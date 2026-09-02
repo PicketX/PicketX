@@ -94,6 +94,27 @@ PicketX 规划支持两种基础运行方式：
 
 架构文档详细描述了领域模型、Linux 数据面、策略语义、Lease 生命周期、授权服务、插件体系、高可用、安全边界和分阶段实施计划。
 
+## 开发
+
+仓库采用 Rust Workspace 组织。Web SPA 在 `apps/web` 下保持独立边界，待前端技术选型确定后再生成具体工程。
+
+```text
+crates/              可复用的领域与基础设施库
+apps/controller/     Controller 与授权服务
+apps/agent/picketxd/ Linux 特权数据面 Agent
+apps/cli/            命令行客户端
+apps/web/            Web SPA
+```
+
+使用以下命令验证当前 Workspace：
+
+```bash
+cargo fmt --check
+cargo check --workspace
+cargo test --workspace
+cargo clippy --workspace --all-targets
+```
+
 ## 参与项目
 
 项目仍处于设计与验证阶段。欢迎围绕使用场景、威胁模型、Linux 数据面、策略模型、部署约束和互操作需求提出 Issue 或参与讨论。开始实现前，请先阅读架构文档，确保变更符合项目边界；如需改变关键决策，应通过明确的设计记录说明取舍。

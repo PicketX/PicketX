@@ -1,0 +1,11 @@
+[package]
+name = "picketx-protocol"
+description = "Controller-Agent protocol definitions for PicketX"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license = "Apache-2.0"
+publish = false
+
+[lints]
+workspace = true

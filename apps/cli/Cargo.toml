@@ -1,0 +1,15 @@
+[package]
+name = "picketx-cli"
+description = "Command-line client for PicketX"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license = "Apache-2.0"
+publish = false
+
+[[bin]]
+name = "picketx"
+path = "src/main.rs"
+
+[lints]
+workspace = true

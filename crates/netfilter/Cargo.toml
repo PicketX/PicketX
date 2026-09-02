@@ -1,0 +1,11 @@
+[package]
+name = "picketx-netfilter"
+description = "Linux Netfilter data-plane backend for picketxd"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license = "GPL-3.0-or-later"
+publish = false
+
+[lints]
+workspace = true

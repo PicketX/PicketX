@@ -94,6 +94,27 @@ Both modes use the same validation, compilation, reconciliation, apply, and Last
 
 The architecture documents describe the domain model, Linux data plane, policy semantics, Lease lifecycle, authorization service, plugin system, high availability, security boundaries, and phased implementation plan in detail.
 
+## Development
+
+The repository is organized as a Rust Workspace. The Web SPA has a separate boundary under `apps/web` and will be scaffolded after its frontend technology is selected.
+
+```text
+crates/              Reusable domain and infrastructure libraries
+apps/controller/     Controller and authorization service
+apps/agent/picketxd/ Privileged Linux data-plane Agent
+apps/cli/            Command-line client
+apps/web/            Web SPA
+```
+
+Validate the current workspace with:
+
+```bash
+cargo fmt --check
+cargo check --workspace
+cargo test --workspace
+cargo clippy --workspace --all-targets
+```
+
 ## Contributing
 
 PicketX is still in its design and validation phase. Feedback and contributions around use cases, threat models, the Linux data plane, policy semantics, deployment constraints, and interoperability requirements are welcome. Please read the architecture document before starting an implementation change. Changes to a major architectural decision should explicitly document their rationale and trade-offs.
