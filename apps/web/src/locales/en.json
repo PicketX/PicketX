@@ -1,0 +1,14 @@
+{
+  "tagline": "Simple, client-free access authorization.",
+  "title": "Access, when you need it.",
+  "description": "Request time-bounded access to your resources and keep using the applications you already know.",
+  "status": "Project initialized",
+  "statusDescription": "This is the starting point for PicketX. Authentication, access requests and enforcement are not available yet.",
+  "portal": "Access portal",
+  "portalDescription": "Discover resources, request access and track your permissions.",
+  "admin": "Administration",
+  "adminDescription": "Manage resources, review requests and inspect enforcement status.",
+  "planned": "Planned",
+  "language": "Language",
+  "footer": "PicketX · Development scaffold"
+}

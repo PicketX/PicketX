@@ -1,124 +1,63 @@
 # PicketX
 
-> English (Default) | [简体中文](README.zh-CN.md)
+English (default) | [简体中文](README.zh-CN.md)
 
-> A Linux service exposure gate and unified authorization plane. PicketX provides identity-, source-, and time-aware access control for SSH, databases, administrative consoles, and other services—without creating a VPN tunnel or requiring application changes.
+**Simple, client-free, on-demand access authorization.**
 
-> **Project status: architecture and design.** This repository currently contains design documents and does not yet provide a runnable release. The roadmap, interfaces, and component boundaries may still change.
+PicketX is designed to grant time-bounded access to protected resources through self-service requests, policies and approval. IP/CIDR network permissions can be shared across matching devices and applications; existing application credentials remain required. Further identity-aware authorization integrates through trusted adapters.
 
-## Why PicketX
+## Project status
 
-Many internal services must be remotely accessible but should not remain exposed to the entire Internet. Traditional approaches often require maintaining static IP allowlists, deploying a VPN, or adding authentication logic to every application. PicketX moves access control to the system network boundary: only sources that satisfy policy may connect to a protected service during an approved time window.
+This repository is an **initial development scaffold**. It includes a Go Controller liveness endpoint and a bilingual React starting page. Authentication, approval, Grants, persistence, Agent synchronization and enforcement are not implemented. Do not use this scaffold to protect resources.
 
-PicketX makes decisions at two levels:
-
-- **Service Exposure Gate:** decides at the Linux network layer whether a source may connect to a service now.
-- **Authorization Plane:** provides a unified API that decides whether a request received by a proxy or gateway may proceed.
-
-Applications remain responsible for their own accounts and business-level permissions. PicketX controls whether their service entry points are reachable.
-
-## Core capabilities
-
-- Declarative access policies based on IPv4, IPv6, protocol, port, identity, resource, and contextual conditions.
-- Time-limited access through Leases, with planned support for approval, self-service source registration, and activity-based renewal.
-- Policy enforcement and connection revocation at the host network layer using nftables/Netfilter and conntrack.
-- Centralized management through a Controller or standalone operation using local static manifests.
-- Unified authorization for existing Web services through Nginx `auth_request`, Envoy `ext_authz`, Traefik `ForwardAuth`, and similar mechanisms.
-- Operational safeguards including Last Known Good state, declarative reconciliation, drift recovery, auditing, and policy simulation.
-- A planned External Plugin model and WASM Policy Runtime for incorporating CMDB, ticketing, organization, and device-posture context.
-- First-class IPv6 support. Dynamic access normally binds to a single IPv6 `/128` or IPv4 `/32` source.
-
-## Use cases
-
-- Temporarily expose high-value services such as SSH, MySQL, Proxmox VE, and internal administrative consoles.
-- Centrally manage network entry across Linux hosts instead of maintaining firewall allowlists one machine at a time.
-- Let users authenticate through Web/OIDC and request time-limited access for their current source address.
-- Add unified identity and entry policy to legacy Web applications that are difficult to modify.
-- Manage policy through local YAML in homelabs, edge devices, isolated environments, or GitOps workflows.
-- Embed the Agent in gateways, NAS products, routers, or other OEM devices.
-
-## What PicketX is not
-
-PicketX does not create VPN tunnels, and it is not intended to replace:
-
-- a WAF or IDS/IPS;
-- reverse proxies such as Nginx, Envoy, Traefik, or Caddy;
-- application-internal RBAC and business permissions;
-- service-mesh features such as discovery, load balancing, retries, or circuit breaking.
-
-## Architecture
-
-```mermaid
-flowchart TB
-    Clients["Web · CLI · Automation"] --> Controller["picketx-controller<br/>REST · OIDC · RBAC · Policy · Lease · AuthZ"]
-    Controller --> DB["SQLite / PostgreSQL"]
-    Controller -->|"gRPC stream + mTLS"| AgentA["picketxd · Node A"]
-    Controller -->|"gRPC stream + mTLS"| AgentB["picketxd · Node B"]
-    AgentA --> KernelA["Netfilter · conntrack"]
-    AgentB --> KernelB["Netfilter · conntrack"]
-    Proxies["Nginx · Envoy · Traefik · Caddy"] -->|"auth request / ext_authz"| Controller
-```
-
-| Component | Responsibility |
-| --- | --- |
-| `picketx-controller` | Manages identities, resources, policies, Leases, node state, authorization decisions, and audit records. |
-| `picketxd` | Reconciles desired state on a Linux node, manages PicketX-owned nftables objects, and observes conntrack. |
-| `picketx` CLI | Calls the Controller API or manages a local Agent through a Unix socket. |
-| Web SPA | Provides policy management, self-service access, approvals, auditing, and operational status; it may be embedded in the Controller. |
-
-Only `picketxd` modifies the host firewall; the Controller never manipulates nftables on a node directly. PicketX also does not terminate application TLS in the authorization path. Existing proxies remain responsible for TLS and traffic forwarding.
-
-## Deployment modes
-
-PicketX is designed around two fundamental operating modes:
-
-1. **Static Manifest Mode:** a local YAML directory is the sole authoritative configuration source. This mode targets standalone hosts, homelabs, GitOps, and isolated environments.
-2. **Controller Mode:** the Controller is the sole authoritative configuration source and adds OIDC, self-service access, approvals, centralized auditing, and multi-node management.
-
-Both modes use the same validation, compilation, reconciliation, apply, and Last Known Good pipeline. Security policy from the two sources is never merged implicitly.
-
-## Status and roadmap
-
-| Milestone | Goal | Status |
-| --- | --- | --- |
-| M0 | Validate the nftables, conntrack, connection-revocation, and container host-namespace data plane | Planned |
-| M1 | Static manifests, Controller, CLI, OIDC, Resource/Policy, Lease, IPv4, and IPv6 | Planned |
-| M2 | PostgreSQL, gRPC streams, multi-node reconciliation, LKG, auditing, and Controller HA | Planned |
-| M3 | Generic Authorization API and proxy adapters | Planned |
-| M4+ | Plugins, WASM, enterprise governance, hosted control plane, and OEM support | Planned |
-
-## Documentation
-
-- [Architecture (English)](docs/ARCHITECTURE.md)
-- [架构设计（简体中文）](docs/ARCHITECTURE.zh-CN.md)
-
-The architecture documents describe the domain model, Linux data plane, policy semantics, Lease lifecycle, authorization service, plugin system, high availability, security boundaries, and phased implementation plan in detail.
+The control plane and Web live here. The official Linux Agent, `picketxd`, belongs to the separate **PicketXD** repository. This initialization does not create or modify that repository.
 
 ## Development
 
-The repository is organized as a Rust Workspace. The Web SPA has a separate boundary under `apps/web` and will be scaffolded after its frontend technology is selected.
+Requirements: Go 1.27+, Node.js 24 LTS and npm.
 
-```text
-crates/              Reusable domain and infrastructure libraries
-apps/controller/     Controller and authorization service
-apps/agent/picketxd/ Privileged Linux data-plane Agent
-apps/cli/            Command-line client
-apps/web/            Web SPA
-```
-
-Validate the current workspace with:
+Start the Controller from the repository root:
 
 ```bash
-cargo fmt --check
-cargo check --workspace
-cargo test --workspace
-cargo clippy --workspace --all-targets
+go run ./cmd/picketx-controller
 ```
 
-## Contributing
+It listens on `127.0.0.1:8080`; use `-listen` to change the address. `GET /healthz` returns process liveness only, not readiness to authorize access.
 
-PicketX is still in its design and validation phase. Feedback and contributions around use cases, threat models, the Linux data plane, policy semantics, deployment constraints, and interoperability requirements are welcome. Please read the architecture document before starting an implementation change. Changes to a major architectural decision should explicitly document their rationale and trade-offs.
+Start the Web development server in another terminal:
 
-## Planned licensing
+```bash
+cd apps/web
+npm ci
+npm run dev
+```
 
-The current architecture proposes GPL-3.0-or-later for `picketxd`, with an alternative commercial license for OEM use. The Controller, CLI, public protocols, and SDKs are planned to use Apache-2.0. Final licensing is governed by the formal license files added to the repository in a future release.
+Open the URL printed by Vite. The frontend and backend build independently. Vite proxies `/healthz` to the local Controller. The Controller does not serve static Web assets yet.
+
+## Verification
+
+```bash
+go test ./...
+go vet ./...
+go build ./...
+
+cd apps/web
+npm run typecheck
+npm run lint
+npm run build
+```
+
+## Layout and design
+
+| Path | Purpose |
+| --- | --- |
+| `cmd/picketx-controller` | Local development server entry point |
+| `internal/controller` | HTTP handler and tests |
+| `apps/web` | React, TypeScript, Vite, shadcn/ui, Tailwind CSS, i18next |
+| `docs` | Current bilingual product and architecture baselines |
+
+Core/public protocol packages will be introduced as their first contracts are implemented. See [Product Design](docs/PRODUCT_DESIGN.md), [Architecture](docs/ARCHITECTURE.md), and [Web development](apps/web/README.md).
+
+## License
+
+Project code is licensed under [Apache-2.0](LICENSE). Copied third-party components retain their original notices; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). PicketXD has a separate GPL-3.0-or-later/OEM licensing design.

@@ -1,0 +1,14 @@
+{
+  "tagline": "简单、无需专用客户端的访问授权。",
+  "title": "在需要时，获得访问权限。",
+  "description": "为资源申请有期限的访问权限，继续使用你熟悉的应用与工具。",
+  "status": "项目已初始化",
+  "statusDescription": "这是 PicketX 的开发起点，认证、权限申请与执行功能尚未实现。",
+  "portal": "访问门户",
+  "portalDescription": "发现资源、申请访问并查看当前权限。",
+  "admin": "管理中心",
+  "adminDescription": "管理资源、审批申请并查看实际执行状态。",
+  "planned": "规划中",
+  "language": "语言",
+  "footer": "PicketX · 开发初始化骨架"
+}
