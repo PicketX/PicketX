@@ -4,10 +4,10 @@
 
 | 字段 | 内容 |
 | --- | --- |
-| 版本 | v0.3.0 |
-| 日期 | 2026-10-01 |
+| 版本 | v0.4.0 |
+| 日期 | 2026-10-08 |
 | 状态 | 已确认的产品基线；不代表功能均已实现 |
-| 架构 | [ARCHITECTURE.zh-CN.md](./ARCHITECTURE.zh-CN.md) v0.6.0 |
+| 架构 | [ARCHITECTURE.zh-CN.md](./ARCHITECTURE.zh-CN.md) v0.7.0 |
 
 ## 1. 产品定位
 
@@ -55,21 +55,27 @@ PicketX 将明确的访问决定变成有生命周期的来源权限，减少手
 | Requester 申请人 | 已认证且有资格申请访问的人或 API 主体 | 后续使用该来源的所有人和设备 |
 | Approver / Administrator | 确认范围、条件与期限 | 实际获得网络权限的来源主体 |
 | Source | 获得网络权限的 IP/CIDR | 经过认证的人或设备身份 |
-| Resource | 被保护的网络或协议入口 | 主机所有端口或应用内部权限体系 |
-| Grant | 一份独立的来源到资源授权贡献 | 门户登录会话或单个内核 Set Element |
+| Resource / Endpoint | 一个受保护逻辑服务及其多个可独立选择的入口 | 主机所有端口或应用内部权限体系 |
+| Grant | 一份独立 Subject 到 Scope 的贡献；网络 Subject 为 IP/CIDR | 门户登录会话或单个内核 Set Element |
 | ProtocolSubject | 通过可信协议集成验证的身份 | 仅从未验证流量中解析出的用户名 |
 
 申请人认证、来源授权和协议认证分别处理。一个申请人可以申请多个来源，多人也可通过有权限的流程为同一来源产生授权。授权记录解释权限由谁授予，不证明之后每个数据包由谁产生。
 
 ## 5. 权限模型
 
-Grant 描述来源 IP/CIDR、资源范围、有效时间、条件、授权来源和撤销状态。自助申请默认使用观测到的 IPv4 /32 或 IPv6 /128。更大 CIDR 必须显式选择并获授权，不由单主机自动推断。
+Grant 描述一个带类型的 Subject、一个或多个资源/Endpoint Scope、共享有效期与条件、授权来源和撤销状态。网络访问的 Subject 为来源 IP/CIDR。自助申请默认使用观测到的 IPv4 /32 或 IPv6 /128。更大 CIDR 必须显式选择并获授权，不由单主机自动推断。
 
 对受保护资源，有效网络权限是当前有效且匹配的 Grant 所贡献权限的合集，再受显式拒绝策略与条件约束。一个地址可以同时匹配单主机和 CIDR Grant。没有匹配的允许即没有网络权限。`ALL` 只表示 PicketX 管理的全部资源，不表示主机所有流量。
 
 每份 Grant 保留独立生命周期和来源。到期或撤销只移除自身贡献。例如网站权限至 16:00、数据库权限至 18:00，不能编译成全部资源都开放到 18:00；反过来，某份网站 Grant 到期，也不能删除其他有效网站 Grant 仍提供的访问权限。
 
 基础流程使用固定到期即可。可选活动续约不得超过 Hard Deadline，也不能复活已过期 Grant。审批通过、权限有效和实际执行是不同状态。
+
+### 5.1 资源入口与部署
+
+Resource 表示 Gitea 等逻辑服务，HTTPS、SSH 分别为 Endpoint。用户可以申请具名入口、标签匹配入口或整个 Resource。省略 Endpoint 限制表示全部当前与未来入口，界面必须显式展示这种动态范围。网络入口类型和动作分别默认 `network`、`connect`。
+
+Endpoint 目标地址是可选 IP/CIDR 数组，用于流量匹配，不是代理后端。EnforcementBinding 将多个选中资源入口交给每个选中的 Agent，定义保护位置而不产生访问权限。Agent 只收到相关的完整保护与授权状态；通过配置来源和冲突校验隔离，不引入 Namespace。
 
 ## 6. 用户流程与可见结果
 
@@ -122,10 +128,17 @@ PicketX 不替代 VPN 隧道、应用账户、业务权限、WAF、IDS/IPS 或�
 
 PicketX 提供统一控制面与授权核心，PicketXD 是官方 Linux 执行实现，其他能力通过 Agent/Adapter 或 AuthZ Hook 接入。Adapter 必须证明可以观察并执行策略要求，不支持的身份或撤销语义不得静默降级。WASM 作为受控策略扩展按需推进，不进入逐包快速路径。
 
+### 9.2 业务流程与标准配置分离
+
+控制面管理用户、申请、审批及 Web/API 业务模型，将获授权结果转换为标准 Resource/Endpoint/Grant/Policy/EnforcementBinding 契约。Agent 通过互斥的 Controller 或 Static Manifest Provider 消费契约，使用相同默认值与语义规范化，并通过独立反馈契约报告执行状态。
+
+流程和 Agent 可独立演进，同时不复制出不同授权语义。本地配置不需要包含控制面的用户或审批数据库。导出、校验、解释与可复现排障应使用同一配置契约。完整 Schema 与待决生命周期由[配置与领域模型设计](CONFIGURATION_MODEL.zh-CN.md)跟踪，不代表功能已经实现。
+
 ## 10. 部署与保留决策
 
 - Controller Mode 以 Controller 为唯一 Security Desired State 权威；本地 Runtime Config 不增加 Resource、Policy、Grant/Lease 或 AuthZ 权限。
 - Static Manifest Mode 以一个 YAML 目录为唯一权威；完整候选校验、Reconcile、来源绑定 LKG 和重载均适用。浏览器自助与集中审批需要 Controller。
+- 默认安装在服务主机；设计保留既有路由上的显式网关实施，取决于适配器能力及后续 NAT/流量范围规范。PicketX 不负责配置网络路由。
 - Linux 实现保留 nftables/Netfilter 与 conntrack；NFQUEUE/TPROXY 是可选执行能力，不是产品定位本身。
 - 保留默认全功能 Agent 能力模型；具体资源选择需要的路径，可显式关闭可选能力。
 - 前端使用 React、TypeScript、Vite、shadcn/ui、Tailwind CSS、i18next 与 npm，明确展示轮询和数据新鲜度。
@@ -146,6 +159,6 @@ PicketX 提供统一控制面与授权核心，PicketXD 是官方 Linux 执行�
 
 ## 12. 修订与权威
 
-本 v0.3.0 产品基线替代已归档 v0.1 产品文档中的定位与范围，技术细节由架构 v0.6.0 维护。旧商业计划与调研报告属于历史输入，不代表当前范围或定价承诺。英文为仓库默认文档，中文同步维护。
+本 v0.4.0 产品基线替代已归档 v0.1 产品文档中的定位与范围，技术细节由架构 v0.7.0 维护。旧商业计划与调研报告属于历史输入，不代表当前范围或定价承诺。英文为仓库默认文档，中文同步维护。
 
-本次 v0.3.0 统一授权核心与执行实现边界，确定双仓库和 Go，更新 shadcn/ui 前端及组合组件维护策略，并补充 Gitea 场景；同步架构 v0.6.0。
+本次 v0.4.0 分离业务、标准配置与执行模型，补充多入口 Resource、多资源/多 Agent 绑定和按节点投影，暂不引入 Namespace；同步架构 v0.7.0 与配置模型 v0.1.0。原 v0.3.0 技术栈、仓库划分和 Gitea 决策继续有效。

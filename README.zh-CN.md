@@ -54,9 +54,9 @@ npm run build
 | `cmd/picketx-controller` | 本地开发服务入口 |
 | `internal/controller` | HTTP Handler 与测试 |
 | `apps/web` | React、TypeScript、Vite、shadcn/ui、Tailwind CSS、i18next |
-| `docs` | 最新中英文产品和架构基线 |
+| `docs` | 最新中英文产品、架构与配置模型基线 |
 
-Core 与公开协议包在实现首个契约时引入。参阅[产品设计](docs/PRODUCT_DESIGN.zh-CN.md)、[架构设计](docs/ARCHITECTURE.zh-CN.md)和 [Web 开发说明](apps/web/README.md)。
+Core 与公开协议包在实现首个契约时引入。参阅[产品设计](docs/PRODUCT_DESIGN.zh-CN.md)、[架构设计](docs/ARCHITECTURE.zh-CN.md)、[配置模型](docs/CONFIGURATION_MODEL.zh-CN.md)和 [Web 开发说明](apps/web/README.md)。
 
 ## 许可证
 

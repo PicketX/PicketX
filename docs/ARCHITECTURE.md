@@ -4,8 +4,8 @@
 
 | Field | Value |
 | --- | --- |
-| Version | v0.6.0 |
-| Date | 2026-10-01 |
+| Version | v0.7.0 |
+| Date | 2026-10-08 |
 | Status | Agreed design baseline; implementation status not asserted |
 | Project | PicketX |
 
@@ -32,6 +32,7 @@ Product requirements, APIs, database schemas, protocol specifications, implement
 | `picketxd` licensing | GPL-3.0-or-later community license, an alternative OEM commercial license, and contributor agreements granting the project the rights needed for approved relicensing. |
 | Other component licensing | Controller, CLI, public protocols and SDKs, and external-plugin SDK use Apache-2.0 by default. |
 | Backend language and repositories | Go; PicketX owns control plane/Core/Web, PicketXD owns the official Linux Agent. |
+| Configuration contract | Shared versioned semantics for remote and static input; Resource/Endpoint/Grant/Binding are separate from workflow and execution models; no Namespace. |
 | Frontend | React, TypeScript, Vite, shadcn/ui, Tailwind CSS, i18next, npm; separate official primitives from project compositions. |
 
 ## Contents
@@ -106,30 +107,41 @@ Protocol-level authorization, richer providers, Cloud, and OEM remain expansion 
 
 ## 3. Business architecture and domain model
 
-The domain model deliberately separates network source, resource, permission, lifetime, identity, and authorization decision. IP addresses, users, policies, and sessions must not collapse into one object.
+The domain separates workflow actors, granted subjects, logical services, entry points, and execution results. The focused [Configuration and Domain Model](CONFIGURATION_MODEL.md) records the agreed selection and binding semantics and identifies schemas still under design.
 
 | Domain object | Responsibility | Key semantics |
 | --- | --- | --- |
-| Node | An enrolled Agent execution node; the official Linux implementation is `picketxd` | Labels, capabilities, desired/applied revision, status |
-| Resource | A service or entry point governed by PicketX | Name, selector, destination, protocol, port, labels |
-| Subject | A typed authorization target | Network source, verified user or service identity; support depends on enforcement capability, with no implicit conversion |
-| Source | The network authorization subject | IPv4/IPv6 address or CIDR; exact hosts are /32 or /128; not a person or device identity |
-| Requester / Approver | A workflow actor | Authenticated portal/API principal; records who requested or approved a grant |
-| ProtocolSubject | A protocol-level identity | Verified user/service/session identity from an adapter; authentication method and trust provenance required |
-| AccessRequest | A request to authorize a Source | Source, resource scope, requested duration, requester, reason, approval outcome |
-| Grant / Permission | One authorization contribution from Source to Resource scope | Independent ID, conditions, validity, provenance, revocation; network grants do not target portal users |
-| EffectivePermissionSet | Compiled effective network permissions | Union of valid matching grants, filtered by deny policy and conditions; derived, not the source of audit truth |
-| SourceSession / Lease | Network-source lifetime and compiled validity | Absolute expiry, optional activity renewal, session epoch; never a portal user session |
-| Policy | Declarative request or enforcement policy | Keep request eligibility, network allow/deny, and protocol authorization as distinct evaluation contexts |
-| Authorization Request | One protocol entry evaluation | Verified ProtocolSubject when required, Source, Resource, request context; not an AccessRequest |
-| Decision | Authorization evaluation result | Allow/deny/challenge, reason, TTL, metadata |
-| Plugin | Extension capability | Capability, version, sandbox, configuration |
+| Agent (Node) | An execution identity; the official Linux implementation is `picketxd` | Enrollment or static local identity, labels, capabilities, desired/applied status |
+| Resource | A logical protected service | Contains multiple named Endpoints; not a single destination tuple |
+| Endpoint | One independently selectable service entry | Default type `network`; protocol, port, optional destination `addresses` containing IPs/CIDRs |
+| Subject / Source | Typed recipient of authorization; Source is the IP/CIDR type | IPv4 and IPv6; requester identity is not packet identity |
+| Scope | Resource selection, optional Endpoint restriction, and actions | Missing Endpoint restriction means all entries including future additions; network action defaults to `connect` |
+| Grant | One independent permission contribution | One Subject, multiple Scopes, shared validity/conditions, provenance and revocation |
+| EnforcementBinding | Resource-entry placement onto Agents | Nonempty `resources[]` and `agents[]`; selected entries apply to every selected Agent |
+| Requester / Approver / AccessRequest | Control-plane workflow and provenance | Requested and approved content stay separate; Agent does not execute approval workflows |
+| Policy | Eligibility, enforcement restriction, or protocol evaluation | Separate contexts; exact schema split remains a follow-up decision |
+| EffectivePermissionSet / Lease | Derived permissions and optional lifetime machinery | Not independent sources of access; no mandatory SourceSession per Grant |
+| AuthorizationContext / Decision | A request-time protocol authorization evaluation | Verified identity/trust provenance where required; distinct from AccessRequest |
+| AuditEvent / ExecutionStatus | Lifecycle evidence and observed outcomes | Approval, Grant validity and confirmed application are separate facts |
+| Plugin | Extension capability | Capability, version, sandbox, configuration; detailed schema follows actual integration needs |
 
-Network policy uses Source as its subject. A portal account may request several sources; several people may request grants for the same source. Neither relationship proves who generated a later packet. Existing generic `Subject` API fields must be explicitly typed by context rather than silently reused as network identity.
+### 3.1 Business, configuration, and execution boundaries
 
-An independently retained Grant contributes permissions only while its conditions and relevant lease/session are valid. Revoking one Grant does not revoke permissions still supplied by another valid Grant. Request approval, desired-state creation, and successful enforcement are separate facts.
+Control-plane Web/API/persistence models manage identity, requests, approval, and audit. A publication boundary converts authorized business outcomes into the versioned configuration contract. Agents consume configuration and provenance identifiers, not raw database rows or UI workflow objects. Execution plans, LKG, and status are separate runtime models.
 
-> **Definition of ALL:** `ALL` means all Resources managed by PicketX. It never means every port or all traffic on a host.
+ControllerProvider and StaticManifestProvider converge on the same validated/defaulted local semantics and compile/reconcile pipeline. They remain mutually exclusive authorities; global Controller payloads and local manifest sets need not be identical. Shared Go packages and protocol conformance keep authorization semantics consistent as the control plane and Agent evolve independently.
+
+### 3.2 Selection, placement, and isolation
+
+A Resource contains multiple Endpoints. For each resource-selection item, omit both `endpointNames` and `endpointSelector` to select all current and future Endpoints; provide exactly one nonempty restriction for a narrower scope. Explicit empty/null restrictions are invalid. There is no `allEndpoints` field. Label selectors use `matchLabels` and `In`/`NotIn`/`Exists`/`DoesNotExist`; `NotIn` includes missing keys and is not an explicit deny.
+
+EnforcementBinding groups multiple Resource selections and multiple Agent references/selectors. Agent matches are unioned and deduplicated; all selected entries apply to every selected Agent, not positional pairs. Different execution settings require separate Bindings. Host deployment is the default; gateway enforcement requires an explicit, capability-checked transit contract.
+
+The Controller projects only related protection, permissions, restrictions, deadlines, and cleanup inventory to each Agent. Aggregate overlapping Grants rather than generating one rule per Grant, while preserving provenance and independent expiry. Removing the last Grant keeps a bound entry protected; removing the last Binding withdraws that target's protection responsibility.
+
+No Namespace is introduced. Object identity, authorized references, contribution tracking and conflict checks provide configuration isolation. Labels and distinct Resource names cannot create traffic isolation where the enforcement backend cannot distinguish the entries. See the focused model for destination arrays, scope defaults, status, validation targets, and unresolved lifecycle decisions.
+
+> **Definition of ALL:** at the product level this means all PicketX-managed Resources, never all host traffic. Omitting an Endpoint restriction only selects all entries inside the explicitly selected Resource set; it does not implicitly select all Resources or Agents. The global ALL encoding is not specified here.
 
 ## 4. Overall system architecture
 
@@ -190,7 +202,7 @@ State-push Agents and request-time AuthZ hooks are separate integration paths. A
 
 - Users, groups, OIDC, and administrative/request RBAC. These identities govern workflow actions, not packet attribution.
 - Basic self-service and approval workflows, independent source Grants, provenance, and effective permission aggregation.
-- Resource, Node, Policy, Lease, label, and selector management.
+- Resource/Endpoint, Agent, Grant, EnforcementBinding, enforcement Policy, label and selector management; workflow storage models remain separate.
 - Compilation of global Desired State into per-node Desired State.
 - Agent enrollment, capability discovery, heartbeats, revision synchronization, and status aggregation.
 - Authorization Engine for generic authorization, `auth_request`, `ext_authz`, and ForwardAuth integrations.
@@ -202,7 +214,7 @@ State-push Agents and request-time AuthZ hooks are separate integration paths. A
 | Borrowed concept | Use in PicketX | Deliberately excluded |
 | --- | --- | --- |
 | `spec` / `status` | Separate declared and observed state | No generic CRD platform |
-| Labels / selectors | Select Nodes for Resource placement | No nested NodeGroup hierarchy in v1 |
+| Labels / selectors | Select Resource entries and Agent placement through explicit bindings | No Namespace or nested NodeGroup hierarchy in v1 |
 | `generation` / `observedGeneration` | Track desired and applied progress | No etcd dependency for the initial design |
 | Reconciliation | Eventual consistency and drift recovery | No scheduler |
 | Watch / revision | Incremental distribution and wake-up | `LISTEN/NOTIFY` is not treated as a reliable log |
@@ -245,9 +257,9 @@ flowchart TB
 The following rules are mandatory:
 
 1. Startup configuration explicitly selects `controller` or `static`. One `picketxd` instance has exactly one authoritative Desired State Provider at a time.
-2. **Controller Mode:** the Controller is the sole authority for Security Desired State. Local manifests containing Resource, Policy, Lease, Authorization Rule, or other security objects never merge with or override Controller state.
+2. **Controller Mode:** the Controller is the sole authority for Security Desired State. Local manifests containing Resource, Grant, EnforcementBinding, Policy, Authorization Rule, or other security objects never merge with or override Controller state.
 3. Local `/etc/picketx/picketxd.yaml` remains valid in Controller Mode, but it contains only Agent Runtime Configuration: Controller endpoint, certificates, logging, data directory, NFQUEUE/TPROXY switches, health/metrics endpoints, and LKG location.
-4. Runtime Configuration and Security Desired State are separate namespaces and models.
+4. Runtime Configuration and Security Desired State are separate configuration domains and models; this does not introduce a Namespace API object.
 5. If static manifests are present in Controller Mode, `picketxd` ignores them and emits a prominent warning. A strict deployment option may reject startup instead.
 6. **Static Manifest Mode:** the manifest directory is the sole authority for Security Desired State. The Controller does not distribute policy to the Agent.
 7. Switching provider replaces the complete Desired Snapshot atomically. State from two providers is never layered or implicitly merged.
@@ -267,7 +279,7 @@ The following rules are mandatory:
 - Static and Controller modes use the same versioned domain schema so Resources and Policies can migrate between them.
 - Git, Ansible, Salt, Puppet, cloud-init, Ignition, NixOS, OCI extraction, or another external mechanism updates the directory. `picketxd` does not embed a Git client in v1.
 
-Example static manifest:
+Illustrative static Resource fragment in the current model (not a complete runnable policy):
 
 ```yaml
 apiVersion: picketx.io/v1alpha1
@@ -277,23 +289,16 @@ metadata:
   labels:
     environment: production
 spec:
-  destination: local
-  protocol: tcp
-  ports: [22]
----
-apiVersion: picketx.io/v1alpha1
-kind: NetworkPolicy
-metadata:
-  name: office-ssh
-spec:
-  sources:
-    - 2001:db8:100::/64
-  resources:
-    - ssh-admin
-  effect: allow
+  endpoints:
+    - name: ssh
+      network:
+        protocol: TCP
+        port: 22
 ```
 
-Static Manifest Mode initially targets static Resources and Policies, fixed or absolute-expiry Leases, and local enforcement. OIDC self-service, centralized approval, and multi-node aggregation require Controller Mode.
+See [Configuration and Domain Model](CONFIGURATION_MODEL.md) for bindings and Grant scope fragments. A Resource declaration alone does not grant access; the complete configuration needs applicable protection bindings and authorized permissions. Static local identity/binding resolution and full Grant/Policy schemas remain follow-up specifications.
+
+Static Manifest Mode targets local protection using the same configuration semantics, including time-bounded Grants with absolute deadlines. Agent restart or manifest reload does not reset those deadlines. OIDC self-service, centralized approval, and multi-node aggregation belong to Controller Mode.
 
 A future **Emergency Override / Break-glass** capability may exist, but it must not become an ordinary Controller-plus-static merge. It requires its own ownership domain, precedence, audit, narrow scope, and automatic expiry. It is outside v1.
 
@@ -329,7 +334,7 @@ ALLOW and DENY use separate membership sets. DENY takes precedence over ALLOW in
 
 ### 7.1 Source-based permission aggregation
 
-For a source address `s` at time `t`, find every Grant whose IP/CIDR contains `s`, whose validity interval contains `t`, and whose conditions and associated lease/session are valid. Union the resource permissions contributed by these Grants, then apply matching explicit deny constraints. No matching allow means deny for a protected resource. PicketX does not implicitly protect every host port.
+For a source address `s` at time `t`, find every Grant whose IP/CIDR contains `s`, whose validity interval contains `t`, and whose conditions and any explicitly configured lease/renewal constraints are valid. Union the resource permissions contributed by these Grants, then apply matching explicit deny constraints. No matching allow means deny for a protected resource. PicketX does not implicitly protect every host port.
 
 CIDR overlap is normal: an exact-host Grant and a wider-prefix Grant may both contribute. Longest-prefix matching used for an activity-renewal policy does not replace permission-union semantics. One Grant's expiry cannot delete a shared kernel element still needed by another Grant, nor extend unrelated permissions to the latest expiry of all Grants.
 
@@ -460,7 +465,7 @@ The WASM Host API may expose:
 
 - `get_subject`, `get_resource`, `get_request`, and `get_source`
 - `get_attribute` and labels
-- namespace-scoped `kv_get`
+- plugin-scoped `kv_get` (storage isolation, not a Namespace API object)
 - `call_provider(name, request)` through a controlled Provider proxy
 - `log` and `metric`
 - return of `decision`, `reason`, `ttl`, and metadata
@@ -489,7 +494,7 @@ flowchart LR
     LKG --> Applied["Applied State · nftables · conntrack"]
 ```
 
-- The Reconciler never needs to know whether the snapshot came from a Controller or YAML. Both providers first produce the same versioned Desired Snapshot.
+- The Reconciler consumes normalized local desired state regardless of provider. Controller projection and static manifests share versioned semantics, not necessarily identical global payloads; see [Configuration and Domain Model](CONFIGURATION_MODEL.md).
 - In Static Manifest Mode, the directory is the declarative source of truth. LKG is only the last successfully compiled and applied recovery copy; it never overwrites the manifests.
 - LKG records provider type and identity to prevent restoration from the wrong source after a mode change or restart.
 - Core CIDR, TTL, overlap, and renewal semantics live in the Go core domain layer so SQLite and PostgreSQL behave consistently.
@@ -609,6 +614,8 @@ Keep business logic out of official UI files, centralize theme changes, and isol
 
 These are deployment options, not organization-size restrictions or measured capacity claims.
 
+Host installation is the default. Explicit gateway bindings can protect transit traffic on an existing route without making PicketX a router or application proxy. Host/container path coverage and gateway NAT matching need adapter-specific validation; neither may widen the binding scope silently. Controller/Static mode selects configuration authority, independently of enforcement placement.
+
 If a containerized Agent controls the host firewall, use host networking and `CAP_NET_ADMIN` where possible instead of full `privileged` mode. nftables and Netfilter operate within a network namespace, so the deployment must intentionally target the host namespace.
 
 ## 17. Licensing and code boundaries
@@ -641,7 +648,7 @@ The product baseline fixes the purpose and boundaries, not a claim that all list
 
 | Phase | Goal | Scope |
 | --- | --- | --- |
-| M0 Data-plane validation | Prove reliable source enforcement | nftables/conntrack, IPv4/IPv6, overlapping IP/CIDR grants, hard expiry, strict/graceful revoke, restart and namespace behavior |
+| M0 Data-plane validation | Prove reliable source enforcement | nftables/conntrack, IPv4/IPv6, overlapping IP/CIDR grants, hard expiry, strict/graceful revoke, restart and Linux network-namespace behavior |
 | M1 Usable access workflow | Complete request, approval, apply and expiry | Browser/OIDC self-service, basic approval, source Grants, permission union, Resource scope, status and authorization records; Controller/SQLite/Agent/CLI and Static Manifest Mode |
 | M2 Operational scale | Reliable multi-node operation | PostgreSQL, mTLS streams, labels/selectors, drift/reconcile, LKG recovery, per-node status; HA as required |
 | M3 Protocol authorization | Add finer enforcement where needed | Generic AuthZ API, HTTP proxy adapters, verified protocol user/session context; other protocols evaluated individually |
@@ -705,6 +712,8 @@ This is a suggested layout; implementation ADRs define module boundaries. This d
   picketxd.yaml             # Agent Runtime Configuration only
   manifests/                # Security Desired State in Static Manifest Mode
     resources/
+    grants/
+    bindings/
     policies/
     authz/
 ```
@@ -713,7 +722,7 @@ This is a suggested layout; implementation ADRs define module boundaries. This d
 
 This architecture should be refined through focused documents rather than expanded indefinitely:
 
-- Domain model and schema specification
+- [Configuration and Domain Model v0.1.0](CONFIGURATION_MODEL.md): current model decisions and open schema questions
 - Static Manifest schema and validation rules
 - Policy evaluation and conflict semantics
 - Southbound protocol specification
@@ -744,9 +753,10 @@ This architecture should be refined through focused documents rather than expand
 
 | Version | Date | Change |
 | --- | --- | --- |
+| v0.7.0 | 2026-10-08 | Separated business/configuration/execution models; documented multi-Endpoint Resources, destination arrays, multi-resource/multi-Agent bindings, node projection and isolation without Namespace; replaced the old static example. |
 | v0.6.0 | 2026-10-01 | Defined Authorization Core and extensible Agent/adapter boundaries; adopted PicketX/PicketXD repositories and Go; selected shadcn/ui/Tailwind with composition, update, i18n and freshness rules; added Gitea acceptance. |
 | v0.5.1 | 2026-09-30 | Added cross-application access to one service; specified client-independent source authorization, portal-cookie independence, protocol authentication and egress boundaries. |
 | v0.5 | 2026-09-30 | Adopted simple client-free source authorization positioning; separated workflow and protocol identities; defined Grant aggregation and shared access; scoped authorization records; moved basic approval into the initial workflow; retained Linux backend, provider isolation and licensing decisions. |
 | v0.4 | 2026-09-02 | Previous bilingual architecture baseline, preserved under the historical documentation archive. |
 
-See [README.md](./README.md) for document precedence and the archive inventory. Detailed API/schema choices remain subject to implementation ADRs; this design revision predates the repository bootstrap; see the root README for current implementation status.
+See [README.md](./README.md) for document precedence and the archive inventory. Detailed API/schema choices remain subject to implementation ADRs; the repository remains a scaffold; see the root README for current implementation status.

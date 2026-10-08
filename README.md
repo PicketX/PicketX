@@ -54,9 +54,9 @@ npm run build
 | `cmd/picketx-controller` | Local development server entry point |
 | `internal/controller` | HTTP handler and tests |
 | `apps/web` | React, TypeScript, Vite, shadcn/ui, Tailwind CSS, i18next |
-| `docs` | Current bilingual product and architecture baselines |
+| `docs` | Current bilingual product, architecture and configuration model baselines |
 
-Core/public protocol packages will be introduced as their first contracts are implemented. See [Product Design](docs/PRODUCT_DESIGN.md), [Architecture](docs/ARCHITECTURE.md), and [Web development](apps/web/README.md).
+Core/public protocol packages will be introduced as their first contracts are implemented. See [Product Design](docs/PRODUCT_DESIGN.md), [Architecture](docs/ARCHITECTURE.md), [Configuration Model](docs/CONFIGURATION_MODEL.md), and [Web development](apps/web/README.md).
 
 ## License
 

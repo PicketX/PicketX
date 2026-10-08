@@ -4,10 +4,10 @@
 
 | Field | Value |
 | --- | --- |
-| Version | v0.3.0 |
-| Date | 2026-10-01 |
+| Version | v0.4.0 |
+| Date | 2026-10-08 |
 | Status | Agreed product baseline; not a claim of implemented features |
-| Architecture | [ARCHITECTURE.md](./ARCHITECTURE.md) v0.6.0 |
+| Architecture | [ARCHITECTURE.md](./ARCHITECTURE.md) v0.7.0 |
 
 ## 1. Product positioning
 
@@ -55,21 +55,27 @@ After portal source authorization, users access one Gitea service through browse
 | Requester | Authenticated person or API principal allowed to ask for access | Every person or device later using the granted source |
 | Approver / administrator | Confirms scope, conditions and duration | The network subject receiving the permission |
 | Source | IP/CIDR receiving network permissions | A verified person or device identity |
-| Resource | A protected network or protocol entry | Every port on the host or the application's internal permission model |
-| Grant | One independent source-to-resource permission contribution | A portal login session or a single kernel set element |
+| Resource / Endpoint | A logical protected service with multiple independently selectable entries | Every port on the host or the application's internal permission model |
+| Grant | One independent Subject-to-Scope contribution; network Subjects are IP/CIDR | A portal login session or a single kernel set element |
 | ProtocolSubject | Identity verified through a trusted protocol integration | A username merely parsed from unverified traffic |
 
 Requester authentication, source authorization and protocol authentication are separate. One requester may request several sources, and several requesters may grant the same source through authorized workflows. Authorization records explain who granted access, not who produced every subsequent packet.
 
 ## 5. Permission model
 
-A Grant describes the source IP/CIDR, resource scope, validity interval, conditions, authorization provenance, and revocation state. Self-service defaults to an observed IPv4 /32 or IPv6 /128. Broader CIDRs are explicitly selected and authorized; they are not inferred from a single observed host.
+A Grant describes one typed Subject, one or more resource/Endpoint Scopes, a shared validity interval and conditions, authorization provenance, and revocation state. For network access the Subject is a source IP/CIDR. Self-service defaults to an observed IPv4 /32 or IPv6 /128. Broader CIDRs are explicitly selected and authorized; they are not inferred from a single observed host.
 
 For a protected resource, effective network permissions are the union of currently valid, matching Grants, constrained by explicit deny policies and conditions. An address may match both exact-host and CIDR Grants. No applicable allow means no network permission. `ALL` means all PicketX-managed resources, not all host traffic.
 
 Each Grant keeps its own lifetime and provenance. Expiring or revoking one Grant removes only its contribution. For example, website permission until 16:00 and database permission until 18:00 must not be compiled into one all-resource permission lasting until 18:00. Conversely, expiry of one website Grant must not remove access still authorized by another valid website Grant.
 
 Fixed expiry is sufficient for the basic workflow. Optional activity renewal must stay within hard deadlines and must not revive expired Grants. Approval, permission validity, and actual enforcement are separate states.
+
+### 5.1 Resource entries and deployment
+
+A Resource represents a service such as Gitea, with HTTPS and SSH as separate Endpoints. Users can request named entries, label-matched entries, or the whole Resource. Omitting an Endpoint restriction means all current and future entries; the UI must show that dynamic scope explicitly. Network entry type and action default to `network` and `connect`.
+
+Endpoint destination addresses are optional IP/CIDR arrays used for traffic matching, not proxy backends. EnforcementBinding assigns multiple selected resource entries to every selected Agent; it defines protection placement, not access permission. Agents receive only their relevant complete protection and authorization state. Configuration ownership and conflict checks provide isolation without introducing Namespace.
 
 ## 6. User workflow and visible results
 
@@ -122,10 +128,17 @@ The product uses a typed Subject–Resource–Action–Conditions core model. IP
 
 PicketX provides the unified control plane and authorization core; PicketXD is the official Linux enforcement implementation. Further capabilities integrate through Agents/adapters or AuthZ hooks. Adapters must establish that they can observe and enforce policy requirements; unsupported identity or revocation semantics cannot silently degrade. WASM is a controlled policy extension introduced as needed, outside the packet fast path.
 
+### 9.2 Separate workflow from standard configuration
+
+The control plane owns users, requests, approvals and Web/API business models. Authorized results are translated into the standard Resource/Endpoint/Grant/Policy/EnforcementBinding contract. Agents consume this contract through mutually exclusive Controller or Static Manifest providers, normalize the same defaults and semantics, and report execution status through a separate feedback contract.
+
+This permits independent workflow and Agent evolution without duplicating authorization semantics. A local configuration need not include the control plane's user or approval database. Export, validation, explanation and reproducible troubleshooting should use the same configuration contract. Full schemas and unresolved lifecycle details are tracked in [Configuration and Domain Model](CONFIGURATION_MODEL.md); they are not implemented features.
+
 ## 10. Deployment and retained decisions
 
 - Controller Mode uses the Controller as the sole security desired-state authority. Local runtime settings never add Resource, Policy, Grant/Lease or AuthZ permissions.
 - Static Manifest Mode uses one YAML directory as the sole security authority. Full candidate validation, reconciliation, source-bound LKG and reload apply; browser self-service and centralized approval require a Controller.
+- Host installation is the default; explicit gateway enforcement on existing routes remains supported by the design, subject to adapter capabilities and a future NAT/traffic-scope specification. PicketX does not configure network routing.
 - The Linux implementation retains nftables/Netfilter and conntrack. NFQUEUE/TPROXY are optional enforcement capabilities, not the product identity.
 - The default Agent capability model remains intact; individual resources select the required path and optional capabilities can be disabled.
 - The frontend uses React, TypeScript, Vite, shadcn/ui, Tailwind CSS, i18next and npm, with explicit polling/freshness feedback.
@@ -146,6 +159,6 @@ Cross-application acceptance uses one test service and at least two existing too
 
 ## 12. Revision and authority
 
-This v0.3.0 product baseline supersedes the positioning and scope of the archived v0.1 product document. Detailed technical decisions are maintained in architecture v0.6.0. Older business plans and research reports are historical inputs, not current scope or pricing commitments. English is the default repository document; the Chinese edition is maintained alongside it.
+This v0.4.0 product baseline supersedes the positioning and scope of the archived v0.1 product document. Detailed technical decisions are maintained in architecture v0.7.0. Older business plans and research reports are historical inputs, not current scope or pricing commitments. English is the default repository document; the Chinese edition is maintained alongside it.
 
-Revision v0.3.0 defines the unified authorization core and execution boundaries, adopts two repositories and Go, updates the shadcn/ui stack and composition maintenance policy, and adds Gitea as the first end-to-end scenario; synchronized with architecture v0.6.0.
+Revision v0.4.0 separates business, standard configuration and execution models; adds multi-Endpoint Resource selection, multi-resource/multi-Agent bindings and per-Agent projection; defers Namespace; synchronized with architecture v0.7.0 and configuration model v0.1.0. The previous v0.3.0 stack, repository and Gitea decisions remain in force.

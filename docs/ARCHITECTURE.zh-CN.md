@@ -4,8 +4,8 @@
 
 | 字段 | 内容 |
 | --- | --- |
-| 版本 | v0.6.0 |
-| 日期 | 2026-10-01 |
+| 版本 | v0.7.0 |
+| 日期 | 2026-10-08 |
 | 状态 | 已确认的设计基线；不代表已实现 |
 | 项目 | PicketX |
 
@@ -32,6 +32,7 @@
 | `picketxd` 许可证 | 社区版本使用 GPL-3.0-or-later；另行提供 OEM Commercial License；贡献协议授予项目方实施经批准再许可所需的权利。 |
 | 其他组件许可证 | Controller、CLI、公开协议与 SDK、External Plugin SDK 默认使用 Apache-2.0。 |
 | 后端语言与仓库 | Go；PicketX 承载控制面/Core/Web，PicketXD 承载官方 Linux Agent。 |
+| 配置契约 | 远程与静态输入共用版本化语义；Resource/Endpoint/Grant/Binding 与业务流程、执行模型分离；不引入 Namespace。 |
 | 前端 | React、TypeScript、Vite、shadcn/ui、Tailwind CSS、i18next、npm；官方基础组件与项目组合分层。 |
 
 ## 目录
@@ -106,30 +107,41 @@ PicketX 是一个简单易用、无需安装专用客户端的按需访问授权
 
 ## 3. 业务架构与领域模型
 
-领域模型需要明确拆分网络来源、资源、权限、有效期、身份与授权决策，不能将 IP、用户、规则和会话混成同一对象。
+领域模型区分流程操作者、获授权主体、逻辑服务、访问入口与执行结果。[配置与领域模型设计](CONFIGURATION_MODEL.zh-CN.md) 记录已确认的选择、绑定语义，并列出仍待细化的 Schema。
 
 | 领域对象 | 职责 | 关键语义 |
 | --- | --- | --- |
-| Node | 注册的 Agent 执行节点；Linux 官方实现为 `picketxd` | Labels、capabilities、desired/applied revision、status |
-| Resource | 由 PicketX 管理的服务或入口 | Name、selector、destination、protocol、port、labels |
-| Subject | 带类型的授权对象 | 网络来源、可信用户或服务身份；由执行能力决定是否支持，不能相互隐式转换 |
-| Source | 网络授权主体 | IPv4/IPv6 地址或 CIDR；精确主机为 /32 或 /128；不等于人或设备身份 |
-| Requester / Approver | 申请审批流程参与者 | 经过认证的门户/API 身份；记录谁申请、谁批准 |
-| ProtocolSubject | 协议层身份 | 适配器提供的可信用户、服务或会话身份；需要认证方式与信任来源 |
-| AccessRequest | 为 Source 申请权限 | 来源、资源范围、申请时长、申请人、原因、审批结果 |
-| Grant / Permission | Source 到 Resource 范围的一份授权贡献 | 独立 ID、条件、有效期、来源、撤销状态；网络 Grant 不以门户用户为对象 |
-| EffectivePermissionSet | 编译后的有效网络权限 | 合并有效匹配授权，再受拒绝策略和条件约束；是派生结果，不是授权记录的事实来源 |
-| SourceSession / Lease | 网络来源生命周期与编译后的有效性 | 绝对过期、可选活动续约、会话 epoch；不是门户用户会话 |
-| Policy | 声明式申请或执行策略 | 申请资格、网络允许/拒绝、协议授权必须区分评估上下文 |
-| Authorization Request | 一次协议入口评估 | 按需包含可信 ProtocolSubject、Source、Resource 和请求上下文；不同于 AccessRequest |
-| Decision | 授权评估结果 | Allow/deny/challenge、reason、TTL、metadata |
-| Plugin | 扩展能力 | Capability、version、sandbox、config |
+| Agent（Node） | 执行身份；Linux 官方实现为 `picketxd` | 注册或静态本地身份、标签、能力、期望/已应用状态 |
+| Resource | 受保护的逻辑服务 | 包含多个具名 Endpoint，不是单个目标元组 |
+| Endpoint | 可独立选择的服务入口 | 类型默认 `network`；协议、端口、可选目标 IP/CIDR 数组 `addresses` |
+| Subject / Source | 带类型的授权接收者；Source 为 IP/CIDR 类型 | 同时支持 IPv4、IPv6；申请人身份不是数据包身份 |
+| Scope | 资源选择、可选入口限制与动作 | 省略入口限制表示全部及未来新增入口；网络动作默认 `connect` |
+| Grant | 一份独立权限贡献 | 一个 Subject、多个 Scope、共享有效期/条件、来源和撤销 |
+| EnforcementBinding | 将资源入口部署到 Agent | 非空 `resources[]` 与 `agents[]`，选中入口应用到每个选中 Agent |
+| Requester / Approver / AccessRequest | 控制面流程与来源 | 区分申请和批准内容；Agent 不执行审批流程 |
+| Policy | 资格、执行限制或协议评估 | 评估上下文分开，具体 Schema 划分待后续确定 |
+| EffectivePermissionSet / Lease | 派生权限与可选生命周期机制 | 不是独立授权来源；不要求每个 Grant 都有 SourceSession |
+| AuthorizationContext / Decision | 请求时协议授权评估 | 按需提供可信身份与信任来源；不同于 AccessRequest |
+| AuditEvent / ExecutionStatus | 生命周期证据与观察结果 | 审批通过、Grant 有效、确认实施分别记录 |
+| Plugin | 扩展能力 | 能力、版本、沙箱与配置，详细 Schema 随实际集成需求推进 |
 
-网络策略以 Source 为主体。同一门户账户可以申请多个来源，多人也可以为同一来源申请授权；两者都不能证明后续数据包由谁发出。已有通用 `Subject` API 字段必须按上下文明确类型，不能直接作为网络身份复用。
+### 3.1 业务、配置与执行边界
 
-Grant 独立保存，仅在自身条件以及相关 Lease/SourceSession 仍有效时贡献权限。撤销某个 Grant，不撤销其他有效 Grant 仍贡献的权限。申请获批、生成 Desired State 和实际执行成功，是三个不同事实。
+控制面 Web/API/持久化模型管理身份、申请、审批与审计，经发布边界把获授权的业务结果转换成版本化配置契约。Agent 消费配置与来源标识，不消费数据库行或 UI 流程对象；执行计划、LKG 与状态是独立运行时模型。
 
-> **ALL 的定义：**`ALL` 只表示“所有由 PicketX 管理的 Resource”，绝不表示主机上的全部端口或所有网络流量。
+ControllerProvider 与 StaticManifestProvider 使用相同的校验/默认值及本地编译、协调语义，同时仍是互斥权威来源。控制面全局数据与本地 Manifest 集合不必完全相同。共享 Go 包和协议一致性验证保证控制面与 Agent 独立演进时授权语义一致。
+
+### 3.2 选择、部署与隔离
+
+Resource 包含多个 Endpoint。每个资源选择项省略 `endpointNames` 和 `endpointSelector` 时，选择全部当前及未来入口；缩小范围时只能填写一个非空限制。显式空值或 null 无效，不设置 `allEndpoints` 字段。标签选择器使用 `matchLabels` 与 `In`/`NotIn`/`Exists`/`DoesNotExist`；`NotIn` 匹配缺失 Key，不是显式拒绝。
+
+EnforcementBinding 组织多个 Resource 选择和多个 Agent 引用/选择器。Agent 匹配取并集去重，所有选中入口应用到所有选中 Agent，不按位置配对。执行参数不同需拆分 Binding。默认主机部署；网关实施需要显式且经过能力校验的转发契约。
+
+Controller 只向每个 Agent 投影相关保护、权限、限制、截止时间及清理清单。重叠 Grant 先聚合，不逐 Grant 生成规则，同时保留来源与独立到期语义。最后一份 Grant 撤销后入口继续受保护；最后一份 Binding 删除则撤除相应位置的保护责任。
+
+不引入 Namespace。对象身份、有权限的引用、贡献追踪与冲突校验实现配置隔离。后端无法区分的入口，不会因标签或 Resource 名称不同而获得流量隔离。目标地址数组、范围默认值、状态、校验目标与待决生命周期见专项模型文档。
+
+> **ALL 的定义：**产品概念上的 ALL 表示所有 PicketX 管理的 Resource，不是主机全部流量。省略 Endpoint 限制仅选中显式 Resource 范围内的全部入口，不会隐式选中全部 Resource 或 Agent；本文不定义全局 ALL 的编码。
 
 ## 4. 总体系统架构
 
@@ -190,7 +202,7 @@ Adapter 只修改自身拥有的对象，报告 Desired/Applied Revision、观�
 
 - 用户、组、OIDC 与管理/申请 RBAC；这些身份决定流程操作权限，不用于推断数据包归属。
 - 基础自助与审批流程、独立来源 Grant、授权来源记录、有效权限聚合。
-- Resource、Node、Policy、Lease、Label 和 Selector 管理。
+- Resource/Endpoint、Agent、Grant、EnforcementBinding、执行 Policy、Label 与 Selector 管理；业务存储模型保持独立。
 - 将全局 Desired State 编译为 per-node Desired State。
 - Agent 注册、能力发现、心跳、revision 同步和状态聚合。
 - Authorization Engine：处理通用授权、`auth_request`、`ext_authz` 和 ForwardAuth。
@@ -202,7 +214,7 @@ Adapter 只修改自身拥有的对象，报告 Desired/Applied Revision、观�
 | 借鉴概念 | 在 PicketX 中的用途 | 明确不做 |
 | --- | --- | --- |
 | `spec` / `status` | 分离声明状态与观察状态 | 不实现通用 CRD 平台 |
-| Labels / selectors | 选择部署 Resource 的 Node | v1 不做嵌套 NodeGroup 体系 |
+| Labels / selectors | 通过显式 Binding 选择资源入口与执行 Agent | v1 不引入 Namespace 或嵌套 NodeGroup |
 | `generation` / `observedGeneration` | 追踪期望与应用进度 | 初期不依赖 etcd |
 | Reconcile | 最终一致性与漂移恢复 | 不做 scheduler |
 | Watch / revision | 增量分发与唤醒 | 不把 `LISTEN/NOTIFY` 当作可靠日志 |
@@ -245,9 +257,9 @@ flowchart TB
 以下规则属于强制约束：
 
 1. 启动配置显式选择 `controller` 或 `static`。同一 `picketxd` 实例在任一时刻只能存在一个 Authoritative Desired State Provider。
-2. **Controller Mode：**Controller 是 Security Desired State 的唯一权威来源。本地 Manifest 中的 Resource、Policy、Lease、Authorization Rule 等安全对象永远不能与 Controller 状态合并，也不能覆盖 Controller 状态。
+2. **Controller Mode：**Controller 是 Security Desired State 的唯一权威来源。本地 Manifest 中的 Resource、Grant、EnforcementBinding、Policy、Authorization Rule 等安全对象永远不能与 Controller 状态合并，也不能覆盖 Controller 状态。
 3. Controller Mode 仍允许本地 `/etc/picketx/picketxd.yaml`，但其中只能保存 Agent Runtime Configuration，例如 Controller endpoint、证书、日志、数据目录、NFQUEUE/TPROXY 开关、health/metrics endpoint 和 LKG 路径。
-4. Runtime Configuration 与 Security Desired State 使用相互独立的模型和命名空间。
+4. Runtime Configuration 与 Security Desired State 使用独立的配置域和模型；不表示引入 Namespace API 对象。
 5. Controller Mode 下发现 Static Manifest 时，`picketxd` 默认忽略并输出显著告警；严格部署选项可以改为拒绝启动。
 6. **Static Manifest Mode：**Manifest 目录是 Security Desired State 的唯一权威来源，Controller 不向该 Agent 下发策略。
 7. 切换 Provider 时必须原子替换完整 Desired Snapshot，禁止把两个来源叠加或隐式合并。
@@ -267,7 +279,7 @@ flowchart TB
 - Static 与 Controller Mode 使用相同的版本化领域 Schema，使 Resource、Policy 可以在两种模式间迁移。
 - Git、Ansible、Salt、Puppet、cloud-init、Ignition、NixOS、OCI 解包或其他外部机制负责更新目录；v1 不在 `picketxd` 内嵌 Git 客户端。
 
-Static Manifest 示例：
+当前模型的静态 Resource 示例片段（不是完整可运行策略）：
 
 ```yaml
 apiVersion: picketx.io/v1alpha1
@@ -277,23 +289,16 @@ metadata:
   labels:
     environment: production
 spec:
-  destination: local
-  protocol: tcp
-  ports: [22]
----
-apiVersion: picketx.io/v1alpha1
-kind: NetworkPolicy
-metadata:
-  name: office-ssh
-spec:
-  sources:
-    - 2001:db8:100::/64
-  resources:
-    - ssh-admin
-  effect: allow
+  endpoints:
+    - name: ssh
+      network:
+        protocol: TCP
+        port: 22
 ```
 
-Static Manifest Mode 初期主要支持静态 Resource 与 Policy、固定或绝对过期 Lease、本机 enforcement。OIDC 自助申请、集中审批和跨节点聚合需要 Controller Mode。
+Binding 与 Grant Scope 片段见[配置与领域模型设计](CONFIGURATION_MODEL.zh-CN.md)。单独声明 Resource 不产生访问权限，完整配置需要适用的保护绑定与获授权的权限。静态本地身份/绑定解析及完整 Grant/Policy Schema 仍需后续规范。
+
+Static Manifest Mode 使用相同配置语义实现本地保护，限时 Grant 保存绝对截止时间，重启或重载不能重置截止时间。OIDC 自助、集中审批和跨节点聚合属于 Controller Mode。
 
 未来可以独立设计 **Emergency Override / Break-glass**，但它不能演变成普通的 Controller + Static Merge。该能力必须具有独立 ownership domain、明确优先级、完整审计、受限范围和自动失效语义，不进入 v1。
 
@@ -329,7 +334,7 @@ ALLOW 与 DENY 使用独立 membership set；在有效策略中 DENY 优先于 A
 
 ### 7.1 基于来源的权限聚合
 
-对来源地址 `s` 与时间 `t`，找出 IP/CIDR 包含 `s`、有效期包含 `t`、自身条件与相关 Lease/Session 均有效的所有 Grant。合并它们贡献的资源权限，再应用匹配的显式拒绝约束。受保护资源没有匹配的允许权限时拒绝；PicketX 不自动保护主机全部端口。
+对来源地址 `s` 与时间 `t`，找出 IP/CIDR 包含 `s`、有效期包含 `t`、自身条件与任何显式配置的 Lease/续约约束有效的所有 Grant。合并它们贡献的资源权限，再应用匹配的显式拒绝约束。受保护资源没有匹配的允许权限时拒绝；PicketX 不自动保护主机全部端口。
 
 CIDR 重叠是正常情况：单主机和更大网段 Grant 可以同时贡献权限。活动续约策略中的最长前缀选择，不替代权限合集语义。某一 Grant 到期，不能删除其他 Grant 仍需要的共享内核元素，也不能把所有无关权限统一延长到最晚到期时间。
 
@@ -460,7 +465,7 @@ WASM Host API 可以提供：
 
 - `get_subject`、`get_resource`、`get_request`、`get_source`
 - `get_attribute` 与 labels
-- 受命名空间限制的 `kv_get`
+- 受插件范围限制的 `kv_get`（存储隔离，不是 Namespace API 对象）
 - 通过受控 Provider Proxy 实现的 `call_provider(name, request)`
 - `log` 与 `metric`
 - 返回 `decision`、`reason`、`ttl` 和 metadata
@@ -489,7 +494,7 @@ flowchart LR
     LKG --> Applied["Applied State · nftables · conntrack"]
 ```
 
-- Reconciler 不需要区分 Snapshot 来自 Controller 还是 YAML；两种 Provider 必须先输出同一版本化 Desired Snapshot。
+- Reconciler 消费规范化后的本地期望状态，不依赖 Provider。控制面投影与静态 Manifest 共用版本化语义，不要求全局数据完全相同；见[配置与领域模型设计](CONFIGURATION_MODEL.zh-CN.md)。
 - Static Manifest Mode 中，目录是声明式事实来源；LKG 只是最后一次成功编译和应用的恢复副本，不能反向覆盖 Manifest。
 - LKG 记录 Provider 类型和 identity，避免模式切换或重启后恢复错误来源的状态。
 - 核心 CIDR、TTL、重叠和 renewal 语义在 Go Core Domain Layer 实现，保证 SQLite 与 PostgreSQL 行为一致。
@@ -609,6 +614,8 @@ npx shadcn@latest migrate --list
 
 这些是部署选择，不是组织规模限制，也不是已经验证的容量承诺。
 
+默认在服务主机安装 Agent。显式网关 Binding 可控制既有路由上的转发流量，不使 PicketX 成为路由器或应用代理。主机/容器路径覆盖及网关 NAT 匹配需要适配器专项校验，均不得暗中扩大绑定范围。Controller/Static Mode 决定配置权威来源，与实施位置独立。
+
 容器化 Agent 如需控制 Host Firewall，应优先使用 Host Network + `CAP_NET_ADMIN`，避免直接使用完整 `privileged`。nftables 与 Netfilter 受 Network Namespace 约束，部署时必须明确操作 Host Namespace。
 
 ## 17. 许可证与代码边界
@@ -641,7 +648,7 @@ Go Backend 方向不再默认引入这些 C 库，但“纯 Go”不是许可证
 
 | 阶段 | 目标 | 范围 |
 | --- | --- | --- |
-| M0 数据面验证 | 证明来源执行可靠 | nftables/conntrack、IPv4/IPv6、重叠 IP/CIDR Grant、Hard Expiry、Strict/Graceful 撤销、重启和 Namespace 行为 |
+| M0 数据面验证 | 证明来源执行可靠 | nftables/conntrack、IPv4/IPv6、重叠 IP/CIDR Grant、Hard Expiry、Strict/Graceful 撤销、重启和 Linux Network Namespace 行为 |
 | M1 可用访问流程 | 完成申请、批准、生效、到期 | 浏览器/OIDC 自助、基础审批、来源 Grant、权限合集、Resource 范围、状态和授权记录；Controller/SQLite/Agent/CLI 与 Static Manifest Mode |
 | M2 运维规模化 | 可靠多节点运行 | PostgreSQL、mTLS Stream、labels/selectors、drift/reconcile、LKG 恢复、各节点状态；按需 HA |
 | M3 协议授权 | 按需增加控制精度 | Generic AuthZ API、HTTP 代理 Adapter、可信协议用户/会话上下文；其他协议逐个评估 |
@@ -705,6 +712,8 @@ PicketXD/                      # GPL-3.0-or-later + OEM option
   picketxd.yaml             # 仅保存 Agent Runtime Configuration
   manifests/                # Static Manifest Mode 的 Security Desired State
     resources/
+    grants/
+    bindings/
     policies/
     authz/
 ```
@@ -713,7 +722,7 @@ PicketXD/                      # GPL-3.0-or-later + OEM option
 
 本架构应通过独立的聚焦文档继续细化，而不是无限扩张本文：
 
-- 领域模型与 Schema 规范
+- [配置与领域模型 v0.1.0](CONFIGURATION_MODEL.zh-CN.md)：当前模型决策与待决 Schema
 - Static Manifest Schema 与 Validation Rule
 - Policy Evaluation 与冲突语义
 - Southbound Protocol 规范
@@ -744,9 +753,10 @@ PicketXD/                      # GPL-3.0-or-later + OEM option
 
 | 版本 | 日期 | 变更 |
 | --- | --- | --- |
+| v0.7.0 | 2026-10-08 | 分离业务/配置/执行模型；明确多入口 Resource、目标地址数组、多资源/多 Agent 绑定、按节点投影和不引入 Namespace 的隔离；替换旧静态示例。 |
 | v0.6.0 | 2026-10-01 | 统一 Authorization Core 与可扩展 Agent/Adapter；确定 PicketX/PicketXD 双仓库与 Go；前端改为 shadcn/ui/Tailwind，补充组件组合、升级、i18n 与新鲜度约束；加入 Gitea 验收。 |
 | v0.5.1 | 2026-09-30 | 增加跨应用访问同一服务场景；明确来源授权不依赖客户端应用或门户 Cookie，以及协议认证和出口变化的边界。 |
 | v0.5 | 2026-09-30 | 固化简单、无需专用客户端的来源授权定位；分离流程与协议身份；明确 Grant 聚合和共享访问；限定授权记录范围；基础审批进入首期流程；保留 Linux Backend、配置源隔离和许可证决策。 |
 | v0.4 | 2026-09-02 | 之前的双语架构基线，原文保存在 历史文档归档。 |
 
-文档优先级和归档清单见 [README.zh-CN.md](./README.zh-CN.md)。具体 API/Schema 仍由实现 ADR 细化；此设计版本早于仓库初始化，实际实现状态见根目录 README。
+文档优先级和归档清单见 [README.zh-CN.md](./README.zh-CN.md)。具体 API/Schema 仍由实现 ADR 细化；仓库仍处于初始化阶段，实际实现状态见根目录 README。
