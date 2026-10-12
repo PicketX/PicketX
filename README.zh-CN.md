@@ -8,7 +8,7 @@ PicketX 通过自助申请、策略和审批，为受保护资源提供有期限
 
 ## 项目状态
 
-当前仓库是**开发初始化骨架**，包含 Go Controller 存活检查和中英文 React 起始页。尚未实现认证、审批、Grant、数据库、Agent 同步或执行功能，不能用于保护实际资源。
+当前仓库是**开发初始化骨架**，包含 基于 Echo v5 的 Go Controller 存活检查和中英文 React 起始页。尚未实现认证、审批、Grant、数据库、Agent 同步或执行功能，不能用于保护实际资源。
 
 控制面与 Web 位于本仓库；官方 Linux Agent `picketxd` 属于独立的 **PicketXD** 仓库。本次初始化未创建或修改该仓库。
 

@@ -5,6 +5,7 @@ Read `docs/PRODUCT_DESIGN.md` and `docs/ARCHITECTURE.md` before changing domain 
 Read `docs/CONFIGURATION_MODEL.md` before implementing configuration schemas or bindings. Keep business workflows, standard desired-state objects and execution state separate; follow the documented omission/empty-value semantics and do not silently finalize its open decisions.
 
 - This repository contains the Go control plane/core and `apps/web`. The Linux enforcement Agent belongs to PicketXD.
+- Controller HTTP uses Echo v5. Keep framework types in HTTP adapters; business and shared configuration/core packages remain framework-independent.
 - Keep network IP/CIDR subjects separate from requesters and verified protocol identities. Approval is not confirmation of enforcement.
 - Preserve independent Grant lifetimes, permission union, deny precedence, IPv6 support, and single authoritative configuration source.
 - Use npm and the committed lockfile for Web development. Keep business code out of `src/components/ui`; compose shared components separately.

@@ -2,15 +2,25 @@
 
 package controller
 
-import "net/http"
+import (
+	"net/http"
+
+	"github.com/labstack/echo/v5"
+)
 
 // NewHandler serves process liveness only. Authorization is not implemented yet.
 func NewHandler() http.Handler {
-	mux := http.NewServeMux()
-	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, _ *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		w.Header().Set("Cache-Control", "no-store")
-		_, _ = w.Write([]byte("{\"status\":\"ok\"}\n"))
+	e := echo.New()
+	e.GET("/healthz", func(c *echo.Context) error {
+		c.Response().Header().Set("Cache-Control", "no-store")
+		return c.JSON(http.StatusOK, struct {
+			Status string `json:"status"`
+		}{Status: "ok"})
 	})
-	return mux
+	e.HEAD("/healthz", func(c *echo.Context) error {
+		c.Response().Header().Set("Cache-Control", "no-store")
+		c.Response().Header().Set("Content-Type", "application/json")
+		return c.NoContent(http.StatusOK)
+	})
+	return e
 }

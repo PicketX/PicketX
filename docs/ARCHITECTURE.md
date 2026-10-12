@@ -4,8 +4,8 @@
 
 | Field | Value |
 | --- | --- |
-| Version | v0.7.0 |
-| Date | 2026-10-08 |
+| Version | v0.7.1 |
+| Date | 2026-10-12 |
 | Status | Agreed design baseline; implementation status not asserted |
 | Project | PicketX |
 
@@ -32,6 +32,7 @@ Product requirements, APIs, database schemas, protocol specifications, implement
 | `picketxd` licensing | GPL-3.0-or-later community license, an alternative OEM commercial license, and contributor agreements granting the project the rights needed for approved relicensing. |
 | Other component licensing | Controller, CLI, public protocols and SDKs, and external-plugin SDK use Apache-2.0 by default. |
 | Backend language and repositories | Go; PicketX owns control plane/Core/Web, PicketXD owns the official Linux Agent. |
+| Controller HTTP framework | Echo v5 (MIT); thin HTTP adapters, independent business/Core packages. |
 | Configuration contract | Shared versioned semantics for remote and static input; Resource/Endpoint/Grant/Binding are separate from workflow and execution models; no Namespace. |
 | Frontend | React, TypeScript, Vite, shadcn/ui, Tailwind CSS, i18next, npm; separate official primitives from project compositions. |
 
@@ -218,6 +219,19 @@ State-push Agents and request-time AuthZ hooks are separate integration paths. A
 | `generation` / `observedGeneration` | Track desired and applied progress | No etcd dependency for the initial design |
 | Reconciliation | Eventual consistency and drift recovery | No scheduler |
 | Watch / revision | Incremental distribution and wake-up | `LISTEN/NOTIFY` is not treated as a reliable log |
+
+### 5.3 Controller HTTP framework
+
+**Echo v5 (MIT) is the selected Controller HTTP framework.** It provides routing, request/response handling and middleware composition. Its handler-returned errors and central HTTP error handler fit the application's request and approval workflows. The initial scaffold pins `github.com/labstack/echo/v5` to v5.4.0 in `go.mod`; upgrades require review of release notes and matching middleware versions.
+
+- Keep Echo types inside the HTTP adapter. Business services and shared authorization/configuration packages use ordinary Go types and `context.Context`; PicketXD does not depend on the Controller's HTTP framework.
+- Use separate request/response DTOs. Resolve authenticated requesters and approvers on the server; do not bind client input directly into persistent/domain objects. Select request parameter sources explicitly.
+- Echo does not include a validation engine. Select one when the first business endpoint needs it; keep model invariants and authorization checks in reusable domain/business code so remote and static configuration retain identical semantics.
+- Map business errors to HTTP status and stable API error codes in one HTTP error handler when business endpoints are implemented. Keep internal errors in server logs. The liveness scaffold uses Echo's default HTTP errors; it does not yet define the business error contract.
+- Echo does not choose persistence, ORM, OIDC/session implementation, OpenAPI tooling or gRPC. These remain separate implementation decisions; Agent synchronization retains the existing protocol boundary.
+- The scaffold only exposes process liveness at `GET /healthz` (and HTTP HEAD semantics), with `Cache-Control: no-store`. The existing `http.Server` owns timeouts and graceful shutdown. Framework adoption does not implement authentication, approval, Grants or enforcement.
+
+References: [Echo documentation](https://echo.labstack.com/), [version policy](https://echo.labstack.com/guide/installation/), [v5 migration](https://github.com/labstack/echo/blob/master/API_CHANGES_V5.md).
 
 ## 6. Agent and Linux data plane
 
@@ -753,6 +767,7 @@ This architecture should be refined through focused documents rather than expand
 
 | Version | Date | Change |
 | --- | --- | --- |
+| v0.7.1 | 2026-10-12 | Selected Echo v5 for Controller HTTP; documented error handling, validation and framework boundaries; migrated the liveness scaffold. |
 | v0.7.0 | 2026-10-08 | Separated business/configuration/execution models; documented multi-Endpoint Resources, destination arrays, multi-resource/multi-Agent bindings, node projection and isolation without Namespace; replaced the old static example. |
 | v0.6.0 | 2026-10-01 | Defined Authorization Core and extensible Agent/adapter boundaries; adopted PicketX/PicketXD repositories and Go; selected shadcn/ui/Tailwind with composition, update, i18n and freshness rules; added Gitea acceptance. |
 | v0.5.1 | 2026-09-30 | Added cross-application access to one service; specified client-independent source authorization, portal-cookie independence, protocol authentication and egress boundaries. |

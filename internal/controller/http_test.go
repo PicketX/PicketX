@@ -42,3 +42,17 @@ func TestHandlerRejectsUnknownPathsAndMethods(t *testing.T) {
 		})
 	}
 }
+
+func TestHealthHead(t *testing.T) {
+	w := httptest.NewRecorder()
+	NewHandler().ServeHTTP(w, httptest.NewRequest(http.MethodHead, "/healthz", nil))
+	if w.Code != http.StatusOK {
+		t.Fatalf("HEAD status: got %d; want %d", w.Code, http.StatusOK)
+	}
+	if w.Header().Get("Cache-Control") != "no-store" || w.Header().Get("Content-Type") != "application/json" {
+		t.Fatalf("HEAD must preserve health response headers: %v", w.Header())
+	}
+	if w.Body.Len() != 0 {
+		t.Fatalf("HEAD must not return a body: %q", w.Body.String())
+	}
+}

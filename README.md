@@ -8,7 +8,7 @@ PicketX is designed to grant time-bounded access to protected resources through 
 
 ## Project status
 
-This repository is an **initial development scaffold**. It includes a Go Controller liveness endpoint and a bilingual React starting page. Authentication, approval, Grants, persistence, Agent synchronization and enforcement are not implemented. Do not use this scaffold to protect resources.
+This repository is an **initial development scaffold**. It includes an Echo v5-based Go Controller liveness endpoint and a bilingual React starting page. Authentication, approval, Grants, persistence, Agent synchronization and enforcement are not implemented. Do not use this scaffold to protect resources.
 
 The control plane and Web live here. The official Linux Agent, `picketxd`, belongs to the separate **PicketXD** repository. This initialization does not create or modify that repository.
 

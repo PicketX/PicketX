@@ -4,8 +4,8 @@
 
 | 字段 | 内容 |
 | --- | --- |
-| 版本 | v0.7.0 |
-| 日期 | 2026-10-08 |
+| 版本 | v0.7.1 |
+| 日期 | 2026-10-12 |
 | 状态 | 已确认的设计基线；不代表已实现 |
 | 项目 | PicketX |
 
@@ -32,6 +32,7 @@
 | `picketxd` 许可证 | 社区版本使用 GPL-3.0-or-later；另行提供 OEM Commercial License；贡献协议授予项目方实施经批准再许可所需的权利。 |
 | 其他组件许可证 | Controller、CLI、公开协议与 SDK、External Plugin SDK 默认使用 Apache-2.0。 |
 | 后端语言与仓库 | Go；PicketX 承载控制面/Core/Web，PicketXD 承载官方 Linux Agent。 |
+| Controller HTTP 框架 | Echo v5（MIT）；HTTP 适配层保持精简，业务/Core 包独立。 |
 | 配置契约 | 远程与静态输入共用版本化语义；Resource/Endpoint/Grant/Binding 与业务流程、执行模型分离；不引入 Namespace。 |
 | 前端 | React、TypeScript、Vite、shadcn/ui、Tailwind CSS、i18next、npm；官方基础组件与项目组合分层。 |
 
@@ -218,6 +219,19 @@ Adapter 只修改自身拥有的对象，报告 Desired/Applied Revision、观�
 | `generation` / `observedGeneration` | 追踪期望与应用进度 | 初期不依赖 etcd |
 | Reconcile | 最终一致性与漂移恢复 | 不做 scheduler |
 | Watch / revision | 增量分发与唤醒 | 不把 `LISTEN/NOTIFY` 当作可靠日志 |
+
+### 5.3 Controller HTTP 框架
+
+**Controller HTTP 框架确定为 Echo v5（MIT）。** 它负责路由、请求/响应处理和中间件组合。Handler 返回错误并由统一 HTTP 错误处理器处理，适合申请与审批流程。初始骨架在 `go.mod` 中锁定 `github.com/labstack/echo/v5` v5.4.0；升级时检查发布说明和中间件主版本兼容性。
+
+- Echo 类型仅用于 HTTP 适配层。业务服务、共享授权与配置包使用普通 Go 类型和 `context.Context`；PicketXD 不依赖 Controller 的 HTTP 框架。
+- 使用独立的请求/响应 DTO。申请者、审批者的认证身份由服务端确定，不把客户端输入直接绑定到持久化或领域对象；显式选择参数来源。
+- Echo 不内置校验引擎，在首个业务接口需要时再选型；模型约束与授权检查留在可复用的领域/业务代码中，保证远程与静态配置语义一致。
+- 实现业务接口时，通过统一 HTTP 错误处理器将业务错误映射为 HTTP 状态与稳定 API 错误码，内部错误留在服务端日志。当前存活检查骨架使用 Echo 默认 HTTP 错误处理，尚未定义业务错误契约。
+- Echo 不决定持久化、ORM、OIDC/会话实现、OpenAPI 工具或 gRPC，这些仍独立选型；Agent 同步保持既定协议边界。
+- 当前骨架仅暴露 `GET /healthz` 进程存活检查（以及 HTTP HEAD 语义），设置 `Cache-Control: no-store`。超时与优雅退出继续由现有 `http.Server` 管理。接入框架不代表已经实现认证、审批、Grant 或执行功能。
+
+参考：[Echo 文档](https://echo.labstack.com/)、[版本策略](https://echo.labstack.com/guide/installation/)、[v5 迁移](https://github.com/labstack/echo/blob/master/API_CHANGES_V5.md)。
 
 ## 6. Agent 与 Linux 数据面
 
@@ -753,6 +767,7 @@ PicketXD/                      # GPL-3.0-or-later + OEM option
 
 | 版本 | 日期 | 变更 |
 | --- | --- | --- |
+| v0.7.1 | 2026-10-12 | 确定 Controller HTTP 使用 Echo v5；记录错误处理、校验及框架边界；迁移存活检查骨架。 |
 | v0.7.0 | 2026-10-08 | 分离业务/配置/执行模型；明确多入口 Resource、目标地址数组、多资源/多 Agent 绑定、按节点投影和不引入 Namespace 的隔离；替换旧静态示例。 |
 | v0.6.0 | 2026-10-01 | 统一 Authorization Core 与可扩展 Agent/Adapter；确定 PicketX/PicketXD 双仓库与 Go；前端改为 shadcn/ui/Tailwind，补充组件组合、升级、i18n 与新鲜度约束；加入 Gitea 验收。 |
 | v0.5.1 | 2026-09-30 | 增加跨应用访问同一服务场景；明确来源授权不依赖客户端应用或门户 Cookie，以及协议认证和出口变化的边界。 |
