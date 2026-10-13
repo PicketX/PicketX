@@ -22,6 +22,8 @@ PicketX 通过自助申请、策略和审批，为受保护资源提供有期限
 
 规划中的 `picketx` CLI 采用 Cobra v1.10.2，并使用 Koanf 配置。CLI 命令尚未实现，现有 Controller 入口继续使用标准库参数解析。
 
+SQLite 选用 GORM 官方驱动（v1.6.0 基线）和 mattn/go-sqlite3（v1.14.52 基线）。默认 Linux 发布包必须完整静态链接，无额外共享库安装要求。数据库接入及静态 CGO 发布流水线尚未实现，PostgreSQL 驱动与迁移工具仍待选。
+
 ## 本地开发
 
 需要 Go 1.27+、Node.js 24 LTS 和 npm。

@@ -4,7 +4,7 @@
 
 | 字段 | 内容 |
 | --- | --- |
-| 版本 | v0.7.8 |
+| 版本 | v0.7.9 |
 | 日期 | 2026-10-13 |
 | 状态 | 已确认的设计基线；不代表已实现 |
 | 项目 | PicketX |
@@ -33,6 +33,7 @@
 | 其他组件许可证 | Controller、CLI、公开协议与 SDK、External Plugin SDK 默认使用 Apache-2.0。 |
 | 后端语言与仓库 | Go；PicketX 承载控制面/Core/Web，PicketXD 承载官方 Linux Agent。 |
 | Controller HTTP 框架 | Echo v5（MIT）；HTTP 适配层保持精简，业务/Core 包独立。 |
+| SQLite 驱动与发布 | 官方 GORM SQLite + mattn；Linux 默认完整静态链接，无额外共享库安装要求。 |
 | Controller 持久化 | GORM（MIT）；SQLite 用于单 Controller，PostgreSQL 用于集群；数据库模型与配置模型分离。 |
 | CLI 框架 | Cobra（Apache-2.0）；轻量命令适配器，Koanf 配置与独立业务/Core。 |
 | 运行日志 | 标准库 slog；集中创建并注入 Logger，文本/JSON 输出；授权审计独立持久化。 |
@@ -244,7 +245,7 @@ Adapter 只修改自身拥有的对象，报告 Desired/Applied Revision、观�
 
 **Controller 数据库访问层确定为 GORM（MIT）**，独立于 Echo。初始接入基线为 `gorm.io/gorm` v1.31.2，核验日期为 2026-10-13。在首个持久化实现实际引用时，将依赖锁定到 `go.mod`/`go.sum`；当前存活检查骨架没有数据库连接或 GORM 运行时依赖。
 
-- 保留 SQLite 用于轻量单 Controller 部署、PostgreSQL 用于集群部署。数据库驱动、SQLite 的 CGO 或纯 Go 实现、连接参数和迁移工具仍独立选型。
+- 保留 SQLite 用于轻量单 Controller 部署、PostgreSQL 用于集群部署。SQLite 官方驱动及静态发布要求在第 5.4.1 节确定；PostgreSQL 驱动、连接参数和迁移工具仍独立选型。
 - GORM 模型和 `*gorm.DB` 限于持久化实现。HTTP DTO、数据库模型与标准配置契约分离；共享授权/配置包及 Agent 契约保持 ORM 无关。
 - 为相关审批、Grant 与发布记录写入定义明确事务边界。数据库提交不代表 Agent 已执行；最终表结构、并发控制和可靠发布机制随首个业务流程设计。
 - 已部署实例采用经过审查、带版本的 Schema 迁移。生产升级不能仅依赖启动时 `AutoMigrate`；本次选型不决定迁移工具。
@@ -252,6 +253,18 @@ Adapter 只修改自身拥有的对象，报告 Desired/Applied Revision、观�
 - GORM 可以抽象部分 SQL 差异，但不能统一数据库并发语义。在声称支持 SQLite 和 PostgreSQL 前，必须分别验证业务一致性与迁移；时间存储、约束及更新行为应保持已约定的授权语义。
 
 参考：[GORM](https://gorm.io/docs/)、[v1.31.2](https://github.com/go-gorm/gorm/releases/tag/v1.31.2)、[迁移说明](https://gorm.io/docs/migration.html)。
+
+### 5.4.1 SQLite 驱动与独立发布要求
+
+**SQLite 采用官方 `gorm.io/driver/sqlite`（MIT），底层使用 `github.com/mattn/go-sqlite3`（MIT）**。于 2026-10-13 核实的初始接入基线为 SQLite Dialector v1.6.0、mattn v1.14.52，保留已选 GORM v1.31.2 基线。首个持久化实现接入时固定并验证版本组合；本文不宣称该组合已通过 PicketX 测试。官方 Dialector 发布版 v1.6.0 原始依赖较旧的 GORM/mattn，近期主分支修复不会自动进入该标签版本。
+
+- 默认发布的可执行文件不能要求用户另外安装 SQLite 或其他额外共享库。**Linux 默认发布包采用完整静态链接**，包含 SQLite 引擎和 C 运行库，不依赖目标机器的 libc/共享 SQLite。允许构建时使用 CGO，但不能因此发布存在未声明共享库要求的二进制。其他平台使用必需的原生系统接口，不增加单独安装 SQLite 运行库的要求。
+- 默认使用驱动自带 SQLite 源码，不启用链接系统 SQLite 的构建标签。采用受控静态 C 工具链，例如 Linux 使用 musl，并为支持的架构配置对应编译器。具体发布脚本、平台支持与参数留待实现确定；当前骨架尚无数据库或静态 CGO 发布流水线。
+- 对每个支持的 Linux 发布架构检查 ELF 解释器/共享库依赖，并在干净目标环境运行。仅本机编译成功不能证明独立发布；需在实际产物上验证数据库创建/重开、事务、约束与必需的 Schema 升级。
+- 首个业务流程明确并检查 SQLite 连接参数：每连接外键约束、忙等待、连接池策略、日志/持久性行为和时间存储方式。选择官方驱动不替代并发与迁移语义设计。PostgreSQL 驱动与已暂缓的迁移工具仍分别选型。
+- 本次不采用纯 Go SQLite 适配器。驱动特有类型/DSN 留在持久化适配层，授权/Core 不依赖数据库。接入依赖及嵌入引擎源码时保留实际第三方声明。
+
+参考：[GORM 官方 SQLite 驱动](https://github.com/go-gorm/sqlite)、[v1.6.0 Module](https://github.com/go-gorm/sqlite/blob/v1.6.0/go.mod)、[mattn v1.14.52](https://github.com/mattn/go-sqlite3/releases/tag/v1.14.52)、[静态构建说明](https://github.com/mattn/go-sqlite3#cross-compiling-from-macos)。
 
 ### 5.5 请求参数校验
 
@@ -866,6 +879,7 @@ PicketXD/                      # GPL-3.0-or-later + OEM option
 
 | 版本 | 日期 | 变更 |
 | --- | --- | --- |
+| v0.7.9 | 2026-10-13 | 确定官方 GORM SQLite/mattn 驱动及默认独立发布、Linux 完整静态链接要求；PostgreSQL 驱动与迁移工具待选，接入和产物验证待实现。 |
 | v0.7.8 | 2026-10-13 | 确定 Cobra v1.10.2 作为 CLI 接入基线；明确 Koanf 参数覆盖、API/本地诊断边界与输出规则；命令实现待接入。 |
 | v0.7.7 | 2026-10-13 | 确定 slog 作为运行日志方案；明确 Logger 注入、格式、字段、动态级别及与独立授权审计的边界。 |
 | v0.7.6 | 2026-10-13 | 确定 Koanf v2.3.8 作为运行时配置接入基线；明确覆盖顺序、带类型注入、重载与策略来源隔离；尚未接入运行代码。 |

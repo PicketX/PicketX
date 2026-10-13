@@ -4,7 +4,7 @@
 
 | Field | Value |
 | --- | --- |
-| Version | v0.7.8 |
+| Version | v0.7.9 |
 | Date | 2026-10-13 |
 | Status | Agreed design baseline; implementation status not asserted |
 | Project | PicketX |
@@ -33,6 +33,7 @@ Product requirements, APIs, database schemas, protocol specifications, implement
 | Other component licensing | Controller, CLI, public protocols and SDKs, and external-plugin SDK use Apache-2.0 by default. |
 | Backend language and repositories | Go; PicketX owns control plane/Core/Web, PicketXD owns the official Linux Agent. |
 | Controller HTTP framework | Echo v5 (MIT); thin HTTP adapters, independent business/Core packages. |
+| SQLite driver and releases | Official GORM SQLite + mattn; fully static default Linux releases with no extra shared-library installation. |
 | Controller persistence | GORM (MIT); SQLite for single-Controller and PostgreSQL for clustered deployments; separate persistence and configuration models. |
 | CLI framework | Cobra (Apache-2.0); thin command adapters, Koanf configuration and independent business/Core. |
 | Runtime logging | Standard-library slog; centrally constructed/injected loggers, text/JSON output and separately persisted authorization audit. |
@@ -244,7 +245,7 @@ References: [Echo documentation](https://echo.labstack.com/), [version policy](h
 
 **GORM (MIT) is the selected Controller database access layer**, independent of Echo. The initial integration baseline is `gorm.io/gorm` v1.31.2, verified on 2026-10-13. Pin the actual dependency in `go.mod`/`go.sum` when the first persistence implementation imports it; the current liveness scaffold has no database connection or GORM runtime dependency.
 
-- Keep SQLite for lightweight single-Controller deployments and PostgreSQL for clustered deployments. Database drivers, SQLite CGO versus pure-Go implementation, connection settings and the migration tool remain separate decisions.
+- Keep SQLite for lightweight single-Controller deployments and PostgreSQL for clustered deployments. The official SQLite driver and static-release requirements are selected in section 5.4.1; PostgreSQL driver, connection settings and the migration tool remain separate decisions.
 - GORM models and `*gorm.DB` belong to persistence implementations. Keep HTTP DTOs, persistence models and the standard configuration contract separate; shared authorization/configuration packages and Agent contracts remain ORM-independent.
 - Use explicit transaction boundaries for related approval, Grant and publication-record writes. Database commit is not confirmation of Agent enforcement. Final table schemas, concurrency control and reliable publication mechanics will be designed with the first workflow.
 - Use reviewed, versioned schema migrations for deployed installations. Do not rely only on startup `AutoMigrate` to manage production upgrades; the migration tool is not selected by this decision.
@@ -252,6 +253,18 @@ References: [Echo documentation](https://echo.labstack.com/), [version policy](h
 - GORM abstracts some SQL differences, not database concurrency semantics. Verify workflow consistency and migrations against both SQLite and PostgreSQL before claiming support. Persisted time, constraints and update behavior must preserve the documented authorization semantics.
 
 References: [GORM](https://gorm.io/docs/), [v1.31.2](https://github.com/go-gorm/gorm/releases/tag/v1.31.2), [migration guidance](https://gorm.io/docs/migration.html).
+
+### 5.4.1 SQLite driver and standalone release requirement
+
+**Select the official `gorm.io/driver/sqlite` (MIT), using `github.com/mattn/go-sqlite3` (MIT).** The initial integration baselines are SQLite Dialector v1.6.0 and mattn v1.14.52, verified on 2026-10-13. Keep the selected GORM v1.31.2 baseline. Pin and verify the combined versions when the first persistence implementation is added; this document does not claim that the combination has already passed PicketX tests. The official Dialector's published v1.6.0 originally depends on older GORM/mattn versions; recent master-branch fixes are not automatically included in that tagged release.
+
+- Default release executables must not require users to install SQLite or other additional shared libraries. **Linux default releases use full static linking**, including the SQLite engine and C runtime, rather than relying on a target machine's libc/shared SQLite. CGO is permitted at build time; it is not permission to ship a binary with undeclared shared-library requirements. Other platforms use their required native system interfaces without adding a separately installed SQLite runtime.
+- Build SQLite from the driver's bundled source. Do not use a system-SQLite linking build tag in the default release. Use a controlled static C toolchain, such as musl for Linux, with target-specific compilers for supported architectures. Exact release scripts, platform support and flags remain implementation decisions; the current scaffold does not yet contain the database or static-CGO release pipeline.
+- Verify each supported Linux release architecture by inspecting the executable for an ELF interpreter/shared-library dependencies and running it in a clean target environment. A successful local build is insufficient evidence of a standalone release. Verify database open/reopen, transaction behavior, constraints and required schema upgrades on the actual artifact.
+- Keep SQLite settings explicit: per-connection foreign-key enforcement, busy handling, connection-pool policy, journal/durability behavior and persisted-time representation must be defined and checked with the first workflow. Choosing the official driver does not resolve concurrency or migration semantics. PostgreSQL driver selection and the deferred migration-tool decision remain separate.
+- Pure-Go SQLite adapters are not selected. Keep driver-specific types/DSNs in persistence adapters; authorization/Core remains database-independent. Preserve the actual third-party notices when dependencies and embedded engine source are incorporated.
+
+References: [official GORM SQLite driver](https://github.com/go-gorm/sqlite), [v1.6.0 module](https://github.com/go-gorm/sqlite/blob/v1.6.0/go.mod), [mattn v1.14.52](https://github.com/mattn/go-sqlite3/releases/tag/v1.14.52), [static-build guidance](https://github.com/mattn/go-sqlite3#cross-compiling-from-macos).
 
 ### 5.5 Request validation
 
@@ -866,6 +879,7 @@ This architecture should be refined through focused documents rather than expand
 
 | Version | Date | Change |
 | --- | --- | --- |
+| v0.7.9 | 2026-10-13 | Selected official GORM SQLite/mattn and standalone default releases with full static Linux linking; PostgreSQL driver/migration tooling remain open; integration and artifact checks remain pending. |
 | v0.7.8 | 2026-10-13 | Selected Cobra v1.10.2 for CLI integration; defined Koanf flag precedence, API/local diagnostic boundaries and output conventions; commands remain unimplemented. |
 | v0.7.7 | 2026-10-13 | Selected slog for runtime logs; defined logger injection, formats, fields, dynamic levels and the separate authorization-audit boundary. |
 | v0.7.6 | 2026-10-13 | Selected Koanf v2.3.8 as the runtime configuration baseline; defined precedence, typed injection, reload and policy-source isolation; runtime integration remains pending. |

@@ -22,6 +22,8 @@ Runtime logging uses standard-library `log/slog`. The scaffold already emits JSO
 
 The planned `picketx` CLI uses Cobra v1.10.2 with Koanf configuration. CLI commands are not implemented; the existing Controller entry point continues to use standard-library flags.
 
+SQLite is selected as the official GORM driver (v1.6.0 baseline) with mattn/go-sqlite3 (v1.14.52 baseline). Default Linux releases must be fully static without additional shared-library installation. Database integration and the static-CGO release pipeline are not implemented; PostgreSQL driver and migration tooling remain undecided.
+
 ## Development
 
 Requirements: Go 1.27+, Node.js 24 LTS and npm.
