@@ -4,7 +4,7 @@
 
 | Field | Value |
 | --- | --- |
-| Version | v0.7.2 |
+| Version | v0.7.3 |
 | Date | 2026-10-13 |
 | Status | Agreed design baseline; implementation status not asserted |
 | Project | PicketX |
@@ -34,6 +34,7 @@ Product requirements, APIs, database schemas, protocol specifications, implement
 | Backend language and repositories | Go; PicketX owns control plane/Core/Web, PicketXD owns the official Linux Agent. |
 | Controller HTTP framework | Echo v5 (MIT); thin HTTP adapters, independent business/Core packages. |
 | Controller persistence | GORM (MIT); SQLite for single-Controller and PostgreSQL for clustered deployments; separate persistence and configuration models. |
+| Request validation | go-playground/validator v10 (MIT) for HTTP fields; reusable Go functions for model invariants. |
 | Configuration contract | Shared versioned semantics for remote and static input; Resource/Endpoint/Grant/Binding are separate from workflow and execution models; no Namespace. |
 | Frontend | React, TypeScript, Vite, shadcn/ui, Tailwind CSS, i18next, npm; separate official primitives from project compositions. |
 
@@ -227,7 +228,7 @@ State-push Agents and request-time AuthZ hooks are separate integration paths. A
 
 - Keep Echo types inside the HTTP adapter. Business services and shared authorization/configuration packages use ordinary Go types and `context.Context`; PicketXD does not depend on the Controller's HTTP framework.
 - Use separate request/response DTOs. Resolve authenticated requesters and approvers on the server; do not bind client input directly into persistent/domain objects. Select request parameter sources explicitly.
-- Echo does not include a validation engine. Select one when the first business endpoint needs it; keep model invariants and authorization checks in reusable domain/business code so remote and static configuration retain identical semantics.
+- Echo does not include a validation engine. Use go-playground/validator v10 as selected in section 5.5; keep model invariants and authorization checks in reusable domain/business code so remote and static configuration retain identical semantics.
 - Map business errors to HTTP status and stable API error codes in one HTTP error handler when business endpoints are implemented. Keep internal errors in server logs. The liveness scaffold uses Echo's default HTTP errors; it does not yet define the business error contract.
 - Echo does not choose persistence, OIDC/session implementation, OpenAPI tooling or gRPC. GORM is selected independently in section 5.4; remaining tools are separate decisions. Agent synchronization retains the existing protocol boundary.
 - The scaffold only exposes process liveness at `GET /healthz` (and HTTP HEAD semantics), with `Cache-Control: no-store`. The existing `http.Server` owns timeouts and graceful shutdown. Framework adoption does not implement authentication, approval, Grants or enforcement.
@@ -242,9 +243,21 @@ References: [Echo documentation](https://echo.labstack.com/), [version policy](h
 - GORM models and `*gorm.DB` belong to persistence implementations. Keep HTTP DTOs, persistence models and the standard configuration contract separate; shared authorization/configuration packages and Agent contracts remain ORM-independent.
 - Use explicit transaction boundaries for related approval, Grant and publication-record writes. Database commit is not confirmation of Agent enforcement. Final table schemas, concurrency control and reliable publication mechanics will be designed with the first workflow.
 - Use reviewed, versioned schema migrations for deployed installations. Do not rely only on startup `AutoMigrate` to manage production upgrades; the migration tool is not selected by this decision.
+- The target user experience is automatic initialization/upgrades on Controller startup for supported upgrade paths, before business services become ready. The migration library choice is deferred until the first persistence models are designed; Goose, golang-migrate and Gormigrate remain candidates. Concurrency protection and failure handling must be designed before this becomes runtime behavior.
 - GORM abstracts some SQL differences, not database concurrency semantics. Verify workflow consistency and migrations against both SQLite and PostgreSQL before claiming support. Persisted time, constraints and update behavior must preserve the documented authorization semantics.
 
 References: [GORM](https://gorm.io/docs/), [v1.31.2](https://github.com/go-gorm/gorm/releases/tag/v1.31.2), [migration guidance](https://gorm.io/docs/migration.html).
+
+### 5.5 Request validation
+
+**Use `github.com/go-playground/validator/v10` (MIT) for routine HTTP request-field validation**, integrated through Echo's validator interface. Required values, lengths, enums and numeric bounds belong in dedicated request DTOs. Add and pin the actual dependency when the first business endpoint uses it; validation is not yet implemented in the liveness scaffold.
+
+- Express complex model invariants in reusable Go validation functions. Endpoint selection exclusivity, object references, address/CIDR parsing and normalization, and the configuration contract's omission/empty-value semantics must not depend on Echo or HTTP-only tags.
+- Preserve the distinction between absent fields, explicit `null`, empty collections and valid zero values during decoding where the contract requires it. A generic `required` rule cannot represent every configured default or PATCH/presence rule.
+- Keep workflow permissions, policy limits and concurrency-sensitive state checks in business/persistence operations. A request passing field validation is not authorization to perform the operation.
+- Controller input and Static Manifest input share the same model validation functions. Keep field-level API error mapping in the HTTP adapter; the exact business error contract remains to be designed with the first endpoint.
+
+References: [validator](https://github.com/go-playground/validator), [Echo validation integration](https://echo.labstack.com/guide/request/).
 
 ## 6. Agent and Linux data plane
 
@@ -780,6 +793,7 @@ This architecture should be refined through focused documents rather than expand
 
 | Version | Date | Change |
 | --- | --- | --- |
+| v0.7.3 | 2026-10-13 | Selected validator v10 for HTTP fields with reusable model validation; retained startup database upgrades as a target and deferred migration-tool selection. |
 | v0.7.2 | 2026-10-13 | Selected GORM for Controller persistence; recorded dual-database, model separation, transaction and versioned migration boundaries without adding database runtime behavior. |
 | v0.7.1 | 2026-10-12 | Selected Echo v5 for Controller HTTP; documented error handling, validation and framework boundaries; migrated the liveness scaffold. |
 | v0.7.0 | 2026-10-08 | Separated business/configuration/execution models; documented multi-Endpoint Resources, destination arrays, multi-resource/multi-Agent bindings, node projection and isolation without Namespace; replaced the old static example. |

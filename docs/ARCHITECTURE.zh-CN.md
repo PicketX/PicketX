@@ -4,7 +4,7 @@
 
 | 字段 | 内容 |
 | --- | --- |
-| 版本 | v0.7.2 |
+| 版本 | v0.7.3 |
 | 日期 | 2026-10-13 |
 | 状态 | 已确认的设计基线；不代表已实现 |
 | 项目 | PicketX |
@@ -34,6 +34,7 @@
 | 后端语言与仓库 | Go；PicketX 承载控制面/Core/Web，PicketXD 承载官方 Linux Agent。 |
 | Controller HTTP 框架 | Echo v5（MIT）；HTTP 适配层保持精简，业务/Core 包独立。 |
 | Controller 持久化 | GORM（MIT）；SQLite 用于单 Controller，PostgreSQL 用于集群；数据库模型与配置模型分离。 |
+| 请求参数校验 | HTTP 字段使用 go-playground/validator v10（MIT）；模型约束使用可复用 Go 函数。 |
 | 配置契约 | 远程与静态输入共用版本化语义；Resource/Endpoint/Grant/Binding 与业务流程、执行模型分离；不引入 Namespace。 |
 | 前端 | React、TypeScript、Vite、shadcn/ui、Tailwind CSS、i18next、npm；官方基础组件与项目组合分层。 |
 
@@ -227,7 +228,7 @@ Adapter 只修改自身拥有的对象，报告 Desired/Applied Revision、观�
 
 - Echo 类型仅用于 HTTP 适配层。业务服务、共享授权与配置包使用普通 Go 类型和 `context.Context`；PicketXD 不依赖 Controller 的 HTTP 框架。
 - 使用独立的请求/响应 DTO。申请者、审批者的认证身份由服务端确定，不把客户端输入直接绑定到持久化或领域对象；显式选择参数来源。
-- Echo 不内置校验引擎，在首个业务接口需要时再选型；模型约束与授权检查留在可复用的领域/业务代码中，保证远程与静态配置语义一致。
+- Echo 不内置校验引擎，采用第 5.5 节确定的 go-playground/validator v10；模型约束与授权检查留在可复用的领域/业务代码中，保证远程与静态配置语义一致。
 - 实现业务接口时，通过统一 HTTP 错误处理器将业务错误映射为 HTTP 状态与稳定 API 错误码，内部错误留在服务端日志。当前存活检查骨架使用 Echo 默认 HTTP 错误处理，尚未定义业务错误契约。
 - Echo 不决定持久化、OIDC/会话实现、OpenAPI 工具或 gRPC。GORM 在第 5.4 节独立确定，其余工具继续分别选型；Agent 同步保持既定协议边界。
 - 当前骨架仅暴露 `GET /healthz` 进程存活检查（以及 HTTP HEAD 语义），设置 `Cache-Control: no-store`。超时与优雅退出继续由现有 `http.Server` 管理。接入框架不代表已经实现认证、审批、Grant 或执行功能。
@@ -242,9 +243,21 @@ Adapter 只修改自身拥有的对象，报告 Desired/Applied Revision、观�
 - GORM 模型和 `*gorm.DB` 限于持久化实现。HTTP DTO、数据库模型与标准配置契约分离；共享授权/配置包及 Agent 契约保持 ORM 无关。
 - 为相关审批、Grant 与发布记录写入定义明确事务边界。数据库提交不代表 Agent 已执行；最终表结构、并发控制和可靠发布机制随首个业务流程设计。
 - 已部署实例采用经过审查、带版本的 Schema 迁移。生产升级不能仅依赖启动时 `AutoMigrate`；本次选型不决定迁移工具。
+- 目标使用体验为 Controller 启动时自动初始化或按受支持的升级路径更新数据库，完成后再让业务服务就绪。迁移库暂缓选型，随首批持久化模型确定；Goose、golang-migrate 与 Gormigrate 继续作为候选。在实现运行时行为前，需要明确并发保护与失败处理。
 - GORM 可以抽象部分 SQL 差异，但不能统一数据库并发语义。在声称支持 SQLite 和 PostgreSQL 前，必须分别验证业务一致性与迁移；时间存储、约束及更新行为应保持已约定的授权语义。
 
 参考：[GORM](https://gorm.io/docs/)、[v1.31.2](https://github.com/go-gorm/gorm/releases/tag/v1.31.2)、[迁移说明](https://gorm.io/docs/migration.html)。
+
+### 5.5 请求参数校验
+
+**常规 HTTP 请求字段校验使用 `github.com/go-playground/validator/v10`（MIT）**，通过 Echo 的 Validator 接口集成。在独立请求 DTO 中表达必填、长度、枚举和数值范围。在首个业务接口实际使用时添加并锁定依赖；当前存活检查骨架尚未实现参数校验。
+
+- 复杂模型约束使用可复用的 Go 校验函数。Endpoint 选择条件互斥、对象引用、地址/CIDR 解析与规范化，以及配置契约的省略/空值语义，不依赖 Echo 或仅用于 HTTP 的标签。
+- 契约需要时，解析过程必须保留字段缺省、显式 `null`、空集合和合法零值之间的差异。通用 `required` 规则不能表达所有默认值或 PATCH/字段存在性规则。
+- 流程权限、策略上限和涉及并发的状态检查保留在业务/持久化操作中。字段校验通过不代表有权执行操作。
+- Controller 输入与 Static Manifest 输入共用模型校验函数。字段级 API 错误映射留在 HTTP 适配层；具体业务错误契约随首个接口设计。
+
+参考：[validator](https://github.com/go-playground/validator)、[Echo 校验集成](https://echo.labstack.com/guide/request/)。
 
 ## 6. Agent 与 Linux 数据面
 
@@ -780,6 +793,7 @@ PicketXD/                      # GPL-3.0-or-later + OEM option
 
 | 版本 | 日期 | 变更 |
 | --- | --- | --- |
+| v0.7.3 | 2026-10-13 | 确定 HTTP 字段使用 validator v10，模型规则复用校验函数；保留启动自动升级数据库目标，暂缓迁移工具选型。 |
 | v0.7.2 | 2026-10-13 | 确定 Controller 持久化使用 GORM；记录双数据库、模型分离、事务与版本化迁移边界，未添加数据库运行时行为。 |
 | v0.7.1 | 2026-10-12 | 确定 Controller HTTP 使用 Echo v5；记录错误处理、校验及框架边界；迁移存活检查骨架。 |
 | v0.7.0 | 2026-10-08 | 分离业务/配置/执行模型；明确多入口 Resource、目标地址数组、多资源/多 Agent 绑定、按节点投影和不引入 Namespace 的隔离；替换旧静态示例。 |

@@ -12,7 +12,7 @@ This repository is an **initial development scaffold**. It includes an Echo v5-b
 
 The control plane and Web live here. The official Linux Agent, `picketxd`, belongs to the separate **PicketXD** repository. This initialization does not create or modify that repository.
 
-The selected backend stack is Go + Echo v5 + GORM. GORM is an architecture decision; database drivers, migrations and persistence are not implemented yet.
+The selected backend stack is Go + Echo v5 + GORM, with go-playground/validator v10 for request fields. GORM and validator are architecture decisions; persistence, migrations and request validation are not implemented yet.
 
 ## Development
 

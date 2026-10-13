@@ -7,6 +7,7 @@ Read `docs/CONFIGURATION_MODEL.md` before implementing configuration schemas or 
 - This repository contains the Go control plane/core and `apps/web`. The Linux enforcement Agent belongs to PicketXD.
 - Controller HTTP uses Echo v5. Keep framework types in HTTP adapters; business and shared configuration/core packages remain framework-independent.
 - Controller persistence uses GORM. Keep ORM types in persistence implementations and use versioned migrations for deployed databases; drivers and migration tooling are not yet selected.
+- Use go-playground/validator v10 for HTTP DTO fields; keep complex configuration invariants in shared Go validation functions and preserve omission/null/empty/zero semantics. Add the dependency when an implemented endpoint requires it.
 - Keep network IP/CIDR subjects separate from requesters and verified protocol identities. Approval is not confirmation of enforcement.
 - Preserve independent Grant lifetimes, permission union, deny precedence, IPv6 support, and single authoritative configuration source.
 - Use npm and the committed lockfile for Web development. Keep business code out of `src/components/ui`; compose shared components separately.
