@@ -16,6 +16,8 @@ The selected backend stack is Go + Echo v5 + GORM, with go-playground/validator 
 
 Dependency assembly uses explicit constructors and module-level composition, with centralized lifecycle management; no DI framework is selected. See architecture section 5.7 for the design boundaries.
 
+Runtime configuration loading is selected as Koanf v2.3.8, with typed module configuration and explicit file/environment/flag precedence. It is not implemented yet; the scaffold still reads `-listen` through the standard `flag` package.
+
 ## Development
 
 Requirements: Go 1.27+, Node.js 24 LTS and npm.

@@ -4,7 +4,7 @@
 
 | 字段 | 内容 |
 | --- | --- |
-| 版本 | v0.7.5 |
+| 版本 | v0.7.6 |
 | 日期 | 2026-10-13 |
 | 状态 | 已确认的设计基线；不代表已实现 |
 | 项目 | PicketX |
@@ -34,6 +34,7 @@
 | 后端语言与仓库 | Go；PicketX 承载控制面/Core/Web，PicketXD 承载官方 Linux Agent。 |
 | Controller HTTP 框架 | Echo v5（MIT）；HTTP 适配层保持精简，业务/Core 包独立。 |
 | Controller 持久化 | GORM（MIT）；SQLite 用于单 Controller，PostgreSQL 用于集群；数据库模型与配置模型分离。 |
+| 运行时配置 | Koanf v2（MIT）；文件/环境变量/启动参数明确覆盖，模块接收带类型配置；策略 Manifest 独立解析。 |
 | 依赖注入与组装 | 手工构造函数注入、按模块组装、集中生命周期管理；不引入 DI 框架。 |
 | API 文档 | Swaggo v2（MIT），固定 CLI 版本；从 HTTP DTO 和注释生成 OpenAPI 3.1；Swagger UI v5（Apache-2.0）展示文档。 |
 | 请求参数校验 | HTTP 字段使用 go-playground/validator v10（MIT）；模型约束使用可复用 Go 函数。 |
@@ -293,6 +294,18 @@ Adapter 只修改自身拥有的对象，报告 Desired/Applied Revision、观�
 - 随实际功能增长拆分模块组装函数。在审查中约束导入方向，并随相关包接入 CI 依赖检查；Go 能发现循环导入，但不会检查所有架构边界。具体包名与生命周期 API 留待实现确定；本次不自建 DI 框架，也不提前创建无用途模块。
 
 参考：[Kubernetes 配置组装](https://github.com/kubernetes/kubernetes/blob/v1.37.1/cmd/kube-apiserver/app/config.go)、[kubelet 依赖](https://github.com/kubernetes/kubernetes/blob/v1.37.1/pkg/kubelet/kubelet.go)、[Prometheus 组装与运行组](https://github.com/prometheus/prometheus/blob/v3.15.0/cmd/prometheus/main.go)、[Go 接口建议](https://go.dev/wiki/CodeReviewComments#interfaces)。
+
+### 5.8 运行时配置加载
+
+**运行时配置加载采用 Koanf v2（MIT）**，于 2026-10-13 核实的 `github.com/knadh/koanf/v2` v2.3.8 作为接入基线。实现运行配置加载时，添加并固定核心及实际需要的 Provider/Parser 模块；这些模块独立版本化。当前骨架仍通过标准库 `flag` 读取监听地址，尚未接入 Koanf。
+
+- 支持运行配置 YAML、显式映射的环境变量和启动参数。覆盖顺序为 **显式传入的启动参数 > 已设置的环境变量 > 配置文件 > 默认值**。未传入参数的默认值不能覆盖文件/环境设置。逐字段定义空值语义，区分未设置与显式空值。
+- Koanf 仅位于配置加载/应用组装边界。使用新实例加载，解析为带类型的 Go 配置，应用明确的默认值/校验，再通过构造函数将各模块需要的配置传入。业务/Core 包不引用 Koanf，也不查询全局配置注册表。保留配置键大小写敏感性，显式定义环境变量/参数映射。
+- 拒绝未知配置键和非法值，不能默默忽略拼写错误或将错误值转换为合法默认值。显式指定文件缺失或非法时启动失败；搜索路径与可选文件行为留待实现确定。诊断可以描述配置来源，但必须脱敏敏感值。
+- 运行配置描述进程如何运行，包括监听地址、数据库设置、Controller 连接、数据路径和功能开关，与 Resource/Grant/Policy/Binding Manifest 分离。Koanf 多来源合并不能把 Controller Desired State 与本地策略对象混合；Controller Mode 保持单一安全配置权威来源。
+- 文件监听仅提供变更信号，不代表允许直接修改运行中的服务。显式定义可重载字段与需重启字段。重载时创建并校验完整候选，失败保留当前配置；通过生命周期负责人协调允许的变更，不让并发读取方共享可变 Koanf 对象。Manifest 目录重载继续使用独立的 Desired State 校验/Reconcile/LKG 流水线。
+
+参考：[Koanf v2.3.8](https://github.com/knadh/koanf/releases/tag/v2.3.8)、[Provider、Parser 与合并顺序](https://github.com/knadh/koanf)、[OpenTelemetry Collector 配置实现](https://github.com/open-telemetry/opentelemetry-collector/blob/main/confmap/internal/conf.go)。
 
 ## 6. Agent 与 Linux 数据面
 
@@ -828,6 +841,7 @@ PicketXD/                      # GPL-3.0-or-later + OEM option
 
 | 版本 | 日期 | 变更 |
 | --- | --- | --- |
+| v0.7.6 | 2026-10-13 | 确定 Koanf v2.3.8 作为运行时配置接入基线；明确覆盖顺序、带类型注入、重载与策略来源隔离；尚未接入运行代码。 |
 | v0.7.5 | 2026-10-13 | 确定手工构造函数注入、模块组装与集中生命周期管理为长期基线；明确分层、依赖方向与作用域，不引入 DI 框架。 |
 | v0.7.4 | 2026-10-13 | 确定 Swaggo v2.0.0-rc6 生成 OpenAPI 3.1 文档；确定 Swagger UI v5.33.2；记录固定构建工具版本、契约检查及本地文档服务边界。 |
 | v0.7.3 | 2026-10-13 | 确定 HTTP 字段使用 validator v10，模型规则复用校验函数；保留启动自动升级数据库目标，暂缓迁移工具选型。 |

@@ -4,7 +4,7 @@
 
 | Field | Value |
 | --- | --- |
-| Version | v0.7.5 |
+| Version | v0.7.6 |
 | Date | 2026-10-13 |
 | Status | Agreed design baseline; implementation status not asserted |
 | Project | PicketX |
@@ -34,6 +34,7 @@ Product requirements, APIs, database schemas, protocol specifications, implement
 | Backend language and repositories | Go; PicketX owns control plane/Core/Web, PicketXD owns the official Linux Agent. |
 | Controller HTTP framework | Echo v5 (MIT); thin HTTP adapters, independent business/Core packages. |
 | Controller persistence | GORM (MIT); SQLite for single-Controller and PostgreSQL for clustered deployments; separate persistence and configuration models. |
+| Runtime configuration | Koanf v2 (MIT); explicit file/env/flag precedence, typed module inputs and separate policy-manifest decoding. |
 | Dependency injection and assembly | Explicit constructors, module-level assembly and centralized lifecycle management; no DI framework. |
 | API documentation | Swaggo v2 (MIT), pinned CLI; generate OpenAPI 3.1 from HTTP DTOs and annotations; Swagger UI v5 (Apache-2.0) renders documentation. |
 | Request validation | go-playground/validator v10 (MIT) for HTTP fields; reusable Go functions for model invariants. |
@@ -293,6 +294,18 @@ References: [Swaggo v2.0.0-rc6](https://github.com/swaggo/swag/releases/tag/v2.0
 - Compose modules with focused assembly functions as implemented features grow. Enforce import boundaries in review and add dependency checks to CI with those packages; Go detects import cycles but does not enforce every architectural boundary. Exact package names and lifecycle APIs are implementation details; this decision does not introduce a custom DI framework or prebuild unused modules.
 
 References: [Kubernetes configuration assembly](https://github.com/kubernetes/kubernetes/blob/v1.37.1/cmd/kube-apiserver/app/config.go), [kubelet dependencies](https://github.com/kubernetes/kubernetes/blob/v1.37.1/pkg/kubelet/kubelet.go), [Prometheus assembly and run group](https://github.com/prometheus/prometheus/blob/v3.15.0/cmd/prometheus/main.go), [Go interface guidance](https://go.dev/wiki/CodeReviewComments#interfaces).
+
+### 5.8 Runtime configuration loading
+
+**Koanf v2 (MIT) is selected for runtime configuration loading**, with `github.com/knadh/koanf/v2` v2.3.8 as the integration baseline verified on 2026-10-13. Install and pin the core and only needed provider/parser modules when runtime configuration loading is implemented; their versions are independent. The current scaffold still uses the standard `flag` package for its listen address and has no Koanf integration.
+
+- Support runtime YAML files, explicitly mapped environment variables and startup flags. The override order is **explicitly supplied flags > present environment variables > configuration file > defaults**. An unsupplied flag's default must not overwrite a file/environment setting. Define empty-value semantics per field; do not confuse an unset value with an explicitly empty value.
+- Keep Koanf in the configuration-loading/assembly boundary. Load into a fresh instance, decode into typed Go configuration, apply documented defaults/validation and pass focused configuration values to modules through constructors. Business/Core packages do not import Koanf or query a global configuration registry. Preserve case-sensitive keys and define environment/flag mappings explicitly.
+- Reject unknown configuration keys and invalid values instead of silently ignoring misspellings or converting malformed values into valid defaults. If an explicitly selected file is missing or invalid, fail startup; discovery paths and optional-file behavior remain implementation details. Diagnostics may describe configuration sources but must redact secrets.
+- Runtime configuration describes how the process runs: listen address, database settings, Controller connection, data paths and feature switches. It is separate from Resource/Grant/Policy/Binding manifests. Koanf source merging never combines Controller Desired State with static policy objects; Controller Mode retains one authoritative security source.
+- File watching is only a change signal, not permission to mutate live services. Define reloadable fields and restart-required fields explicitly. A reload creates and validates a complete candidate; failed reloads retain the active configuration. Coordinate supported changes through lifecycle owners, rather than sharing a mutable Koanf object with concurrent readers. Manifest-directory reload continues to use the independent Desired State validation/reconcile/LKG pipeline.
+
+References: [Koanf v2.3.8](https://github.com/knadh/koanf/releases/tag/v2.3.8), [providers, parsers and merge order](https://github.com/knadh/koanf), [OpenTelemetry Collector configuration implementation](https://github.com/open-telemetry/opentelemetry-collector/blob/main/confmap/internal/conf.go).
 
 ## 6. Agent and Linux data plane
 
@@ -828,6 +841,7 @@ This architecture should be refined through focused documents rather than expand
 
 | Version | Date | Change |
 | --- | --- | --- |
+| v0.7.6 | 2026-10-13 | Selected Koanf v2.3.8 as the runtime configuration baseline; defined precedence, typed injection, reload and policy-source isolation; runtime integration remains pending. |
 | v0.7.5 | 2026-10-13 | Adopted constructor injection, module assembly and centralized lifecycle as a long-term baseline; specified layer directions and scopes without a DI framework. |
 | v0.7.4 | 2026-10-13 | Selected Swaggo v2.0.0-rc6 for OpenAPI 3.1 documentation generation; selected Swagger UI v5.33.2; recorded pinned build tooling, contract checks and self-hosted documentation boundaries. |
 | v0.7.3 | 2026-10-13 | Selected validator v10 for HTTP fields with reusable model validation; retained startup database upgrades as a target and deferred migration-tool selection. |
