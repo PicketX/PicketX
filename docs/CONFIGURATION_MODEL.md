@@ -7,7 +7,7 @@
 | Version | v0.1.0 |
 | Date | 2026-10-08 |
 | Status | Agreed model boundaries and selection semantics; detailed schemas remain under design |
-| Related documents | [Architecture v0.7.0](ARCHITECTURE.md), [Product v0.4.0](PRODUCT_DESIGN.md) |
+| Related documents | [Architecture v0.8.0](ARCHITECTURE.md), [Product v0.4.1](PRODUCT_DESIGN.md) |
 
 This document records the modeling decisions made on 2026-10-07 and 2026-10-08. It is the focused design authority for configuration boundaries, Resource/Endpoint selection, and Agent bindings. YAML examples are proposed contract notation, not an implemented parser, published OpenAPI/protobuf schema, or production-ready configuration. Unsettled details are listed in section 13; examples must not silently settle them.
 

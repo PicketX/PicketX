@@ -4,10 +4,10 @@
 
 | Field | Value |
 | --- | --- |
-| Version | v0.4.0 |
-| Date | 2026-10-08 |
+| Version | v0.4.1 |
+| Date | 2026-10-14 |
 | Status | Agreed product baseline; not a claim of implemented features |
-| Architecture | [ARCHITECTURE.md](./ARCHITECTURE.md) v0.7.9 |
+| Architecture | [ARCHITECTURE.md](./ARCHITECTURE.md) v0.8.0 |
 
 ## 1. Product positioning
 
@@ -120,7 +120,7 @@ PicketX does not replace a VPN tunnel, application accounts, business permission
 
 Protocol support and authorization precision are independent dimensions. Network permissions remain IP/CIDR-based even when a protocol adapter verifies a user. Where both layers are configured, both must allow access. Protocol parsing alone is not identity verification, and a protocol allow does not automatically enlarge a network Grant.
 
-HTTP integration through existing proxies is a natural extension for websites. Further database or SSH integrations must explicitly address identity verification, encryption, enforcement and lifecycle. None implies a commitment to universal traffic inspection or full behavior recording.
+The initial execution scope includes IP/CIDR network admission, HTTP/HTTPS request authorization through existing trusted ingress, and a local decision interface over TCP or Unix socket for application integration. External ingress owns TLS and forwarding, evaluates each protected request and binds authorization to the actual routing target. Other applications own their native protocol authentication and lifecycle. Native database/SSH protocol proxies, packet/mirror inspection, asynchronous detection/response, transparent proxying and Agent TLS termination are deferred. None is a first-release dependency or a commitment to full behavior recording.
 
 ### 9.1 Unified authorization core and multiple execution implementations
 
@@ -139,8 +139,8 @@ This permits independent workflow and Agent evolution without duplicating author
 - Controller Mode uses the Controller as the sole security desired-state authority. Local runtime settings never add Resource, Policy, Grant/Lease or AuthZ permissions.
 - Static Manifest Mode uses one YAML directory as the sole security authority. Full candidate validation, reconciliation, source-bound LKG and reload apply; browser self-service and centralized approval require a Controller.
 - Host installation is the default; explicit gateway enforcement on existing routes remains supported by the design, subject to adapter capabilities and a future NAT/traffic-scope specification. PicketX does not configure network routing.
-- The Linux implementation retains nftables/Netfilter and conntrack. NFQUEUE/TPROXY are optional enforcement capabilities, not the product identity.
-- The default Agent capability model remains intact; individual resources select the required path and optional capabilities can be disabled.
+- The initial Linux implementation uses nftables/Netfilter and conntrack. NFQUEUE, mirror response and transparent proxies are deferred exploration.
+- The earlier full-capability-by-default Agent model is superseded by the initial scope above; resources select their network and HTTP ingress integrations.
 - The frontend uses React, TypeScript, Vite, shadcn/ui, Tailwind CSS, i18next and npm, with explicit polling/freshness feedback.
 - Licensing intent remains `picketxd` GPL-3.0-or-later plus alternative OEM terms and contributor relicensing rights; other designated components use Apache-2.0. See the architecture for third-party dependency constraints.
 
@@ -157,8 +157,12 @@ Deployment and operation should reduce the combined effort of requesters and adm
 
 Cross-application acceptance uses one test service and at least two existing tools, such as an IDE database tool and a CLI client. After one source authorization, both matching clients must establish connections without PicketX plugins or portal cookies. After expiry, with no other valid Grant, both must be denied new connections; existing flows follow the selected policy. Service authentication must still succeed. Other egress sources outside the authorized scope do not inherit permission.
 
+HTTP integration acceptance must reject an unauthorized resource on a reused connection without treating its initial SNI/request as blanket permission. The local decision interface must enforce caller/resource scope and preserve decision semantics across supported TCP and Unix socket listeners.
+
 ## 12. Revision and authority
 
-This v0.4.0 product baseline supersedes the positioning and scope of the archived v0.1 product document. Detailed technical decisions are maintained in architecture v0.7.9. Older business plans and research reports are historical inputs, not current scope or pricing commitments. English is the default repository document; the Chinese edition is maintained alongside it.
+This v0.4.1 product baseline supersedes the positioning and scope of the archived v0.1 product document. Detailed technical decisions are maintained in architecture v0.8.0. Older business plans and research reports are historical inputs, not current scope or pricing commitments. English is the default repository document; the Chinese edition is maintained alongside it.
 
 Revision v0.4.0 separates business, standard configuration and execution models; adds multi-Endpoint Resource selection, multi-resource/multi-Agent bindings and per-Agent projection; defers Namespace; synchronized with architecture v0.7.0 and configuration model v0.1.0. The previous v0.3.0 stack, repository and Gitea decisions remain in force.
+
+Revision v0.4.1 narrows the first-release execution scope to network admission, external HTTP/HTTPS ingress authorization and local decision APIs; the earlier default NFQUEUE/TPROXY capability assumption is superseded.

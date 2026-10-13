@@ -4,8 +4,8 @@
 
 | Field | Value |
 | --- | --- |
-| Version | v0.7.9 |
-| Date | 2026-10-13 |
+| Version | v0.8.0 |
+| Date | 2026-10-14 |
 | Status | Agreed design baseline; implementation status not asserted |
 | Project | PicketX |
 
@@ -24,7 +24,7 @@ Product requirements, APIs, database schemas, protocol specifications, implement
 | Product position | Simple, dedicated-client-free, on-demand access authorization using IP/CIDR network subjects; independent deployment or complementary protection for existing networks. |
 | Network grant model | Union of active matching source grants, subject to explicit denies and conditions; requesters and approvers are provenance, not connection identities. |
 | Product scope | No organization-size restriction. Authorization records are core; application behavior recording is outside scope. |
-| Core data plane | nftables/Netfilter + conntrack; NFQUEUE for bounded first-packet or initial-flow inspection; TPROXY for optional advanced interception. |
+| Core data plane | nftables/Netfilter + conntrack for IP/CIDR admission. NFQUEUE, mirror-based detection/response and transparent proxy/TLS handling are deferred exploration, not default Agent requirements. |
 | Core processes | `picketx-controller`, `picketxd`, and the `picketx` CLI. The Web SPA may be embedded in the Controller. |
 | Authorization | A generic Authorization API. Nginx `auth_request`, Envoy `ext_authz`, Traefik `ForwardAuth`, and similar mechanisms are adapters. |
 | HTTPS boundary | PicketX does not terminate application TLS in the authorization path. TLS termination and HTTP forwarding remain the responsibility of Nginx, Envoy, Traefik, Caddy, or another proxy. |
@@ -34,7 +34,7 @@ Product requirements, APIs, database schemas, protocol specifications, implement
 | Backend language and repositories | Go; PicketX owns control plane/Core/Web, PicketXD owns the official Linux Agent. |
 | Controller HTTP framework | Echo v5 (MIT); thin HTTP adapters, independent business/Core packages. |
 | SQLite driver and releases | Official GORM SQLite + mattn; fully static default Linux releases with no extra shared-library installation. |
-| Controller persistence | GORM (MIT); SQLite for single-Controller and PostgreSQL for clustered deployments; separate persistence and configuration models. |
+| Controller persistence | GORM (MIT); official SQLite/mattn and PostgreSQL/pgx drivers; SQLite for single-Controller and PostgreSQL for clustered deployments; migration tooling deferred. |
 | CLI framework | Cobra (Apache-2.0); thin command adapters, Koanf configuration and independent business/Core. |
 | Runtime logging | Standard-library slog; centrally constructed/injected loggers, text/JSON output and separately persisted authorization audit. |
 | Runtime configuration | Koanf v2 (MIT); explicit file/env/flag precedence, typed module inputs and separate policy-manifest decoding. |
@@ -100,7 +100,7 @@ The following principles govern the design:
 
 Organization size is not part of the product definition. Fit depends on the access workflow, source-sharing policy, and operational requirements. Request frequency and willingness to pay remain validation questions, not established market facts.
 
-Protocol-level authorization, richer providers, Cloud, and OEM remain expansion directions. They are not all prerequisites for the first usable release.
+HTTP/HTTPS authorization through existing ingress and the local decision interface are initial application integrations. Other protocol adapters, richer providers, Cloud and OEM remain expansion directions rather than prerequisites for the first usable release.
 
 ### 2.2 Explicit non-goals
 
@@ -108,7 +108,7 @@ Protocol-level authorization, richer providers, Cloud, and OEM remain expansion 
 | --- | --- | --- |
 | VPN tunnel | No | PicketX creates no overlay or tunnel; it controls reachability over the real network. |
 | Full WAF | No | HTTP metadata may participate in authorization, but PicketX does not perform general SQL injection, XSS, or body inspection. |
-| Full IDS/IPS | No | NFQUEUE performs bounded initial-flow inspection and authorization support, not long-lived DPI. |
+| Full IDS/IPS | No | Packet inspection and asynchronous detection/response are deferred; they are not a substitute for synchronous application authorization. |
 | Reverse proxy | No | The Authorization Service does not terminate application TLS or forward application traffic. |
 | Application-internal RBAC | No | PicketX controls the entry boundary; the application retains its business permissions. |
 | Application behavior recording | No | No SQL histories, command recordings, page histories, or file-content capture; authorization records remain core. |
@@ -245,7 +245,7 @@ References: [Echo documentation](https://echo.labstack.com/), [version policy](h
 
 **GORM (MIT) is the selected Controller database access layer**, independent of Echo. The initial integration baseline is `gorm.io/gorm` v1.31.2, verified on 2026-10-13. Pin the actual dependency in `go.mod`/`go.sum` when the first persistence implementation imports it; the current liveness scaffold has no database connection or GORM runtime dependency.
 
-- Keep SQLite for lightweight single-Controller deployments and PostgreSQL for clustered deployments. The official SQLite driver and static-release requirements are selected in section 5.4.1; PostgreSQL driver, connection settings and the migration tool remain separate decisions.
+- Keep SQLite for lightweight single-Controller deployments and PostgreSQL for clustered deployments. Official SQLite and PostgreSQL drivers are selected in sections 5.4.1 and 5.4.2. Connection settings and the migration tool remain separate implementation decisions.
 - GORM models and `*gorm.DB` belong to persistence implementations. Keep HTTP DTOs, persistence models and the standard configuration contract separate; shared authorization/configuration packages and Agent contracts remain ORM-independent.
 - Use explicit transaction boundaries for related approval, Grant and publication-record writes. Database commit is not confirmation of Agent enforcement. Final table schemas, concurrency control and reliable publication mechanics will be designed with the first workflow.
 - Use reviewed, versioned schema migrations for deployed installations. Do not rely only on startup `AutoMigrate` to manage production upgrades; the migration tool is not selected by this decision.
@@ -261,10 +261,21 @@ References: [GORM](https://gorm.io/docs/), [v1.31.2](https://github.com/go-gorm/
 - Default release executables must not require users to install SQLite or other additional shared libraries. **Linux default releases use full static linking**, including the SQLite engine and C runtime, rather than relying on a target machine's libc/shared SQLite. CGO is permitted at build time; it is not permission to ship a binary with undeclared shared-library requirements. Other platforms use their required native system interfaces without adding a separately installed SQLite runtime.
 - Build SQLite from the driver's bundled source. Do not use a system-SQLite linking build tag in the default release. Use a controlled static C toolchain, such as musl for Linux, with target-specific compilers for supported architectures. Exact release scripts, platform support and flags remain implementation decisions; the current scaffold does not yet contain the database or static-CGO release pipeline.
 - Verify each supported Linux release architecture by inspecting the executable for an ELF interpreter/shared-library dependencies and running it in a clean target environment. A successful local build is insufficient evidence of a standalone release. Verify database open/reopen, transaction behavior, constraints and required schema upgrades on the actual artifact.
-- Keep SQLite settings explicit: per-connection foreign-key enforcement, busy handling, connection-pool policy, journal/durability behavior and persisted-time representation must be defined and checked with the first workflow. Choosing the official driver does not resolve concurrency or migration semantics. PostgreSQL driver selection and the deferred migration-tool decision remain separate.
+- Keep SQLite settings explicit: per-connection foreign-key enforcement, busy handling, connection-pool policy, journal/durability behavior and persisted-time representation must be defined and checked with the first workflow. Choosing the official driver does not resolve concurrency or migration semantics. The PostgreSQL driver is selected in section 5.4.2; migration tooling remains deferred.
 - Pure-Go SQLite adapters are not selected. Keep driver-specific types/DSNs in persistence adapters; authorization/Core remains database-independent. Preserve the actual third-party notices when dependencies and embedded engine source are incorporated.
 
 References: [official GORM SQLite driver](https://github.com/go-gorm/sqlite), [v1.6.0 module](https://github.com/go-gorm/sqlite/blob/v1.6.0/go.mod), [mattn v1.14.52](https://github.com/mattn/go-sqlite3/releases/tag/v1.14.52), [static-build guidance](https://github.com/mattn/go-sqlite3#cross-compiling-from-macos).
+
+### 5.4.2 PostgreSQL driver
+
+**Use the official `gorm.io/driver/postgres` (MIT), with its default `github.com/jackc/pgx/v5` (MIT) database/sql driver.** The initial integration baseline is PostgreSQL Dialector v1.6.3, verified on 2026-10-14. Its published module requires GORM v1.31.2 and pgx/v5 v5.10.0. Pin and test the actual combination when persistence is implemented; no PostgreSQL runtime dependency or database support is added by this documentation decision.
+
+- Use GORM for ordinary persistence. Keep Dialector, DSN and pgx-specific details inside persistence/infrastructure adapters; business/Core and desired-state objects remain independent of these drivers.
+- pgx is a pure-Go PostgreSQL client and does not require libpq or an additional C/shared-library installation. This preserves the standalone release requirement; SQLite still requires the controlled static-CGO build described above.
+- Define pool limits, connection/query timeouts, TLS verification, timezone/time representation, transaction/concurrency behavior and any proxy/prepared-statement compatibility with the first persistence workflow. Choosing the driver does not finalize these settings or prove multi-Controller safety.
+- Schema initialization/upgrades retain the versioned-migration requirement. Migration tooling is still deferred; this selection does not authorize production upgrades through AutoMigrate alone.
+
+References: [official GORM PostgreSQL driver](https://github.com/go-gorm/postgres), [v1.6.3 module](https://github.com/go-gorm/postgres/blob/v1.6.3/go.mod), [GORM connection guidance](https://gorm.io/docs/connecting_to_the_database.html), [pgx](https://github.com/jackc/pgx).
 
 ### 5.5 Request validation
 
@@ -336,7 +347,7 @@ References: [Go structured logging](https://go.dev/blog/slog), [slog API](https:
 
 ## 6. Agent and Linux data plane
 
-`picketxd` is the only privileged data-plane process. It must run independently of the Controller. The default binary includes Agent/Reconcile, nftables, NFQUEUE Inspector, and TPROXY-related capabilities; NFQUEUE and TPROXY may be explicitly disabled.
+`picketxd` is the only privileged data-plane process. It must run independently of the Controller. The initial binary scope is Agent/Reconcile, nftables/conntrack enforcement and scoped local APIs. NFQUEUE inspection, NFLOG/mirror detection and response, REDIRECT/TPROXY proxies and application TLS termination are deferred and are not default dependencies. This supersedes the earlier full-capability-by-default Agent assumption.
 
 Missing core nftables/conntrack capabilities are fatal. Missing optional capabilities only disable the affected feature.
 
@@ -350,8 +361,7 @@ Missing core nftables/conntrack capabilities are fatal. Missing optional capabil
 | nftables Backend | Uses a validated Go Netlink backend to operate nf_tables. |
 | Conntrack Backend | Uses a Go ctnetlink backend to observe and delete connections. |
 | Activity Monitor | Derives Source/Lease activity from conntrack lifecycle events. |
-| NFQUEUE Inspector | Performs bounded initial-packet inspection with strict byte, packet, and time budgets. |
-| TPROXY Runtime | Supports optional advanced capabilities that require continued userspace interception. |
+| Local Authorization API | Supplies scoped request-time decisions to trusted integrations over local TCP or Unix socket; separate from administrative operations. |
 | Drift Monitor | Combines Netlink events and periodic consistency scans to repair drift. |
 | Local Admin API | Exposes status, doctor, dump, reconcile, and reload over a Unix socket. |
 
@@ -373,7 +383,7 @@ The following rules are mandatory:
 
 1. Startup configuration explicitly selects `controller` or `static`. One `picketxd` instance has exactly one authoritative Desired State Provider at a time.
 2. **Controller Mode:** the Controller is the sole authority for Security Desired State. Local manifests containing Resource, Grant, EnforcementBinding, Policy, Authorization Rule, or other security objects never merge with or override Controller state.
-3. Local `/etc/picketx/picketxd.yaml` remains valid in Controller Mode, but it contains only Agent Runtime Configuration: Controller endpoint, certificates, logging, data directory, NFQUEUE/TPROXY switches, health/metrics endpoints, and LKG location.
+3. Local `/etc/picketx/picketxd.yaml` remains valid in Controller Mode, but it contains only Agent Runtime Configuration: Controller endpoint, certificates, logging, data directory, enabled local API listeners, health/metrics endpoints, and LKG location.
 4. Runtime Configuration and Security Desired State are separate configuration domains and models; this does not introduce a Namespace API object.
 5. If static manifests are present in Controller Mode, `picketxd` ignores them and emits a prominent warning. A strict deployment option may reject startup instead.
 6. **Static Manifest Mode:** the manifest directory is the sole authority for Security Desired State. The Controller does not distribute policy to the Agent.
@@ -428,7 +438,7 @@ A future **Emergency Override / Break-glass** capability may exist, but it must 
 
 The Linux backend prioritizes Go Netlink integrations rather than making libnftnl/libmnl/libnetfilter_conntrack a mandatory default dependency. Candidate libraries include `google/nftables`, `ti-mo/conntrack`, and `florianl/go-nfqueue`; `cilium/ebpf` is a candidate only if a later requirement justifies an eBPF adapter. These are evaluation candidates, not pinned or fully validated dependencies.
 
-Validate interval/concatenated-set coverage, atomic batch behavior, IPv4/IPv6, conntrack loss recovery and filtered deletion, NFQUEUE budgets, kernel compatibility, and dependency licenses before adoption. Keep backend interfaces replaceable. The nftables/conntrack architecture remains the initial enforcement choice; moving to Go does not commit the product to eBPF or eliminate third-party license review.
+Validate interval/concatenated-set coverage, atomic batch behavior, IPv4/IPv6, conntrack loss recovery and filtered deletion, kernel compatibility, and dependency licenses before adoption. Keep backend interfaces replaceable. The nftables/conntrack architecture remains the initial enforcement choice; moving to Go does not commit the product to eBPF or eliminate third-party license review.
 
 ## 7. Network policy and permission model
 
@@ -502,7 +512,7 @@ The runtime SourceLeaseIndex should use IPv4 and IPv6 Patricia or compressed rad
 
 ## 9. Authorization Service
 
-The Authorization Service is a second enforcement integration, independent of TPROXY. It does not proxy application traffic. It accepts authorization callbacks from Nginx, Envoy, Traefik, Caddy, and other gateways, then evaluates PicketX Identity, Resource, Policy, WASM, Providers, and audit rules.
+The Authorization Service is the initial application enforcement integration, independent of the network-admission backend. It does not proxy application traffic. It accepts authorization callbacks from Nginx, Envoy, Traefik, Caddy, and other gateways, then evaluates PicketX Identity, Resource, Policy, WASM, Providers, and audit rules.
 
 ```mermaid
 flowchart TB
@@ -549,6 +559,18 @@ PicketX does not need to read encrypted application traffic. The proxy terminate
 - Timeouts are bounded and included in adapter configuration guidance.
 - Positive and negative decisions may be cached only within the TTL returned by the Authorization Engine and within the revocation guarantees of the selected policy.
 - Authorization records retain the minimum decision metadata, verified identity provenance where relevant, policy IDs, reason, and correlation ID. Do not store full requests, credentials, arbitrary headers, or application behavior content by default.
+
+### 9.5 Initial execution scope and deferred exploration
+
+The initial scope is **IP/CIDR network admission + HTTP/HTTPS authorization through existing ingress + a local authorization interface**. Network Grants apply to all supported transport protocols; the initial application-protocol integration is HTTP/HTTPS. Native MySQL/database proxies and other protocol parsers are not part of this release scope.
+
+- Trusted HTTP ingress evaluates every protected request against its actual resource/routing target, including requests on reused connections. SNI or the first request does not authorize all later hosts; protocol allow never overrides a required network deny. Verified identity and source metadata must come from a trusted integration, not arbitrary client headers.
+- The local decision interface is available over local TCP or Unix socket with the same authorization semantics. Scope it to relevant resources/provider state, protect caller access, and keep it separate from the local administrative API. Other applications own their protocol authentication, lifecycle and forwarding. Listener/DTO contracts remain to be designed; selecting the interface is not a claim of a running endpoint.
+- Existing ingress owns TLS certificates, termination and application traffic forwarding. Certificate/private-key possession alone does not permit passive decryption of modern TLS. Agent TLS termination, transparent proxying and protocol-specific TLS negotiation remain deferred.
+- NFQUEUE, traffic mirroring and asynchronous detection/connection response remain future exploration, not another initial authorization mode. Mirror analysis cannot guarantee that the triggering operation was stopped; encrypted content, truncation, loss and request multiplexing constrain it. Future response policies must declare their target and outcome: terminating a connection is not rejecting one HTTP request/stream, deleting conntrack is not resetting sockets, and an anomaly does not automatically authorize IP/port-wide bans or unrelated Grant revocation. Active stream termination requires a capable ingress integration; auth_request alone does not provide it.
+- Deferred capabilities require separate design and measurable resource budgets before adoption. Their absence must not make the initial Agent unusable or weaken an explicitly required policy.
+
+References: [Nginx auth_request](https://nginx.org/en/docs/http/ngx_http_auth_request_module.html), [HTTP/2 connection reuse](https://www.rfc-editor.org/rfc/rfc9113.html#section-9.1.1), [TLS passive-decryption limits](https://wiki.wireshark.org/TLS), [conntrack operations](https://netfilter.org/projects/conntrack-tools/conntrack-manpage.html).
 
 ## 10. Plugin and WASM architecture
 
@@ -648,7 +670,7 @@ flowchart LR
 | Agent compromise | Only the Agent receives `NET_ADMIN`; local API protected by Unix socket permissions |
 | Policy misconfiguration | Dry run, policy simulation, revisions, LKG, and fast rollback |
 | Authorization timeout | Per-Resource fail mode; security-sensitive Resources default to fail-closed |
-| NFQUEUE congestion | Strict timeout, bounded prefix, selected bypass/failure policy, queue-depth monitoring |
+| Deferred inspection/proxy adoption | Separate design and explicit enforcement guarantees; no implicit bypass when a required capability is absent |
 | Plugin risk | External process isolation, WASM sandboxing, and Host API allowlists |
 | Identity confusion | IP/CIDR is the network authorization subject; workflow actors and verified protocol identities are separate; shared access is explicit |
 | Replay or stale connection | Only TCP SYN creates new authorization; strict revoke deletes conntrack |
@@ -658,11 +680,11 @@ Privilege separation should be tightened over time. Components that do not requi
 
 ## 15. Observability and operations
 
-- **Metrics:** policy compile latency, apply latency, Agent connectivity, authorization decision latency, allow/deny counts, NFQUEUE queue depth, conntrack reconciliation, WASM latency, provider errors, and LKG age.
+- **Metrics:** policy compile latency, apply latency, Agent connectivity, authorization decision latency, allow/deny counts, conntrack reconciliation, WASM latency, provider errors, and LKG age.
 - **Audit:** policy changes, Lease requests and approvals, matched authorization policies, strict revocation, mode changes, and reload outcomes.
 - **Logs:** structured JSON with Node, Resource, Policy, revision, provider identity, trace ID, and decision correlation where applicable.
 - **Health:** Controller readiness/liveness, local Agent health, and Netfilter capability probes.
-- **Doctor:** kernel modules, nftables capabilities, conntrack, NFQUEUE, TPROXY, routing, permissions, configuration source, manifest validation, and Controller connectivity.
+- **Doctor:** kernel modules, nftables capabilities, conntrack, existing-route assumptions, local API permissions, configuration source, manifest validation, and Controller connectivity.
 
 ### 15.1 Authorization records and visible state
 
@@ -775,12 +797,12 @@ The product baseline fixes the purpose and boundaries, not a claim that all list
 | Phase | Goal | Scope |
 | --- | --- | --- |
 | M0 Data-plane validation | Prove reliable source enforcement | nftables/conntrack, IPv4/IPv6, overlapping IP/CIDR grants, hard expiry, strict/graceful revoke, restart and Linux network-namespace behavior |
-| M1 Usable access workflow | Complete request, approval, apply and expiry | Browser/OIDC self-service, basic approval, source Grants, permission union, Resource scope, status and authorization records; Controller/SQLite/Agent/CLI and Static Manifest Mode |
+| M1 Usable access workflow | Complete request, approval, apply and expiry | Browser/OIDC self-service, basic approval, source Grants, permission union, Resource scope, status and authorization records; Controller/SQLite/Agent/CLI and Static Manifest Mode; HTTP/HTTPS ingress authorization and scoped local decision API |
 | M2 Operational scale | Reliable multi-node operation | PostgreSQL, mTLS streams, labels/selectors, drift/reconcile, LKG recovery, per-node status; HA as required |
-| M3 Protocol authorization | Add finer enforcement where needed | Generic AuthZ API, HTTP proxy adapters, verified protocol user/session context; other protocols evaluated individually |
+| M3 Protocol expansion | Add finer enforcement where needed | Further trusted adapters and verified protocol user/session context; native protocol proxies and inspection evaluated individually |
 | M4 Extension and delivery options | Expand against actual demand | WASM, external Providers/plugins, advanced approval, Cloud/OEM and commercial packaging |
 
-The architecture retains the full Agent capability model, with NFQUEUE and TPROXY explicitly disableable. Merely compiling or enabling a capability does not send all traffic through it. No milestone requires implementing a universal proxy, full behavior recording, or every protocol parser.
+The initial Agent scope supersedes the earlier full-capability model: NFQUEUE, mirror-based response, transparent proxies and TLS termination are deferred. HTTP/HTTPS ingress authorization and the local decision interface are within the first-release scope, although they can be implemented after network admission. No milestone requires a universal proxy, full behavior recording or every protocol parser.
 
 Basic approval and authorization records belong to M1, not only to a future enterprise tier. Large-scale benchmarks are engineering exploration, not adoption or commercial acceptance gates for the first usable product.
 
@@ -797,7 +819,7 @@ The first end-to-end scenario is Gitea: after portal source authorization, brows
 | Policy overlap or conflict | Accidental allow or deny | Deny precedence, compiler validation, simulation, provenance, audit |
 | Configuration-source conflict | Operators misunderstand effective policy | Exactly one authoritative provider, no merge, warnings, provider-bound LKG |
 | Large state volume | Controller or Agent memory pressure | Per-node compilation, tries, snapshot/delta, 100k and 1M benchmarks |
-| Optional inspection overload | Packet loss or service outage | Strict NFQUEUE/TPROXY budgets, feature switches, measurable failure policy |
+| Future inspection/proxy overload | Packet loss or service outage | Defer adoption until byte/flow/time budgets, capacity and failure policy are designed and measured |
 
 ## 20. Appendix
 
@@ -879,6 +901,7 @@ This architecture should be refined through focused documents rather than expand
 
 | Version | Date | Change |
 | --- | --- | --- |
+| v0.8.0 | 2026-10-14 | Selected the official GORM PostgreSQL/pgx driver; narrowed initial enforcement to network admission, external HTTP/HTTPS ingress authorization and local decision APIs; deferred inspection, transparent proxy/TLS and native database proxies; integration remains pending. |
 | v0.7.9 | 2026-10-13 | Selected official GORM SQLite/mattn and standalone default releases with full static Linux linking; PostgreSQL driver/migration tooling remain open; integration and artifact checks remain pending. |
 | v0.7.8 | 2026-10-13 | Selected Cobra v1.10.2 for CLI integration; defined Koanf flag precedence, API/local diagnostic boundaries and output conventions; commands remain unimplemented. |
 | v0.7.7 | 2026-10-13 | Selected slog for runtime logs; defined logger injection, formats, fields, dynamic levels and the separate authorization-audit boundary. |

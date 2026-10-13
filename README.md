@@ -22,7 +22,9 @@ Runtime logging uses standard-library `log/slog`. The scaffold already emits JSO
 
 The planned `picketx` CLI uses Cobra v1.10.2 with Koanf configuration. CLI commands are not implemented; the existing Controller entry point continues to use standard-library flags.
 
-SQLite is selected as the official GORM driver (v1.6.0 baseline) with mattn/go-sqlite3 (v1.14.52 baseline). Default Linux releases must be fully static without additional shared-library installation. Database integration and the static-CGO release pipeline are not implemented; PostgreSQL driver and migration tooling remain undecided.
+SQLite is selected as the official GORM driver (v1.6.0 baseline) with mattn/go-sqlite3 (v1.14.52 baseline). Default Linux releases must be fully static without additional shared-library installation. PostgreSQL uses official gorm.io/driver/postgres v1.6.3 with pgx/v5 v5.10.0. Database integration and the static-CGO release pipeline are not implemented; migration tooling remains deferred.
+
+Initial enforcement scope is IP/CIDR network admission, HTTP/HTTPS authorization through existing ingress, and a local decision interface over TCP or Unix socket. NFQUEUE/mirror inspection, transparent proxy/TLS termination and native database proxies are deferred; these endpoints and integrations are not implemented yet.
 
 ## Development
 

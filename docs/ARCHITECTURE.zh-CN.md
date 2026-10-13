@@ -4,8 +4,8 @@
 
 | 字段 | 内容 |
 | --- | --- |
-| 版本 | v0.7.9 |
-| 日期 | 2026-10-13 |
+| 版本 | v0.8.0 |
+| 日期 | 2026-10-14 |
 | 状态 | 已确认的设计基线；不代表已实现 |
 | 项目 | PicketX |
 
@@ -24,7 +24,7 @@
 | 产品定位 | 简单易用、无需专用客户端，以 IP/CIDR 为网络授权对象的按需访问授权系统；独立使用或补充保护现有网络。 |
 | 网络授权模型 | 聚合仍有效且匹配的来源授权，受显式拒绝与条件约束；申请人、审批人是授权来源，不是连接身份。 |
 | 产品范围 | 不按组织规模限制适用范围；授权记录属于核心，应用行为记录不属于范围。 |
-| 核心数据面 | nftables/Netfilter + conntrack；NFQUEUE 用于有限首包或初始流探测；TPROXY 用于可选高级拦截能力。 |
+| 核心数据面 | nftables/Netfilter + conntrack 实现 IP/CIDR 准入；NFQUEUE、镜像检测响应、透明代理与 TLS 处理属于后续探索，不是默认 Agent 要求。 |
 | 核心进程 | `picketx-controller`、`picketxd` 和 `picketx` CLI；Web SPA 可嵌入 Controller。 |
 | 授权服务 | 提供通用 Authorization API；Nginx `auth_request`、Envoy `ext_authz`、Traefik `ForwardAuth` 等均为适配器。 |
 | HTTPS 边界 | PicketX 在授权路径中不终止业务 TLS；TLS 终止与 HTTP 转发继续由 Nginx、Envoy、Traefik、Caddy 等承担。 |
@@ -34,7 +34,7 @@
 | 后端语言与仓库 | Go；PicketX 承载控制面/Core/Web，PicketXD 承载官方 Linux Agent。 |
 | Controller HTTP 框架 | Echo v5（MIT）；HTTP 适配层保持精简，业务/Core 包独立。 |
 | SQLite 驱动与发布 | 官方 GORM SQLite + mattn；Linux 默认完整静态链接，无额外共享库安装要求。 |
-| Controller 持久化 | GORM（MIT）；SQLite 用于单 Controller，PostgreSQL 用于集群；数据库模型与配置模型分离。 |
+| Controller 持久化 | GORM（MIT）；官方 SQLite/mattn 与 PostgreSQL/pgx 驱动；SQLite 用于单 Controller，PostgreSQL 用于集群；迁移工具暂缓。 |
 | CLI 框架 | Cobra（Apache-2.0）；轻量命令适配器，Koanf 配置与独立业务/Core。 |
 | 运行日志 | 标准库 slog；集中创建并注入 Logger，文本/JSON 输出；授权审计独立持久化。 |
 | 运行时配置 | Koanf v2（MIT）；文件/环境变量/启动参数明确覆盖，模块接收带类型配置；策略 Manifest 独立解析。 |
@@ -100,7 +100,7 @@ PicketX 是一个简单易用、无需安装专用客户端的按需访问授权
 
 组织规模不属于产品定义。是否适用取决于访问流程、来源共享策略与运维要求。使用频率和付费意愿仍需验证，不作为既成市场结论。
 
-协议级授权、丰富的外部 Provider、Cloud 和 OEM 保留为扩展方向，不是首个可用版本必须全部具备的条件。
+现有入口提供 HTTP/HTTPS 授权与本地决策接口属于首期应用集成；其他协议 Adapter、丰富的外部 Provider、Cloud 和 OEM 保留为扩展方向，不作为首个可用版本的前置条件。
 
 ### 2.2 明确非目标
 
@@ -108,7 +108,7 @@ PicketX 是一个简单易用、无需安装专用客户端的按需访问授权
 | --- | --- | --- |
 | VPN 隧道 | 否 | 不创建 overlay 或 tunnel；控制真实网络上的服务可达性。 |
 | 完整 WAF | 否 | HTTP 元数据可以参与授权，但不负责通用 SQL 注入、XSS 或 body 检测。 |
-| 完整 IDS/IPS | 否 | NFQUEUE 仅做有限初始流探测和授权辅助，不做长期 DPI。 |
+| 完整 IDS/IPS | 否 | 包检查与异步检测响应暂缓，不能替代同步应用授权。 |
 | 反向代理 | 否 | Authorization Service 不终止业务 TLS，也不转发业务流量。 |
 | 应用内部 RBAC | 否 | PicketX 控制入口边界，应用保留业务权限。 |
 | 应用行为记录 | 否 | 不记录完整 SQL、命令、页面操作或文件内容；授权记录仍是核心。 |
@@ -245,7 +245,7 @@ Adapter 只修改自身拥有的对象，报告 Desired/Applied Revision、观�
 
 **Controller 数据库访问层确定为 GORM（MIT）**，独立于 Echo。初始接入基线为 `gorm.io/gorm` v1.31.2，核验日期为 2026-10-13。在首个持久化实现实际引用时，将依赖锁定到 `go.mod`/`go.sum`；当前存活检查骨架没有数据库连接或 GORM 运行时依赖。
 
-- 保留 SQLite 用于轻量单 Controller 部署、PostgreSQL 用于集群部署。SQLite 官方驱动及静态发布要求在第 5.4.1 节确定；PostgreSQL 驱动、连接参数和迁移工具仍独立选型。
+- 保留 SQLite 用于轻量单 Controller 部署、PostgreSQL 用于集群部署。SQLite 与 PostgreSQL 官方驱动分别在第 5.4.1、5.4.2 节确定；连接参数和迁移工具仍独立设计。
 - GORM 模型和 `*gorm.DB` 限于持久化实现。HTTP DTO、数据库模型与标准配置契约分离；共享授权/配置包及 Agent 契约保持 ORM 无关。
 - 为相关审批、Grant 与发布记录写入定义明确事务边界。数据库提交不代表 Agent 已执行；最终表结构、并发控制和可靠发布机制随首个业务流程设计。
 - 已部署实例采用经过审查、带版本的 Schema 迁移。生产升级不能仅依赖启动时 `AutoMigrate`；本次选型不决定迁移工具。
@@ -261,10 +261,21 @@ Adapter 只修改自身拥有的对象，报告 Desired/Applied Revision、观�
 - 默认发布的可执行文件不能要求用户另外安装 SQLite 或其他额外共享库。**Linux 默认发布包采用完整静态链接**，包含 SQLite 引擎和 C 运行库，不依赖目标机器的 libc/共享 SQLite。允许构建时使用 CGO，但不能因此发布存在未声明共享库要求的二进制。其他平台使用必需的原生系统接口，不增加单独安装 SQLite 运行库的要求。
 - 默认使用驱动自带 SQLite 源码，不启用链接系统 SQLite 的构建标签。采用受控静态 C 工具链，例如 Linux 使用 musl，并为支持的架构配置对应编译器。具体发布脚本、平台支持与参数留待实现确定；当前骨架尚无数据库或静态 CGO 发布流水线。
 - 对每个支持的 Linux 发布架构检查 ELF 解释器/共享库依赖，并在干净目标环境运行。仅本机编译成功不能证明独立发布；需在实际产物上验证数据库创建/重开、事务、约束与必需的 Schema 升级。
-- 首个业务流程明确并检查 SQLite 连接参数：每连接外键约束、忙等待、连接池策略、日志/持久性行为和时间存储方式。选择官方驱动不替代并发与迁移语义设计。PostgreSQL 驱动与已暂缓的迁移工具仍分别选型。
+- 首个业务流程明确并检查 SQLite 连接参数：每连接外键约束、忙等待、连接池策略、日志/持久性行为和时间存储方式。选择官方驱动不替代并发与迁移语义设计。PostgreSQL 驱动在第 5.4.2 节确定；迁移工具继续暂缓。
 - 本次不采用纯 Go SQLite 适配器。驱动特有类型/DSN 留在持久化适配层，授权/Core 不依赖数据库。接入依赖及嵌入引擎源码时保留实际第三方声明。
 
 参考：[GORM 官方 SQLite 驱动](https://github.com/go-gorm/sqlite)、[v1.6.0 Module](https://github.com/go-gorm/sqlite/blob/v1.6.0/go.mod)、[mattn v1.14.52](https://github.com/mattn/go-sqlite3/releases/tag/v1.14.52)、[静态构建说明](https://github.com/mattn/go-sqlite3#cross-compiling-from-macos)。
+
+### 5.4.2 PostgreSQL 驱动
+
+**采用官方 `gorm.io/driver/postgres`（MIT），默认底层为 `github.com/jackc/pgx/v5`（MIT）的 database/sql 驱动。** 于 2026-10-14 核实的初始接入基线为 PostgreSQL Dialector v1.6.3，其发布 Module 依赖 GORM v1.31.2 和 pgx/v5 v5.10.0。持久化实现接入时固定并验证实际版本组合；本次文档选型不新增 PostgreSQL 运行时依赖，也不代表已实现数据库支持。
+
+- 常规持久化使用 GORM；Dialector、DSN 与 pgx 特有细节限于持久化/基础设施适配层，业务/Core 和 Desired State 对象保持驱动无关。
+- pgx 是纯 Go PostgreSQL 客户端，无需额外安装 libpq 或 C/共享库，符合独立发布要求；SQLite 仍使用前述受控静态 CGO 构建。
+- 首个持久化流程设计连接池上限、连接/查询超时、TLS 验证、时区/时间表示、事务/并发行为，以及代理/预编译语句兼容性。选择驱动不等于确定这些参数，也不证明多 Controller 安全性。
+- Schema 初始化/升级继续采用带版本的迁移。迁移工具仍暂缓，不因此允许生产升级只使用 AutoMigrate。
+
+参考：[GORM 官方 PostgreSQL 驱动](https://github.com/go-gorm/postgres)、[v1.6.3 Module](https://github.com/go-gorm/postgres/blob/v1.6.3/go.mod)、[GORM 连接说明](https://gorm.io/docs/connecting_to_the_database.html)、[pgx](https://github.com/jackc/pgx)。
 
 ### 5.5 请求参数校验
 
@@ -336,7 +347,7 @@ Adapter 只修改自身拥有的对象，报告 Desired/Applied Revision、观�
 
 ## 6. Agent 与 Linux 数据面
 
-`picketxd` 是唯一的特权数据面进程，并且必须能够脱离 Controller 独立运行。默认二进制包含 Agent/Reconcile、nftables、NFQUEUE Inspector 和 TPROXY 相关能力；NFQUEUE 与 TPROXY 均可通过配置显式关闭。
+`picketxd` 是唯一的特权数据面进程，并且必须能够脱离 Controller 独立运行。首期二进制范围为 Agent/Reconcile、nftables/conntrack 执行和受限本地接口。NFQUEUE 探测、NFLOG/镜像检测响应、REDIRECT/TPROXY 代理及业务 TLS 终止均后移，不是默认依赖；此决定替代此前默认全功能 Agent 的假设。
 
 核心 nftables/conntrack 能力缺失属于 fatal；可选能力缺失只禁用对应功能。
 
@@ -350,8 +361,7 @@ Adapter 只修改自身拥有的对象，报告 Desired/Applied Revision、观�
 | nftables Backend | 通过经验证的 Go Netlink Backend 操作 nf_tables。 |
 | Conntrack Backend | 通过 Go ctnetlink Backend 观察和删除连接。 |
 | Activity Monitor | 根据 conntrack 生命周期推导 Source/Lease 活动。 |
-| NFQUEUE Inspector | 在严格字节数、包数和时间预算内执行有限初始包探测。 |
-| TPROXY Runtime | 支持需要持续用户态拦截的可选高级能力。 |
+| Local Authorization API | 通过本地 TCP 或 Unix Socket 向可信集成提供受限逐请求决策，与管理操作分离。 |
 | Drift Monitor | 结合 Netlink 事件和周期一致性扫描恢复漂移。 |
 | Local Admin API | 通过 Unix socket 提供 status、doctor、dump、reconcile 和 reload。 |
 
@@ -373,7 +383,7 @@ flowchart TB
 
 1. 启动配置显式选择 `controller` 或 `static`。同一 `picketxd` 实例在任一时刻只能存在一个 Authoritative Desired State Provider。
 2. **Controller Mode：**Controller 是 Security Desired State 的唯一权威来源。本地 Manifest 中的 Resource、Grant、EnforcementBinding、Policy、Authorization Rule 等安全对象永远不能与 Controller 状态合并，也不能覆盖 Controller 状态。
-3. Controller Mode 仍允许本地 `/etc/picketx/picketxd.yaml`，但其中只能保存 Agent Runtime Configuration，例如 Controller endpoint、证书、日志、数据目录、NFQUEUE/TPROXY 开关、health/metrics endpoint 和 LKG 路径。
+3. Controller Mode 仍允许本地 `/etc/picketx/picketxd.yaml`，但其中只能保存 Agent Runtime Configuration，例如 Controller endpoint、证书、日志、数据目录、已启用的本地 API 监听、health/metrics endpoint 和 LKG 路径。
 4. Runtime Configuration 与 Security Desired State 使用独立的配置域和模型；不表示引入 Namespace API 对象。
 5. Controller Mode 下发现 Static Manifest 时，`picketxd` 默认忽略并输出显著告警；严格部署选项可以改为拒绝启动。
 6. **Static Manifest Mode：**Manifest 目录是 Security Desired State 的唯一权威来源，Controller 不向该 Agent 下发策略。
@@ -428,7 +438,7 @@ Static Manifest Mode 使用相同配置语义实现本地保护，限时 Grant �
 
 Linux Backend 优先评估 Go Netlink 集成，不再将 libnftnl/libmnl/libnetfilter_conntrack 作为默认必须依赖。候选库包括 `google/nftables`、`ti-mo/conntrack` 和 `florianl/go-nfqueue`；只有后续需求证明需要 eBPF Adapter 时再评估 `cilium/ebpf`。这些是评估候选，不代表已锁定版本或完成验证。
 
-采用前验证 Interval/Concatenated Set 覆盖、原子 Batch、IPv4/IPv6、conntrack 丢事件恢复与定向删除、NFQUEUE 预算、内核兼容和依赖许可证，保持 Backend 可替换。首期仍采用 nftables/conntrack；切换 Go 不意味着切换 eBPF，也不免除第三方许可证审查。
+采用前验证 Interval/Concatenated Set 覆盖、原子 Batch、IPv4/IPv6、conntrack 丢事件恢复与定向删除、内核兼容和依赖许可证，保持 Backend 可替换。首期仍采用 nftables/conntrack；切换 Go 不意味着切换 eBPF，也不免除第三方许可证审查。
 
 ## 7. 网络策略与权限模型
 
@@ -502,7 +512,7 @@ Controller Mode 下 Controller 是 Hard Expiry 的权威来源；Static Manifest
 
 ## 9. Authorization Service
 
-Authorization Service 是独立于 TPROXY 的第二种 Enforcement Integration。它不代理业务流量，而是接收 Nginx、Envoy、Traefik、Caddy 等网关的授权回调，然后统一评估 PicketX Identity、Resource、Policy、WASM、Provider 与审计规则。
+Authorization Service 是首期应用执行集成，与网络准入 Backend 独立。它不代理业务流量，而是接收 Nginx、Envoy、Traefik、Caddy 等网关的授权回调，然后统一评估 PicketX Identity、Resource、Policy、WASM、Provider 与审计规则。
 
 ```mermaid
 flowchart TB
@@ -549,6 +559,18 @@ PicketX 不需要读取加密后的业务流量。代理负责终止 TLS，并�
 - Adapter 配置必须包含有界 Timeout。
 - Allow 和 Deny Decision 只能在 Authorization Engine 返回的 TTL 内缓存，同时必须满足所选 Policy 的撤销保证。
 - 授权记录保留必要的决策元数据、按需包含的可信身份来源、Policy ID、原因与 Correlation ID；默认不保存完整请求、凭据、任意 Header 或应用行为内容。
+
+### 9.5 首期执行范围与后续探索
+
+首期范围为 **IP/CIDR 网络准入 + 现有入口提供 HTTP/HTTPS 授权 + 本地授权接口**。网络 Grant 适用于支持的传输协议；首期应用协议集成为 HTTP/HTTPS。原生 MySQL/数据库代理与其他协议解析器不属于本次交付范围。
+
+- 可信 HTTP 入口对每个受保护请求，根据实际资源/路由目标执行授权，包括复用连接上的后续请求。SNI 或首个请求不会授权连接上的所有后续网站；协议 Allow 不能覆盖必需的网络 Deny。可信身份和来源元数据来自受信集成，不能直接信任任意客户端 Header。
+- 本地决策接口可通过本地 TCP 或 Unix Socket 提供相同授权语义，限制在相关资源/Provider 状态内，保护调用方访问，并与本地管理 API 分离。其他应用负责自己的协议认证、生命周期与转发。监听/DTO 契约留待设计，选定接口不代表已有运行端点。
+- 现有入口管理 TLS 证书、终止和业务转发；仅持有证书/私钥不能旁路解密现代 TLS。Agent TLS 终止、透明代理与协议特有的 TLS 协商均暂缓。
+- NFQUEUE、流量镜像与异步检测/连接响应属于后续探索，不作为另一种首期授权模式。镜像分析不能保证触发异常的操作已被阻止，加密、截断、丢失和请求复用均限制其保证。未来响应策略必须声明对象与结果：终止连接不同于拒绝单个 HTTP 请求/Stream，删除 conntrack 不等于重置 Socket，发现异常不会自动允许封禁整个 IP/端口或撤销无关 Grant。主动终止 Stream 需要具备该能力的入口集成，auth_request 本身不提供这一能力。
+- 后移能力在采用前独立设计并测量资源预算；缺少这些能力不能导致首期 Agent 不可用，也不能弱化显式要求的策略。
+
+参考：[Nginx auth_request](https://nginx.org/en/docs/http/ngx_http_auth_request_module.html)、[HTTP/2 连接复用](https://www.rfc-editor.org/rfc/rfc9113.html#section-9.1.1)、[TLS 旁路解密限制](https://wiki.wireshark.org/TLS)、[conntrack 操作](https://netfilter.org/projects/conntrack-tools/conntrack-manpage.html)。
 
 ## 10. 插件与 WASM 架构
 
@@ -648,7 +670,7 @@ flowchart LR
 | Agent 被控制 | 只有 Agent 获得 `NET_ADMIN`；Local API 由 Unix socket 权限保护 |
 | Policy 误配置 | Dry-run、Policy Simulation、Revision、LKG、快速回滚 |
 | Authorization 超时 | Per-Resource Fail Mode；安全敏感 Resource 默认 fail-closed |
-| NFQUEUE 堵塞 | 严格 Timeout、Bounded Prefix、可选绕过/失败策略、Queue Depth 监控 |
+| 后续探测/代理接入 | 独立设计并声明执行保证；所需能力缺失不能隐式绕过 |
 | Plugin 风险 | External Process Isolation、WASM Sandbox、Host API Allowlist |
 | 身份混淆 | IP/CIDR 是网络授权主体；流程参与者和可信协议身份分离，共享访问必须明确 |
 | 重放或旧连接 | TCP 仅 SYN 创建新授权；Strict Revoke 删除 conntrack |
@@ -658,11 +680,11 @@ flowchart LR
 
 ## 15. 可观测性与运维
 
-- **Metrics：**Policy Compile Latency、Apply Latency、Agent Connectivity、Authorization Decision Latency、Allow/Deny Count、NFQUEUE Queue Depth、Conntrack Reconcile、WASM Latency、Provider Error、LKG Age。
+- **Metrics：**Policy Compile Latency、Apply Latency、Agent Connectivity、Authorization Decision Latency、Allow/Deny Count、Conntrack Reconcile、WASM Latency、Provider Error、LKG Age。
 - **Audit：**Policy 修改、Lease 申请与审批、Authorization 命中 Policy、Strict Revoke、Mode 切换和 Reload 结果。
 - **Logs：**结构化 JSON；按场景包含 Node、Resource、Policy、Revision、Provider Identity、Trace ID 和 Decision Correlation。
 - **Health：**Controller Readiness/Liveness、Agent Local Health、Netfilter Capability Probe。
-- **Doctor：**内核模块、nftables capability、conntrack、NFQUEUE、TPROXY、routing、权限、配置源、Manifest Validation 和 Controller Connectivity。
+- **Doctor：**内核模块、nftables capability、conntrack、既有路由假设、本地 API 权限、配置源、Manifest Validation 和 Controller Connectivity。
 
 ### 15.1 授权记录与可见状态
 
@@ -775,12 +797,12 @@ Go Backend 方向不再默认引入这些 C 库，但“纯 Go”不是许可证
 | 阶段 | 目标 | 范围 |
 | --- | --- | --- |
 | M0 数据面验证 | 证明来源执行可靠 | nftables/conntrack、IPv4/IPv6、重叠 IP/CIDR Grant、Hard Expiry、Strict/Graceful 撤销、重启和 Linux Network Namespace 行为 |
-| M1 可用访问流程 | 完成申请、批准、生效、到期 | 浏览器/OIDC 自助、基础审批、来源 Grant、权限合集、Resource 范围、状态和授权记录；Controller/SQLite/Agent/CLI 与 Static Manifest Mode |
+| M1 可用访问流程 | 完成申请、批准、生效、到期 | 浏览器/OIDC 自助、基础审批、来源 Grant、权限合集、Resource 范围、状态和授权记录；Controller/SQLite/Agent/CLI 与 Static Manifest Mode；HTTP/HTTPS 入口授权和受限本地决策 API |
 | M2 运维规模化 | 可靠多节点运行 | PostgreSQL、mTLS Stream、labels/selectors、drift/reconcile、LKG 恢复、各节点状态；按需 HA |
-| M3 协议授权 | 按需增加控制精度 | Generic AuthZ API、HTTP 代理 Adapter、可信协议用户/会话上下文；其他协议逐个评估 |
+| M3 协议扩展 | 按需增加控制精度 | 更多可信 Adapter 和协议用户/会话上下文；原生协议代理与探测逐个评估 |
 | M4 扩展与交付形态 | 按实际需求扩展 | WASM、External Provider/Plugin、高级审批、Cloud/OEM 和商业打包 |
 
-架构保留全功能 Agent 能力模型，NFQUEUE 和 TPROXY 可显式关闭。编译或启用某能力不代表所有流量都进入该路径。各阶段均不要求实现通用代理、完整行为记录或所有协议解析器。
+首期 Agent 范围替代此前全功能模型：NFQUEUE、镜像响应、透明代理和 TLS 终止均后移。HTTP/HTTPS 入口授权与本地决策接口属于首期范围，可在网络准入之后实现；各阶段均不要求实现通用代理、完整行为记录或所有协议解析器。
 
 基础审批与授权记录属于 M1，不仅属于未来企业版本。大规模 Benchmark 属于工程探索，不是首个可用产品的用户采用或商业验收门槛。
 
@@ -797,7 +819,7 @@ Go Backend 方向不再默认引入这些 C 库，但“纯 Go”不是许可证
 | Policy 重叠或冲突 | 误放行或误拒绝 | Deny 优先、Compiler Validation、Simulation、Provenance、Audit |
 | 配置源冲突 | 运维人员误判实际策略 | 唯一权威 Provider、禁止 Merge、显著告警、Provider-bound LKG |
 | 大规模状态 | Controller 或 Agent 内存压力 | Per-node Compile、Trie、Snapshot/Delta、100k 与 1M Benchmark |
-| 可选探测过载 | 丢包或服务中断 | 严格 NFQUEUE/TPROXY Budget、功能开关、可度量的失败策略 |
+| 后续探测/代理过载 | 丢包或服务中断 | 在字节/流/时间预算、容量和失败策略设计及测量后再采用 |
 
 ## 20. 附录
 
@@ -879,6 +901,7 @@ PicketXD/                      # GPL-3.0-or-later + OEM option
 
 | 版本 | 日期 | 变更 |
 | --- | --- | --- |
+| v0.8.0 | 2026-10-14 | 确定官方 GORM PostgreSQL/pgx 驱动；首期收敛为网络准入、外部 HTTP/HTTPS 入口授权和本地决策接口；探测、透明代理/TLS 与原生数据库代理后移；实际接入待实现。 |
 | v0.7.9 | 2026-10-13 | 确定官方 GORM SQLite/mattn 驱动及默认独立发布、Linux 完整静态链接要求；PostgreSQL 驱动与迁移工具待选，接入和产物验证待实现。 |
 | v0.7.8 | 2026-10-13 | 确定 Cobra v1.10.2 作为 CLI 接入基线；明确 Koanf 参数覆盖、API/本地诊断边界与输出规则；命令实现待接入。 |
 | v0.7.7 | 2026-10-13 | 确定 slog 作为运行日志方案；明确 Logger 注入、格式、字段、动态级别及与独立授权审计的边界。 |
