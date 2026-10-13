@@ -18,6 +18,8 @@ Dependency assembly uses explicit constructors and module-level composition, wit
 
 Runtime configuration loading is selected as Koanf v2.3.8, with typed module configuration and explicit file/environment/flag precedence. It is not implemented yet; the scaffold still reads `-listen` through the standard `flag` package.
 
+Runtime logging uses standard-library `log/slog`. The scaffold already emits JSON to standard error; module logger injection, selectable formats, configurable levels and persisted authorization audit remain to be implemented.
+
 ## Development
 
 Requirements: Go 1.27+, Node.js 24 LTS and npm.

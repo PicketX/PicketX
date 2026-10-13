@@ -4,7 +4,7 @@
 
 | Field | Value |
 | --- | --- |
-| Version | v0.7.6 |
+| Version | v0.7.7 |
 | Date | 2026-10-13 |
 | Status | Agreed design baseline; implementation status not asserted |
 | Project | PicketX |
@@ -34,6 +34,7 @@ Product requirements, APIs, database schemas, protocol specifications, implement
 | Backend language and repositories | Go; PicketX owns control plane/Core/Web, PicketXD owns the official Linux Agent. |
 | Controller HTTP framework | Echo v5 (MIT); thin HTTP adapters, independent business/Core packages. |
 | Controller persistence | GORM (MIT); SQLite for single-Controller and PostgreSQL for clustered deployments; separate persistence and configuration models. |
+| Runtime logging | Standard-library slog; centrally constructed/injected loggers, text/JSON output and separately persisted authorization audit. |
 | Runtime configuration | Koanf v2 (MIT); explicit file/env/flag precedence, typed module inputs and separate policy-manifest decoding. |
 | Dependency injection and assembly | Explicit constructors, module-level assembly and centralized lifecycle management; no DI framework. |
 | API documentation | Swaggo v2 (MIT), pinned CLI; generate OpenAPI 3.1 from HTTP DTOs and annotations; Swagger UI v5 (Apache-2.0) renders documentation. |
@@ -306,6 +307,18 @@ References: [Kubernetes configuration assembly](https://github.com/kubernetes/ku
 - File watching is only a change signal, not permission to mutate live services. Define reloadable fields and restart-required fields explicitly. A reload creates and validates a complete candidate; failed reloads retain the active configuration. Coordinate supported changes through lifecycle owners, rather than sharing a mutable Koanf object with concurrent readers. Manifest-directory reload continues to use the independent Desired State validation/reconcile/LKG pipeline.
 
 References: [Koanf v2.3.8](https://github.com/knadh/koanf/releases/tag/v2.3.8), [providers, parsers and merge order](https://github.com/knadh/koanf), [OpenTelemetry Collector configuration implementation](https://github.com/open-telemetry/opentelemetry-collector/blob/main/confmap/internal/conf.go).
+
+### 5.9 Runtime logging
+
+**Use the Go standard library `log/slog` (BSD-3-Clause) for runtime logging.** It follows the project's Go toolchain version and adds no external logging dependency. Use the standard JSON/Text handlers initially; Zap, Zerolog and third-party handlers are not selected.
+
+- The application assembly layer constructs logger instances and injects `*slog.Logger` into modules that need logging. Add stable component fields with `With`. Pure model operations need not receive a logger solely to satisfy a layering convention. Configure a default logger only at the process boundary for compatibility; do not use global logger reconfiguration as module dependency management.
+- Development defaults to text output, deployment to structured JSON. Write runtime logs to standard error for the hosting environment to collect. The current scaffold already emits JSON through a startup-configured default slog logger; module injection, selectable formats and runtime log-level configuration are not implemented yet.
+- Use consistent fields such as `component`, `request_id`, `agent_id`, `resource`, `grant_id`, `revision`, `provider_id` and `error` when relevant; include trace correlation only when tracing is actually integrated. Use context-aware calls where request cancellation/correlation is available; context does not automatically become log attributes. Never label an approval as confirmed enforcement.
+- Integrate log-level configuration with typed runtime settings when implemented. `slog.LevelVar` supports safe level changes; this does not imply that all runtime settings are reloadable. Redact credentials, tokens and sensitive payloads rather than serializing entire request/configuration objects.
+- Runtime logs support operations and debugging. Authorization/audit records are separately persisted business evidence as defined in section 15.1; changing log levels, sampling or losing console output must not discard required authorization records. Their schema, retention and reliable persistence remain implementation decisions; no audit storage is implemented by choosing slog.
+
+References: [Go structured logging](https://go.dev/blog/slog), [slog API](https://pkg.go.dev/log/slog).
 
 ## 6. Agent and Linux data plane
 
@@ -841,6 +854,7 @@ This architecture should be refined through focused documents rather than expand
 
 | Version | Date | Change |
 | --- | --- | --- |
+| v0.7.7 | 2026-10-13 | Selected slog for runtime logs; defined logger injection, formats, fields, dynamic levels and the separate authorization-audit boundary. |
 | v0.7.6 | 2026-10-13 | Selected Koanf v2.3.8 as the runtime configuration baseline; defined precedence, typed injection, reload and policy-source isolation; runtime integration remains pending. |
 | v0.7.5 | 2026-10-13 | Adopted constructor injection, module assembly and centralized lifecycle as a long-term baseline; specified layer directions and scopes without a DI framework. |
 | v0.7.4 | 2026-10-13 | Selected Swaggo v2.0.0-rc6 for OpenAPI 3.1 documentation generation; selected Swagger UI v5.33.2; recorded pinned build tooling, contract checks and self-hosted documentation boundaries. |

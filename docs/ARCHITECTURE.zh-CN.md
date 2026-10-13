@@ -4,7 +4,7 @@
 
 | 字段 | 内容 |
 | --- | --- |
-| 版本 | v0.7.6 |
+| 版本 | v0.7.7 |
 | 日期 | 2026-10-13 |
 | 状态 | 已确认的设计基线；不代表已实现 |
 | 项目 | PicketX |
@@ -34,6 +34,7 @@
 | 后端语言与仓库 | Go；PicketX 承载控制面/Core/Web，PicketXD 承载官方 Linux Agent。 |
 | Controller HTTP 框架 | Echo v5（MIT）；HTTP 适配层保持精简，业务/Core 包独立。 |
 | Controller 持久化 | GORM（MIT）；SQLite 用于单 Controller，PostgreSQL 用于集群；数据库模型与配置模型分离。 |
+| 运行日志 | 标准库 slog；集中创建并注入 Logger，文本/JSON 输出；授权审计独立持久化。 |
 | 运行时配置 | Koanf v2（MIT）；文件/环境变量/启动参数明确覆盖，模块接收带类型配置；策略 Manifest 独立解析。 |
 | 依赖注入与组装 | 手工构造函数注入、按模块组装、集中生命周期管理；不引入 DI 框架。 |
 | API 文档 | Swaggo v2（MIT），固定 CLI 版本；从 HTTP DTO 和注释生成 OpenAPI 3.1；Swagger UI v5（Apache-2.0）展示文档。 |
@@ -306,6 +307,18 @@ Adapter 只修改自身拥有的对象，报告 Desired/Applied Revision、观�
 - 文件监听仅提供变更信号，不代表允许直接修改运行中的服务。显式定义可重载字段与需重启字段。重载时创建并校验完整候选，失败保留当前配置；通过生命周期负责人协调允许的变更，不让并发读取方共享可变 Koanf 对象。Manifest 目录重载继续使用独立的 Desired State 校验/Reconcile/LKG 流水线。
 
 参考：[Koanf v2.3.8](https://github.com/knadh/koanf/releases/tag/v2.3.8)、[Provider、Parser 与合并顺序](https://github.com/knadh/koanf)、[OpenTelemetry Collector 配置实现](https://github.com/open-telemetry/opentelemetry-collector/blob/main/confmap/internal/conf.go)。
+
+### 5.9 运行日志
+
+**运行日志采用 Go 标准库 `log/slog`（BSD-3-Clause）**，随项目 Go 工具链版本维护，不添加外部日志依赖。初期使用标准 JSON/Text Handler；本次不选用 Zap、Zerolog 或第三方 Handler。
+
+- 应用组装层创建 Logger，并向需要日志的模块注入 `*slog.Logger`；使用 `With` 添加稳定的组件字段。纯模型操作不必仅为符合分层形式而接收 Logger。默认 Logger 仅在进程边界为兼容性设置，不通过全局 Logger 重配置管理模块依赖。
+- 开发环境默认文本输出，部署环境默认结构化 JSON。运行日志写标准错误，由宿主环境采集。当前骨架已通过启动时设置的默认 slog Logger 输出 JSON；模块注入、格式选择与运行日志级别配置尚未实现。
+- 按场景统一 `component`、`request_id`、`agent_id`、`resource`、`grant_id`、`revision`、`provider_id` 和 `error` 等字段；仅在实际接入追踪时添加 Trace 关联。请求场景使用带 Context 的调用，但 Context 不会自动变成日志字段。不能把审批成功描述为已确认执行。
+- 实现时通过带类型运行配置管理日志级别。`slog.LevelVar` 支持安全动态调整级别，但不代表所有运行配置均可热重载。脱敏凭据、Token 和敏感内容，不直接序列化整个请求/配置对象。
+- 运行日志用于运维与排障；授权/审计记录是第 15.1 节定义的独立持久化业务证据。调整日志级别、采样或控制台输出丢失不能丢弃必需的授权记录。具体 Schema、保留周期和可靠持久化机制留待实现确定；选用 slog 不代表已实现审计存储。
+
+参考：[Go 结构化日志](https://go.dev/blog/slog)、[slog API](https://pkg.go.dev/log/slog)。
 
 ## 6. Agent 与 Linux 数据面
 
@@ -841,6 +854,7 @@ PicketXD/                      # GPL-3.0-or-later + OEM option
 
 | 版本 | 日期 | 变更 |
 | --- | --- | --- |
+| v0.7.7 | 2026-10-13 | 确定 slog 作为运行日志方案；明确 Logger 注入、格式、字段、动态级别及与独立授权审计的边界。 |
 | v0.7.6 | 2026-10-13 | 确定 Koanf v2.3.8 作为运行时配置接入基线；明确覆盖顺序、带类型注入、重载与策略来源隔离；尚未接入运行代码。 |
 | v0.7.5 | 2026-10-13 | 确定手工构造函数注入、模块组装与集中生命周期管理为长期基线；明确分层、依赖方向与作用域，不引入 DI 框架。 |
 | v0.7.4 | 2026-10-13 | 确定 Swaggo v2.0.0-rc6 生成 OpenAPI 3.1 文档；确定 Swagger UI v5.33.2；记录固定构建工具版本、契约检查及本地文档服务边界。 |
