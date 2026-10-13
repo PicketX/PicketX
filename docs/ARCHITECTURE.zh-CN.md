@@ -4,7 +4,7 @@
 
 | 字段 | 内容 |
 | --- | --- |
-| 版本 | v0.7.4 |
+| 版本 | v0.7.5 |
 | 日期 | 2026-10-13 |
 | 状态 | 已确认的设计基线；不代表已实现 |
 | 项目 | PicketX |
@@ -34,6 +34,7 @@
 | 后端语言与仓库 | Go；PicketX 承载控制面/Core/Web，PicketXD 承载官方 Linux Agent。 |
 | Controller HTTP 框架 | Echo v5（MIT）；HTTP 适配层保持精简，业务/Core 包独立。 |
 | Controller 持久化 | GORM（MIT）；SQLite 用于单 Controller，PostgreSQL 用于集群；数据库模型与配置模型分离。 |
+| 依赖注入与组装 | 手工构造函数注入、按模块组装、集中生命周期管理；不引入 DI 框架。 |
 | API 文档 | Swaggo v2（MIT），固定 CLI 版本；从 HTTP DTO 和注释生成 OpenAPI 3.1；Swagger UI v5（Apache-2.0）展示文档。 |
 | 请求参数校验 | HTTP 字段使用 go-playground/validator v10（MIT）；模型约束使用可复用 Go 函数。 |
 | 配置契约 | 远程与静态输入共用版本化语义；Resource/Endpoint/Grant/Binding 与业务流程、执行模型分离；不引入 Namespace。 |
@@ -271,6 +272,27 @@ Adapter 只修改自身拥有的对象，报告 Desired/Applied Revision、观�
 - **文档展示与交互请求采用 Swagger UI v5（Apache-2.0）**，于 2026-10-13 核实的最新发布版本 v5.33.2 作为接入基线。Controller 提供固定版本的本地静态资源及生成的规范文件；Echo 专用包装库不是必需，使用时必须明确支持 Echo v5。运行时不依赖公共 CDN，关闭外部在线规范验证器。文档与 Try it out 请求继续遵守正常认证/授权；路由访问和生产暴露方式留待实现确定。当前骨架未接入 UI 包或文档路由。API 描述默认英文；本地化说明必须保持相同的路径、Schema 和授权语义。
 
 参考：[Swaggo v2.0.0-rc6](https://github.com/swaggo/swag/releases/tag/v2.0.0-rc6)、[固定版本 CLI 与注释文档](https://pkg.go.dev/github.com/swaggo/swag/v2@v2.0.0-rc6)、[OpenAPI 3.1.0](https://spec.openapis.org/oas/v3.1.0.html)、[Swagger UI v5.33.2](https://github.com/swagger-api/swagger-ui/releases/tag/v5.33.2)、[Swagger UI 配置](https://swagger.io/docs/open-source-tools/swagger-ui/usage/configuration/)。
+
+### 5.7 依赖注入与应用组装
+
+**长期基线采用显式构造函数注入、按模块组装和集中生命周期管理**，不选用 DI 容器或代码生成框架。手工组装不是必须最终迁移到 Fx 的临时阶段；仅在实际模块组合或生命周期问题证明有必要时重新评估工具。
+
+| 边界 | 职责与依赖方向 |
+| --- | --- |
+| Core / 配置模型 | 共享授权模型、选择器、有效期与校验；不依赖 HTTP、ORM、Controller 启动组装或 Linux 实现 |
+| 应用服务 | 审批、Grant 和发布等用例；依赖 Core 及使用的存储/发布能力，不依赖具体适配器 |
+| HTTP 适配器 | 解析/校验 DTO、获取认证身份、调用服务和映射结果；不直接执行数据库业务流程 |
+| 持久化 / 外部适配器 | 使用 GORM 或外部 Client 实现所需能力；不依赖 HTTP Handler |
+| 应用组装层 | 选择具体实现、创建共享资源并组合模块；业务包不能反向引用它 |
+| 命令入口 | 解析启动输入并调用组装后的应用；避免 main 函数不断累积模块构造和业务代码 |
+
+- 每个模块通过构造函数参数或专用 `Dependencies` 结构体接收必要依赖。在实际替换/适配边界定义小接口，通常放在使用方包；不为每个结构体创建接口。模块内部对象保持私有，仅暴露需要的入口和生命周期操作。不向所有模块传递整个应用或万能服务容器。
+- 运行配置值与已创建的依赖分开。禁止通过可变全局服务、`init()` 注册或 `context.Context` 查找依赖。必要依赖缺失时启动失败；可选能力必须显式定义，不能因缺失而跳过授权。
+- 连接池、HTTP Client 和共享服务属于进程范围，必须支持并发使用。当前身份、请求 ID 和截止时间通过方法参数/请求 Context 传递；事务由用例明确限定范围。当前申请人或事务不能存入共享 Service 字段。
+- 构造函数组装对象，不偷偷启动后台循环。应用显式管理创建、准备/就绪、运行与关闭。先停止接入和依赖资源的任务，再关闭资源；失败时清理已创建/启动的部分组件，并设置关闭时限。对象创建成功不代表业务就绪或 Agent 已执行。
+- 随实际功能增长拆分模块组装函数。在审查中约束导入方向，并随相关包接入 CI 依赖检查；Go 能发现循环导入，但不会检查所有架构边界。具体包名与生命周期 API 留待实现确定；本次不自建 DI 框架，也不提前创建无用途模块。
+
+参考：[Kubernetes 配置组装](https://github.com/kubernetes/kubernetes/blob/v1.37.1/cmd/kube-apiserver/app/config.go)、[kubelet 依赖](https://github.com/kubernetes/kubernetes/blob/v1.37.1/pkg/kubelet/kubelet.go)、[Prometheus 组装与运行组](https://github.com/prometheus/prometheus/blob/v3.15.0/cmd/prometheus/main.go)、[Go 接口建议](https://go.dev/wiki/CodeReviewComments#interfaces)。
 
 ## 6. Agent 与 Linux 数据面
 
@@ -806,6 +828,7 @@ PicketXD/                      # GPL-3.0-or-later + OEM option
 
 | 版本 | 日期 | 变更 |
 | --- | --- | --- |
+| v0.7.5 | 2026-10-13 | 确定手工构造函数注入、模块组装与集中生命周期管理为长期基线；明确分层、依赖方向与作用域，不引入 DI 框架。 |
 | v0.7.4 | 2026-10-13 | 确定 Swaggo v2.0.0-rc6 生成 OpenAPI 3.1 文档；确定 Swagger UI v5.33.2；记录固定构建工具版本、契约检查及本地文档服务边界。 |
 | v0.7.3 | 2026-10-13 | 确定 HTTP 字段使用 validator v10，模型规则复用校验函数；保留启动自动升级数据库目标，暂缓迁移工具选型。 |
 | v0.7.2 | 2026-10-13 | 确定 Controller 持久化使用 GORM；记录双数据库、模型分离、事务与版本化迁移边界，未添加数据库运行时行为。 |

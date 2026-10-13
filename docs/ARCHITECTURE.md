@@ -4,7 +4,7 @@
 
 | Field | Value |
 | --- | --- |
-| Version | v0.7.4 |
+| Version | v0.7.5 |
 | Date | 2026-10-13 |
 | Status | Agreed design baseline; implementation status not asserted |
 | Project | PicketX |
@@ -34,6 +34,7 @@ Product requirements, APIs, database schemas, protocol specifications, implement
 | Backend language and repositories | Go; PicketX owns control plane/Core/Web, PicketXD owns the official Linux Agent. |
 | Controller HTTP framework | Echo v5 (MIT); thin HTTP adapters, independent business/Core packages. |
 | Controller persistence | GORM (MIT); SQLite for single-Controller and PostgreSQL for clustered deployments; separate persistence and configuration models. |
+| Dependency injection and assembly | Explicit constructors, module-level assembly and centralized lifecycle management; no DI framework. |
 | API documentation | Swaggo v2 (MIT), pinned CLI; generate OpenAPI 3.1 from HTTP DTOs and annotations; Swagger UI v5 (Apache-2.0) renders documentation. |
 | Request validation | go-playground/validator v10 (MIT) for HTTP fields; reusable Go functions for model invariants. |
 | Configuration contract | Shared versioned semantics for remote and static input; Resource/Endpoint/Grant/Binding are separate from workflow and execution models; no Namespace. |
@@ -271,6 +272,27 @@ References: [validator](https://github.com/go-playground/validator), [Echo valid
 - **Swagger UI v5 (Apache-2.0) is selected for documentation rendering and interactive requests**, with v5.33.2 as the latest-release integration baseline verified on 2026-10-13. Serve pinned local assets and the generated specification through the Controller; an Echo-specific wrapper is optional and must explicitly support Echo v5 if used. Keep runtime operation independent of public CDNs and disable the external online specification validator. Documentation and Try it out requests retain normal authentication/authorization; route access and production exposure are implementation decisions. No UI package or route is implemented in the current scaffold. English is the default API description language; localized prose must preserve identical paths, schemas and authorization semantics.
 
 References: [Swaggo v2.0.0-rc6](https://github.com/swaggo/swag/releases/tag/v2.0.0-rc6), [versioned CLI and annotation documentation](https://pkg.go.dev/github.com/swaggo/swag/v2@v2.0.0-rc6), [OpenAPI 3.1.0](https://spec.openapis.org/oas/v3.1.0.html), [Swagger UI v5.33.2](https://github.com/swagger-api/swagger-ui/releases/tag/v5.33.2), [Swagger UI configuration](https://swagger.io/docs/open-source-tools/swagger-ui/usage/configuration/).
+
+### 5.7 Dependency injection and application assembly
+
+**Use explicit constructor injection, module-level assembly and centralized lifecycle management as the long-term baseline.** No DI container or code-generation framework is selected. Manual assembly is not a temporary stage that must eventually migrate to Fx; revisit tooling only when concrete module-composition or lifecycle problems justify it.
+
+| Boundary | Responsibility and dependency direction |
+| --- | --- |
+| Core / configuration | Shared authorization models, selectors, lifetimes and validation; independent of HTTP, ORM, Controller bootstrap and Linux implementation |
+| Application services | Approval, Grant and publication use cases; depend on Core and the storage/publication capabilities they consume, not concrete adapters |
+| HTTP adapters | Decode/validate DTOs, resolve authenticated actors, invoke services and map results; no direct database workflow logic |
+| Persistence / external adapters | Implement consumed capabilities using GORM or external clients; no dependency on HTTP handlers |
+| Application assembly | Select concrete implementations, construct shared resources and compose modules; business packages must not import it |
+| Command entry point | Parse startup inputs and invoke the assembled application; keep module construction and business behavior out of a growing main function |
+
+- Each module receives only its required dependencies through constructor parameters or a focused `Dependencies` struct. Define small interfaces at real substitution/adapter boundaries, usually in the consuming package; do not create an interface for every struct. Keep module internals private and expose only needed entry points and lifecycle operations. Do not pass the entire application or a universal service container into every module.
+- Separate runtime configuration values from constructed dependencies. Do not use mutable global services, `init()` registration, or `context.Context` as a dependency lookup mechanism. Required missing dependencies fail startup; optional capabilities must be explicit and must never silently bypass authorization.
+- Shared pools, HTTP clients and services are process-scoped and concurrency-safe. Request identities, IDs and deadlines travel through method inputs/request context; transactions have explicit use-case scope. Never store a current requester or transaction in shared service fields.
+- Constructors assemble objects without starting hidden background loops. The application explicitly manages construction, preparation/readiness, running and shutdown. Stop admission and dependent workers before closing their resources; clean up partially constructed/started components on failure and apply bounded shutdown. A successfully constructed service is not proof of readiness or Agent enforcement.
+- Compose modules with focused assembly functions as implemented features grow. Enforce import boundaries in review and add dependency checks to CI with those packages; Go detects import cycles but does not enforce every architectural boundary. Exact package names and lifecycle APIs are implementation details; this decision does not introduce a custom DI framework or prebuild unused modules.
+
+References: [Kubernetes configuration assembly](https://github.com/kubernetes/kubernetes/blob/v1.37.1/cmd/kube-apiserver/app/config.go), [kubelet dependencies](https://github.com/kubernetes/kubernetes/blob/v1.37.1/pkg/kubelet/kubelet.go), [Prometheus assembly and run group](https://github.com/prometheus/prometheus/blob/v3.15.0/cmd/prometheus/main.go), [Go interface guidance](https://go.dev/wiki/CodeReviewComments#interfaces).
 
 ## 6. Agent and Linux data plane
 
@@ -806,6 +828,7 @@ This architecture should be refined through focused documents rather than expand
 
 | Version | Date | Change |
 | --- | --- | --- |
+| v0.7.5 | 2026-10-13 | Adopted constructor injection, module assembly and centralized lifecycle as a long-term baseline; specified layer directions and scopes without a DI framework. |
 | v0.7.4 | 2026-10-13 | Selected Swaggo v2.0.0-rc6 for OpenAPI 3.1 documentation generation; selected Swagger UI v5.33.2; recorded pinned build tooling, contract checks and self-hosted documentation boundaries. |
 | v0.7.3 | 2026-10-13 | Selected validator v10 for HTTP fields with reusable model validation; retained startup database upgrades as a target and deferred migration-tool selection. |
 | v0.7.2 | 2026-10-13 | Selected GORM for Controller persistence; recorded dual-database, model separation, transaction and versioned migration boundaries without adding database runtime behavior. |

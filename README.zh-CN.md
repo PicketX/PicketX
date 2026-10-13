@@ -14,6 +14,8 @@ PicketX 通过自助申请、策略和审批，为受保护资源提供有期限
 
 后端技术栈已确定为 Go + Echo v5 + GORM，请求字段校验采用 go-playground/validator v10。API 文档生成采用 Swaggo v2.0.0-rc6，目标规范为 OpenAPI 3.1，文档展示与交互请求采用 Swagger UI v5.33.2。GORM、validator、Swaggo 和 Swagger UI 当前为架构选型，持久化、迁移、请求参数校验与 API 文档生成/展示尚未实现。
 
+依赖组装采用显式构造函数注入、按模块组合和集中生命周期管理，不引入 DI 框架；设计边界见架构第 5.7 节。
+
 ## 本地开发
 
 需要 Go 1.27+、Node.js 24 LTS 和 npm。

@@ -9,6 +9,7 @@ Read `docs/CONFIGURATION_MODEL.md` before implementing configuration schemas or 
 - Controller persistence uses GORM. Keep ORM types in persistence implementations and use versioned migrations for deployed databases; drivers and migration tooling are not yet selected.
 - Use go-playground/validator v10 for HTTP DTO fields; keep complex configuration invariants in shared Go validation functions and preserve omission/null/empty/zero semantics. Add the dependency when an implemented endpoint requires it.
 - API documentation uses Swaggo v2 CLI pinned to v2.0.0-rc6 with `--v3.1`; introduce generation and CI contract checks with the first documented business endpoint. Keep ordinary Echo handlers; Swagger UI v5.33.2 is selected for self-hosted rendering. Code generation is not an initial requirement.
+- Use explicit constructor injection and focused module assembly; no DI framework is selected. Keep dependency directions inward, avoid global service lookup, and centrally manage startup/readiness/failure cleanup/shutdown. Request identities and transactions must not live in shared service fields.
 - Keep network IP/CIDR subjects separate from requesters and verified protocol identities. Approval is not confirmation of enforcement.
 - Preserve independent Grant lifetimes, permission union, deny precedence, IPv6 support, and single authoritative configuration source.
 - Use npm and the committed lockfile for Web development. Keep business code out of `src/components/ui`; compose shared components separately.

@@ -14,6 +14,8 @@ The control plane and Web live here. The official Linux Agent, `picketxd`, belon
 
 The selected backend stack is Go + Echo v5 + GORM, with go-playground/validator v10 for request fields. API documentation generation uses Swaggo v2.0.0-rc6 targeting OpenAPI 3.1, with Swagger UI v5.33.2 for documentation and interactive requests. GORM, validator, Swaggo and Swagger UI are architecture decisions; persistence, migrations, request validation and API documentation generation/display are not implemented yet.
 
+Dependency assembly uses explicit constructors and module-level composition, with centralized lifecycle management; no DI framework is selected. See architecture section 5.7 for the design boundaries.
+
 ## Development
 
 Requirements: Go 1.27+, Node.js 24 LTS and npm.
