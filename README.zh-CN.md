@@ -12,6 +12,8 @@ PicketX 通过自助申请、策略和审批，为受保护资源提供有期限
 
 控制面与 Web 位于本仓库；官方 Linux Agent `picketxd` 属于独立的 **PicketXD** 仓库。本次初始化未创建或修改该仓库。
 
+后端技术栈已确定为 Go + Echo v5 + GORM。GORM 当前为架构选型，数据库驱动、迁移与持久化尚未实现。
+
 ## 本地开发
 
 需要 Go 1.27+、Node.js 24 LTS 和 npm。

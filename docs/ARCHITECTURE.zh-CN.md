@@ -4,8 +4,8 @@
 
 | 字段 | 内容 |
 | --- | --- |
-| 版本 | v0.7.1 |
-| 日期 | 2026-10-12 |
+| 版本 | v0.7.2 |
+| 日期 | 2026-10-13 |
 | 状态 | 已确认的设计基线；不代表已实现 |
 | 项目 | PicketX |
 
@@ -33,6 +33,7 @@
 | 其他组件许可证 | Controller、CLI、公开协议与 SDK、External Plugin SDK 默认使用 Apache-2.0。 |
 | 后端语言与仓库 | Go；PicketX 承载控制面/Core/Web，PicketXD 承载官方 Linux Agent。 |
 | Controller HTTP 框架 | Echo v5（MIT）；HTTP 适配层保持精简，业务/Core 包独立。 |
+| Controller 持久化 | GORM（MIT）；SQLite 用于单 Controller，PostgreSQL 用于集群；数据库模型与配置模型分离。 |
 | 配置契约 | 远程与静态输入共用版本化语义；Resource/Endpoint/Grant/Binding 与业务流程、执行模型分离；不引入 Namespace。 |
 | 前端 | React、TypeScript、Vite、shadcn/ui、Tailwind CSS、i18next、npm；官方基础组件与项目组合分层。 |
 
@@ -228,10 +229,22 @@ Adapter 只修改自身拥有的对象，报告 Desired/Applied Revision、观�
 - 使用独立的请求/响应 DTO。申请者、审批者的认证身份由服务端确定，不把客户端输入直接绑定到持久化或领域对象；显式选择参数来源。
 - Echo 不内置校验引擎，在首个业务接口需要时再选型；模型约束与授权检查留在可复用的领域/业务代码中，保证远程与静态配置语义一致。
 - 实现业务接口时，通过统一 HTTP 错误处理器将业务错误映射为 HTTP 状态与稳定 API 错误码，内部错误留在服务端日志。当前存活检查骨架使用 Echo 默认 HTTP 错误处理，尚未定义业务错误契约。
-- Echo 不决定持久化、ORM、OIDC/会话实现、OpenAPI 工具或 gRPC，这些仍独立选型；Agent 同步保持既定协议边界。
+- Echo 不决定持久化、OIDC/会话实现、OpenAPI 工具或 gRPC。GORM 在第 5.4 节独立确定，其余工具继续分别选型；Agent 同步保持既定协议边界。
 - 当前骨架仅暴露 `GET /healthz` 进程存活检查（以及 HTTP HEAD 语义），设置 `Cache-Control: no-store`。超时与优雅退出继续由现有 `http.Server` 管理。接入框架不代表已经实现认证、审批、Grant 或执行功能。
 
 参考：[Echo 文档](https://echo.labstack.com/)、[版本策略](https://echo.labstack.com/guide/installation/)、[v5 迁移](https://github.com/labstack/echo/blob/master/API_CHANGES_V5.md)。
+
+### 5.4 Controller 持久化
+
+**Controller 数据库访问层确定为 GORM（MIT）**，独立于 Echo。初始接入基线为 `gorm.io/gorm` v1.31.2，核验日期为 2026-10-13。在首个持久化实现实际引用时，将依赖锁定到 `go.mod`/`go.sum`；当前存活检查骨架没有数据库连接或 GORM 运行时依赖。
+
+- 保留 SQLite 用于轻量单 Controller 部署、PostgreSQL 用于集群部署。数据库驱动、SQLite 的 CGO 或纯 Go 实现、连接参数和迁移工具仍独立选型。
+- GORM 模型和 `*gorm.DB` 限于持久化实现。HTTP DTO、数据库模型与标准配置契约分离；共享授权/配置包及 Agent 契约保持 ORM 无关。
+- 为相关审批、Grant 与发布记录写入定义明确事务边界。数据库提交不代表 Agent 已执行；最终表结构、并发控制和可靠发布机制随首个业务流程设计。
+- 已部署实例采用经过审查、带版本的 Schema 迁移。生产升级不能仅依赖启动时 `AutoMigrate`；本次选型不决定迁移工具。
+- GORM 可以抽象部分 SQL 差异，但不能统一数据库并发语义。在声称支持 SQLite 和 PostgreSQL 前，必须分别验证业务一致性与迁移；时间存储、约束及更新行为应保持已约定的授权语义。
+
+参考：[GORM](https://gorm.io/docs/)、[v1.31.2](https://github.com/go-gorm/gorm/releases/tag/v1.31.2)、[迁移说明](https://gorm.io/docs/migration.html)。
 
 ## 6. Agent 与 Linux 数据面
 
@@ -767,6 +780,7 @@ PicketXD/                      # GPL-3.0-or-later + OEM option
 
 | 版本 | 日期 | 变更 |
 | --- | --- | --- |
+| v0.7.2 | 2026-10-13 | 确定 Controller 持久化使用 GORM；记录双数据库、模型分离、事务与版本化迁移边界，未添加数据库运行时行为。 |
 | v0.7.1 | 2026-10-12 | 确定 Controller HTTP 使用 Echo v5；记录错误处理、校验及框架边界；迁移存活检查骨架。 |
 | v0.7.0 | 2026-10-08 | 分离业务/配置/执行模型；明确多入口 Resource、目标地址数组、多资源/多 Agent 绑定、按节点投影和不引入 Namespace 的隔离；替换旧静态示例。 |
 | v0.6.0 | 2026-10-01 | 统一 Authorization Core 与可扩展 Agent/Adapter；确定 PicketX/PicketXD 双仓库与 Go；前端改为 shadcn/ui/Tailwind，补充组件组合、升级、i18n 与新鲜度约束；加入 Gitea 验收。 |

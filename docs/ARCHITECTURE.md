@@ -4,8 +4,8 @@
 
 | Field | Value |
 | --- | --- |
-| Version | v0.7.1 |
-| Date | 2026-10-12 |
+| Version | v0.7.2 |
+| Date | 2026-10-13 |
 | Status | Agreed design baseline; implementation status not asserted |
 | Project | PicketX |
 
@@ -33,6 +33,7 @@ Product requirements, APIs, database schemas, protocol specifications, implement
 | Other component licensing | Controller, CLI, public protocols and SDKs, and external-plugin SDK use Apache-2.0 by default. |
 | Backend language and repositories | Go; PicketX owns control plane/Core/Web, PicketXD owns the official Linux Agent. |
 | Controller HTTP framework | Echo v5 (MIT); thin HTTP adapters, independent business/Core packages. |
+| Controller persistence | GORM (MIT); SQLite for single-Controller and PostgreSQL for clustered deployments; separate persistence and configuration models. |
 | Configuration contract | Shared versioned semantics for remote and static input; Resource/Endpoint/Grant/Binding are separate from workflow and execution models; no Namespace. |
 | Frontend | React, TypeScript, Vite, shadcn/ui, Tailwind CSS, i18next, npm; separate official primitives from project compositions. |
 
@@ -228,10 +229,22 @@ State-push Agents and request-time AuthZ hooks are separate integration paths. A
 - Use separate request/response DTOs. Resolve authenticated requesters and approvers on the server; do not bind client input directly into persistent/domain objects. Select request parameter sources explicitly.
 - Echo does not include a validation engine. Select one when the first business endpoint needs it; keep model invariants and authorization checks in reusable domain/business code so remote and static configuration retain identical semantics.
 - Map business errors to HTTP status and stable API error codes in one HTTP error handler when business endpoints are implemented. Keep internal errors in server logs. The liveness scaffold uses Echo's default HTTP errors; it does not yet define the business error contract.
-- Echo does not choose persistence, ORM, OIDC/session implementation, OpenAPI tooling or gRPC. These remain separate implementation decisions; Agent synchronization retains the existing protocol boundary.
+- Echo does not choose persistence, OIDC/session implementation, OpenAPI tooling or gRPC. GORM is selected independently in section 5.4; remaining tools are separate decisions. Agent synchronization retains the existing protocol boundary.
 - The scaffold only exposes process liveness at `GET /healthz` (and HTTP HEAD semantics), with `Cache-Control: no-store`. The existing `http.Server` owns timeouts and graceful shutdown. Framework adoption does not implement authentication, approval, Grants or enforcement.
 
 References: [Echo documentation](https://echo.labstack.com/), [version policy](https://echo.labstack.com/guide/installation/), [v5 migration](https://github.com/labstack/echo/blob/master/API_CHANGES_V5.md).
+
+### 5.4 Controller persistence
+
+**GORM (MIT) is the selected Controller database access layer**, independent of Echo. The initial integration baseline is `gorm.io/gorm` v1.31.2, verified on 2026-10-13. Pin the actual dependency in `go.mod`/`go.sum` when the first persistence implementation imports it; the current liveness scaffold has no database connection or GORM runtime dependency.
+
+- Keep SQLite for lightweight single-Controller deployments and PostgreSQL for clustered deployments. Database drivers, SQLite CGO versus pure-Go implementation, connection settings and the migration tool remain separate decisions.
+- GORM models and `*gorm.DB` belong to persistence implementations. Keep HTTP DTOs, persistence models and the standard configuration contract separate; shared authorization/configuration packages and Agent contracts remain ORM-independent.
+- Use explicit transaction boundaries for related approval, Grant and publication-record writes. Database commit is not confirmation of Agent enforcement. Final table schemas, concurrency control and reliable publication mechanics will be designed with the first workflow.
+- Use reviewed, versioned schema migrations for deployed installations. Do not rely only on startup `AutoMigrate` to manage production upgrades; the migration tool is not selected by this decision.
+- GORM abstracts some SQL differences, not database concurrency semantics. Verify workflow consistency and migrations against both SQLite and PostgreSQL before claiming support. Persisted time, constraints and update behavior must preserve the documented authorization semantics.
+
+References: [GORM](https://gorm.io/docs/), [v1.31.2](https://github.com/go-gorm/gorm/releases/tag/v1.31.2), [migration guidance](https://gorm.io/docs/migration.html).
 
 ## 6. Agent and Linux data plane
 
@@ -767,6 +780,7 @@ This architecture should be refined through focused documents rather than expand
 
 | Version | Date | Change |
 | --- | --- | --- |
+| v0.7.2 | 2026-10-13 | Selected GORM for Controller persistence; recorded dual-database, model separation, transaction and versioned migration boundaries without adding database runtime behavior. |
 | v0.7.1 | 2026-10-12 | Selected Echo v5 for Controller HTTP; documented error handling, validation and framework boundaries; migrated the liveness scaffold. |
 | v0.7.0 | 2026-10-08 | Separated business/configuration/execution models; documented multi-Endpoint Resources, destination arrays, multi-resource/multi-Agent bindings, node projection and isolation without Namespace; replaced the old static example. |
 | v0.6.0 | 2026-10-01 | Defined Authorization Core and extensible Agent/adapter boundaries; adopted PicketX/PicketXD repositories and Go; selected shadcn/ui/Tailwind with composition, update, i18n and freshness rules; added Gitea acceptance. |
