@@ -12,7 +12,7 @@ This repository is an **initial development scaffold**. It includes an Echo v5-b
 
 The control plane and Web live here. The official Linux Agent, `picketxd`, belongs to the separate **PicketXD** repository. This initialization does not create or modify that repository.
 
-The selected backend stack is Go + Echo v5 + GORM, with go-playground/validator v10 for request fields. GORM and validator are architecture decisions; persistence, migrations and request validation are not implemented yet.
+The selected backend stack is Go + Echo v5 + GORM, with go-playground/validator v10 for request fields. API documentation generation uses Swaggo v2.0.0-rc6 targeting OpenAPI 3.1, with Swagger UI v5.33.2 for documentation and interactive requests. GORM, validator, Swaggo and Swagger UI are architecture decisions; persistence, migrations, request validation and API documentation generation/display are not implemented yet.
 
 ## Development
 

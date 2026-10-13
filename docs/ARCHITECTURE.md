@@ -4,7 +4,7 @@
 
 | Field | Value |
 | --- | --- |
-| Version | v0.7.3 |
+| Version | v0.7.4 |
 | Date | 2026-10-13 |
 | Status | Agreed design baseline; implementation status not asserted |
 | Project | PicketX |
@@ -34,6 +34,7 @@ Product requirements, APIs, database schemas, protocol specifications, implement
 | Backend language and repositories | Go; PicketX owns control plane/Core/Web, PicketXD owns the official Linux Agent. |
 | Controller HTTP framework | Echo v5 (MIT); thin HTTP adapters, independent business/Core packages. |
 | Controller persistence | GORM (MIT); SQLite for single-Controller and PostgreSQL for clustered deployments; separate persistence and configuration models. |
+| API documentation | Swaggo v2 (MIT), pinned CLI; generate OpenAPI 3.1 from HTTP DTOs and annotations; Swagger UI v5 (Apache-2.0) renders documentation. |
 | Request validation | go-playground/validator v10 (MIT) for HTTP fields; reusable Go functions for model invariants. |
 | Configuration contract | Shared versioned semantics for remote and static input; Resource/Endpoint/Grant/Binding are separate from workflow and execution models; no Namespace. |
 | Frontend | React, TypeScript, Vite, shadcn/ui, Tailwind CSS, i18next, npm; separate official primitives from project compositions. |
@@ -230,7 +231,7 @@ State-push Agents and request-time AuthZ hooks are separate integration paths. A
 - Use separate request/response DTOs. Resolve authenticated requesters and approvers on the server; do not bind client input directly into persistent/domain objects. Select request parameter sources explicitly.
 - Echo does not include a validation engine. Use go-playground/validator v10 as selected in section 5.5; keep model invariants and authorization checks in reusable domain/business code so remote and static configuration retain identical semantics.
 - Map business errors to HTTP status and stable API error codes in one HTTP error handler when business endpoints are implemented. Keep internal errors in server logs. The liveness scaffold uses Echo's default HTTP errors; it does not yet define the business error contract.
-- Echo does not choose persistence, OIDC/session implementation, OpenAPI tooling or gRPC. GORM is selected independently in section 5.4; remaining tools are separate decisions. Agent synchronization retains the existing protocol boundary.
+- Echo does not choose persistence, OIDC/session implementation, OpenAPI tooling or gRPC. GORM is selected independently in section 5.4 and Swaggo documentation generation in section 5.6; remaining tools are separate decisions. Agent synchronization retains the existing protocol boundary.
 - The scaffold only exposes process liveness at `GET /healthz` (and HTTP HEAD semantics), with `Cache-Control: no-store`. The existing `http.Server` owns timeouts and graceful shutdown. Framework adoption does not implement authentication, approval, Grants or enforcement.
 
 References: [Echo documentation](https://echo.labstack.com/), [version policy](https://echo.labstack.com/guide/installation/), [v5 migration](https://github.com/labstack/echo/blob/master/API_CHANGES_V5.md).
@@ -258,6 +259,18 @@ References: [GORM](https://gorm.io/docs/), [v1.31.2](https://github.com/go-gorm/
 - Controller input and Static Manifest input share the same model validation functions. Keep field-level API error mapping in the HTTP adapter; the exact business error contract remains to be designed with the first endpoint.
 
 References: [validator](https://github.com/go-playground/validator), [Echo validation integration](https://echo.labstack.com/guide/request/).
+
+### 5.6 API documentation generation
+
+**Swaggo v2 (MIT) is the selected API documentation generator.** The baseline is `github.com/swaggo/swag/v2/cmd/swag` at `v2.0.0-rc6`, verified as the latest published release on 2026-10-13. It remains a release candidate despite GitHub not marking it as a prerelease. Pin this explicit version for reproducible generation; upgrades require release-note review and output verification.
+
+- Generate **OpenAPI 3.1** JSON/YAML using `swag init --v3.1` and explicit input/output paths. Use Go HTTP DTOs and Handler annotations as documentation inputs; document parameters, presence/default semantics, responses, stable errors, examples and authentication requirements. Code/SDK generation is not an initial requirement.
+- Keep ordinary Echo v5 handlers, validator v10 and the framework-independent business/Core boundary. The CLI does not require an Echo middleware package or change the runtime request-processing model. API documentation does not replace authorization, validation or the Agent configuration/protobuf contract.
+- Introduce the pinned build-time tool, generation command and generated document location with the first documented business endpoint. The current liveness scaffold has no Swaggo dependency, generation pipeline, published OpenAPI document or documentation page. Do not import a generated Go registration package merely to serve static JSON/YAML.
+- At integration, regenerate documents in CI, validate the generated OpenAPI 3.1 output with a compatible validator, and detect uncommitted generation changes. Compare documented paths/status codes, nullability, collections, enums, authentication and error shapes with implementation; generation success alone is not proof of a correct contract. The validation tool and exact CI commands remain implementation decisions.
+- **Swagger UI v5 (Apache-2.0) is selected for documentation rendering and interactive requests**, with v5.33.2 as the latest-release integration baseline verified on 2026-10-13. Serve pinned local assets and the generated specification through the Controller; an Echo-specific wrapper is optional and must explicitly support Echo v5 if used. Keep runtime operation independent of public CDNs and disable the external online specification validator. Documentation and Try it out requests retain normal authentication/authorization; route access and production exposure are implementation decisions. No UI package or route is implemented in the current scaffold. English is the default API description language; localized prose must preserve identical paths, schemas and authorization semantics.
+
+References: [Swaggo v2.0.0-rc6](https://github.com/swaggo/swag/releases/tag/v2.0.0-rc6), [versioned CLI and annotation documentation](https://pkg.go.dev/github.com/swaggo/swag/v2@v2.0.0-rc6), [OpenAPI 3.1.0](https://spec.openapis.org/oas/v3.1.0.html), [Swagger UI v5.33.2](https://github.com/swagger-api/swagger-ui/releases/tag/v5.33.2), [Swagger UI configuration](https://swagger.io/docs/open-source-tools/swagger-ui/usage/configuration/).
 
 ## 6. Agent and Linux data plane
 
@@ -793,6 +806,7 @@ This architecture should be refined through focused documents rather than expand
 
 | Version | Date | Change |
 | --- | --- | --- |
+| v0.7.4 | 2026-10-13 | Selected Swaggo v2.0.0-rc6 for OpenAPI 3.1 documentation generation; selected Swagger UI v5.33.2; recorded pinned build tooling, contract checks and self-hosted documentation boundaries. |
 | v0.7.3 | 2026-10-13 | Selected validator v10 for HTTP fields with reusable model validation; retained startup database upgrades as a target and deferred migration-tool selection. |
 | v0.7.2 | 2026-10-13 | Selected GORM for Controller persistence; recorded dual-database, model separation, transaction and versioned migration boundaries without adding database runtime behavior. |
 | v0.7.1 | 2026-10-12 | Selected Echo v5 for Controller HTTP; documented error handling, validation and framework boundaries; migrated the liveness scaffold. |

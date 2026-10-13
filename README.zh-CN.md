@@ -12,7 +12,7 @@ PicketX 通过自助申请、策略和审批，为受保护资源提供有期限
 
 控制面与 Web 位于本仓库；官方 Linux Agent `picketxd` 属于独立的 **PicketXD** 仓库。本次初始化未创建或修改该仓库。
 
-后端技术栈已确定为 Go + Echo v5 + GORM，请求字段校验采用 go-playground/validator v10。GORM 和 validator 当前为架构选型，持久化、迁移与请求参数校验尚未实现。
+后端技术栈已确定为 Go + Echo v5 + GORM，请求字段校验采用 go-playground/validator v10。API 文档生成采用 Swaggo v2.0.0-rc6，目标规范为 OpenAPI 3.1，文档展示与交互请求采用 Swagger UI v5.33.2。GORM、validator、Swaggo 和 Swagger UI 当前为架构选型，持久化、迁移、请求参数校验与 API 文档生成/展示尚未实现。
 
 ## 本地开发
 

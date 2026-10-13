@@ -4,7 +4,7 @@
 
 | 字段 | 内容 |
 | --- | --- |
-| 版本 | v0.7.3 |
+| 版本 | v0.7.4 |
 | 日期 | 2026-10-13 |
 | 状态 | 已确认的设计基线；不代表已实现 |
 | 项目 | PicketX |
@@ -34,6 +34,7 @@
 | 后端语言与仓库 | Go；PicketX 承载控制面/Core/Web，PicketXD 承载官方 Linux Agent。 |
 | Controller HTTP 框架 | Echo v5（MIT）；HTTP 适配层保持精简，业务/Core 包独立。 |
 | Controller 持久化 | GORM（MIT）；SQLite 用于单 Controller，PostgreSQL 用于集群；数据库模型与配置模型分离。 |
+| API 文档 | Swaggo v2（MIT），固定 CLI 版本；从 HTTP DTO 和注释生成 OpenAPI 3.1；Swagger UI v5（Apache-2.0）展示文档。 |
 | 请求参数校验 | HTTP 字段使用 go-playground/validator v10（MIT）；模型约束使用可复用 Go 函数。 |
 | 配置契约 | 远程与静态输入共用版本化语义；Resource/Endpoint/Grant/Binding 与业务流程、执行模型分离；不引入 Namespace。 |
 | 前端 | React、TypeScript、Vite、shadcn/ui、Tailwind CSS、i18next、npm；官方基础组件与项目组合分层。 |
@@ -230,7 +231,7 @@ Adapter 只修改自身拥有的对象，报告 Desired/Applied Revision、观�
 - 使用独立的请求/响应 DTO。申请者、审批者的认证身份由服务端确定，不把客户端输入直接绑定到持久化或领域对象；显式选择参数来源。
 - Echo 不内置校验引擎，采用第 5.5 节确定的 go-playground/validator v10；模型约束与授权检查留在可复用的领域/业务代码中，保证远程与静态配置语义一致。
 - 实现业务接口时，通过统一 HTTP 错误处理器将业务错误映射为 HTTP 状态与稳定 API 错误码，内部错误留在服务端日志。当前存活检查骨架使用 Echo 默认 HTTP 错误处理，尚未定义业务错误契约。
-- Echo 不决定持久化、OIDC/会话实现、OpenAPI 工具或 gRPC。GORM 在第 5.4 节独立确定，其余工具继续分别选型；Agent 同步保持既定协议边界。
+- Echo 不决定持久化、OIDC/会话实现、OpenAPI 工具或 gRPC。GORM 在第 5.4 节独立确定，Swaggo 文档生成在第 5.6 节确定，其余工具继续分别选型；Agent 同步保持既定协议边界。
 - 当前骨架仅暴露 `GET /healthz` 进程存活检查（以及 HTTP HEAD 语义），设置 `Cache-Control: no-store`。超时与优雅退出继续由现有 `http.Server` 管理。接入框架不代表已经实现认证、审批、Grant 或执行功能。
 
 参考：[Echo 文档](https://echo.labstack.com/)、[版本策略](https://echo.labstack.com/guide/installation/)、[v5 迁移](https://github.com/labstack/echo/blob/master/API_CHANGES_V5.md)。
@@ -258,6 +259,18 @@ Adapter 只修改自身拥有的对象，报告 Desired/Applied Revision、观�
 - Controller 输入与 Static Manifest 输入共用模型校验函数。字段级 API 错误映射留在 HTTP 适配层；具体业务错误契约随首个接口设计。
 
 参考：[validator](https://github.com/go-playground/validator)、[Echo 校验集成](https://echo.labstack.com/guide/request/)。
+
+### 5.6 API 文档生成
+
+**API 文档生成采用 Swaggo v2（MIT）**。基线为 `github.com/swaggo/swag/v2/cmd/swag` 的 `v2.0.0-rc6`，于 2026-10-13 核实为最新发布版本。虽然 GitHub 未标记为 prerelease，它仍是候选发布版。固定显式版本以复现生成结果；升级需审阅发布说明并核对输出。
+
+- 使用 `swag init --v3.1` 和显式输入/输出路径生成 **OpenAPI 3.1** JSON/YAML。Go HTTP DTO 和 Handler 注释作为文档输入，明确参数、字段存在性/默认值、响应、稳定错误、示例和认证要求。代码/SDK 生成不是首期要求。
+- 保留普通 Echo v5 Handler、validator v10 以及独立业务/Core 边界。CLI 不依赖 Echo 中间件包，也不改变运行时请求处理模型。API 文档不替代授权、校验或 Agent 配置/protobuf 契约。
+- 随首个有文档的业务接口引入固定版本的构建工具、生成命令和产物位置。当前存活检查骨架没有 Swaggo 依赖、生成流水线、已发布 OpenAPI 文档或文档页面。仅提供静态 JSON/YAML 时，不必导入生成的 Go 注册包。
+- 接入时在 CI 重新生成文档，使用兼容工具验证 OpenAPI 3.1 输出，并检测未提交的生成差异。核对文档中的路径/状态码、可空性、集合、枚举、认证和错误结构与实现一致；生成成功不代表契约正确。验证工具和具体 CI 命令留待实现确定。
+- **文档展示与交互请求采用 Swagger UI v5（Apache-2.0）**，于 2026-10-13 核实的最新发布版本 v5.33.2 作为接入基线。Controller 提供固定版本的本地静态资源及生成的规范文件；Echo 专用包装库不是必需，使用时必须明确支持 Echo v5。运行时不依赖公共 CDN，关闭外部在线规范验证器。文档与 Try it out 请求继续遵守正常认证/授权；路由访问和生产暴露方式留待实现确定。当前骨架未接入 UI 包或文档路由。API 描述默认英文；本地化说明必须保持相同的路径、Schema 和授权语义。
+
+参考：[Swaggo v2.0.0-rc6](https://github.com/swaggo/swag/releases/tag/v2.0.0-rc6)、[固定版本 CLI 与注释文档](https://pkg.go.dev/github.com/swaggo/swag/v2@v2.0.0-rc6)、[OpenAPI 3.1.0](https://spec.openapis.org/oas/v3.1.0.html)、[Swagger UI v5.33.2](https://github.com/swagger-api/swagger-ui/releases/tag/v5.33.2)、[Swagger UI 配置](https://swagger.io/docs/open-source-tools/swagger-ui/usage/configuration/)。
 
 ## 6. Agent 与 Linux 数据面
 
@@ -793,6 +806,7 @@ PicketXD/                      # GPL-3.0-or-later + OEM option
 
 | 版本 | 日期 | 变更 |
 | --- | --- | --- |
+| v0.7.4 | 2026-10-13 | 确定 Swaggo v2.0.0-rc6 生成 OpenAPI 3.1 文档；确定 Swagger UI v5.33.2；记录固定构建工具版本、契约检查及本地文档服务边界。 |
 | v0.7.3 | 2026-10-13 | 确定 HTTP 字段使用 validator v10，模型规则复用校验函数；保留启动自动升级数据库目标，暂缓迁移工具选型。 |
 | v0.7.2 | 2026-10-13 | 确定 Controller 持久化使用 GORM；记录双数据库、模型分离、事务与版本化迁移边界，未添加数据库运行时行为。 |
 | v0.7.1 | 2026-10-12 | 确定 Controller HTTP 使用 Echo v5；记录错误处理、校验及框架边界；迁移存活检查骨架。 |
