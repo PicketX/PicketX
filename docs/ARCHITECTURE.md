@@ -4,7 +4,7 @@
 
 | Field | Value |
 | --- | --- |
-| Version | v0.7.7 |
+| Version | v0.7.8 |
 | Date | 2026-10-13 |
 | Status | Agreed design baseline; implementation status not asserted |
 | Project | PicketX |
@@ -34,6 +34,7 @@ Product requirements, APIs, database schemas, protocol specifications, implement
 | Backend language and repositories | Go; PicketX owns control plane/Core/Web, PicketXD owns the official Linux Agent. |
 | Controller HTTP framework | Echo v5 (MIT); thin HTTP adapters, independent business/Core packages. |
 | Controller persistence | GORM (MIT); SQLite for single-Controller and PostgreSQL for clustered deployments; separate persistence and configuration models. |
+| CLI framework | Cobra (Apache-2.0); thin command adapters, Koanf configuration and independent business/Core. |
 | Runtime logging | Standard-library slog; centrally constructed/injected loggers, text/JSON output and separately persisted authorization audit. |
 | Runtime configuration | Koanf v2 (MIT); explicit file/env/flag precedence, typed module inputs and separate policy-manifest decoding. |
 | Dependency injection and assembly | Explicit constructors, module-level assembly and centralized lifecycle management; no DI framework. |
@@ -585,6 +586,17 @@ Arbitrary networking, filesystem access, and system calls are denied by default.
 
 All public protocols are explicitly versioned. Backward compatibility rules belong in protocol-specific specifications, not implicit implementation behavior.
 
+### 11.1 CLI command framework
+
+**Use Cobra (Apache-2.0) for the `picketx` CLI**, with `github.com/spf13/cobra` v1.10.2 as the latest-release integration baseline verified on 2026-10-13. Add and pin Cobra and directly used flag-provider dependencies when the first CLI commands are implemented. The current repository has only the standard-flag Controller entry point; it has no `picketx` command tree or Cobra runtime dependency.
+
+- Cobra owns command/subcommand organization, argument parsing, help, completion and command-documentation generation. Keep command handlers thin: translate input, call an API client or explicitly scoped application operation, and format results. Core and application services do not import Cobra; commands do not duplicate approval or authorization rules or directly manipulate database/firewall state.
+- Controller-facing CLI commands use the versioned northbound API and its normal authentication/authorization. Local Agent diagnostics use the separately defined Unix-socket API with local access controls, not the privileged Agent implementation package. Concrete command names, authentication storage and API-client behavior remain implementation decisions.
+- Continue using Koanf for runtime configuration. Cobra/pflag integration does not require Viper. Only explicitly changed command flags override environment/file settings; unspecified flag defaults must not alter the precedence in section 5.8. Do not introduce a second configuration-loading mechanism through CLI framework examples.
+- Construct commands with focused dependencies at the assembly boundary; propagate context/deadlines and return errors to the entry point. Write command results to standard output and diagnostics/runtime logs to standard error. Commands must distinguish approved, applying, applied, failed and stale outcomes rather than infer enforcement from an API write succeeding. Output formats and exit-code contracts will be designed with actual commands.
+
+References: [Cobra v1.10.2](https://github.com/spf13/cobra/releases/tag/v1.10.2), [Cobra](https://github.com/spf13/cobra), [Koanf flag provider](https://pkg.go.dev/github.com/knadh/koanf/providers/posflag).
+
 ## 12. Data and state architecture
 
 PicketX has three state layers:
@@ -854,6 +866,7 @@ This architecture should be refined through focused documents rather than expand
 
 | Version | Date | Change |
 | --- | --- | --- |
+| v0.7.8 | 2026-10-13 | Selected Cobra v1.10.2 for CLI integration; defined Koanf flag precedence, API/local diagnostic boundaries and output conventions; commands remain unimplemented. |
 | v0.7.7 | 2026-10-13 | Selected slog for runtime logs; defined logger injection, formats, fields, dynamic levels and the separate authorization-audit boundary. |
 | v0.7.6 | 2026-10-13 | Selected Koanf v2.3.8 as the runtime configuration baseline; defined precedence, typed injection, reload and policy-source isolation; runtime integration remains pending. |
 | v0.7.5 | 2026-10-13 | Adopted constructor injection, module assembly and centralized lifecycle as a long-term baseline; specified layer directions and scopes without a DI framework. |

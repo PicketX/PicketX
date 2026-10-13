@@ -4,7 +4,7 @@
 
 | 字段 | 内容 |
 | --- | --- |
-| 版本 | v0.7.7 |
+| 版本 | v0.7.8 |
 | 日期 | 2026-10-13 |
 | 状态 | 已确认的设计基线；不代表已实现 |
 | 项目 | PicketX |
@@ -34,6 +34,7 @@
 | 后端语言与仓库 | Go；PicketX 承载控制面/Core/Web，PicketXD 承载官方 Linux Agent。 |
 | Controller HTTP 框架 | Echo v5（MIT）；HTTP 适配层保持精简，业务/Core 包独立。 |
 | Controller 持久化 | GORM（MIT）；SQLite 用于单 Controller，PostgreSQL 用于集群；数据库模型与配置模型分离。 |
+| CLI 框架 | Cobra（Apache-2.0）；轻量命令适配器，Koanf 配置与独立业务/Core。 |
 | 运行日志 | 标准库 slog；集中创建并注入 Logger，文本/JSON 输出；授权审计独立持久化。 |
 | 运行时配置 | Koanf v2（MIT）；文件/环境变量/启动参数明确覆盖，模块接收带类型配置；策略 Manifest 独立解析。 |
 | 依赖注入与组装 | 手工构造函数注入、按模块组装、集中生命周期管理；不引入 DI 框架。 |
@@ -585,6 +586,17 @@ WASM Host API 可以提供：
 
 所有公开协议必须显式版本化。向后兼容规则应进入对应协议规范，不能依赖实现中的隐式行为。
 
+### 11.1 CLI 命令框架
+
+**`picketx` CLI 采用 Cobra（Apache-2.0）**，于 2026-10-13 核实的 `github.com/spf13/cobra` v1.10.2 作为最新发布版接入基线。实现首批 CLI 命令时，添加并固定 Cobra 及直接使用的参数 Provider 依赖。当前仓库仅有使用标准库参数解析的 Controller 入口，尚无 `picketx` 命令树或 Cobra 运行依赖。
+
+- Cobra 负责命令/子命令组织、参数解析、帮助、补全和命令文档生成。命令 Handler 保持轻量：转换输入，调用 API Client 或职责明确的应用操作，再格式化结果。Core 与应用服务不引用 Cobra；命令不能重复实现审批/授权规则，也不直接操作数据库/防火墙状态。
+- 面向 Controller 的 CLI 命令通过版本化 Northbound API，遵守正常认证/授权。本地 Agent 诊断通过独立 Unix Socket API 和本地访问控制，不引用特权 Agent 实现包。具体命令名称、认证存储和 API Client 行为留待实现确定。
+- 运行配置继续使用 Koanf。Cobra/pflag 集成不要求 Viper。仅显式修改的命令参数覆盖环境变量/文件设置，未指定参数的默认值不能改变第 5.8 节覆盖顺序。不因 CLI 框架示例引入第二套配置加载机制。
+- 在组装边界为命令传入必要依赖，传递 Context/截止时间，并把错误返回入口。命令结果写标准输出，诊断/运行日志写标准错误。命令需区分已批准、执行中、已执行、失败和过时结果，不能因 API 写入成功推断已实施。输出格式和退出码契约随实际命令设计。
+
+参考：[Cobra v1.10.2](https://github.com/spf13/cobra/releases/tag/v1.10.2)、[Cobra](https://github.com/spf13/cobra)、[Koanf 参数 Provider](https://pkg.go.dev/github.com/knadh/koanf/providers/posflag)。
+
 ## 12. 数据与状态架构
 
 PicketX 包含三层状态：
@@ -854,6 +866,7 @@ PicketXD/                      # GPL-3.0-or-later + OEM option
 
 | 版本 | 日期 | 变更 |
 | --- | --- | --- |
+| v0.7.8 | 2026-10-13 | 确定 Cobra v1.10.2 作为 CLI 接入基线；明确 Koanf 参数覆盖、API/本地诊断边界与输出规则；命令实现待接入。 |
 | v0.7.7 | 2026-10-13 | 确定 slog 作为运行日志方案；明确 Logger 注入、格式、字段、动态级别及与独立授权审计的边界。 |
 | v0.7.6 | 2026-10-13 | 确定 Koanf v2.3.8 作为运行时配置接入基线；明确覆盖顺序、带类型注入、重载与策略来源隔离；尚未接入运行代码。 |
 | v0.7.5 | 2026-10-13 | 确定手工构造函数注入、模块组装与集中生命周期管理为长期基线；明确分层、依赖方向与作用域，不引入 DI 框架。 |

@@ -20,6 +20,8 @@ PicketX 通过自助申请、策略和审批，为受保护资源提供有期限
 
 运行日志使用标准库 `log/slog`。当前骨架已向标准错误输出 JSON；模块 Logger 注入、格式选择、级别配置和独立持久化授权审计尚未实现。
 
+规划中的 `picketx` CLI 采用 Cobra v1.10.2，并使用 Koanf 配置。CLI 命令尚未实现，现有 Controller 入口继续使用标准库参数解析。
+
 ## 本地开发
 
 需要 Go 1.27+、Node.js 24 LTS 和 npm。

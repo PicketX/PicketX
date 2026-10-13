@@ -7,7 +7,7 @@
 | Version | v0.4.0 |
 | Date | 2026-10-08 |
 | Status | Agreed product baseline; not a claim of implemented features |
-| Architecture | [ARCHITECTURE.md](./ARCHITECTURE.md) v0.7.7 |
+| Architecture | [ARCHITECTURE.md](./ARCHITECTURE.md) v0.7.8 |
 
 ## 1. Product positioning
 
@@ -159,6 +159,6 @@ Cross-application acceptance uses one test service and at least two existing too
 
 ## 12. Revision and authority
 
-This v0.4.0 product baseline supersedes the positioning and scope of the archived v0.1 product document. Detailed technical decisions are maintained in architecture v0.7.7. Older business plans and research reports are historical inputs, not current scope or pricing commitments. English is the default repository document; the Chinese edition is maintained alongside it.
+This v0.4.0 product baseline supersedes the positioning and scope of the archived v0.1 product document. Detailed technical decisions are maintained in architecture v0.7.8. Older business plans and research reports are historical inputs, not current scope or pricing commitments. English is the default repository document; the Chinese edition is maintained alongside it.
 
 Revision v0.4.0 separates business, standard configuration and execution models; adds multi-Endpoint Resource selection, multi-resource/multi-Agent bindings and per-Agent projection; defers Namespace; synchronized with architecture v0.7.0 and configuration model v0.1.0. The previous v0.3.0 stack, repository and Gitea decisions remain in force.

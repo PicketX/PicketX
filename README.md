@@ -20,6 +20,8 @@ Runtime configuration loading is selected as Koanf v2.3.8, with typed module con
 
 Runtime logging uses standard-library `log/slog`. The scaffold already emits JSON to standard error; module logger injection, selectable formats, configurable levels and persisted authorization audit remain to be implemented.
 
+The planned `picketx` CLI uses Cobra v1.10.2 with Koanf configuration. CLI commands are not implemented; the existing Controller entry point continues to use standard-library flags.
+
 ## Development
 
 Requirements: Go 1.27+, Node.js 24 LTS and npm.
