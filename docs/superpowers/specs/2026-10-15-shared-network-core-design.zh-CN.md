@@ -3,7 +3,8 @@
 > [English (default)](2026-10-15-shared-network-core-design.md) | 简体中文
 
 - 日期：2026-10-15（Asia/Shanghai）
-- 状态：待评审的书面设计；尚未开始实现
+- 状态：书面设计已获用户批准并合并；尚未开始实现
+- 下一步：[实施计划待评审](../plans/2026-10-15-shared-network-core.zh-CN.md)
 - 实现仓库：PicketX/PicketX，Apache-2.0
 - 依据：[架构](../../ARCHITECTURE.zh-CN.md)、[配置边界](../../CONFIGURATION_MODEL.zh-CN.md)、[产品流程](../../PRODUCT_DESIGN.zh-CN.md)
 - 前置成果：[PicketXD M0 PR](https://github.com/PicketX/PicketXD/pull/1)已合并；[最终已测源码](https://github.com/PicketX/PicketXD/commit/13fdf2d9aacd79be74578ebe9c23af19a6b33d6a)及[真实内核 CI](https://github.com/PicketX/PicketXD/actions/runs/38547987642)
