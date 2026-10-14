@@ -28,6 +28,10 @@ SQLite 选用 GORM 官方驱动（v1.6.0 基线）和 mattn/go-sqlite3（v1.14.5
 
 授权选用 Casbin RBAC 和官方 GORM Adapter；业务层提供当前用户的可信组/角色，共享规则在进程内鉴权，按可配置周期同步，启动时按规模/成本提供建议。ABAC 按需扩展。这些能力尚未实现，见 [ADR 0001](docs/decisions/0001-rbac-authorization.zh-CN.md)。
 
+运行支持已选 SCS Session、Echo 内置 CSRF、普通/Agent 分别配置的限流、官方 gRPC/protobuf、独立 Agent Token 与可选服务端 TLS、Prometheus 指标、标准库周期任务；均待接入，见 [ADR 0002](docs/decisions/0002-runtime-support.zh-CN.md)。
+
+下一执行单元为 [M0 Linux 数据面验证](docs/superpowers/specs/2026-10-14-linux-data-plane-validation.zh-CN.md)及[可评审实施计划](docs/superpowers/plans/2026-10-14-linux-data-plane-validation.zh-CN.md)。PicketXD 当前只有 LICENSE 文件；Agent 实现前先对齐许可证与 Go 验证骨架。本次文档更新不声称已完成内核验证或生产执行能力。
+
 ## 本地开发
 
 需要 Go 1.27+、Node.js 24 LTS 和 npm。

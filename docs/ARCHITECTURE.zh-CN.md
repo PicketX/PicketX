@@ -4,7 +4,7 @@
 
 | 字段 | 内容 |
 | --- | --- |
-| 版本 | v0.8.1 |
+| 版本 | v0.8.2 |
 | 日期 | 2026-10-14 |
 | 状态 | 已确认的设计基线；不代表已实现 |
 | 项目 | PicketX |
@@ -35,6 +35,11 @@
 | Controller HTTP 框架 | Echo v5（MIT）；HTTP 适配层保持精简，业务/Core 包独立。 |
 | RBAC 授权 | Casbin + 官方 GORM Adapter；当前用户可信组/角色输入、共享组/角色规则，每进程一个 SyncedEnforcer；ABAC 按需扩展。 |
 | RBAC 策略同步 | 仅定时重载，间隔可配置，启动按规模/成本提供建议；不自动改间隔，不依赖策略 Watcher。 |
+| 登录 Session 与 CSRF | SCS v2，内存/GORM/Redis Store；Echo 内置 CSRF；接入待实现。 |
+| 限流 | Echo 内置本地计数；普通 HTTP 与 Agent 通信独立配置。 |
+| Agent 通信 | 官方 grpc-go/protobuf；独立 Agent Token；明文或服务端 TLS；mTLS 后续可选。 |
+| 指标与周期任务 | Prometheus client_golang；Controller/Agent 分别采集；Go Timer/Ticker 与显式生命周期。 |
+| Linux Backend 优先级 | google/nftables 配置规则；vishvananda/netlink 用于必需的严格撤销；事件观测另行评估。 |
 | SQLite 驱动与发布 | 官方 GORM SQLite + mattn；Linux 默认完整静态链接，无额外共享库安装要求。 |
 | Controller 持久化 | GORM（MIT）；官方 SQLite/mattn 与 PostgreSQL/pgx 驱动；SQLite 用于单 Controller，PostgreSQL 用于集群；迁移工具暂缓。 |
 | CLI 框架 | Cobra（Apache-2.0）；轻量命令适配器，Koanf 配置与独立业务/Core。 |
@@ -160,15 +165,15 @@ Controller 只向每个 Agent 投影相关保护、权限、限制、截止时�
 flowchart TB
     Clients["Web · CLI · Automation"] --> Controller["picketx-controller · REST · OIDC · RBAC · Policy · Lease · AuthZ"]
     Controller --> DB["SQLite / PostgreSQL"]
-    Controller -->|"gRPC stream + mTLS"| AgentA["picketxd · Node A"]
-    Controller -->|"gRPC stream + mTLS"| AgentB["picketxd · Node B"]
+    Controller -->|"gRPC stream + Token; TLS optional"| AgentA["picketxd · Node A"]
+    Controller -->|"gRPC stream + Token; TLS optional"| AgentB["picketxd · Node B"]
     AgentA --> KernelA["Netfilter · conntrack"]
     AgentB --> KernelB["Netfilter · conntrack"]
     Proxies["Nginx · Envoy · Traefik · Caddy"] -->|"auth request / ext_authz"| Controller
 ```
 
 - **Northbound：**Web、CLI 和自动化工具调用 Controller 的 REST/JSON/OpenAPI。
-- **Southbound：**Agent 主动通过 mTLS 与 Controller 建立 gRPC/protobuf 长连接。
+- **Southbound：**Agent 使用独立 Token 认证，主动建立 gRPC/protobuf 长连接；支持明文与服务端 TLS。mTLS 是未来可选方式，不是首版要求。
 - **Local Administration：**`picketx agent status`、`doctor`、`dump`、`reconcile`、`reload` 通过本地 Unix socket 调用。
 - **Authorization：**代理与网关调用 Controller 或独立 AuthZ endpoint。
 - **Enforcement：**只有 `picketxd` 修改 `table inet picketx`，Controller 不直接操作主机防火墙。
@@ -357,6 +362,14 @@ Casbin 策略仅通过定时重载同步，提供可配置的正数间隔。启�
 
 持久化、多角色拒绝语义、规模建议和接入验收见 [ADR 0001](decisions/0001-rbac-authorization.zh-CN.md)。这是已确认选型，不代表授权已经实现。
 
+### 5.11 运行支持组件接入基线
+
+登录 Session 选用 SCS v2.9.0，提供内存、复用既有 GORM 的数据库、Redis Store；声明支持 Valkey 前验证实际互操作。CSRF 与内存限流使用 Echo v5 内置能力。普通 HTTP 与 Agent 通信分别配置限流参数/计数，需要时区分 Stream 建立和消息处理。
+
+Agent 通信使用官方 grpc-go v1.84.0 与官方 protobuf，通过独立可撤销 Agent Token 认证。明文和服务端 TLS 可配置；启用 TLS 时正常验证证书。mTLS/内部 CA 签发不是首版依赖。指标使用 Prometheus client_golang v1.25.0，周期任务使用标准库，指标分别采集，模块生命周期可取消。
+
+这些是决策，不是运行实现。Session 新鲜度、传输、代理、配额、标签基数和到期边界见 [ADR 0002](decisions/0002-runtime-support.zh-CN.md)。具体配置 Schema 与接入细节随首个实现流程确定。
+
 ## 6. Agent 与 Linux 数据面
 
 `picketxd` 是唯一的特权数据面进程，并且必须能够脱离 Controller 独立运行。首期二进制范围为 Agent/Reconcile、nftables/conntrack 执行和受限本地接口。NFQUEUE 探测、NFLOG/镜像检测响应、REDIRECT/TPROXY 代理及业务 TLS 终止均后移，不是默认依赖；此决定替代此前默认全功能 Agent 的假设。
@@ -366,7 +379,7 @@ Casbin 策略仅通过定时重载同步，提供可配置的正数间隔。启�
 | 模块 | 职责 |
 | --- | --- |
 | Desired State Provider | Controller Mode 从 Controller 接收状态；Static Manifest Mode 扫描本地 YAML；同一时刻只有一个权威 Provider。 |
-| Controller Client | 建立 mTLS stream，接收 snapshot 或 delta，报告 applied status。 |
+| Controller Client | 按配置使用明文/服务端 TLS 建立 Token 认证的 gRPC Stream，接收 snapshot/delta，报告 applied status。 |
 | Static Manifest Watcher | 监听目录，解析全部 YAML，完成校验并构造 Candidate Desired Snapshot。 |
 | Desired/LKG Store | 保存最近可用配置、绝对过期时间、provider identity、`boot_id` 和恢复元数据。 |
 | Reconciler | 将统一 Desired State 编译并应用到 PicketX 自有 nftables 对象。 |
@@ -395,7 +408,7 @@ flowchart TB
 
 1. 启动配置显式选择 `controller` 或 `static`。同一 `picketxd` 实例在任一时刻只能存在一个 Authoritative Desired State Provider。
 2. **Controller Mode：**Controller 是 Security Desired State 的唯一权威来源。本地 Manifest 中的 Resource、Grant、EnforcementBinding、Policy、Authorization Rule 等安全对象永远不能与 Controller 状态合并，也不能覆盖 Controller 状态。
-3. Controller Mode 仍允许本地 `/etc/picketx/picketxd.yaml`，但其中只能保存 Agent Runtime Configuration，例如 Controller endpoint、证书、日志、数据目录、已启用的本地 API 监听、health/metrics endpoint 和 LKG 路径。
+3. Controller Mode 仍允许本地 `/etc/picketx/picketxd.yaml`，但其中只能保存 Agent Runtime Configuration，例如 Controller endpoint、Agent 凭据和可选 TLS 配置、日志、数据目录、已启用的本地 API 监听、health/metrics endpoint 和 LKG 路径。
 4. Runtime Configuration 与 Security Desired State 使用独立的配置域和模型；不表示引入 Namespace API 对象。
 5. Controller Mode 下发现 Static Manifest 时，`picketxd` 默认忽略并输出显著告警；严格部署选项可以改为拒绝启动。
 6. **Static Manifest Mode：**Manifest 目录是 Security Desired State 的唯一权威来源，Controller 不向该 Agent 下发策略。
@@ -448,9 +461,11 @@ Static Manifest Mode 使用相同配置语义实现本地保护，限时 Grant �
 
 ### 6.3 Go Backend 方向
 
-Linux Backend 优先评估 Go Netlink 集成，不再将 libnftnl/libmnl/libnetfilter_conntrack 作为默认必须依赖。候选库包括 `google/nftables`、`ti-mo/conntrack` 和 `florianl/go-nfqueue`；只有后续需求证明需要 eBPF Adapter 时再评估 `cilium/ebpf`。这些是评估候选，不代表已锁定版本或完成验证。
+nftables 优先验证 `google/nftables` v0.3.0；当前必需的定向严格撤销优先验证 `vishvananda/netlink`。`ti-mo/conntrack` 保留为事件观测候选。使用内核 conntrack 表达式本身不需要用户态 conntrack 库；主动观测/删除才需要。
 
-采用前验证 Interval/Concatenated Set 覆盖、原子 Batch、IPv4/IPv6、conntrack 丢事件恢复与定向删除、内核兼容和依赖许可证，保持 Backend 可替换。首期仍采用 nftables/conntrack；切换 Go 不意味着切换 eBPF，也不免除第三方许可证审查。
+默认运行不依赖 libnftnl/libmnl/libnetfilter_conntrack 或 nft/conntrack 系统命令。实际接入与内核兼容尚未验证。验证区间/组合集合、Batch 失败、IPv4/IPv6、绝对到期、重叠有效权限、NAT 元组和部分删除，保持 Backend 可替换。
+
+参阅 [ADR 0003](decisions/0003-linux-backends.zh-CN.md)、[M0 设计](superpowers/specs/2026-10-14-linux-data-plane-validation.zh-CN.md)和[实施计划](superpowers/plans/2026-10-14-linux-data-plane-validation.zh-CN.md)。NFQUEUE/eBPF 依赖继续后移。
 
 ## 7. 网络策略与权限模型
 
@@ -626,7 +641,7 @@ WASM Host API 可以提供：
 | 接口 | 协议 | 使用者 | 设计原则 |
 | --- | --- | --- | --- |
 | Northbound API | HTTPS REST/JSON/OpenAPI | Web、CLI、自动化 | 稳定、版本化、资源导向 |
-| Southbound Protocol | gRPC/protobuf + mTLS | Agent，包括 `picketxd` | Agent 主动连接、双向 stream、snapshot/delta |
+| Southbound Protocol | gRPC/protobuf + Agent Token；TLS 可选 | Agent，包括 `picketxd` | Agent 主动连接、双向 stream、snapshot/delta |
 | Authorization API | HTTP/gRPC Adapter | Nginx、Envoy、Traefik、Caddy 等 | 低延迟、明确 timeout 与 fail mode、可缓存 |
 | Local Agent API | Unix socket | 本地 CLI 与诊断 | 默认不监听外部 TCP |
 | External Plugin Protocol | Unix socket/gRPC | External Plugin | 公开稳定、能力注册、结构化 context |
@@ -678,7 +693,7 @@ flowchart LR
 
 | 风险 | 架构响应 |
 | --- | --- |
-| Controller 被攻破 | mTLS、最小权限、审计、审批、可选多人变更控制 |
+| Controller 被攻破 | Agent 凭据/RPC 范围、最小权限、审计、审批、可选多人变更控制；按配置启用 TLS |
 | Agent 被控制 | 只有 Agent 获得 `NET_ADMIN`；Local API 由 Unix socket 权限保护 |
 | Policy 误配置 | Dry-run、Policy Simulation、Revision、LKG、快速回滚 |
 | Authorization 超时 | Per-Resource Fail Mode；安全敏感 Resource 默认 fail-closed |
@@ -804,13 +819,15 @@ Go Backend 方向不再默认引入这些 C 库，但“纯 Go”不是许可证
 
 ## 18. 分阶段实施路线
 
+下一执行单元是 [M0 Linux 数据面验证设计](superpowers/specs/2026-10-14-linux-data-plane-validation.zh-CN.md)和[实施计划](superpowers/plans/2026-10-14-linux-data-plane-validation.zh-CN.md)。Agent 实现前评审具体计划，保留实际测试证据；没有已证明的冲突时不重新打开既定架构。
+
 产品基线固定目标与边界，不代表所列能力均已实现。历史范围保留为架构选项；协议适配和企业集成按已验证需求分阶段推进。
 
 | 阶段 | 目标 | 范围 |
 | --- | --- | --- |
 | M0 数据面验证 | 证明来源执行可靠 | nftables/conntrack、IPv4/IPv6、重叠 IP/CIDR Grant、Hard Expiry、Strict/Graceful 撤销、重启和 Linux Network Namespace 行为 |
 | M1 可用访问流程 | 完成申请、批准、生效、到期 | 浏览器/OIDC 自助、基础审批、来源 Grant、权限合集、Resource 范围、状态和授权记录；Controller/SQLite/Agent/CLI 与 Static Manifest Mode；HTTP/HTTPS 入口授权和受限本地决策 API |
-| M2 运维规模化 | 可靠多节点运行 | PostgreSQL、mTLS Stream、labels/selectors、drift/reconcile、LKG 恢复、各节点状态；按需 HA |
+| M2 运维规模化 | 可靠多节点运行 | PostgreSQL、按配置传输的认证 gRPC Stream、labels/selectors、drift/reconcile、LKG 恢复、各节点状态；按需 HA |
 | M3 协议扩展 | 按需增加控制精度 | 更多可信 Adapter 和协议用户/会话上下文；原生协议代理与探测逐个评估 |
 | M4 扩展与交付形态 | 按实际需求扩展 | WASM、External Provider/Plugin、高级审批、Cloud/OEM 和商业打包 |
 
@@ -913,6 +930,7 @@ PicketXD/                      # GPL-3.0-or-later + OEM option
 
 | 版本 | 日期 | 变更 |
 | --- | --- | --- |
+| v0.8.2 | 2026-10-14 | 记录 SCS、内置 CSRF/限流、官方 gRPC/protobuf、Token 认证与可选 TLS、Prometheus、标准库周期任务；明确 Linux Backend 验证优先级，提出 M0 执行设计/计划；运行接入和内核验证待完成。 |
 | v0.8.1 | 2026-10-14 | 确定 Casbin RBAC 与官方 GORM Adapter；当前用户成员关系与共享规则分离；仅定时策略同步、间隔可配置，启动按规模/成本提供建议；记录双语 ADR 0001；接入待实现。 |
 | v0.8.0 | 2026-10-14 | 确定官方 GORM PostgreSQL/pgx 驱动；首期收敛为网络准入、外部 HTTP/HTTPS 入口授权和本地决策接口；探测、透明代理/TLS 与原生数据库代理后移；实际接入待实现。 |
 | v0.7.9 | 2026-10-13 | 确定官方 GORM SQLite/mattn 驱动及默认独立发布、Linux 完整静态链接要求；PostgreSQL 驱动与迁移工具待选，接入和产物验证待实现。 |

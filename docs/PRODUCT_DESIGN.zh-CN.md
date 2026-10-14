@@ -7,7 +7,7 @@
 | 版本 | v0.4.1 |
 | 日期 | 2026-10-14 |
 | 状态 | 已确认的产品基线；不代表功能均已实现 |
-| 架构 | [ARCHITECTURE.zh-CN.md](./ARCHITECTURE.zh-CN.md) v0.8.1 |
+| 架构 | [ARCHITECTURE.zh-CN.md](./ARCHITECTURE.zh-CN.md) v0.8.2 |
 
 ## 1. 产品定位
 

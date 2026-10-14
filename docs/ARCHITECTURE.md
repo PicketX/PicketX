@@ -4,7 +4,7 @@
 
 | Field | Value |
 | --- | --- |
-| Version | v0.8.1 |
+| Version | v0.8.2 |
 | Date | 2026-10-14 |
 | Status | Agreed design baseline; implementation status not asserted |
 | Project | PicketX |
@@ -35,6 +35,11 @@ Product requirements, APIs, database schemas, protocol specifications, implement
 | Controller HTTP framework | Echo v5 (MIT); thin HTTP adapters, independent business/Core packages. |
 | RBAC authorization | Casbin + official GORM Adapter; trusted current-user groups/roles, shared group/role rules and one SyncedEnforcer per process; ABAC deferred until required. |
 | RBAC policy synchronization | Periodic reload only, with configurable interval and startup scale/cost recommendations; no automatic interval changes or policy Watcher dependency. |
+| Login sessions and CSRF | SCS v2 with memory/GORM/Redis stores; Echo built-in CSRF; integration pending. |
+| Rate limiting | Echo built-in local counters; ordinary HTTP and Agent communication independently configured. |
+| Agent communication | Official grpc-go/protobuf; independent Agent Token; plaintext or server TLS; mTLS optional later. |
+| Metrics and periodic jobs | Prometheus client_golang; separate Controller/Agent metrics; Go Timer/Ticker with explicit lifecycle. |
+| Linux backend priority | google/nftables for rules; vishvananda/netlink for required strict revocation; event observation evaluated separately. |
 | SQLite driver and releases | Official GORM SQLite + mattn; fully static default Linux releases with no extra shared-library installation. |
 | Controller persistence | GORM (MIT); official SQLite/mattn and PostgreSQL/pgx drivers; SQLite for single-Controller and PostgreSQL for clustered deployments; migration tooling deferred. |
 | CLI framework | Cobra (Apache-2.0); thin command adapters, Koanf configuration and independent business/Core. |
@@ -160,15 +165,15 @@ No Namespace is introduced. Object identity, authorized references, contribution
 flowchart TB
     Clients["Web · CLI · Automation"] --> Controller["picketx-controller · REST · OIDC · RBAC · Policy · Lease · AuthZ"]
     Controller --> DB["SQLite / PostgreSQL"]
-    Controller -->|"gRPC stream + mTLS"| AgentA["picketxd · Node A"]
-    Controller -->|"gRPC stream + mTLS"| AgentB["picketxd · Node B"]
+    Controller -->|"gRPC stream + Token; TLS optional"| AgentA["picketxd · Node A"]
+    Controller -->|"gRPC stream + Token; TLS optional"| AgentB["picketxd · Node B"]
     AgentA --> KernelA["Netfilter · conntrack"]
     AgentB --> KernelB["Netfilter · conntrack"]
     Proxies["Nginx · Envoy · Traefik · Caddy"] -->|"auth request / ext_authz"| Controller
 ```
 
 - **Northbound:** Web, CLI, and automation clients use the Controller's REST/JSON/OpenAPI interface.
-- **Southbound:** Agents initiate long-lived gRPC/protobuf connections to the Controller using mTLS.
+- **Southbound:** Agents initiate long-lived gRPC/protobuf connections with independent Agent Token authentication. Plaintext and server TLS are supported; mTLS is optional future work, not a first-release requirement.
 - **Local administration:** `picketx agent status`, `doctor`, `dump`, `reconcile`, and `reload` use a local Unix socket.
 - **Authorization:** Proxies and gateways call the Controller or a dedicated AuthZ endpoint.
 - **Enforcement:** Only `picketxd` modifies `table inet picketx`. The Controller never manipulates a host firewall directly.
@@ -357,6 +362,14 @@ Synchronize Casbin policy only through scheduled reloads with a configurable pos
 
 See [ADR 0001](decisions/0001-rbac-authorization.md) for persistence, multi-role deny semantics, scale guidance and pending integration checks. This is an accepted selection, not implemented authorization.
 
+### 5.11 Runtime support integration baseline
+
+SCS v2.9.0 is selected for login Sessions, with memory, existing-GORM database and Redis stores; verify actual Valkey interoperability before claiming it. Echo v5 built-in CSRF and memory RateLimiter are selected. Ordinary HTTP and Agent communication have independent limit settings/counters, including separate stream-establishment and message handling where required.
+
+Agent communication uses official grpc-go v1.84.0 and official protobuf, with independent revocable Agent Tokens. Plaintext and server TLS are configurable; normal certificate verification applies when TLS is enabled. mTLS/internal CA issuance is not a first-release dependency. Use Prometheus client_golang v1.25.0 and standard-library periodic jobs, with separate metrics collection and cancellable module lifecycles.
+
+These decisions are not runtime implementation. See [ADR 0002](decisions/0002-runtime-support.md) for session freshness, transport, proxy, quota, cardinality and expiry boundaries. Exact configuration schemas and integration details follow their first implemented workflow.
+
 ## 6. Agent and Linux data plane
 
 `picketxd` is the only privileged data-plane process. It must run independently of the Controller. The initial binary scope is Agent/Reconcile, nftables/conntrack enforcement and scoped local APIs. NFQUEUE inspection, NFLOG/mirror detection and response, REDIRECT/TPROXY proxies and application TLS termination are deferred and are not default dependencies. This supersedes the earlier full-capability-by-default Agent assumption.
@@ -366,7 +379,7 @@ Missing core nftables/conntrack capabilities are fatal. Missing optional capabil
 | Module | Responsibility |
 | --- | --- |
 | Desired State Provider | Receives state from the Controller in Controller Mode or scans local YAML manifests in Static Manifest Mode. Exactly one provider is authoritative. |
-| Controller Client | Establishes the mTLS stream, receives snapshots or deltas, and reports applied status. |
+| Controller Client | Establishes the Token-authenticated gRPC stream with configured plaintext/server TLS, receives snapshots or deltas, and reports applied status. |
 | Static Manifest Watcher | Watches a directory, parses all YAML manifests, validates them, and builds a candidate Desired Snapshot. |
 | Desired/LKG Store | Persists the last valid configuration, absolute expiry times, provider identity, `boot_id`, and recovery metadata. |
 | Reconciler | Compiles and applies unified Desired State to PicketX-owned nftables objects. |
@@ -395,7 +408,7 @@ The following rules are mandatory:
 
 1. Startup configuration explicitly selects `controller` or `static`. One `picketxd` instance has exactly one authoritative Desired State Provider at a time.
 2. **Controller Mode:** the Controller is the sole authority for Security Desired State. Local manifests containing Resource, Grant, EnforcementBinding, Policy, Authorization Rule, or other security objects never merge with or override Controller state.
-3. Local `/etc/picketx/picketxd.yaml` remains valid in Controller Mode, but it contains only Agent Runtime Configuration: Controller endpoint, certificates, logging, data directory, enabled local API listeners, health/metrics endpoints, and LKG location.
+3. Local `/etc/picketx/picketxd.yaml` remains valid in Controller Mode, but it contains only Agent Runtime Configuration: Controller endpoint, Agent credentials and optional TLS settings, logging, data directory, enabled local API listeners, health/metrics endpoints, and LKG location.
 4. Runtime Configuration and Security Desired State are separate configuration domains and models; this does not introduce a Namespace API object.
 5. If static manifests are present in Controller Mode, `picketxd` ignores them and emits a prominent warning. A strict deployment option may reject startup instead.
 6. **Static Manifest Mode:** the manifest directory is the sole authority for Security Desired State. The Controller does not distribute policy to the Agent.
@@ -448,9 +461,11 @@ A future **Emergency Override / Break-glass** capability may exist, but it must 
 
 ### 6.3 Go backend direction
 
-The Linux backend prioritizes Go Netlink integrations rather than making libnftnl/libmnl/libnetfilter_conntrack a mandatory default dependency. Candidate libraries include `google/nftables`, `ti-mo/conntrack`, and `florianl/go-nfqueue`; `cilium/ebpf` is a candidate only if a later requirement justifies an eBPF adapter. These are evaluation candidates, not pinned or fully validated dependencies.
+Prioritize `google/nftables` v0.3.0 for nftables validation and `vishvananda/netlink` for the required strictly scoped conntrack revocation. `ti-mo/conntrack` remains an event-observation candidate. Kernel conntrack expressions do not themselves require a user-space conntrack library; active observation/deletion does.
 
-Validate interval/concatenated-set coverage, atomic batch behavior, IPv4/IPv6, conntrack loss recovery and filtered deletion, kernel compatibility, and dependency licenses before adoption. Keep backend interfaces replaceable. The nftables/conntrack architecture remains the initial enforcement choice; moving to Go does not commit the product to eBPF or eliminate third-party license review.
+Keep default runtime operation independent of libnftnl/libmnl/libnetfilter_conntrack and system nft/conntrack commands. Actual integration and kernel compatibility remain unverified. Validate interval/concatenated sets, batch failure, IPv4/IPv6, absolute expiry, overlapping effective permissions, NAT tuple matching and partial deletion behavior. Preserve replaceable backend boundaries.
+
+See [ADR 0003](decisions/0003-linux-backends.md), the [M0 design](superpowers/specs/2026-10-14-linux-data-plane-validation.md) and its [implementation plan](superpowers/plans/2026-10-14-linux-data-plane-validation.md). NFQUEUE/eBPF dependency selection remains deferred.
 
 ## 7. Network policy and permission model
 
@@ -626,7 +641,7 @@ Arbitrary networking, filesystem access, and system calls are denied by default.
 | Interface | Protocol | Consumers | Design principles |
 | --- | --- | --- | --- |
 | Northbound API | HTTPS REST/JSON/OpenAPI | Web, CLI, automation | Stable, versioned, resource-oriented |
-| Southbound protocol | gRPC/protobuf + mTLS | Agents, including `picketxd` | Agent-initiated, bidirectional stream, snapshot/delta |
+| Southbound protocol | gRPC/protobuf + Agent Token; TLS optional | Agents, including `picketxd` | Agent-initiated, bidirectional stream, snapshot/delta |
 | Authorization API | HTTP/gRPC adapters | Nginx, Envoy, Traefik, Caddy, others | Low latency, explicit timeout and fail mode, cacheable |
 | Local Agent API | Unix socket | Local CLI and diagnostics | No external TCP listener by default |
 | External Plugin Protocol | Unix socket/gRPC | External plugins | Public and stable, capability registration, structured context |
@@ -678,7 +693,7 @@ flowchart LR
 
 | Risk | Architectural response |
 | --- | --- |
-| Controller compromise | mTLS, least privilege, audit, approval, and optional multi-party change control |
+| Controller compromise | Scoped Agent credentials/RPC, least privilege, audit, approval, and optional multi-party change control; TLS when configured |
 | Agent compromise | Only the Agent receives `NET_ADMIN`; local API protected by Unix socket permissions |
 | Policy misconfiguration | Dry run, policy simulation, revisions, LKG, and fast rollback |
 | Authorization timeout | Per-Resource fail mode; security-sensitive Resources default to fail-closed |
@@ -804,13 +819,15 @@ The Go backend direction no longer defaults to these C libraries, but “pure Go
 
 ## 18. Phased delivery plan
 
+The next execution unit is the [M0 Linux data-plane validation design](superpowers/specs/2026-10-14-linux-data-plane-validation.md) and [implementation plan](superpowers/plans/2026-10-14-linux-data-plane-validation.md). Review the concrete plan before Agent implementation; preserve actual test evidence and do not reopen settled architecture without a demonstrated conflict.
+
 The product baseline fixes the purpose and boundaries, not a claim that all listed capabilities are implemented. Historical scope is retained as architecture options; protocol adapters and enterprise integrations are staged by demonstrated need.
 
 | Phase | Goal | Scope |
 | --- | --- | --- |
 | M0 Data-plane validation | Prove reliable source enforcement | nftables/conntrack, IPv4/IPv6, overlapping IP/CIDR grants, hard expiry, strict/graceful revoke, restart and Linux network-namespace behavior |
 | M1 Usable access workflow | Complete request, approval, apply and expiry | Browser/OIDC self-service, basic approval, source Grants, permission union, Resource scope, status and authorization records; Controller/SQLite/Agent/CLI and Static Manifest Mode; HTTP/HTTPS ingress authorization and scoped local decision API |
-| M2 Operational scale | Reliable multi-node operation | PostgreSQL, mTLS streams, labels/selectors, drift/reconcile, LKG recovery, per-node status; HA as required |
+| M2 Operational scale | Reliable multi-node operation | PostgreSQL, authenticated gRPC streams with configured transport, labels/selectors, drift/reconcile, LKG recovery, per-node status; HA as required |
 | M3 Protocol expansion | Add finer enforcement where needed | Further trusted adapters and verified protocol user/session context; native protocol proxies and inspection evaluated individually |
 | M4 Extension and delivery options | Expand against actual demand | WASM, external Providers/plugins, advanced approval, Cloud/OEM and commercial packaging |
 
@@ -913,6 +930,7 @@ This architecture should be refined through focused documents rather than expand
 
 | Version | Date | Change |
 | --- | --- | --- |
+| v0.8.2 | 2026-10-14 | Recorded SCS, built-in CSRF/rate limiting, official gRPC/protobuf, Token authentication with optional TLS, Prometheus and standard periodic jobs; set Linux backend evaluation priorities and proposed M0 execution documents; runtime/kernel validation pending. |
 | v0.8.1 | 2026-10-14 | Selected Casbin RBAC and the official GORM Adapter; separated current-user memberships from shared rules; accepted configurable periodic-only policy synchronization and startup scale/cost guidance; recorded bilingual ADR 0001; runtime integration pending. |
 | v0.8.0 | 2026-10-14 | Selected the official GORM PostgreSQL/pgx driver; narrowed initial enforcement to network admission, external HTTP/HTTPS ingress authorization and local decision APIs; deferred inspection, transparent proxy/TLS and native database proxies; integration remains pending. |
 | v0.7.9 | 2026-10-13 | Selected official GORM SQLite/mattn and standalone default releases with full static Linux linking; PostgreSQL driver/migration tooling remain open; integration and artifact checks remain pending. |
