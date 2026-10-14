@@ -7,7 +7,7 @@
 | Version | v0.4.1 |
 | Date | 2026-10-14 |
 | Status | Agreed product baseline; not a claim of implemented features |
-| Architecture | [ARCHITECTURE.md](./ARCHITECTURE.md) v0.8.1 |
+| Architecture | [ARCHITECTURE.md](./ARCHITECTURE.md) v0.8.2 |
 
 ## 1. Product positioning
 

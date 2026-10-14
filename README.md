@@ -28,6 +28,10 @@ Initial enforcement scope is IP/CIDR network admission, HTTP/HTTPS authorization
 
 Authorization is selected as Casbin RBAC with the official GORM Adapter. The business layer supplies the current user's trusted groups/roles; shared rules use in-process enforcement and configurable periodic policy synchronization, with startup scale/cost recommendations. ABAC is deferred until needed. This is not implemented; see [ADR 0001](docs/decisions/0001-rbac-authorization.md).
 
+Runtime support selections are SCS Sessions, Echo built-in CSRF and separately configured ordinary/Agent rate limits, official gRPC/protobuf with independent Agent Tokens and optional server TLS, Prometheus metrics and standard-library periodic jobs. These remain unimplemented; see [ADR 0002](docs/decisions/0002-runtime-support.md).
+
+The next execution unit is [M0 Linux data-plane validation](docs/superpowers/specs/2026-10-14-linux-data-plane-validation.md), with its [reviewable implementation plan](docs/superpowers/plans/2026-10-14-linux-data-plane-validation.md). PicketXD currently contains only a LICENSE file; its license and Go validation scaffold must be aligned before Agent implementation. No kernel verification or production enforcement is claimed by this documentation update.
+
 ## Development
 
 Requirements: Go 1.27+, Node.js 24 LTS and npm.

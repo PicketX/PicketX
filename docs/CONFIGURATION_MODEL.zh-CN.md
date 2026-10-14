@@ -7,7 +7,7 @@
 | 版本 | v0.1.0 |
 | 日期 | 2026-10-08 |
 | 状态 | 模型边界与选择语义已确认；详细 Schema 继续设计 |
-| 关联文档 | [架构 v0.8.0](ARCHITECTURE.zh-CN.md)、[产品 v0.4.1](PRODUCT_DESIGN.zh-CN.md) |
+| 关联文档 | [架构 v0.8.2](ARCHITECTURE.zh-CN.md)、[产品 v0.4.1](PRODUCT_DESIGN.zh-CN.md) |
 
 本文记录 2026-10-07 至 2026-10-08 的建模决策，作为配置边界、Resource/Endpoint 选择与 Agent 绑定的专项设计依据。YAML 示例是拟议契约表达，不代表已经实现的解析器、已发布的 OpenAPI/protobuf Schema 或可用于生产的完整配置。尚未确定的内容见第 13 节，不通过示例暗中定案。
 

@@ -5,9 +5,13 @@ English is the default; Chinese editions carry the same decisions. These documen
 | Document | English | 简体中文 |
 | --- | --- | --- |
 | Product v0.4.1 | [Product](PRODUCT_DESIGN.md) | [产品](PRODUCT_DESIGN.zh-CN.md) |
-| Architecture v0.8.1 | [Architecture](ARCHITECTURE.md) | [架构](ARCHITECTURE.zh-CN.md) |
+| Architecture v0.8.2 | [Architecture](ARCHITECTURE.md) | [架构](ARCHITECTURE.zh-CN.md) |
 | Configuration model v0.1.0 | [Model](CONFIGURATION_MODEL.md) | [模型](CONFIGURATION_MODEL.zh-CN.md) |
 | ADR 0001: RBAC authorization | [Decision](decisions/0001-rbac-authorization.md) | [授权决策](decisions/0001-rbac-authorization.zh-CN.md) |
+| ADR 0002: Runtime support | [Decision](decisions/0002-runtime-support.md) | [运行支持](decisions/0002-runtime-support.zh-CN.md) |
+| ADR 0003: Linux backend priority | [Decision](decisions/0003-linux-backends.md) | [Backend 决策](decisions/0003-linux-backends.zh-CN.md) |
+| M0 validation design (proposed) | [Design](superpowers/specs/2026-10-14-linux-data-plane-validation.md) | [验证设计](superpowers/specs/2026-10-14-linux-data-plane-validation.zh-CN.md) |
+| M0 implementation plan (proposed) | [Plan](superpowers/plans/2026-10-14-linux-data-plane-validation.md) | [实施计划](superpowers/plans/2026-10-14-linux-data-plane-validation.zh-CN.md) |
 
 The product document defines outcomes, the architecture defines system boundaries, and the configuration model refines the agreed object/selection/binding contract. Unresolved schema details are explicitly tracked; illustrative YAML is not an implemented API.
 
