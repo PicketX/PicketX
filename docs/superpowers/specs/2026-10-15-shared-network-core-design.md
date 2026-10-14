@@ -3,7 +3,8 @@
 > English (default) | [简体中文](2026-10-15-shared-network-core-design.zh-CN.md)
 
 - Date: 2026-10-15 (Asia/Shanghai)
-- Status: Proposed written design for review; implementation has not started
+- Status: Written design approved by the user and merged; implementation has not started
+- Next: [Implementation plan for review](../plans/2026-10-15-shared-network-core.md)
 - Implementation repository: PicketX/PicketX, Apache-2.0
 - Authority: [Architecture](../../ARCHITECTURE.md), [configuration boundaries](../../CONFIGURATION_MODEL.md), [product workflow](../../PRODUCT_DESIGN.md)
 - Prerequisite: [PicketXD M0 PR](https://github.com/PicketX/PicketXD/pull/1), merged; [final tested source](https://github.com/PicketX/PicketXD/commit/13fdf2d9aacd79be74578ebe9c23af19a6b33d6a) and [real-kernel CI](https://github.com/PicketX/PicketXD/actions/runs/38547987642)
