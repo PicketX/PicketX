@@ -150,7 +150,7 @@ if err != nil || !ssh.Allowed { t.Fatalf("ssh=%+v err=%v", ssh, err) }
 
 - 三个实现提交分别交付原语、不可变引擎、Gitea 契约；9 项原语与 14 项引擎测试先观察行为 RED，再实现 GREEN。5 项跨场景测试和公开示例验证已有引擎；实际 first-Grant-only/含到期终点的临时变异均被 Gitea 固定断言拒绝，之后恢复正确代码。
 - 全部 29 项 Core 测试/示例及 3 项现有 Controller 测试通过，没有跳过测试；命令包本身没有测试。Go unit/race/vet/build、格式及 diff 检查通过；Web npm ci/typecheck/lint/build 通过。Core 非标准库依赖只有自身，go.mod/go.sum 不变。
-- 独立整分支评审：0 Critical、0 Important；评审者独立执行非缓存 race/vet/build/格式/依赖检查。GitHub Actions 查询尚无运行记录，远端结果等待实际运行，不以本地检查替代远端证据。
+- 独立整分支评审：0 Critical、0 Important；评审者独立执行非缓存 race/vet/build/格式/依赖检查。远端 [CI #38608827993](https://github.com/PicketX/PicketX/actions/runs/38608827993) 已在提交 `03efd46722dcf245f354ff56e96a3a03d8ec2b29` 成功：Go/Web 两个任务通过，Go 日志确认实际执行 pkg/core race 测试。后续验证记录文档变更不修改运行时或测试源码。
 - 延期 Minor：`Validity.NextBoundary` 对早于公元 1 年的非零查询时间，可能将未提供的 NotBefore 作为未来边界返回 zero，遮蔽实际到期边界；正常运行时间不受影响。后续可加入 IsZero 检查与历史时间回归测试。
 - 执行调整：任务 3 的最终评审/发布步骤置于全分支完成关卡，遵循 executing-plans；影响仅流程顺序，评审仍先于发布。
 - 范围裁定：物理目的地址/Binding/内核实施留后续，因此逻辑允许不证明数据包放行；持久化/审批/可靠发布/实际状态留后续，因此尚无完整浏览器到 Agent 工作流；外部 Schema/解码留后续，因此不承诺稳定协议；规模容量未作承诺，须实测后才能给出部署容量保证。这些维持已批准边界。
