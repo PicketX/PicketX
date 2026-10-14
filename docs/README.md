@@ -5,8 +5,9 @@ English is the default; Chinese editions carry the same decisions. These documen
 | Document | English | 简体中文 |
 | --- | --- | --- |
 | Product v0.4.1 | [Product](PRODUCT_DESIGN.md) | [产品](PRODUCT_DESIGN.zh-CN.md) |
-| Architecture v0.8.0 | [Architecture](ARCHITECTURE.md) | [架构](ARCHITECTURE.zh-CN.md) |
+| Architecture v0.8.1 | [Architecture](ARCHITECTURE.md) | [架构](ARCHITECTURE.zh-CN.md) |
 | Configuration model v0.1.0 | [Model](CONFIGURATION_MODEL.md) | [模型](CONFIGURATION_MODEL.zh-CN.md) |
+| ADR 0001: RBAC authorization | [Decision](decisions/0001-rbac-authorization.md) | [授权决策](decisions/0001-rbac-authorization.zh-CN.md) |
 
 The product document defines outcomes, the architecture defines system boundaries, and the configuration model refines the agreed object/selection/binding contract. Unresolved schema details are explicitly tracked; illustrative YAML is not an implemented API.
 

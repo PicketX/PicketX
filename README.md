@@ -26,6 +26,8 @@ SQLite is selected as the official GORM driver (v1.6.0 baseline) with mattn/go-s
 
 Initial enforcement scope is IP/CIDR network admission, HTTP/HTTPS authorization through existing ingress, and a local decision interface over TCP or Unix socket. NFQUEUE/mirror inspection, transparent proxy/TLS termination and native database proxies are deferred; these endpoints and integrations are not implemented yet.
 
+Authorization is selected as Casbin RBAC with the official GORM Adapter. The business layer supplies the current user's trusted groups/roles; shared rules use in-process enforcement and configurable periodic policy synchronization, with startup scale/cost recommendations. ABAC is deferred until needed. This is not implemented; see [ADR 0001](docs/decisions/0001-rbac-authorization.md).
+
 ## Development
 
 Requirements: Go 1.27+, Node.js 24 LTS and npm.

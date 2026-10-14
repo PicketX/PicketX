@@ -4,7 +4,7 @@
 
 | 字段 | 内容 |
 | --- | --- |
-| 版本 | v0.8.0 |
+| 版本 | v0.8.1 |
 | 日期 | 2026-10-14 |
 | 状态 | 已确认的设计基线；不代表已实现 |
 | 项目 | PicketX |
@@ -33,6 +33,8 @@
 | 其他组件许可证 | Controller、CLI、公开协议与 SDK、External Plugin SDK 默认使用 Apache-2.0。 |
 | 后端语言与仓库 | Go；PicketX 承载控制面/Core/Web，PicketXD 承载官方 Linux Agent。 |
 | Controller HTTP 框架 | Echo v5（MIT）；HTTP 适配层保持精简，业务/Core 包独立。 |
+| RBAC 授权 | Casbin + 官方 GORM Adapter；当前用户可信组/角色输入、共享组/角色规则，每进程一个 SyncedEnforcer；ABAC 按需扩展。 |
+| RBAC 策略同步 | 仅定时重载，间隔可配置，启动按规模/成本提供建议；不自动改间隔，不依赖策略 Watcher。 |
 | SQLite 驱动与发布 | 官方 GORM SQLite + mattn；Linux 默认完整静态链接，无额外共享库安装要求。 |
 | Controller 持久化 | GORM（MIT）；官方 SQLite/mattn 与 PostgreSQL/pgx 驱动；SQLite 用于单 Controller，PostgreSQL 用于集群；迁移工具暂缓。 |
 | CLI 框架 | Cobra（Apache-2.0）；轻量命令适配器，Koanf 配置与独立业务/Core。 |
@@ -345,6 +347,16 @@ Adapter 只修改自身拥有的对象，报告 Desired/Applied Revision、观�
 
 参考：[Go 结构化日志](https://go.dev/blog/slog)、[slog API](https://pkg.go.dev/log/slog)。
 
+### 5.10 RBAC 授权
+
+**采用 Casbin 与官方 GORM Adapter，从 RBAC 开始，实际需要属性条件时再扩展 ABAC。** 身份/业务服务提供当前用户的可信组/角色；共享 Enforcer 保存组→角色绑定、角色继承及角色→资源/操作权限，不复制整个用户目录的成员关系。PicketX 按钮权限对应后端必须校验的操作，第三方应用自身权限仍独立。
+
+复用已有 GORM 连接，保留官方 Adapter 对 Casbin 表的默认初始化/AutoMigrate；这与业务 Schema 的版本化迁移分开，也不承诺任意历史数据升级。每个进程创建并注入一个 `SyncedEnforcer`。注册策略与登录 Session 独立；IP/CIDR Grant 聚合、Lease 生命周期、网络编译与连接撤销继续由 PicketX Core 管理。
+
+Casbin 策略仅通过定时重载同步，提供可配置的正数间隔。启动时报告实际加载的 `p`/`g` 数量与加载耗时，通过可配置的规模/成本分级建议扩大间隔或按范围装载，并解释对应的传播延迟。建议不自动改配置，扩大间隔不会减少常驻策略内存。Session 成员关系新鲜度单独约定；ABAC、决策缓存、具体配置键/默认值和规模数值阈值尚未在本次冻结。
+
+持久化、多角色拒绝语义、规模建议和接入验收见 [ADR 0001](decisions/0001-rbac-authorization.zh-CN.md)。这是已确认选型，不代表授权已经实现。
+
 ## 6. Agent 与 Linux 数据面
 
 `picketxd` 是唯一的特权数据面进程，并且必须能够脱离 Controller 独立运行。首期二进制范围为 Agent/Reconcile、nftables/conntrack 执行和受限本地接口。NFQUEUE 探测、NFLOG/镜像检测响应、REDIRECT/TPROXY 代理及业务 TLS 终止均后移，不是默认依赖；此决定替代此前默认全功能 Agent 的假设。
@@ -655,7 +667,7 @@ flowchart LR
 
 - 不自行实现 Raft。
 - PostgreSQL 模式下 Controller 尽量无状态，每个实例拥有自己当前连接的 Agent Stream。
-- PostgreSQL `LISTEN/NOTIFY` 仅用于唤醒；正确性依赖按 revision 重新读取。
+- PostgreSQL `LISTEN/NOTIFY` 可用于唤醒期望状态分发；正确性依赖按 revision 重新读取。这与 Casbin 策略刷新分开，后者仅使用第 5.10 节的可配置定时重载。
 - 单例定时任务可使用 PostgreSQL Advisory Lock。
 - Agent 落后过多时直接接收 Full Snapshot，不无限维护复杂 Replay History。
 - Agent 启动时读取 `boot_id`；宿主重启后从合法且 Provider 绑定的 LKG 重建 PicketX Table。
@@ -901,6 +913,7 @@ PicketXD/                      # GPL-3.0-or-later + OEM option
 
 | 版本 | 日期 | 变更 |
 | --- | --- | --- |
+| v0.8.1 | 2026-10-14 | 确定 Casbin RBAC 与官方 GORM Adapter；当前用户成员关系与共享规则分离；仅定时策略同步、间隔可配置，启动按规模/成本提供建议；记录双语 ADR 0001；接入待实现。 |
 | v0.8.0 | 2026-10-14 | 确定官方 GORM PostgreSQL/pgx 驱动；首期收敛为网络准入、外部 HTTP/HTTPS 入口授权和本地决策接口；探测、透明代理/TLS 与原生数据库代理后移；实际接入待实现。 |
 | v0.7.9 | 2026-10-13 | 确定官方 GORM SQLite/mattn 驱动及默认独立发布、Linux 完整静态链接要求；PostgreSQL 驱动与迁移工具待选，接入和产物验证待实现。 |
 | v0.7.8 | 2026-10-13 | 确定 Cobra v1.10.2 作为 CLI 接入基线；明确 Koanf 参数覆盖、API/本地诊断边界与输出规则；命令实现待接入。 |

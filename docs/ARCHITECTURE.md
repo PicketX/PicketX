@@ -4,7 +4,7 @@
 
 | Field | Value |
 | --- | --- |
-| Version | v0.8.0 |
+| Version | v0.8.1 |
 | Date | 2026-10-14 |
 | Status | Agreed design baseline; implementation status not asserted |
 | Project | PicketX |
@@ -33,6 +33,8 @@ Product requirements, APIs, database schemas, protocol specifications, implement
 | Other component licensing | Controller, CLI, public protocols and SDKs, and external-plugin SDK use Apache-2.0 by default. |
 | Backend language and repositories | Go; PicketX owns control plane/Core/Web, PicketXD owns the official Linux Agent. |
 | Controller HTTP framework | Echo v5 (MIT); thin HTTP adapters, independent business/Core packages. |
+| RBAC authorization | Casbin + official GORM Adapter; trusted current-user groups/roles, shared group/role rules and one SyncedEnforcer per process; ABAC deferred until required. |
+| RBAC policy synchronization | Periodic reload only, with configurable interval and startup scale/cost recommendations; no automatic interval changes or policy Watcher dependency. |
 | SQLite driver and releases | Official GORM SQLite + mattn; fully static default Linux releases with no extra shared-library installation. |
 | Controller persistence | GORM (MIT); official SQLite/mattn and PostgreSQL/pgx drivers; SQLite for single-Controller and PostgreSQL for clustered deployments; migration tooling deferred. |
 | CLI framework | Cobra (Apache-2.0); thin command adapters, Koanf configuration and independent business/Core. |
@@ -345,6 +347,16 @@ References: [Koanf v2.3.8](https://github.com/knadh/koanf/releases/tag/v2.3.8), 
 
 References: [Go structured logging](https://go.dev/blog/slog), [slog API](https://pkg.go.dev/log/slog).
 
+### 5.10 RBAC authorization
+
+**Use Casbin with the official GORM Adapter, starting with RBAC; extend to ABAC only for actual attribute-based requirements.** Business/identity services resolve the current user's trusted groups/roles; the shared enforcer stores group-to-role bindings, role inheritance and role-to-resource/operation permissions, without mirroring the entire user directory's memberships. PicketX button permissions map to backend-enforced operations; third-party application permissions remain separate.
+
+Reuse the existing GORM connection and the official adapter's default Casbin-table initialization/AutoMigrate. This is distinct from business-schema versioned migrations and does not promise arbitrary data upgrades. Create one injected `SyncedEnforcer` per process. Registered policies remain independent of login Sessions; IP/CIDR Grant aggregation, Lease lifetimes, network compilation and connection revocation stay in the PicketX Core.
+
+Synchronize Casbin policy only through scheduled reloads with a configurable positive interval. At startup report loaded `p`/`g` counts and loading duration, use configurable size/cost bands to suggest longer intervals or scoped loading, and explain the corresponding propagation delay. Suggestions never alter configuration automatically; larger intervals do not reduce policy resident memory. Session membership freshness remains a separate contract, and ABAC, decision caching, exact config keys/defaults and numerical scale thresholds are not finalized here.
+
+See [ADR 0001](decisions/0001-rbac-authorization.md) for persistence, multi-role deny semantics, scale guidance and pending integration checks. This is an accepted selection, not implemented authorization.
+
 ## 6. Agent and Linux data plane
 
 `picketxd` is the only privileged data-plane process. It must run independently of the Controller. The initial binary scope is Agent/Reconcile, nftables/conntrack enforcement and scoped local APIs. NFQUEUE inspection, NFLOG/mirror detection and response, REDIRECT/TPROXY proxies and application TLS termination are deferred and are not default dependencies. This supersedes the earlier full-capability-by-default Agent assumption.
@@ -655,7 +667,7 @@ flowchart LR
 
 - Do not build a custom Raft implementation.
 - In PostgreSQL mode, Controllers are as stateless as practical; each instance owns its current Agent streams.
-- PostgreSQL `LISTEN/NOTIFY` is a wake-up mechanism only. Correctness depends on rereading by revision.
+- PostgreSQL `LISTEN/NOTIFY` may wake up desired-state distribution; correctness depends on rereading by revision. This is separate from Casbin policy refresh, which uses only the configurable periodic reload in section 5.10.
 - Singleton scheduled jobs may use PostgreSQL advisory locks.
 - An Agent that falls too far behind receives a full snapshot rather than an indefinitely complex replay history.
 - The Agent reads `boot_id` on startup and reconstructs the PicketX table from a valid provider-bound LKG after host restart.
@@ -901,6 +913,7 @@ This architecture should be refined through focused documents rather than expand
 
 | Version | Date | Change |
 | --- | --- | --- |
+| v0.8.1 | 2026-10-14 | Selected Casbin RBAC and the official GORM Adapter; separated current-user memberships from shared rules; accepted configurable periodic-only policy synchronization and startup scale/cost guidance; recorded bilingual ADR 0001; runtime integration pending. |
 | v0.8.0 | 2026-10-14 | Selected the official GORM PostgreSQL/pgx driver; narrowed initial enforcement to network admission, external HTTP/HTTPS ingress authorization and local decision APIs; deferred inspection, transparent proxy/TLS and native database proxies; integration remains pending. |
 | v0.7.9 | 2026-10-13 | Selected official GORM SQLite/mattn and standalone default releases with full static Linux linking; PostgreSQL driver/migration tooling remain open; integration and artifact checks remain pending. |
 | v0.7.8 | 2026-10-13 | Selected Cobra v1.10.2 for CLI integration; defined Koanf flag precedence, API/local diagnostic boundaries and output conventions; commands remain unimplemented. |

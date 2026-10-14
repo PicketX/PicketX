@@ -26,6 +26,8 @@ SQLite 选用 GORM 官方驱动（v1.6.0 基线）和 mattn/go-sqlite3（v1.14.5
 
 首期执行范围为 IP/CIDR 网络准入、现有入口提供 HTTP/HTTPS 授权、本地 TCP 或 Unix Socket 决策接口。NFQUEUE/镜像探测、透明代理/TLS 终止及原生数据库代理均后移；这些端点与集成尚未实现。
 
+授权选用 Casbin RBAC 和官方 GORM Adapter；业务层提供当前用户的可信组/角色，共享规则在进程内鉴权，按可配置周期同步，启动时按规模/成本提供建议。ABAC 按需扩展。这些能力尚未实现，见 [ADR 0001](docs/decisions/0001-rbac-authorization.zh-CN.md)。
+
 ## 本地开发
 
 需要 Go 1.27+、Node.js 24 LTS 和 npm。
