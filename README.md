@@ -30,7 +30,7 @@ Authorization is selected as Casbin RBAC with the official GORM Adapter. The bus
 
 Runtime support selections are SCS Sessions, Echo built-in CSRF and separately configured ordinary/Agent rate limits, official gRPC/protobuf with independent Agent Tokens and optional server TLS, Prometheus metrics and standard-library periodic jobs. These remain unimplemented; see [ADR 0002](docs/decisions/0002-runtime-support.md).
 
-M0 Linux data-plane validation is implemented and merged in [PicketXD](https://github.com/PicketX/PicketXD/pull/1). The [final tested source](https://github.com/PicketX/PicketXD/commit/13fdf2d9aacd79be74578ebe9c23af19a6b33d6a) passed [17 required real-kernel scenarios](https://github.com/PicketX/PicketXD/actions/runs/38547987642) on Linux 6.17.0-1022-azure / Go 1.27.0. This is reusable validation infrastructure, not a production Agent. The [M1.1 shared network Core design](docs/superpowers/specs/2026-10-15-shared-network-core-design.md) is approved and merged; its [implementation plan](docs/superpowers/plans/2026-10-15-shared-network-core.md) is ready for review. Core implementation and Controller workflow integration have not started.
+M0 Linux data-plane validation is implemented and merged in [PicketXD](https://github.com/PicketX/PicketXD/pull/1). The [final tested source](https://github.com/PicketX/PicketXD/commit/13fdf2d9aacd79be74578ebe9c23af19a6b33d6a) passed [17 required real-kernel scenarios](https://github.com/PicketX/PicketXD/actions/runs/38547987642) on Linux 6.17.0-1022-azure / Go 1.27.0. This is reusable validation infrastructure, not a production Agent. The approved [M1.1 design](docs/superpowers/specs/2026-10-15-shared-network-core-design.md) and [implementation plan](docs/superpowers/plans/2026-10-15-shared-network-core.md) now have a standard-library-only logical engine in [`pkg/core`](pkg/core). It validates sources, selectors, entry scopes and explicit lifetime modes; unions matching Grants, prioritizes denies and explains independent contributions and future changes. Literal Gitea HTTPS/SSH tests cover overlap, revocation, immutable replacement and deadline-preserving replay. Physical Endpoint/Binding planning, Core-to-M0 integration and the Controller workflow remain unimplemented; a logical allow does not confirm Agent enforcement.
 
 ## Development
 
@@ -76,7 +76,7 @@ npm run build
 | `apps/web` | React, TypeScript, Vite, shadcn/ui, Tailwind CSS, i18next |
 | `docs` | Current bilingual product, architecture and configuration model baselines |
 
-Core/public protocol packages will be introduced as their first contracts are implemented. See [Product Design](docs/PRODUCT_DESIGN.md), [Architecture](docs/ARCHITECTURE.md), [Configuration Model](docs/CONFIGURATION_MODEL.md), and [Web development](apps/web/README.md).
+`pkg/core` contains the evolving logical network Go API and a runnable `ExampleCompile`; public wire/protocol packages remain deferred. See [Product Design](docs/PRODUCT_DESIGN.md), [Architecture](docs/ARCHITECTURE.md), [Configuration Model](docs/CONFIGURATION_MODEL.md), and [Web development](apps/web/README.md).
 
 ## License
 
