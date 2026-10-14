@@ -13,7 +13,7 @@ English is the default; Chinese editions carry the same decisions. These documen
 | M0 validation design (executed) | [Design](superpowers/specs/2026-10-14-linux-data-plane-validation.md) | [验证设计](superpowers/specs/2026-10-14-linux-data-plane-validation.zh-CN.md) |
 | M0 implementation plan (executed) | [Plan](superpowers/plans/2026-10-14-linux-data-plane-validation.md) | [实施计划](superpowers/plans/2026-10-14-linux-data-plane-validation.zh-CN.md) |
 | M1.1 shared Core design (approved) | [Design](superpowers/specs/2026-10-15-shared-network-core-design.md) | [共享 Core 设计](superpowers/specs/2026-10-15-shared-network-core-design.zh-CN.md) |
-| M1.1 Core implementation plan (approved, executing) | [Plan](superpowers/plans/2026-10-15-shared-network-core.md) | [实施计划](superpowers/plans/2026-10-15-shared-network-core.zh-CN.md) |
+| M1.1 Core implementation plan (executed, integration pending) | [Plan](superpowers/plans/2026-10-15-shared-network-core.md) | [实施计划](superpowers/plans/2026-10-15-shared-network-core.zh-CN.md) |
 
 The product document defines outcomes, the architecture defines system boundaries, and the configuration model refines the agreed object/selection/binding contract. Unresolved schema details are explicitly tracked; illustrative YAML is not an implemented API.
 

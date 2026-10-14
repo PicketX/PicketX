@@ -3,8 +3,8 @@
 > English (default) | [简体中文](2026-10-15-shared-network-core-design.zh-CN.md)
 
 - Date: 2026-10-15 (Asia/Shanghai)
-- Status: Written design approved by the user and merged; implementation has not started
-- Next: [Implementation plan for review](../plans/2026-10-15-shared-network-core.md)
+- Status: Approved design; logical Core implementation and local acceptance complete, awaiting implementation PR integration
+- Next: [Executed plan and validation record](../plans/2026-10-15-shared-network-core.md)
 - Implementation repository: PicketX/PicketX, Apache-2.0
 - Authority: [Architecture](../../ARCHITECTURE.md), [configuration boundaries](../../CONFIGURATION_MODEL.md), [product workflow](../../PRODUCT_DESIGN.md)
 - Prerequisite: [PicketXD M0 PR](https://github.com/PicketX/PicketXD/pull/1), merged; [final tested source](https://github.com/PicketX/PicketXD/commit/13fdf2d9aacd79be74578ebe9c23af19a6b33d6a) and [real-kernel CI](https://github.com/PicketX/PicketXD/actions/runs/38547987642)
@@ -124,7 +124,7 @@ Tests compare hand-derived expected IDs, booleans and instants. Add a small exha
 
 Direct dependencies are the Go standard library. The existing Echo liveness handler is unchanged. Existing CI already runs Go race tests; implementation will include `pkg` in the formatting check. No GPL Agent code or fixture implementation is copied into the Apache repository; conformance expectations are independently written from the agreed contract.
 
-After this design is reviewed, write the concrete TDD implementation plan and continue with the already selected inline execution method. Its final review covers the whole branch once. The present design PR contains documentation only and does not create `pkg/core` yet.
+After this design is reviewed, write the concrete TDD implementation plan and continue with the already selected inline execution method. Its final review covers the whole branch once. The original design PR contained documentation only; the logical implementation is now recorded in the plan's execution record.
 
 ## 8. Remaining M1 sequence
 
