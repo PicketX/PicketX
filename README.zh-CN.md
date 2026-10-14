@@ -30,7 +30,7 @@ SQLite 选用 GORM 官方驱动（v1.6.0 基线）和 mattn/go-sqlite3（v1.14.5
 
 运行支持已选 SCS Session、Echo 内置 CSRF、普通/Agent 分别配置的限流、官方 gRPC/protobuf、独立 Agent Token 与可选服务端 TLS、Prometheus 指标、标准库周期任务；均待接入，见 [ADR 0002](docs/decisions/0002-runtime-support.zh-CN.md)。
 
-下一执行单元为 [M0 Linux 数据面验证](docs/superpowers/specs/2026-10-14-linux-data-plane-validation.zh-CN.md)及[可评审实施计划](docs/superpowers/plans/2026-10-14-linux-data-plane-validation.zh-CN.md)。PicketXD 当前只有 LICENSE 文件；Agent 实现前先对齐许可证与 Go 验证骨架。本次文档更新不声称已完成内核验证或生产执行能力。
+M0 Linux 数据面验证已在 [PicketXD](https://github.com/PicketX/PicketXD/pull/1) 实现并合并。[最终已测源码](https://github.com/PicketX/PicketXD/commit/13fdf2d9aacd79be74578ebe9c23af19a6b33d6a)在 Linux 6.17.0-1022-azure / Go 1.27.0 上通过 [17 项必需真实内核场景](https://github.com/PicketX/PicketXD/actions/runs/38547987642)。这是可复用验证基础设施，尚不是生产 Agent。下一增量为待评审的 [M1.1 共享网络 Core 设计](docs/superpowers/specs/2026-10-15-shared-network-core-design.zh-CN.md)，Controller/Core 工作流集成尚未开始。
 
 ## 本地开发
 

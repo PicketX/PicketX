@@ -2,6 +2,8 @@
 
 > English (default) | [简体中文](2026-10-14-linux-data-plane-validation.zh-CN.md)
 
+> Execution record (2026-10-15): user accepted M0; [Agent PR #1](https://github.com/PicketX/PicketXD/pull/1) is merged. [Final tested source](https://github.com/PicketX/PicketXD/commit/13fdf2d9aacd79be74578ebe9c23af19a6b33d6a) passed [all 17 required real-kernel scenarios](https://github.com/PicketX/PicketXD/actions/runs/38547987642), unit/race/vet/build and the independent-review fix pass. Original planning text below is retained as the reviewed historical input. Production integration remains pending.
+
 - Date: 2026-10-14
 - Status: Proposed execution design for review; no kernel acceptance claimed
 - Implementation repository: [PicketX/PicketXD](https://github.com/PicketX/PicketXD)
