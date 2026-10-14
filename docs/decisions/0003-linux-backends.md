@@ -3,7 +3,9 @@
 > English (default) | [简体中文](0003-linux-backends.zh-CN.md)
 
 - Date: 2026-10-14
-- Status: Accepted evaluation priority; kernel acceptance and production integration pending
+- Status: Accepted evaluation priority; M0 kernel validation completed, production integration pending
+
+M0 was merged through [PicketXD PR #1](https://github.com/PicketX/PicketXD/pull/1). Its final source passed [17 required kernel scenarios](https://github.com/PicketX/PicketXD/actions/runs/38547987642) on Linux 6.17.0-1022-azure with Go1.27.0, nftables v0.3.0 and netlink v1.3.1. See [measured findings](https://github.com/PicketX/PicketXD/blob/main/docs/validation/M0.md). This does not establish a production Agent or other kernel compatibility.
 
 ## Decision
 

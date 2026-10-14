@@ -463,7 +463,7 @@ A future **Emergency Override / Break-glass** capability may exist, but it must 
 
 Prioritize `google/nftables` v0.3.0 for nftables validation and `vishvananda/netlink` for the required strictly scoped conntrack revocation. `ti-mo/conntrack` remains an event-observation candidate. Kernel conntrack expressions do not themselves require a user-space conntrack library; active observation/deletion does.
 
-Keep default runtime operation independent of libnftnl/libmnl/libnetfilter_conntrack and system nft/conntrack commands. Actual integration and kernel compatibility remain unverified. Validate interval/concatenated sets, batch failure, IPv4/IPv6, absolute expiry, overlapping effective permissions, NAT tuple matching and partial deletion behavior. Preserve replaceable backend boundaries.
+Keep default runtime operation independent of libnftnl/libmnl/libnetfilter_conntrack and system nft/conntrack commands. M0 validated the pinned backends on Linux 6.17.0-1022-azure / Go 1.27.0, with [17 required real-kernel scenarios passing](https://github.com/PicketX/PicketXD/actions/runs/38547987642) and the [Agent validation change merged](https://github.com/PicketX/PicketXD/pull/1). Production integration and other kernel compatibility remain pending. Validate interval/concatenated sets, batch failure, IPv4/IPv6, absolute expiry, overlapping effective permissions, NAT tuple matching and partial deletion behavior. Preserve replaceable backend boundaries.
 
 See [ADR 0003](decisions/0003-linux-backends.md), the [M0 design](superpowers/specs/2026-10-14-linux-data-plane-validation.md) and its [implementation plan](superpowers/plans/2026-10-14-linux-data-plane-validation.md). NFQUEUE/eBPF dependency selection remains deferred.
 

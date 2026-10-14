@@ -2,6 +2,8 @@
 
 > [English (default)](2026-10-14-linux-data-plane-validation.md) | 简体中文
 
+> 执行记录（2026-10-15）：用户已接受 M0，[Agent PR #1](https://github.com/PicketX/PicketXD/pull/1)已合并。[最终已测源码](https://github.com/PicketX/PicketXD/commit/13fdf2d9aacd79be74578ebe9c23af19a6b33d6a)通过 [17 项必需真实内核场景](https://github.com/PicketX/PicketXD/actions/runs/38547987642)、单元/竞态/静态检查/构建及独立评审后的修复验证。保留下面原始计划文字作为已评审的历史输入；生产集成仍待实现。
+
 - 日期：2026-10-14
 - 状态：执行设计待评审；不声称已通过内核验收
 - 实现仓库：[PicketX/PicketXD](https://github.com/PicketX/PicketXD)

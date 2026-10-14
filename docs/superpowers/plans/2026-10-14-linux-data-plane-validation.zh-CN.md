@@ -2,6 +2,8 @@
 
 > **面向执行 Agent：**建议当前会话直接执行，逐任务使用 superpowers:executing-plans；只有用户选择委派时才使用 superpowers:subagent-driven-development。步骤以复选框跟踪。
 
+> 执行记录（2026-10-15）：用户已接受 M0，[Agent PR #1](https://github.com/PicketX/PicketXD/pull/1)已合并。[最终已测源码](https://github.com/PicketX/PicketXD/commit/13fdf2d9aacd79be74578ebe9c23af19a6b33d6a)通过 [17 项必需真实内核场景](https://github.com/PicketX/PicketXD/actions/runs/38547987642)、单元/竞态/静态检查/构建及独立评审后的修复验证。保留下面原始计划文字作为已评审的历史输入；生产集成仍待实现。
+
 **目标：**建立可重复执行的 M0 Linux 验证套件，为 nftables 执行和 conntrack 定向严格撤销提供真实证据。
 
 **架构：**在 PicketXD 实现测试内部 Fixture 与 Adapter，用隔离网络命名空间中的真实流量验证。快照代表预期有效权限，不是生产 Grant Compiler 或公开配置 Schema。

@@ -3,7 +3,9 @@
 > [English (default)](0003-linux-backends.md) | 简体中文
 
 - 日期：2026-10-14
-- 状态：验证优先级已确认；内核验收与生产接入待完成
+- 状态：已接受的评估顺序；M0 内核验证完成，生产集成待实现
+
+M0 已通过 [PicketXD PR #1](https://github.com/PicketX/PicketXD/pull/1) 合并。最终源码在 Linux 6.17.0-1022-azure、Go1.27.0、nftables v0.3.0、netlink v1.3.1 上通过 [17 项必需内核场景](https://github.com/PicketX/PicketXD/actions/runs/38547987642)。参见[实测发现](https://github.com/PicketX/PicketXD/blob/main/docs/validation/M0.zh-CN.md)。这不代表生产 Agent 或其他内核兼容性已得到验证。
 
 ## 决策
 

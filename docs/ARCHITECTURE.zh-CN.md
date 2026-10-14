@@ -463,7 +463,7 @@ Static Manifest Mode 使用相同配置语义实现本地保护，限时 Grant �
 
 nftables 优先验证 `google/nftables` v0.3.0；当前必需的定向严格撤销优先验证 `vishvananda/netlink`。`ti-mo/conntrack` 保留为事件观测候选。使用内核 conntrack 表达式本身不需要用户态 conntrack 库；主动观测/删除才需要。
 
-默认运行不依赖 libnftnl/libmnl/libnetfilter_conntrack 或 nft/conntrack 系统命令。实际接入与内核兼容尚未验证。验证区间/组合集合、Batch 失败、IPv4/IPv6、绝对到期、重叠有效权限、NAT 元组和部分删除，保持 Backend 可替换。
+默认运行不依赖 libnftnl/libmnl/libnetfilter_conntrack 或 nft/conntrack 系统命令。M0 已在 Linux 6.17.0-1022-azure / Go 1.27.0 上验证固定版本 Backend，[17 项必需真实内核场景通过](https://github.com/PicketX/PicketXD/actions/runs/38547987642)，[Agent 验证变更已合并](https://github.com/PicketX/PicketXD/pull/1)。生产接入与其他内核兼容仍待验证。验证区间/组合集合、Batch 失败、IPv4/IPv6、绝对到期、重叠有效权限、NAT 元组和部分删除，保持 Backend 可替换。
 
 参阅 [ADR 0003](decisions/0003-linux-backends.zh-CN.md)、[M0 设计](superpowers/specs/2026-10-14-linux-data-plane-validation.zh-CN.md)和[实施计划](superpowers/plans/2026-10-14-linux-data-plane-validation.zh-CN.md)。NFQUEUE/eBPF 依赖继续后移。
 
