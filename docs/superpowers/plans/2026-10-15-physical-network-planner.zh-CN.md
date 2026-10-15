@@ -1,6 +1,6 @@
 # M1.2 物理网络规划实施计划
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking. 用户已选择本会话直接执行，全部完成后做一次独立全分支评审；保留该选择。
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking. 用户已选择本会话直接执行，全部完成后做一次独立全分支评审；保留该选择。
 
 > [English (default)](2026-10-15-physical-network-planner.md) | 简体中文
 
@@ -12,7 +12,7 @@
 
 **设计依据：** [已批准 M1.2 设计](../specs/2026-10-15-physical-network-planner-design.zh-CN.md)，已通过 [PR #5](https://github.com/PicketX/PicketX/pull/5) 合并。
 
-**状态：** 待评审实施计划，尚未实现 M1.2 代码。基线 `315e0dd5617eed6cfc5055322d23b56378179cd2`。M1.1 历史时间边界修正在任务 1 规划，尚未修复。
+**状态：** 计划经 PR #6 批准，从合并提交 `dc7158ad8583d3cfafe95c94bdef8d708bf31118` 开始执行。五项任务均已通过本地验证，发布前进行全分支评审。规划基线是 `315e0dd5617eed6cfc5055322d23b56378179cd2`；任务 1 已修复 M1.1 历史时间回归。
 
 ## 全局约束
 
@@ -76,7 +76,7 @@ Engine 保留规范化且独立持有的目录，包含 Resource 标签和空 Re
 
 只在 `validity.go` 修正已记录的 `NextBoundary` 省略值问题：即使传入非零时间早于公元 1 年，省略的零值 `NotBefore` 也不是未来生效点。不新增时间范围限制，不改变期限规则。
 
-- [ ] **1. 在本任务测试文件编写下列具名失败测试。** 断言片段使用测试内 fixture 变量；在所属测试包内构造，不复用其他包的私有测试 helper。
+- [x] **1. 在本任务测试文件编写下列具名失败测试。** 断言片段使用测试内 fixture 变量；在所属测试包内构造，不复用其他包的私有测试 helper。
 
 ```go
 // TestNetworkViewResolvedMembership: "empty" remains a resource with zero entries;
@@ -102,22 +102,22 @@ if got := v.NextBoundary(at); !got.Equal(end) { t.Fatal(got) }
 // Also assert explicit future NotBefore is returned and permanent/no-start is zero.
 ```
 
-- [ ] **2. 运行下方聚焦命令，观察预期行为失败。** 新 API 先补声明和最小返回错误的桩，使红色证据来自断言，不是缺少导入。
+- [x] **2. 运行下方聚焦命令，观察预期行为失败。** 新 API 先补声明和最小返回错误的桩，使红色证据来自断言，不是缺少导入。
 
 ```bash
 go test ./pkg/core -run 'Test(NetworkView|NextBoundaryOmittedStartHistoricalClock)' -count=1
 ```
 
-- [ ] **3. 在文件映射所列文件实现声明的接口，** 遵守本任务规则与已批准设计，不附带无关重构。
+- [x] **3. 在文件映射所列文件实现声明的接口，** 遵守本任务规则与已批准设计，不附带无关重构。
 
-- [ ] **4. 重跑聚焦命令和指定回归命令；** 要求 PASS 且退出码为 0。
+- [x] **4. 重跑聚焦命令和指定回归命令；** 要求 PASS 且退出码为 0。
 
 ```bash
 go test ./pkg/core -run 'Test(NetworkView|NextBoundaryOmittedStartHistoricalClock)' -count=1
 go test -race ./pkg/core -count=1
 ```
 
-- [ ] **5. 检查 `git diff --check` 和暂存差异后，只提交本任务文件，** 使用下方提交信息。
+- [x] **5. 检查 `git diff --check` 和暂存差异后，只提交本任务文件，** 使用下方提交信息。
 
 ```bash
 git commit -m "feat(core): expose owned resolved network view"
@@ -188,7 +188,7 @@ func ResolveContext(r ContextRequest, c ExecutionContext, caps *CapabilityProfil
 
 `NormalizeCapabilities(nil)` 返回 nil 且无错误，表示清单元数据未知；选中上下文使用 nil 能力时报错。未使用描述中的枚举也须校验，集合排序/去重/复制。实际物理协议/地址族在任务 3 交集后校验。非 nil 描述的空集合表示不支持任何对应值；`OriginalDestination=false` 不满足观察阶段。
 
-- [ ] **1. 在本任务测试文件编写下列具名失败测试。** 断言片段使用测试内 fixture 变量；在所属测试包内构造，不复用其他包的私有测试 helper。
+- [x] **1. 在本任务测试文件编写下列具名失败测试。** 断言片段使用测试内 fixture 变量；在所属测试包内构造，不复用其他包的私有测试 helper。
 
 ```go
 // TestParseDestinationsPresenceAndFamilies: nil -> nil; []string{} -> error;
@@ -213,22 +213,22 @@ if got.Destinations[0] != netip.MustParsePrefix("192.0.2.128/25") { t.Fatal(got)
 // unknown enum errors; missing class/stage/handling support errors; all sets copied/sorted.
 ```
 
-- [ ] **2. 运行下方聚焦命令，观察预期行为失败。** 新 API 先补声明和最小返回错误的桩，使红色证据来自断言，不是缺少导入。
+- [x] **2. 运行下方聚焦命令，观察预期行为失败。** 新 API 先补声明和最小返回错误的桩，使红色证据来自断言，不是缺少导入。
 
 ```bash
 go test ./pkg/networkplan -run 'Test(ParseDestinations|CanonicalDestinations|DestinationIntersection|NormalizeNetwork|ResolveContext|NormalizeExecutionContext|CapabilityValidation)' -count=1
 ```
 
-- [ ] **3. 在文件映射所列文件实现声明的接口，** 遵守本任务规则与已批准设计，不附带无关重构。
+- [x] **3. 在文件映射所列文件实现声明的接口，** 遵守本任务规则与已批准设计，不附带无关重构。
 
-- [ ] **4. 重跑聚焦命令和指定回归命令；** 要求 PASS 且退出码为 0。
+- [x] **4. 重跑聚焦命令和指定回归命令；** 要求 PASS 且退出码为 0。
 
 ```bash
 go test ./pkg/networkplan -run 'Test(ParseDestinations|CanonicalDestinations|DestinationIntersection|NormalizeNetwork|ResolveContext|NormalizeExecutionContext|CapabilityValidation)' -count=1
 go test ./pkg/core ./pkg/networkplan -count=1
 ```
 
-- [ ] **5. 检查 `git diff --check` 和暂存差异后，只提交本任务文件，** 使用下方提交信息。
+- [x] **5. 检查 `git diff --check` 和暂存差异后，只提交本任务文件，** 使用下方提交信息。
 
 ```bash
 git commit -m "feat(networkplan): normalize physical definitions and contexts"
@@ -314,7 +314,7 @@ func (p *Plan) Inventory(agentRef string) ([]TargetInventory, error)
 
 Inventory 保留所有地址族相关贡献，包括已撤销/未生效/未来成员。Projection 保留保护目标，分别输出当前活跃且未撤销的 Allow/Deny 成员，按目标/匹配/类型域 ID 去重。Adapter 求值时活跃 deny 优先，领域清单仍保留重叠 allow 和 deny。NextChange 取相关未撤销成员中最早未来 Core 边界，含 deny 生效/到期；不转为 TTL。活跃 Grant 为零时保护仍存在。这些领域成员不规定每 Grant 一条内核规则。不添加定时器、应用 goroutine 或连接清理。
 
-- [ ] **1. 在本任务测试文件编写下列具名失败测试。** 断言片段使用测试内 fixture 变量；在所属测试包内构造，不复用其他包的私有测试 helper。
+- [x] **1. 在本任务测试文件编写下列具名失败测试。** 断言片段使用测试内 fixture 变量；在所属测试包内构造，不复用其他包的私有测试 helper。
 
 ```go
 // TestBindingCrossProduct: 2 entries x 2 Agents == 4 owned targets;
@@ -352,22 +352,22 @@ if !projection.NextChange.Equal(time.Date(2026,10,15,9,30,0,0,time.UTC)) { t.Fat
 if !reflect.DeepEqual(protection.BindingIDs, []string{"b1", "b2"}) { t.Fatal(protection) }
 ```
 
-- [ ] **2. 运行下方聚焦命令，观察预期行为失败。** 新 API 先补声明和最小返回错误的桩，使红色证据来自断言，不是缺少导入。
+- [x] **2. 运行下方聚焦命令，观察预期行为失败。** 新 API 先补声明和最小返回错误的桩，使红色证据来自断言，不是缺少导入。
 
 ```bash
 go test ./pkg/networkplan -run 'Test(Binding|ContextSelection|Projection|Protected|PhysicalConflict)' -count=1
 ```
 
-- [ ] **3. 在文件映射所列文件实现声明的接口，** 遵守本任务规则与已批准设计，不附带无关重构。
+- [x] **3. 在文件映射所列文件实现声明的接口，** 遵守本任务规则与已批准设计，不附带无关重构。
 
-- [ ] **4. 重跑聚焦命令和指定回归命令；** 要求 PASS 且退出码为 0。
+- [x] **4. 重跑聚焦命令和指定回归命令；** 要求 PASS 且退出码为 0。
 
 ```bash
 go test ./pkg/networkplan -run 'Test(Binding|ContextSelection|Projection|Protected|PhysicalConflict)' -count=1
 go test -race ./pkg/core ./pkg/networkplan -count=1
 ```
 
-- [ ] **5. 检查 `git diff --check` 和暂存差异后，只提交本任务文件，** 使用下方提交信息。
+- [x] **5. 检查 `git diff --check` 和暂存差异后，只提交本任务文件，** 使用下方提交信息。
 
 ```bash
 git commit -m "feat(networkplan): compile immutable per-agent intent"
@@ -393,7 +393,7 @@ func Replace(previous *Plan, input Input) (Replacement, error)
 
 按 TargetKey 比较期望保护。旧 key 消失产生 `Reason="removed"`；同 key 匹配变化产生 `Reason="match-changed"`。每项携带完整独立 `Former`（匹配/上下文/Binding ID/全部相关贡献），按 TargetKey 排序，即使 Agent 已移除。少一个 Binding 但仍有其他贡献，或仅权限成员变化，都不属于保护撤回；新 Inventory 将成员变化提供给后续 Adapter。这是重新核对完整旧目标的意图，不允许删除其全部旧连接：实际严格清理须比较已安装/已观察历史所有权与已确认新策略，并保留仍允许的流。
 
-- [ ] **1. 在本任务测试文件编写下列具名失败测试。** 断言片段使用测试内 fixture 变量；在所属测试包内构造，不复用其他包的私有测试 helper。
+- [x] **1. 在本任务测试文件编写下列具名失败测试。** 断言片段使用测试内 fixture 变量；在所属测试包内构造，不复用其他包的私有测试 helper。
 
 ```go
 // TestReplaceAuthorityAndAtomicity: nil/zero previous or changed AuthorityID errors;
@@ -422,22 +422,22 @@ if len(got.Withdrawals) != 1 || got.Withdrawals[0].Reason != "removed" { t.Fatal
 // names stay fixed; removing referenced named entry fails; remove/reissue named grants succeeds.
 ```
 
-- [ ] **2. 运行下方聚焦命令，观察预期行为失败。** 新 API 先补声明和最小返回错误的桩，使红色证据来自断言，不是缺少导入。
+- [x] **2. 运行下方聚焦命令，观察预期行为失败。** 新 API 先补声明和最小返回错误的桩，使红色证据来自断言，不是缺少导入。
 
 ```bash
 go test ./pkg/networkplan -run 'Test(Replace|Retarget|ContextIdentity|Withdrawal|HistoricalFormer|EntryLifecycle)' -count=1
 ```
 
-- [ ] **3. 在文件映射所列文件实现声明的接口，** 遵守本任务规则与已批准设计，不附带无关重构。
+- [x] **3. 在文件映射所列文件实现声明的接口，** 遵守本任务规则与已批准设计，不附带无关重构。
 
-- [ ] **4. 重跑聚焦命令和指定回归命令；** 要求 PASS 且退出码为 0。
+- [x] **4. 重跑聚焦命令和指定回归命令；** 要求 PASS 且退出码为 0。
 
 ```bash
 go test ./pkg/networkplan -run 'Test(Replace|Retarget|ContextIdentity|Withdrawal|HistoricalFormer|EntryLifecycle)' -count=1
 go test -race ./pkg/core ./pkg/networkplan -count=1
 ```
 
-- [ ] **5. 检查 `git diff --check` 和暂存差异后，只提交本任务文件，** 使用下方提交信息。
+- [x] **5. 检查 `git diff --check` 和暂存差异后，只提交本任务文件，** 使用下方提交信息。
 
 ```bash
 git commit -m "feat(networkplan): validate replacements and retain withdrawals"
@@ -449,7 +449,7 @@ git commit -m "feat(networkplan): validate replacements and retain withdrawals"
 
 在 `doc.go` 和双语 README 说明：权威输入/可信事实边界、nil 与空地址、不支持要求、新 ID 重发边界、不可变独立结果、通过 NextChange 调度、期望与安装历史、明确空所有权清理、保护与未管理流量、保守上下文冲突。代码及验证通过后才标记 M1.2 已实现；M1.3 仍须独立桥接设计和真实特权流量证据。桥接须保留 guard/原始元组、调度未来生效、先应用确认再严格范围清理、使用实际安装历史 before 状态，明确处理 M0 空 Protected 限制。纯测试不证明这些运行时结果。
 
-- [ ] **1. 在本任务测试文件编写下列具名失败测试。** 断言片段使用测试内 fixture 变量；在所属测试包内构造，不复用其他包的私有测试 helper。
+- [x] **1. 在本任务测试文件编写下列具名失败测试。** 断言片段使用测试内 fixture 变量；在所属测试包内构造，不复用其他包的私有测试 helper。
 
 ```go
 // TestGiteaConformance: gitea https TCP/443 ends 10:00, ssh TCP/22 ends 12:00;
@@ -471,22 +471,22 @@ if !reflect.DeepEqual(before, after) { t.Fatal(after) }
 // agent-a gitea/https tcp/443 192.0.2.100/32
 ```
 
-- [ ] **2. 运行下方聚焦命令，观察预期行为失败。** 新 API 先补声明和最小返回错误的桩，使红色证据来自断言，不是缺少导入。
+- [x] **2. 运行下方聚焦命令，观察预期行为失败。** 新 API 先补声明和最小返回错误的桩，使红色证据来自断言，不是缺少导入。
 
 ```bash
 go test ./pkg/networkplan -run 'Test(GiteaConformance|ProviderNormalizedEquivalence|PlanOwnershipAndConcurrentReads)|ExampleCompile' -count=1
 ```
 
-- [ ] **3. 在文件映射所列文件实现声明的接口，** 遵守本任务规则与已批准设计，不附带无关重构。
+- [x] **3. 在文件映射所列文件实现声明的接口，** 遵守本任务规则与已批准设计，不附带无关重构。
 
-- [ ] **4. 重跑聚焦命令和指定回归命令；** 要求 PASS 且退出码为 0。
+- [x] **4. 重跑聚焦命令和指定回归命令；** 要求 PASS 且退出码为 0。
 
 ```bash
 go test ./pkg/networkplan -run 'Test(GiteaConformance|ProviderNormalizedEquivalence|PlanOwnershipAndConcurrentReads)|ExampleCompile' -count=1
 go test -race ./... -count=1
 ```
 
-- [ ] **5. 检查 `git diff --check` 和暂存差异后，只提交本任务文件，** 使用下方提交信息。
+- [x] **5. 检查 `git diff --check` 和暂存差异后，只提交本任务文件，** 使用下方提交信息。
 
 ```bash
 git commit -m "test(networkplan): add gitea conformance and public usage"
@@ -511,4 +511,8 @@ git diff --check
 
 设计 17 行验收均映射到任务 1–5：校验/地址/上下文（1–3）、部署/冲突/时间/来源记录（3）、生命周期/撤回（4）、数据所有权/提供方等价/Gitea（5）。自查覆盖设计全部八节、跨任务类型及五行评审重点；M1.2 内无遗漏留给未定义任务，明确排除的 M1.3 运行时义务仍如上保留。
 
-本计划 PR 不含实现，也不声称新包测试已通过。编码前评审这份具体计划；已选的本会话直接执行方式不变。
+## 执行记录
+
+任务 1–4 均在最小 API 桩上的断言级失败后实现；历史时间回归在实际 M1.1 代码上先失败，再修正。任务 5 为已实现行为增加跨层契约验证与公开示例，首次运行即通过，不声称人为制造过失败。这是唯一执行裁定；代价是单元实现后的验收测试可能遗漏问题，通过字面量期望和最终独立评审补足。
+
+Go 1.27.0：test、race、vet、build 均通过。32 个计划具名测试全部执行，Core（35）、规划层（27）、Controller（3）合计 65 个顶层测试/示例通过，没有跳过测试；命令入口包没有测试文件。依赖检查的非标准库输出仅 Core/规划层，go.mod/go.sum 不变。不声称已有数据包/内核验证；独立评审及最终提交 CI 证据在可用后记录到实现 PR。

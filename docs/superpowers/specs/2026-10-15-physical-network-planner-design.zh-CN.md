@@ -3,7 +3,7 @@
 > [English (default)](2026-10-15-physical-network-planner-design.md) | 简体中文
 
 - 日期：2026-10-15（Asia/Shanghai）
-- 状态：书面设计已批准，经 [PR #5](https://github.com/PicketX/PicketX/pull/5) 合并；[实施计划](../plans/2026-10-15-physical-network-planner.zh-CN.md)待评审；尚未开始规划层实现
+- 状态：设计已批准（[PR #5](https://github.com/PicketX/PicketX/pull/5)）；[计划](../plans/2026-10-15-physical-network-planner.zh-CN.md)经 PR #6 批准并执行，`pkg/networkplan` 已通过本地验证；独立 M1.3 桥接尚未实现
 - 仓库：PicketX/PicketX，Apache-2.0，现有 Go 1.27.0 模块
 - 依据：[产品](../../PRODUCT_DESIGN.zh-CN.md)、[架构](../../ARCHITECTURE.zh-CN.md)、[配置模型](../../CONFIGURATION_MODEL.zh-CN.md)、[M1.1 逻辑 Core](2026-10-15-shared-network-core-design.zh-CN.md)
 - 基线：M1.1 [PR #4](https://github.com/PicketX/PicketX/pull/4)已合并为 `a2143104d8e17a1f6e8552a3ec1d5195d5bbd3cf`；[主干 CI](https://github.com/PicketX/PicketX/actions/runs/38661859967)通过

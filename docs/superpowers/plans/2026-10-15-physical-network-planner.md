@@ -1,6 +1,6 @@
 # M1.2 Physical Network Planner Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking. The user has selected native inline execution and one fresh whole-branch review at the end; preserve that choice.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking. The user has selected native inline execution and one fresh whole-branch review at the end; preserve that choice.
 
 > English (default) | [简体中文](2026-10-15-physical-network-planner.zh-CN.md)
 
@@ -12,7 +12,7 @@
 
 **Spec:** [Approved M1.2 design](../specs/2026-10-15-physical-network-planner-design.md), approved and merged in [PR #5](https://github.com/PicketX/PicketX/pull/5).
 
-**Status:** Proposed implementation plan for review; no M1.2 code implemented. Baseline `315e0dd5617eed6cfc5055322d23b56378179cd2`. M1.1 historical-clock correction is planned in Task 1, not already fixed.
+**Status:** Approved in PR #6 and executed from merged plan commit `dc7158ad8583d3cfafe95c94bdef8d708bf31118`. All five tasks are locally verified; whole-branch review follows before publication. Planning baseline is `315e0dd5617eed6cfc5055322d23b56378179cd2`. Task 1 fixes the M1.1 historical-clock regression.
 
 ## Global constraints
 
@@ -76,7 +76,7 @@ Retain an owned normalized catalog in Engine, including Resource labels and empt
 
 Fix only the recorded `NextBoundary` omission bug in `validity.go`: an omitted zero `NotBefore` is not a future activation even when the supplied nonzero time predates AD 1. Do not introduce a new clock range or alter lifetime rules.
 
-- [ ] **1. Write the named failing tests** in the task's test files. Assertion excerpts below use local fixture variables; build those fixtures in the owning test package. Do not reuse another package's private test helpers.
+- [x] **1. Write the named failing tests** in the task's test files. Assertion excerpts below use local fixture variables; build those fixtures in the owning test package. Do not reuse another package's private test helpers.
 
 ```go
 // TestNetworkViewResolvedMembership: "empty" remains a resource with zero entries;
@@ -102,22 +102,22 @@ if got := v.NextBoundary(at); !got.Equal(end) { t.Fatal(got) }
 // Also assert explicit future NotBefore is returned and permanent/no-start is zero.
 ```
 
-- [ ] **2. Run the focused command** below and observe the expected behavior failure. For new APIs, add only declarations/minimal error-returning stubs first so red evidence exercises assertions rather than missing imports.
+- [x] **2. Run the focused command** below and observe the expected behavior failure. For new APIs, add only declarations/minimal error-returning stubs first so red evidence exercises assertions rather than missing imports.
 
 ```bash
 go test ./pkg/core -run 'Test(NetworkView|NextBoundaryOmittedStartHistoricalClock)' -count=1
 ```
 
-- [ ] **3. Implement the declared interfaces** in the mapped files, following the task's rules and the approved spec; no unrelated refactor.
+- [x] **3. Implement the declared interfaces** in the mapped files, following the task's rules and the approved spec; no unrelated refactor.
 
-- [ ] **4. Re-run the focused command** and the indicated regression command; require PASS and exit 0.
+- [x] **4. Re-run the focused command** and the indicated regression command; require PASS and exit 0.
 
 ```bash
 go test ./pkg/core -run 'Test(NetworkView|NextBoundaryOmittedStartHistoricalClock)' -count=1
 go test -race ./pkg/core -count=1
 ```
 
-- [ ] **5. Commit only this task's files** with the message below after reviewing `git diff --check` and the staged diff.
+- [x] **5. Commit only this task's files** with the message below after reviewing `git diff --check` and the staged diff.
 
 ```bash
 git commit -m "feat(core): expose owned resolved network view"
@@ -188,7 +188,7 @@ All normalized results own their collections. Contexts require nonempty Agent/Pr
 
 `NormalizeCapabilities(nil)` returns nil without error (unknown inventory metadata); resolving a selected context with nil capabilities errors. Validate enum sets even on unused profiles, sort/deduplicate/copy them. Required physical protocol/family checks happen in Task 3 after intersection. A non-nil profile with empty sets supports nothing; `OriginalDestination=false` cannot satisfy the stage.
 
-- [ ] **1. Write the named failing tests** in the task's test files. Assertion excerpts below use local fixture variables; build those fixtures in the owning test package. Do not reuse another package's private test helpers.
+- [x] **1. Write the named failing tests** in the task's test files. Assertion excerpts below use local fixture variables; build those fixtures in the owning test package. Do not reuse another package's private test helpers.
 
 ```go
 // TestParseDestinationsPresenceAndFamilies: nil -> nil; []string{} -> error;
@@ -213,22 +213,22 @@ if got.Destinations[0] != netip.MustParsePrefix("192.0.2.128/25") { t.Fatal(got)
 // unknown enum errors; missing class/stage/handling support errors; all sets copied/sorted.
 ```
 
-- [ ] **2. Run the focused command** below and observe the expected behavior failure. For new APIs, add only declarations/minimal error-returning stubs first so red evidence exercises assertions rather than missing imports.
+- [x] **2. Run the focused command** below and observe the expected behavior failure. For new APIs, add only declarations/minimal error-returning stubs first so red evidence exercises assertions rather than missing imports.
 
 ```bash
 go test ./pkg/networkplan -run 'Test(ParseDestinations|CanonicalDestinations|DestinationIntersection|NormalizeNetwork|ResolveContext|NormalizeExecutionContext|CapabilityValidation)' -count=1
 ```
 
-- [ ] **3. Implement the declared interfaces** in the mapped files, following the task's rules and the approved spec; no unrelated refactor.
+- [x] **3. Implement the declared interfaces** in the mapped files, following the task's rules and the approved spec; no unrelated refactor.
 
-- [ ] **4. Re-run the focused command** and the indicated regression command; require PASS and exit 0.
+- [x] **4. Re-run the focused command** and the indicated regression command; require PASS and exit 0.
 
 ```bash
 go test ./pkg/networkplan -run 'Test(ParseDestinations|CanonicalDestinations|DestinationIntersection|NormalizeNetwork|ResolveContext|NormalizeExecutionContext|CapabilityValidation)' -count=1
 go test ./pkg/core ./pkg/networkplan -count=1
 ```
 
-- [ ] **5. Commit only this task's files** with the message below after reviewing `git diff --check` and the staged diff.
+- [x] **5. Commit only this task's files** with the message below after reviewing `git diff --check` and the staged diff.
 
 ```bash
 git commit -m "feat(networkplan): normalize physical definitions and contexts"
@@ -314,7 +314,7 @@ Store full normalized definitions/view/context catalog for Task 4, including unb
 
 Inventory retains all same-family relevant contributions, including revoked/inactive/future. Projection retains protected targets and emits active nonrevoked Allow/Deny memberships separately, deduplicated by target/match/typed ID. Active deny takes precedence when an adapter evaluates a flow; the domain lists preserve overlapping allows and denies. NextChange is the earliest future Core boundary among relevant nonrevoked members, including deny activation/expiry; no TTL conversion. Protection survives zero active Grants. These domain memberships do not specify one kernel rule per Grant. No timer, applying goroutine or connection cleanup is added.
 
-- [ ] **1. Write the named failing tests** in the task's test files. Assertion excerpts below use local fixture variables; build those fixtures in the owning test package. Do not reuse another package's private test helpers.
+- [x] **1. Write the named failing tests** in the task's test files. Assertion excerpts below use local fixture variables; build those fixtures in the owning test package. Do not reuse another package's private test helpers.
 
 ```go
 // TestBindingCrossProduct: 2 entries x 2 Agents == 4 owned targets;
@@ -352,22 +352,22 @@ if !projection.NextChange.Equal(time.Date(2026,10,15,9,30,0,0,time.UTC)) { t.Fat
 if !reflect.DeepEqual(protection.BindingIDs, []string{"b1", "b2"}) { t.Fatal(protection) }
 ```
 
-- [ ] **2. Run the focused command** below and observe the expected behavior failure. For new APIs, add only declarations/minimal error-returning stubs first so red evidence exercises assertions rather than missing imports.
+- [x] **2. Run the focused command** below and observe the expected behavior failure. For new APIs, add only declarations/minimal error-returning stubs first so red evidence exercises assertions rather than missing imports.
 
 ```bash
 go test ./pkg/networkplan -run 'Test(Binding|ContextSelection|Projection|Protected|PhysicalConflict)' -count=1
 ```
 
-- [ ] **3. Implement the declared interfaces** in the mapped files, following the task's rules and the approved spec; no unrelated refactor.
+- [x] **3. Implement the declared interfaces** in the mapped files, following the task's rules and the approved spec; no unrelated refactor.
 
-- [ ] **4. Re-run the focused command** and the indicated regression command; require PASS and exit 0.
+- [x] **4. Re-run the focused command** and the indicated regression command; require PASS and exit 0.
 
 ```bash
 go test ./pkg/networkplan -run 'Test(Binding|ContextSelection|Projection|Protected|PhysicalConflict)' -count=1
 go test -race ./pkg/core ./pkg/networkplan -count=1
 ```
 
-- [ ] **5. Commit only this task's files** with the message below after reviewing `git diff --check` and the staged diff.
+- [x] **5. Commit only this task's files** with the message below after reviewing `git diff --check` and the staged diff.
 
 ```bash
 git commit -m "feat(networkplan): compile immutable per-agent intent"
@@ -393,7 +393,7 @@ Compare all old/new trusted context catalog rows sharing `(AgentRef,ID)`, even u
 
 Diff desired protection by TargetKey. Absent old key yields `Reason="removed"`; changed matches under the same key yields `Reason="match-changed"`. Each withdrawal carries the complete owned `Former` target (matches/context/Binding IDs/all relevant contributions), sorted by TargetKey, even if the Agent disappeared. Losing one Binding while another remains, or changing permission membership alone, is not a protection withdrawal. New Inventory exposes those membership changes to the later adapter. This is full old-target reconsideration intent, not permission to delete every former flow: actual strict cleanup must compare installed/observed historical ownership with the confirmed new policy and preserve remaining allowed flows.
 
-- [ ] **1. Write the named failing tests** in the task's test files. Assertion excerpts below use local fixture variables; build those fixtures in the owning test package. Do not reuse another package's private test helpers.
+- [x] **1. Write the named failing tests** in the task's test files. Assertion excerpts below use local fixture variables; build those fixtures in the owning test package. Do not reuse another package's private test helpers.
 
 ```go
 // TestReplaceAuthorityAndAtomicity: nil/zero previous or changed AuthorityID errors;
@@ -422,22 +422,22 @@ if len(got.Withdrawals) != 1 || got.Withdrawals[0].Reason != "removed" { t.Fatal
 // names stay fixed; removing referenced named entry fails; remove/reissue named grants succeeds.
 ```
 
-- [ ] **2. Run the focused command** below and observe the expected behavior failure. For new APIs, add only declarations/minimal error-returning stubs first so red evidence exercises assertions rather than missing imports.
+- [x] **2. Run the focused command** below and observe the expected behavior failure. For new APIs, add only declarations/minimal error-returning stubs first so red evidence exercises assertions rather than missing imports.
 
 ```bash
 go test ./pkg/networkplan -run 'Test(Replace|Retarget|ContextIdentity|Withdrawal|HistoricalFormer|EntryLifecycle)' -count=1
 ```
 
-- [ ] **3. Implement the declared interfaces** in the mapped files, following the task's rules and the approved spec; no unrelated refactor.
+- [x] **3. Implement the declared interfaces** in the mapped files, following the task's rules and the approved spec; no unrelated refactor.
 
-- [ ] **4. Re-run the focused command** and the indicated regression command; require PASS and exit 0.
+- [x] **4. Re-run the focused command** and the indicated regression command; require PASS and exit 0.
 
 ```bash
 go test ./pkg/networkplan -run 'Test(Replace|Retarget|ContextIdentity|Withdrawal|HistoricalFormer|EntryLifecycle)' -count=1
 go test -race ./pkg/core ./pkg/networkplan -count=1
 ```
 
-- [ ] **5. Commit only this task's files** with the message below after reviewing `git diff --check` and the staged diff.
+- [x] **5. Commit only this task's files** with the message below after reviewing `git diff --check` and the staged diff.
 
 ```bash
 git commit -m "feat(networkplan): validate replacements and retain withdrawals"
@@ -449,7 +449,7 @@ git commit -m "feat(networkplan): validate replacements and retain withdrawals"
 
 Document in `doc.go` and both README languages: input authority/trusted facts boundary, nil vs empty addresses, unsupported requirements, fresh-ID reissuance boundary, immutable owned results, scheduling via NextChange, desired vs installed history, explicit empty-owned cleanup, protected vs unmanaged traffic and conservative context conflicts. Mark M1.2 implemented only after code and checks pass; M1.3 still needs its own bridge design and real privileged packet evidence. The bridge must preserve guards/original tuples, schedule future activation, apply/confirm before scoped strict cleanup, use installed historical before-state and handle M0's empty Protected limitation explicitly. Pure tests demonstrate none of those runtime outcomes.
 
-- [ ] **1. Write the named failing tests** in the task's test files. Assertion excerpts below use local fixture variables; build those fixtures in the owning test package. Do not reuse another package's private test helpers.
+- [x] **1. Write the named failing tests** in the task's test files. Assertion excerpts below use local fixture variables; build those fixtures in the owning test package. Do not reuse another package's private test helpers.
 
 ```go
 // TestGiteaConformance: gitea https TCP/443 ends 10:00, ssh TCP/22 ends 12:00;
@@ -471,22 +471,22 @@ if !reflect.DeepEqual(before, after) { t.Fatal(after) }
 // agent-a gitea/https tcp/443 192.0.2.100/32
 ```
 
-- [ ] **2. Run the focused command** below and observe the expected behavior failure. For new APIs, add only declarations/minimal error-returning stubs first so red evidence exercises assertions rather than missing imports.
+- [x] **2. Run the focused command** below and observe the expected behavior failure. For new APIs, add only declarations/minimal error-returning stubs first so red evidence exercises assertions rather than missing imports.
 
 ```bash
 go test ./pkg/networkplan -run 'Test(GiteaConformance|ProviderNormalizedEquivalence|PlanOwnershipAndConcurrentReads)|ExampleCompile' -count=1
 ```
 
-- [ ] **3. Implement the declared interfaces** in the mapped files, following the task's rules and the approved spec; no unrelated refactor.
+- [x] **3. Implement the declared interfaces** in the mapped files, following the task's rules and the approved spec; no unrelated refactor.
 
-- [ ] **4. Re-run the focused command** and the indicated regression command; require PASS and exit 0.
+- [x] **4. Re-run the focused command** and the indicated regression command; require PASS and exit 0.
 
 ```bash
 go test ./pkg/networkplan -run 'Test(GiteaConformance|ProviderNormalizedEquivalence|PlanOwnershipAndConcurrentReads)|ExampleCompile' -count=1
 go test -race ./... -count=1
 ```
 
-- [ ] **5. Commit only this task's files** with the message below after reviewing `git diff --check` and the staged diff.
+- [x] **5. Commit only this task's files** with the message below after reviewing `git diff --check` and the staged diff.
 
 ```bash
 git commit -m "test(networkplan): add gitea conformance and public usage"
@@ -511,4 +511,8 @@ Require no gofmt output, all test/build/vet commands exit 0, and nonstandard dep
 
 All 17 spec acceptance rows map to Tasks 1–5: validation/addresses/context (1–3), placement/conflict/time/provenance (3), lifecycle/withdrawal (4), ownership/provider-equivalence/Gitea (5). Self-review checked all eight design sections, all cross-task types and five Review Focus rows. No scope gap is assigned to an undefined later task inside M1.2; the explicitly excluded M1.3 runtime obligations remain visible above.
 
-This document PR contains no implementation or test-result claims for the new package. Review this concrete plan before coding; the already selected native execution method remains unchanged.
+## Execution record
+
+Tasks 1–4 were implemented after assertion-level red runs against minimal API stubs; the historical-clock regression failed against actual M1.1 code before correction. Task 5 adds cross-layer conformance and a public example over that implemented behavior: all pass on their first run, so no artificial failure is claimed. This is the sole execution ruling; the cost is that acceptance added after unit implementation may miss a gap, mitigated by literal expectations and the fresh final review.
+
+Go 1.27.0: test, race, vet and build pass. All 32 planned named tests ran; 65 top-level tests/examples pass across Core (35), planner (27) and Controller (3), with no skipped tests. The command entry package has no test files. Dependency inspection lists only Core/planner outside the standard library; go.mod/go.sum stay unchanged. No packet/kernel validation is claimed. Independent review and final-head CI evidence are recorded in the implementation PR when available.
