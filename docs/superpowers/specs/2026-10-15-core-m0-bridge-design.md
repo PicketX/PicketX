@@ -108,24 +108,24 @@ Retain all 17 required M0 scenarios and their existing evidence gate. Add bridge
 
 Verification: `unit` means pure/injected boundary tests; `kernel` means actual privileged packets/state; `both` requires both kinds. Injected failures alone never satisfy the kernel part.
 
-| Case | Required proof  Verification |
+| Case | Required proof | Verification |
 | --- | --- | --- |
-| Context rejection | Host/published/post-DNAT/wrong namespace/profile/capability/wider scope/unproven tuple rejects before any backend action  `unit` |
-| Conversion and provenance | Explicit protocol/single ports, same-family prefixes, all Binding IDs and typed Grant/Deny IDs survive; permanent alone maps to zero expiry  `unit` |
-| Invalid or inactive input | Full shared validation; future/revoked/expired permissions never gain active rules; backend submillisecond omissions are present in receipts  `both` |
-| Gitea-shaped independent limits | TCP/443 and TCP/22, exact source and wider CIDR retain independently timed permissions; packet results agree with Core for owned tuples  `kernel` |
-| Deny and revocation | Active deny wins; removing one contribution preserves matching wider/other grants; unrelated entry/source control continues  `kernel` |
-| UDP | Generated UDP/8002 policy accepts authorized packets; withdrawn owned state cannot bypass current permission within protected scope  `kernel` |
-| Native expiry | New connections deny after absolute expiry without Controller/reapply, within the recorded observation window; graceful established TCP survives until a later explicit deny/cleanup  `kernel` |
-| Future boundaries | Driver activates future allow and deny and removes expired deny; logs boundary/apply/probe times; stale generations cannot replay old policy and cancellation causes no later apply  `both` |
-| Replay/late application | Near-expiry backend reconstruction and repeated apply keep original ends; lock/preparation delay does not restart full TTL or turn expiry into permanence  `both` |
-| Historical strict cleanup | Prior emitted allow remains in historical before after expiry, an intervening confirmed apply and failed cleanup; retry selects and removes the actual existing withdrawn flow  `both` |
-| Strict preservation | Overlapping active grant, other entry, unrelated/unmarked traffic and other ownership mark survive; new withdrawn connections stay denied in protected scope  `kernel` |
-| Failed apply/confirmation | No revoker call or false state advancement; real invalid batch preserves previous reachability; ambiguous apply is reported unknown  `both` |
-| Interrupted/partial cleanup | No destructive action after incomplete initial dumps; errors/remaining counts persist; confirmed policy remains and explicit retry can finish  `both` |
-| Binding ownership | Removing one of two Bindings preserves protection and remaining provenance; last Grant removal keeps protection  `both` |
-| Empty owned desired | Last Binding/Agent removal takes explicit scoped table cleanup; strict historical marked flows reach Remaining=0; graceful path skips deletion; unmanaged controls remain usable  `both` |
-| NAT original/reply tuples | Admission and translation commit atomically; generated original VIP TCP/8000 withdrawal preserves independently allowed TCP/8001; translated reply Server/9000 is observed and exact filters preserve independent mappings  `kernel` |
+| Context rejection | Host/published/post-DNAT/wrong namespace/profile/capability/wider scope/unproven tuple rejects before any backend action | `unit` |
+| Conversion and provenance | Explicit protocol/single ports, same-family prefixes, all Binding IDs and typed Grant/Deny IDs survive; permanent alone maps to zero expiry | `unit` |
+| Invalid or inactive input | Full shared validation; future/revoked/expired permissions never gain active rules; backend submillisecond omissions are present in receipts | `both` |
+| Gitea-shaped independent limits | TCP/443 and TCP/22, exact source and wider CIDR retain independently timed permissions; packet results agree with Core for owned tuples | `kernel` |
+| Deny and revocation | Active deny wins; removing one contribution preserves matching wider/other grants; unrelated entry/source control continues | `kernel` |
+| UDP | Generated UDP/8002 policy accepts authorized packets; withdrawn owned state cannot bypass current permission within protected scope | `kernel` |
+| Native expiry | New connections deny after absolute expiry without Controller/reapply, within the recorded observation window; graceful established TCP survives until a later explicit deny/cleanup | `kernel` |
+| Future boundaries | Driver activates future allow and deny and removes expired deny; logs boundary/apply/probe times; stale generations cannot replay old policy and cancellation causes no later apply | `both` |
+| Replay/late application | Near-expiry backend reconstruction and repeated apply keep original ends; lock/preparation delay does not restart full TTL or turn expiry into permanence | `both` |
+| Historical strict cleanup | Prior emitted allow remains in historical before after expiry, an intervening confirmed apply and failed cleanup; retry selects and removes the actual existing withdrawn flow | `both` |
+| Strict preservation | Overlapping active grant, other entry, unrelated/unmarked traffic and other ownership mark survive; new withdrawn connections stay denied in protected scope | `kernel` |
+| Failed apply/confirmation | No revoker call or false state advancement; real invalid batch preserves previous reachability; ambiguous apply is reported unknown | `both` |
+| Interrupted/partial cleanup | No destructive action after incomplete initial dumps; errors/remaining counts persist; confirmed policy remains and explicit retry can finish | `both` |
+| Binding ownership | Removing one of two Bindings preserves protection and remaining provenance; last Grant removal keeps protection | `both` |
+| Empty owned desired | Last Binding/Agent removal takes explicit scoped table cleanup; strict historical marked flows reach Remaining=0; graceful path skips deletion; unmanaged controls remain usable | `both` |
+| NAT original/reply tuples | Admission and translation commit atomically; generated original VIP TCP/8000 withdrawal preserves independently allowed TCP/8001; translated reply Server/9000 is observed and exact filters preserve independent mappings | `kernel` |
 
 The kernel runner must compile and execute the bridge integration binary in the existing disposable-namespace path and parse its events into required evidence. Remove stale bridge results before repeat runs. Missing/duplicate/failed/skipped required bridge cases fail the gate; privilege/setup failure under PICKETX_KERNEL_TESTS=1 fails rather than skips. Keep unit and privileged jobs separate and preserve failure artifacts even when no scenario can run.
 

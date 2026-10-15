@@ -40,6 +40,8 @@ M1.3 已在 [PicketXD PR #3](https://github.com/PicketX/PicketXD/pull/3) 完成�
 
 M2A 新增 [`pkg/configuration`](pkg/configuration) 和 `picketx config check`：严格版本化 YAML、固定资源 UID 引用、独立绝对期限、完整规划校验/替换及显式空撤回。参见[可运行 Gitea 示例](examples/static/README.zh-CN.md)。这是可用的配置检查入口；运行时提供器/LKG、Agent 部署与同步、七层及管理端仍未实现。
 
+M2B 已在 [PicketXD PR #4](https://github.com/PicketX/PicketXD/pull/4) 合并：`picketxd prepare` 可持久恢复静态期望、重载完整配置并调度绝对时间边界。[最终 CI](https://github.com/PicketX/PicketXD/actions/runs/38760479190) 通过全部 43 项必需内核场景，包括 7 项主机 INPUT 场景。准备命令报告 `enforcementConfirmed=false`，生产执行仍待实现。[M1.3 实施计划](docs/superpowers/plans/2026-10-15-core-m0-bridge.zh-CN.md)保留并链接实际执行的 Agent 增量，后续沿[基本功能路线图](docs/BASIC_FUNCTION_ROADMAP.zh-CN.md)推进。
+
 ## 本地开发
 
 需要 Go 1.27+、Node.js 24 LTS 和 npm。

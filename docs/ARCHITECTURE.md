@@ -819,7 +819,7 @@ The Go backend direction no longer defaults to these C libraries, but “pure Go
 
 ## 18. Phased delivery plan
 
-The next execution unit is the [M0 Linux data-plane validation design](superpowers/specs/2026-10-14-linux-data-plane-validation.md) and [implementation plan](superpowers/plans/2026-10-14-linux-data-plane-validation.md). Review the concrete plan before Agent implementation; preserve actual test evidence and do not reopen settled architecture without a demonstrated conflict.
+M0, M1.1, M1.2 and the isolated M1.3 bridge are implemented and merged. The [M1.3 implementation plan](superpowers/plans/2026-10-15-core-m0-bridge.md) links the executed Agent increments. M2A adds static configuration checks; merged PicketXD M2B adds durable desired-state preparation and host INPUT conformance. Production execution, synchronization, L7 and usable management remain on the [basic-function roadmap](BASIC_FUNCTION_ROADMAP.md). Preserve actual test evidence and do not reopen settled architecture without a demonstrated conflict.
 
 The product baseline fixes the purpose and boundaries, not a claim that all listed capabilities are implemented. Historical scope is retained as architecture options; protocol adapters and enterprise integrations are staged by demonstrated need.
 

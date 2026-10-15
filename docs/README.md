@@ -17,6 +17,8 @@ English is the default; Chinese editions carry the same decisions. These documen
 | M1.2 physical network planner design (approved, merged) | [Design](superpowers/specs/2026-10-15-physical-network-planner-design.md) | [物理网络规划](superpowers/specs/2026-10-15-physical-network-planner-design.zh-CN.md) |
 | M1.2 planner implementation plan (executed, merged) | [Plan](superpowers/plans/2026-10-15-physical-network-planner.md) | [实施计划](superpowers/plans/2026-10-15-physical-network-planner.zh-CN.md) |
 | M1.3 Core/planner-to-M0 bridge (kernel verified in PicketXD) | [Design](superpowers/specs/2026-10-15-core-m0-bridge-design.md) | [契约桥接设计](superpowers/specs/2026-10-15-core-m0-bridge-design.zh-CN.md) |
+| M1.3 bridge implementation plan (execution links recorded) | [Plan](superpowers/plans/2026-10-15-core-m0-bridge.md) | [实施计划](superpowers/plans/2026-10-15-core-m0-bridge.zh-CN.md) |
+| Basic-function delivery roadmap | [Roadmap](BASIC_FUNCTION_ROADMAP.md) | [持续交付路线图](BASIC_FUNCTION_ROADMAP.zh-CN.md) |
 | M2A static configuration design | [Design](superpowers/specs/2026-10-15-static-configuration-design.md) | [静态配置设计](superpowers/specs/2026-10-15-static-configuration-design.zh-CN.md) |
 | M2A implementation plan | [Plan](superpowers/plans/2026-10-15-static-configuration.md) | [实施计划](superpowers/plans/2026-10-15-static-configuration.zh-CN.md) |
 | Runnable configuration check | [Example](../examples/static/README.md) | [示例](../examples/static/README.zh-CN.md) |

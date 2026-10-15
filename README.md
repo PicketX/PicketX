@@ -40,6 +40,8 @@ M1.3 has a real-kernel-verified implementation in [PicketXD PR #3](https://githu
 
 M2A adds [`pkg/configuration`](pkg/configuration) and `picketx config check`: strict versioned YAML, pinned Resource references, independent absolute lifetimes, complete planner validation/replacement and explicit empty withdrawal. See the [runnable Gitea example](examples/static/README.md). This is a usable configuration-check entry point; runtime providers/LKG, Agent deployment/synchronization, L7 and administration remain unimplemented.
 
+M2B is merged in [PicketXD PR #4](https://github.com/PicketX/PicketXD/pull/4): `picketxd prepare` durably recovers static desired state, reloads complete configurations and schedules absolute boundaries. Its [final CI](https://github.com/PicketX/PicketXD/actions/runs/38760479190) passes all 43 required kernel scenarios, including seven host INPUT cases. Preparation reports `enforcementConfirmed=false`; production execution remains pending. The [M1.3 implementation plan](docs/superpowers/plans/2026-10-15-core-m0-bridge.md) is retained with links to the executed Agent increments. Continue through the [basic-function roadmap](docs/BASIC_FUNCTION_ROADMAP.md).
+
 ## Development
 
 Requirements: Go 1.27+, Node.js 24 LTS and npm.
