@@ -4,6 +4,7 @@ package core
 import (
 	"cmp"
 	"fmt"
+	"maps"
 	"slices"
 )
 
@@ -16,7 +17,40 @@ type compiledContribution struct {
 // Engine is an immutable logical network snapshot. Construct it with Compile.
 // Decisions are safe for concurrent reads, including mutation of independent results.
 type Engine struct {
-	entries map[entryKey][]compiledContribution
+	entries   map[entryKey][]compiledContribution
+	resources []Resource
+}
+
+// NetworkView returns owned, deterministic resolved membership without filtering
+// by time or revocation. It includes known Resources that have no entries.
+func (e *Engine) NetworkView() (NetworkView, error) {
+	if e == nil || e.entries == nil {
+		return NetworkView{}, fmt.Errorf("engine is not compiled")
+	}
+	var view NetworkView
+	for _, r := range e.resources {
+		out := ResolvedResource{Name: r.Name, Labels: maps.Clone(r.Labels)}
+		for _, ep := range r.Endpoints {
+			entry := ResolvedEntry{Endpoint: ep}
+			entry.Endpoint.Labels = maps.Clone(ep.Labels)
+			for _, c := range e.entries[entryKey{r.Name, ep.Name}] {
+				v := ResolvedContribution{ID: c.grant.GrantID, Source: c.grant.Source, Validity: c.grant.Validity, Revoked: c.revoked}
+				if c.deny {
+					entry.Denies = append(entry.Denies, v)
+				} else {
+					entry.Grants = append(entry.Grants, v)
+				}
+			}
+			byID := func(a, b ResolvedContribution) int { return cmp.Compare(a.ID, b.ID) }
+			slices.SortFunc(entry.Grants, byID)
+			slices.SortFunc(entry.Denies, byID)
+			out.Entries = append(out.Entries, entry)
+		}
+		slices.SortFunc(out.Entries, func(a, b ResolvedEntry) int { return cmp.Compare(a.Endpoint.Name, b.Endpoint.Name) })
+		view.Resources = append(view.Resources, out)
+	}
+	slices.SortFunc(view.Resources, func(a, b ResolvedResource) int { return cmp.Compare(a.Name, b.Name) })
+	return view, nil
 }
 
 // Compile validates the complete candidate before returning any replacement state.
@@ -45,6 +79,7 @@ func Compile(s Snapshot) (*Engine, error) {
 			endpoints = append(endpoints, n)
 		}
 		catalog[r.Name] = endpoints
+		e.resources = append(e.resources, Resource{Name: r.Name, Labels: maps.Clone(r.Labels), Endpoints: endpoints})
 	}
 	for _, deny := range []bool{false, true} {
 		seen := make(map[string]struct{})

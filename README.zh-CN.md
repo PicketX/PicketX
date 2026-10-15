@@ -8,7 +8,7 @@ PicketX 通过自助申请、策略和审批，为受保护资源提供有期限
 
 ## 项目状态
 
-当前仓库是**开发初始化骨架**，包含 基于 Echo v5 的 Go Controller 存活检查和中英文 React 起始页。尚未实现认证、审批、Grant、数据库、Agent 同步或执行功能，不能用于保护实际资源。
+当前仓库是**开发初始化骨架**，包含共享逻辑授权与物理规划库、基于 Echo v5 的 Go Controller 存活检查和中英文 React 起始页。尚未实现认证、审批、Grant 签发、数据库、Agent 同步或执行功能，不能用于保护实际资源。
 
 控制面与 Web 位于本仓库；官方 Linux Agent `picketxd` 属于独立的 **PicketXD** 仓库。本次初始化未创建或修改该仓库。
 
@@ -30,9 +30,11 @@ SQLite 选用 GORM 官方驱动（v1.6.0 基线）和 mattn/go-sqlite3（v1.14.5
 
 运行支持已选 SCS Session、Echo 内置 CSRF、普通/Agent 分别配置的限流、官方 gRPC/protobuf、独立 Agent Token 与可选服务端 TLS、Prometheus 指标、标准库周期任务；均待接入，见 [ADR 0002](docs/decisions/0002-runtime-support.zh-CN.md)。
 
-M0 Linux 数据面验证已在 [PicketXD](https://github.com/PicketX/PicketXD/pull/1) 实现并合并。[最终已测源码](https://github.com/PicketX/PicketXD/commit/13fdf2d9aacd79be74578ebe9c23af19a6b33d6a)在 Linux 6.17.0-1022-azure / Go 1.27.0 上通过 [17 项必需真实内核场景](https://github.com/PicketX/PicketXD/actions/runs/38547987642)。这是可复用验证基础设施，尚不是生产 Agent。已批准的 [M1.1 设计](docs/superpowers/specs/2026-10-15-shared-network-core-design.zh-CN.md)与[实施计划](docs/superpowers/plans/2026-10-15-shared-network-core.zh-CN.md)已有仅依赖标准库的逻辑引擎 [`pkg/core`](pkg/core)：校验来源、选择器、入口范围和明确期限，合并匹配 Grant、优先处理 deny，并解释独立贡献与未来变化。Gitea HTTPS/SSH 固定断言覆盖重叠、撤销、不可变替换和重放不延期。物理 Endpoint/Binding 规划、Core-to-M0 集成及 Controller 工作流尚未实现；逻辑允许不代表 Agent 已实际放行。
+M0 Linux 数据面验证已在 [PicketXD](https://github.com/PicketX/PicketXD/pull/1) 实现并合并。[最终已测源码](https://github.com/PicketX/PicketXD/commit/13fdf2d9aacd79be74578ebe9c23af19a6b33d6a)在 Linux 6.17.0-1022-azure / Go 1.27.0 上通过 [17 项必需真实内核场景](https://github.com/PicketX/PicketXD/actions/runs/38547987642)。这是可复用验证基础设施，尚不是生产 Agent。已批准的 [M1.1 设计](docs/superpowers/specs/2026-10-15-shared-network-core-design.zh-CN.md)与[实施计划](docs/superpowers/plans/2026-10-15-shared-network-core.zh-CN.md)已有仅依赖标准库的逻辑引擎 [`pkg/core`](pkg/core)：校验来源、选择器、入口范围和明确期限，合并匹配 Grant、优先处理 deny，并解释独立贡献与未来变化。Gitea HTTPS/SSH 固定断言覆盖重叠、撤销、不可变替换和重放不延期。Core-to-M0 集成及 Controller 工作流尚未实现；逻辑允许不代表 Agent 已实际放行。
 
-[M1.2 物理规划设计](docs/superpowers/specs/2026-10-15-physical-network-planner-design.zh-CN.md)已批准并合并；[五任务实施计划](docs/superpowers/plans/2026-10-15-physical-network-planner.zh-CN.md)待评审。先交付规范化的每 Agent 规划，再单独交付 PicketXD M0 桥接；目前尚无 M1.2 实现。
+已批准的 [M1.2 设计](docs/superpowers/specs/2026-10-15-physical-network-planner-design.zh-CN.md)与[已执行计划](docs/superpowers/plans/2026-10-15-physical-network-planner.zh-CN.md)现有仅依赖标准库的物理规划层 [`pkg/networkplan`](pkg/networkplan)，消费 Core 独立解析视图。它校验明确 TCP/UDP 单端口定义、可信上下文边界/能力、Binding 笛卡尔积与物理冲突；输出不可变且独立持有的清单和显式时间 allow/deny 投影，并对完整替换提供约束及旧目标撤回来源记录。入口 nil 地址使用明确上下文边界，非 nil 空地址报错；离线目标仍保留，未绑定入口不受管理。NextChange 包含未来 allow/deny 边界，不延长绝对期限。M1.1 省略开始时间时的历史时钟边界问题已修正。
+
+每份计划只有一个权威来源，不合并 Controller/static 计划。上下文事实不能扩大请求的类别/阶段/目的范围。改指向但保留同类型 Grant/Deny ID 时拒绝；新 ID 的审批关联及原期限保留仍由发布方负责。清单和撤回记录只是期望历史，不证明已经安装，也不是删除清单。独立 M1.3 PicketXD 桥接仍需落实具体 guard/原始元组、运行时调度、实际应用历史、先确认应用再严格范围清理，以及明确空所有权清理（M0 拒绝空 Protected）。纯 Go 契约验证不证明主机/容器或数据包兼容性。用法见[包说明](pkg/networkplan/doc.go)及外部包 `ExampleCompile`。
 
 ## 本地开发
 
@@ -75,6 +77,8 @@ npm run build
 | --- | --- |
 | `cmd/picketx-controller` | 本地开发服务入口 |
 | `internal/controller` | HTTP Handler 与测试 |
+| `pkg/core` | 逻辑来源到入口的授权及已解析成员 |
+| `pkg/networkplan` | 有明确范围的每 Agent 物理意图及替换约束 |
 | `apps/web` | React、TypeScript、Vite、shadcn/ui、Tailwind CSS、i18next |
 | `docs` | 最新中英文产品、架构与配置模型基线 |
 

@@ -3,7 +3,7 @@
 > English (default) | [简体中文](2026-10-15-physical-network-planner-design.zh-CN.md)
 
 - Date: 2026-10-15 (Asia/Shanghai)
-- Status: Approved written design, merged in [PR #5](https://github.com/PicketX/PicketX/pull/5); [implementation plan](../plans/2026-10-15-physical-network-planner.md) pending review; no planner implementation has started
+- Status: Approved design ([PR #5](https://github.com/PicketX/PicketX/pull/5)); [plan](../plans/2026-10-15-physical-network-planner.md) approved in PR #6 and executed, locally verified in `pkg/networkplan`; separate M1.3 bridge remains unimplemented
 - Repository: PicketX/PicketX, Apache-2.0, existing Go 1.27.0 module
 - Authority: [Product](../../PRODUCT_DESIGN.md), [architecture](../../ARCHITECTURE.md), [configuration model](../../CONFIGURATION_MODEL.md), [M1.1 logical Core](2026-10-15-shared-network-core-design.md)
 - Baseline: M1.1 [PR #4](https://github.com/PicketX/PicketX/pull/4) merged as `a2143104d8e17a1f6e8552a3ec1d5195d5bbd3cf`; [main CI](https://github.com/PicketX/PicketX/actions/runs/38661859967) succeeds
