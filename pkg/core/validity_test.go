@@ -60,3 +60,19 @@ func TestNextBoundary(t *testing.T) {
 		t.Fatalf("UTC: %+v %v", n, err)
 	}
 }
+
+func TestNextBoundaryOmittedStartHistoricalClock(t *testing.T) {
+	at := time.Date(0, 1, 1, 0, 0, 0, 0, time.UTC)
+	end := time.Date(2026, 10, 15, 10, 0, 0, 0, time.UTC)
+	v := Validity{Mode: LifetimeBounded, ExpiresAt: end}
+	if got := v.NextBoundary(at); !got.Equal(end) {
+		t.Fatalf("got %v want %v", got, end)
+	}
+	v.NotBefore = atHour("08:00")
+	if got := v.NextBoundary(at); !got.Equal(v.NotBefore) {
+		t.Fatal(got)
+	}
+	if got := (Validity{Mode: LifetimePermanent}).NextBoundary(at); !got.IsZero() {
+		t.Fatal(got)
+	}
+}

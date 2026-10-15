@@ -51,7 +51,7 @@ func (v Validity) NextBoundary(at time.Time) time.Time {
 	if err != nil || at.IsZero() {
 		return time.Time{}
 	}
-	if n.NotBefore.After(at) {
+	if !n.NotBefore.IsZero() && n.NotBefore.After(at) {
 		return n.NotBefore
 	}
 	if n.ExpiresAt.After(at) {

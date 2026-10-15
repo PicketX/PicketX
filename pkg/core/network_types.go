@@ -57,3 +57,22 @@ type Decision struct {
 	Contributions     []Contribution
 	NextChange        time.Time
 }
+
+// ResolvedContribution retains a contribution independently of evaluation time.
+// Grant and Deny IDs occupy separate domains in ResolvedEntry.
+type ResolvedContribution struct {
+	ID       string
+	Source   netip.Prefix
+	Validity Validity
+	Revoked  bool
+}
+type ResolvedEntry struct {
+	Endpoint       Endpoint
+	Grants, Denies []ResolvedContribution
+}
+type ResolvedResource struct {
+	Name    string
+	Labels  map[string]string
+	Entries []ResolvedEntry
+}
+type NetworkView struct{ Resources []ResolvedResource }
