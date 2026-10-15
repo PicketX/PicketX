@@ -12,7 +12,7 @@
 
 **Spec:** [Approved M1.1 design](../specs/2026-10-15-shared-network-core-design.md).
 
-**Status:** Approved and executed; logical Core local acceptance and independent review complete, awaiting implementation PR integration. Planning design baseline is `ec23f7467d66ee9fc5655e2ed98c6e3ba89e019c`; execution started from merged plan commit `e64ccd36f0ddd7362e551dcfed593941df34e862`.
+**Status:** Executed, verified and merged through [PR #4](https://github.com/PicketX/PicketX/pull/4); [main CI](https://github.com/PicketX/PicketX/actions/runs/38661859967) succeeds. Planning design baseline is `ec23f7467d66ee9fc5655e2ed98c6e3ba89e019c`; execution started from merged plan commit `e64ccd36f0ddd7362e551dcfed593941df34e862`.
 
 ## Global Constraints
 

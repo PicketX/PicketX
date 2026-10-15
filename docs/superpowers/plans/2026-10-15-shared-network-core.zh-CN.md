@@ -12,7 +12,7 @@
 
 **设计依据：** [已批准的 M1.1 设计](../specs/2026-10-15-shared-network-core-design.zh-CN.md)。
 
-**状态：** 已批准并执行；逻辑 Core 本地验收和独立评审完成，等待实现 PR 集成。计划设计基线为 `ec23f7467d66ee9fc5655e2ed98c6e3ba89e019c`；执行从计划合并提交 `e64ccd36f0ddd7362e551dcfed593941df34e862` 开始。
+**状态：** 已执行、验收并合并 [PR #4](https://github.com/PicketX/PicketX/pull/4)；[主干 CI](https://github.com/PicketX/PicketX/actions/runs/38661859967)通过。计划设计基线为 `ec23f7467d66ee9fc5655e2ed98c6e3ba89e019c`；执行从计划合并提交 `e64ccd36f0ddd7362e551dcfed593941df34e862` 开始。
 
 ## 全局约束
 
