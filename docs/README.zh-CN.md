@@ -13,7 +13,9 @@
 - [M0 实施计划（已执行）](superpowers/plans/2026-10-14-linux-data-plane-validation.zh-CN.md) / [English](superpowers/plans/2026-10-14-linux-data-plane-validation.md)
 - [M1.1 共享 Core 设计（已批准）](superpowers/specs/2026-10-15-shared-network-core-design.zh-CN.md) / [English](superpowers/specs/2026-10-15-shared-network-core-design.md)
 - [M1.1 Core 实施计划（已执行并合并）](superpowers/plans/2026-10-15-shared-network-core.zh-CN.md) / [English](superpowers/plans/2026-10-15-shared-network-core.md)
-- [M1.2 物理网络规划设计（待评审）](superpowers/specs/2026-10-15-physical-network-planner-design.zh-CN.md) / [English](superpowers/specs/2026-10-15-physical-network-planner-design.md)
+- [M1.2 物理网络规划设计（已批准并合并）](superpowers/specs/2026-10-15-physical-network-planner-design.zh-CN.md) / [English](superpowers/specs/2026-10-15-physical-network-planner-design.md)
+
+- [M1.2 规划层实施计划（待评审）](superpowers/plans/2026-10-15-physical-network-planner.zh-CN.md) / [English](superpowers/plans/2026-10-15-physical-network-planner.md)
 
 产品文档定义目标，架构定义系统边界，配置模型细化已确认的对象/选择/绑定契约。待决 Schema 明确列出，示例 YAML 不是已经实现的 API。
 

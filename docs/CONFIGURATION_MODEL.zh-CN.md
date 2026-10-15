@@ -293,7 +293,7 @@ Agent 报告期望/已应用版本、观察时间、逐目标结果、能力失�
 
 ## 13. 待决事项
 
-[M1.2 物理网络规划设计](superpowers/specs/2026-10-15-physical-network-planner-design.zh-CN.md)提出目的范围、Binding 冲突和保守替换规则，目前待评审，不是已实现的外部协议。
+[已批准的 M1.2 物理网络规划设计](superpowers/specs/2026-10-15-physical-network-planner-design.zh-CN.md)确定目的范围、Binding 冲突和保守替换规则；[实施计划](superpowers/plans/2026-10-15-physical-network-planner.zh-CN.md)待评审，不是已实现的外部协议。
 
 | 领域 | 仍需确定 |
 | --- | --- |
