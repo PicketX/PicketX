@@ -132,3 +132,14 @@ type Projection struct {
 	Allow, Deny           []Membership
 	NextChange            time.Time
 }
+
+// Withdrawal requests reconsideration of a former desired target. Former is not
+// proof of installation, nor a flow deletion list.
+type Withdrawal struct {
+	Former TargetInventory
+	Reason string
+}
+type Replacement struct {
+	Plan        *Plan
+	Withdrawals []Withdrawal
+}
