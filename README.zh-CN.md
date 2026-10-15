@@ -32,6 +32,8 @@ SQLite 选用 GORM 官方驱动（v1.6.0 基线）和 mattn/go-sqlite3（v1.14.5
 
 M0 Linux 数据面验证已在 [PicketXD](https://github.com/PicketX/PicketXD/pull/1) 实现并合并。[最终已测源码](https://github.com/PicketX/PicketXD/commit/13fdf2d9aacd79be74578ebe9c23af19a6b33d6a)在 Linux 6.17.0-1022-azure / Go 1.27.0 上通过 [17 项必需真实内核场景](https://github.com/PicketX/PicketXD/actions/runs/38547987642)。这是可复用验证基础设施，尚不是生产 Agent。已批准的 [M1.1 设计](docs/superpowers/specs/2026-10-15-shared-network-core-design.zh-CN.md)与[实施计划](docs/superpowers/plans/2026-10-15-shared-network-core.zh-CN.md)已有仅依赖标准库的逻辑引擎 [`pkg/core`](pkg/core)：校验来源、选择器、入口范围和明确期限，合并匹配 Grant、优先处理 deny，并解释独立贡献与未来变化。Gitea HTTPS/SSH 固定断言覆盖重叠、撤销、不可变替换和重放不延期。物理 Endpoint/Binding 规划、Core-to-M0 集成及 Controller 工作流尚未实现；逻辑允许不代表 Agent 已实际放行。
 
+下一阶段的 [M1.2 物理规划设计](docs/superpowers/specs/2026-10-15-physical-network-planner-design.zh-CN.md)待评审，将规范化的每 Agent 规划与后续 PicketXD M0 桥接分开交付。
+
 ## 本地开发
 
 需要 Go 1.27+、Node.js 24 LTS 和 npm。

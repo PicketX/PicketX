@@ -3,7 +3,7 @@
 > English (default) | [简体中文](2026-10-15-shared-network-core-design.zh-CN.md)
 
 - Date: 2026-10-15 (Asia/Shanghai)
-- Status: Approved design; logical Core implementation and local acceptance complete, awaiting implementation PR integration
+- Status: Implemented and locally/remotely verified; [PR #4](https://github.com/PicketX/PicketX/pull/4) merged
 - Next: [Executed plan and validation record](../plans/2026-10-15-shared-network-core.md)
 - Implementation repository: PicketX/PicketX, Apache-2.0
 - Authority: [Architecture](../../ARCHITECTURE.md), [configuration boundaries](../../CONFIGURATION_MODEL.md), [product workflow](../../PRODUCT_DESIGN.md)

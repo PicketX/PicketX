@@ -3,7 +3,7 @@
 > [English (default)](2026-10-15-shared-network-core-design.md) | 简体中文
 
 - 日期：2026-10-15（Asia/Shanghai）
-- 状态：书面设计已批准；逻辑 Core 实现及本地验收完成，等待实现 PR 集成
+- 状态：已实现并通过本地/远端验收；[PR #4](https://github.com/PicketX/PicketX/pull/4)已合并
 - 下一步：[已执行计划与验证记录](../plans/2026-10-15-shared-network-core.zh-CN.md)
 - 实现仓库：PicketX/PicketX，Apache-2.0
 - 依据：[架构](../../ARCHITECTURE.zh-CN.md)、[配置边界](../../CONFIGURATION_MODEL.zh-CN.md)、[产品流程](../../PRODUCT_DESIGN.zh-CN.md)
