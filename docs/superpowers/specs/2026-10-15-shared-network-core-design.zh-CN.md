@@ -3,8 +3,8 @@
 > [English (default)](2026-10-15-shared-network-core-design.md) | 简体中文
 
 - 日期：2026-10-15（Asia/Shanghai）
-- 状态：书面设计已获用户批准并合并；尚未开始实现
-- 下一步：[实施计划待评审](../plans/2026-10-15-shared-network-core.zh-CN.md)
+- 状态：书面设计已批准；逻辑 Core 实现及本地验收完成，等待实现 PR 集成
+- 下一步：[已执行计划与验证记录](../plans/2026-10-15-shared-network-core.zh-CN.md)
 - 实现仓库：PicketX/PicketX，Apache-2.0
 - 依据：[架构](../../ARCHITECTURE.zh-CN.md)、[配置边界](../../CONFIGURATION_MODEL.zh-CN.md)、[产品流程](../../PRODUCT_DESIGN.zh-CN.md)
 - 前置成果：[PicketXD M0 PR](https://github.com/PicketX/PicketXD/pull/1)已合并；[最终已测源码](https://github.com/PicketX/PicketXD/commit/13fdf2d9aacd79be74578ebe9c23af19a6b33d6a)及[真实内核 CI](https://github.com/PicketX/PicketXD/actions/runs/38547987642)
@@ -124,7 +124,7 @@ IPv4 前缀只匹配 IPv4 来源，IPv6 前缀只匹配 IPv6 来源。考虑全�
 
 直接依赖仅为 Go 标准库。既有 Echo 存活检查不变。CI 已运行 Go 竞态测试；实现时将 `pkg` 加入格式检查。不把 GPL Agent 或夹具实现复制到 Apache 仓库；按照已同意契约独立编写期望结果。
 
-书面设计评审通过后，编写具体 TDD 实施计划，沿用已选择的本会话直接执行方式，最后对整个分支进行一次独立评审。本设计 PR 只有文档，尚未创建 `pkg/core`。
+书面设计评审通过后，编写具体 TDD 实施计划，沿用已选择的本会话直接执行方式，最后对整个分支进行一次独立评审。原设计 PR 仅包含文档；逻辑实现现见实施计划的执行记录。
 
 ## 8. M1 后续顺序
 

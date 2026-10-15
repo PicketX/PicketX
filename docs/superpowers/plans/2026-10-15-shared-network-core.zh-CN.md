@@ -12,7 +12,7 @@
 
 **设计依据：** [已批准的 M1.1 设计](../specs/2026-10-15-shared-network-core-design.zh-CN.md)。
 
-**状态：** 实施计划待评审；尚未创建 `pkg/core` 实现或测试。基线为已合并设计提交 `ec23f7467d66ee9fc5655e2ed98c6e3ba89e019c`。
+**状态：** 已批准并执行；逻辑 Core 本地验收和独立评审完成，等待实现 PR 集成。计划设计基线为 `ec23f7467d66ee9fc5655e2ed98c6e3ba89e019c`；执行从计划合并提交 `e64ccd36f0ddd7362e551dcfed593941df34e862` 开始。
 
 ## 全局约束
 
@@ -67,13 +67,13 @@
 - `NormalizeSelection(EndpointSelection) (EndpointSelection, error)` 仅将完全零值规范化为 all；omitted/all 携带 names/selector 非法。names 要求非空列表、非空名称和 nil selector；labels 要求有效非 nil selector、nil names。显式非 nil 空 slice 或混用模式失败。
 - `SelectEndpointNames(endpoints []Endpoint, selection EndpointSelection) ([]string, error)` 校验入口与选择，拒绝重复定义/不存在的指定名称，返回排序去重名称；有效标签无匹配或 all 遇到空目录时返回 nil，不能扩展匹配。空目录不是通配符。
 
-- [ ] **先写来源测试。** `TestParseSource`：`192.0.2.10`→`192.0.2.10/32`，`2001:db8::10`→`/128`，`192.0.2.10/24`→`192.0.2.0/24`；拒绝域名、`%eth0`、mapped 地址和 `::ffff:192.0.2.10/64`。`TestValidateSource`：非法/未掩码化/mapped 前缀失败。
-- [ ] **先写选择器与入口选择测试。** `TestSelectorOperators`：缺失 key 的 NotIn 为 true，追加 Exists 后为 false；In 内部或、条件间 AND；DoesNotExist；已有 `access:""` 与缺失 key。`TestSelectorRejectsInvalidValues`：nil/空选择器、空 key、未知操作符、空 In/NotIn、Exists/DoesNotExist 非 nil 空 values 失败。`TestEndpointSelection`：零值/显式 all 等价，新增入口后 named 不变，selector 跟随标签，无匹配返回 nil。`TestSelectionRejectsInvalidInputs`：空/混合模式、重复入口、缺失名称、不支持类型失败。
-- [ ] **先写期限测试。** `TestValidityBoundaries`：起点 `2026-10-15T08:00:00Z`，终点 `10:00Z`；起点前 false，起点 true，终点−1ns true，精确终点 false；permanent 在 12:00Z 后仍有效。`TestValidityRejectsInvalidModes`：零/未知模式、bounded 无终点、permanent 有终点、终点≤起点、零查询时间不能允许。`TestNextBoundary`：起点前→起点，起点→终点，终点→zero；等价时区规范化到 UTC，时刻不变。
-- [ ] **运行 RED。** 仅补齐编译所需类型和签名，行为暂缺；运行 `go test ./pkg/core -run 'Test(ParseSource|ValidateSource|Selector|EndpointSelection|SelectionRejects|Validity|NextBoundary)' -count=1`。预期规范化、空值与时间边界的行为断言失败，不是 import/依赖失败。
-- [ ] **实现原语。** 使用 net/netip 与标准 maps/slices/time；先保留输入存在性，再规范化；返回规范对象不能别名共享输入。
-- [ ] **运行 GREEN。** `go test ./...`、`go vet ./...`、`go build ./...`、`git diff --check`；预期全部退出 0，原语断言通过。
-- [ ] **提交。** `feat(core): add source selection and validity primitives`。
+- [x] **先写来源测试。** `TestParseSource`：`192.0.2.10`→`192.0.2.10/32`，`2001:db8::10`→`/128`，`192.0.2.10/24`→`192.0.2.0/24`；拒绝域名、`%eth0`、mapped 地址和 `::ffff:192.0.2.10/64`。`TestValidateSource`：非法/未掩码化/mapped 前缀失败。
+- [x] **先写选择器与入口选择测试。** `TestSelectorOperators`：缺失 key 的 NotIn 为 true，追加 Exists 后为 false；In 内部或、条件间 AND；DoesNotExist；已有 `access:""` 与缺失 key。`TestSelectorRejectsInvalidValues`：nil/空选择器、空 key、未知操作符、空 In/NotIn、Exists/DoesNotExist 非 nil 空 values 失败。`TestEndpointSelection`：零值/显式 all 等价，新增入口后 named 不变，selector 跟随标签，无匹配返回 nil。`TestSelectionRejectsInvalidInputs`：空/混合模式、重复入口、缺失名称、不支持类型失败。
+- [x] **先写期限测试。** `TestValidityBoundaries`：起点 `2026-10-15T08:00:00Z`，终点 `10:00Z`；起点前 false，起点 true，终点−1ns true，精确终点 false；permanent 在 12:00Z 后仍有效。`TestValidityRejectsInvalidModes`：零/未知模式、bounded 无终点、permanent 有终点、终点≤起点、零查询时间不能允许。`TestNextBoundary`：起点前→起点，起点→终点，终点→zero；等价时区规范化到 UTC，时刻不变。
+- [x] **运行 RED。** 仅补齐编译所需类型和签名，行为暂缺；运行 `go test ./pkg/core -run 'Test(ParseSource|ValidateSource|Selector|EndpointSelection|SelectionRejects|Validity|NextBoundary)' -count=1`。预期规范化、空值与时间边界的行为断言失败，不是 import/依赖失败。
+- [x] **实现原语。** 使用 net/netip 与标准 maps/slices/time；先保留输入存在性，再规范化；返回规范对象不能别名共享输入。
+- [x] **运行 GREEN。** `go test ./...`、`go vet ./...`、`go build ./...`、`git diff --check`；预期全部退出 0，原语断言通过。
+- [x] **提交。** `feat(core): add source selection and validity primitives`。
 
 ### 任务 2：不可变的 Grant/限制决策
 
@@ -92,13 +92,13 @@
 - `(*Engine).Decide(Query) (Decision, error)` 收集当前非撤销匹配贡献；deny 获胜仍保留匹配 allow 解释。ID 排序去重，Contributions 按 GrantID 排序；无匹配返回 nil ID/贡献列表，无未来边界返回 zero NextChange。结果不能暴露引擎所有的数据；nil/未初始化引擎返回 error，不能 panic 或允许。
 - NextChange 取非撤销、来源/范围/动作匹配的 Grant/Deny 的严格未来最小边界，包含未来起点；已过期、无匹配、不相关、已撤销贡献不能虚构边界；不能视为新到期时间或已生效字段。
 
-- [ ] **先写完整校验测试。** `TestCompileRejectsInvalidSnapshot`：重复名称/ID（各域内重复失败，同一 ID 的 Grant/Deny 配对有效）、缺失 Resource/Endpoint、空 scopes/actions、非法来源/期限均返回 nil 引擎及 error。`TestCompileValidatesInactiveContributions`：撤销、过期、选择器无匹配贡献的非法引用/要求仍失败。`TestCompileRejectsUnsupportedRequirements`：Grant 与 Deny 中的 user/service、http、read、任何 condition、unique-only renewal 均失败。`TestCompileDefaults`：省略/显式 network、connect、disabled 决策等价；空目录无可查询入口；有效非空标签选择器无匹配时不贡献 allow。
-- [ ] **先写决策测试。** `TestDecisionPermissionUnion`：`192.0.2.10` 同时匹配 `a-host` /32 与 `b-prefix` /24，解释含两个 ID 及原始来源/期限；其他来源仅匹配 b-prefix；IPv6 等价，地址族不串联。`TestDecisionDenyPrecedence`：有效 deny 覆盖两者，未来/失效/撤销 deny 不覆盖，NotIn 不能取消另一 Grant。`TestDecisionRevocation`：撤销 a-host 保留 b-prefix，全部撤销 no-active-grant，永久 Grant 撤销也不允许。`TestDecisionNextChange`：allow 起点 08:30Z、deny 起点 09:00Z、allow 终点 10:00Z、deny 终点 09:30Z；08:00Z→08:30Z，08:30Z→09:00Z，09:00Z deny 获胜且 NextChange 为 09:30Z，09:30Z 恢复 allow 且 NextChange 为 10:00Z。`TestDecisionRejectsInvalidQuery` 覆盖所有查询错误和 nil/零引擎。
-- [ ] **先写所有权、确定性与并发测试。** `TestCompileOwnsInputs` 修改原始标签、入口/选择名称、selector values、scopes、Grant ID/来源/期限/撤销状态和 Deny，旧决策不变。`TestDecisionOwnsResults` 修改返回 ID/贡献，再次查询不变。`TestDecisionDeterministic` 重排等价目录/贡献/scopes/selector values，排序解释相同。`TestDecisionConcurrentRead` 多 goroutine 查询同一引擎并仅修改各自返回值，固定结果保持一致、race 无报告。`TestInvalidReplacementPreservesEngine` 拒绝非法新候选，稍后旧引擎仍按原期限失效。
-- [ ] **运行 RED。** 仅创建可编译类型/签名；`go test ./pkg/core -run 'Test(Compile|Decision|InvalidReplacement)' -count=1`。预期权限/原因/解释/校验的行为断言失败，无 import 错误或 nil-pointer 测试错误。
-- [ ] **实现 Compile/Decide。** 在自有目录解析精确 Resource 和入口成员，过滤前完整校验未生效数据；可按入口建索引，但计算所有匹配来源贡献，各边界独立。无最长前缀独占、全局缓存、goroutine 或副作用。
-- [ ] **运行 GREEN。** `go test ./...`、`go test -race ./...`、`go vet ./...`、`go build ./...`、`git diff --check`；预期退出 0，所有权与并发断言稳定。
-- [ ] **提交。** `feat(core): evaluate immutable network grant contributions`。
+- [x] **先写完整校验测试。** `TestCompileRejectsInvalidSnapshot`：重复名称/ID（各域内重复失败，同一 ID 的 Grant/Deny 配对有效）、缺失 Resource/Endpoint、空 scopes/actions、非法来源/期限均返回 nil 引擎及 error。`TestCompileValidatesInactiveContributions`：撤销、过期、选择器无匹配贡献的非法引用/要求仍失败。`TestCompileRejectsUnsupportedRequirements`：Grant 与 Deny 中的 user/service、http、read、任何 condition、unique-only renewal 均失败。`TestCompileDefaults`：省略/显式 network、connect、disabled 决策等价；空目录无可查询入口；有效非空标签选择器无匹配时不贡献 allow。
+- [x] **先写决策测试。** `TestDecisionPermissionUnion`：`192.0.2.10` 同时匹配 `a-host` /32 与 `b-prefix` /24，解释含两个 ID 及原始来源/期限；其他来源仅匹配 b-prefix；IPv6 等价，地址族不串联。`TestDecisionDenyPrecedence`：有效 deny 覆盖两者，未来/失效/撤销 deny 不覆盖，NotIn 不能取消另一 Grant。`TestDecisionRevocation`：撤销 a-host 保留 b-prefix，全部撤销 no-active-grant，永久 Grant 撤销也不允许。`TestDecisionNextChange`：allow 起点 08:30Z、deny 起点 09:00Z、allow 终点 10:00Z、deny 终点 09:30Z；08:00Z→08:30Z，08:30Z→09:00Z，09:00Z deny 获胜且 NextChange 为 09:30Z，09:30Z 恢复 allow 且 NextChange 为 10:00Z。`TestDecisionRejectsInvalidQuery` 覆盖所有查询错误和 nil/零引擎。
+- [x] **先写所有权、确定性与并发测试。** `TestCompileOwnsInputs` 修改原始标签、入口/选择名称、selector values、scopes、Grant ID/来源/期限/撤销状态和 Deny，旧决策不变。`TestDecisionOwnsResults` 修改返回 ID/贡献，再次查询不变。`TestDecisionDeterministic` 重排等价目录/贡献/scopes/selector values，排序解释相同。`TestDecisionConcurrentRead` 多 goroutine 查询同一引擎并仅修改各自返回值，固定结果保持一致、race 无报告。`TestInvalidReplacementPreservesEngine` 拒绝非法新候选，稍后旧引擎仍按原期限失效。
+- [x] **运行 RED。** 仅创建可编译类型/签名；`go test ./pkg/core -run 'Test(Compile|Decision|InvalidReplacement)' -count=1`。预期权限/原因/解释/校验的行为断言失败，无 import 错误或 nil-pointer 测试错误。
+- [x] **实现 Compile/Decide。** 在自有目录解析精确 Resource 和入口成员，过滤前完整校验未生效数据；可按入口建索引，但计算所有匹配来源贡献，各边界独立。无最长前缀独占、全局缓存、goroutine 或副作用。
+- [x] **运行 GREEN。** `go test ./...`、`go test -race ./...`、`go vet ./...`、`go build ./...`、`git diff --check`；预期退出 0，所有权与并发断言稳定。
+- [x] **提交。** `feat(core): evaluate immutable network grant contributions`。
 
 ### 任务 3：Gitea 契约、公开示例与真实覆盖
 
@@ -110,13 +110,13 @@
 - `doc.go` 说明来源与申请人分离、可信逻辑身份、显式时间、不可变快照替换、nil/空输入差异、不支持要求必须失败、Go API 演进且不是外部协议承诺。
 - CI 格式命令由 `gofmt -l cmd internal` 改为 `gofmt -l cmd internal pkg`；保留 vet/race/build 验收。
 
-- [ ] **先写跨场景测试。** `TestGiteaIndependentDeadlines`：dev-gitea 的 https/ssh、来源 192.0.2.10；HTTPS 10:00Z 失效，SSH 12:00Z 失效；09:00Z 两者允许，10:00Z 仅 SSH，12:00Z 全部失效，IPv6 重复。追加 11:00Z 失效的 HTTPS prefix Grant，HTTPS 维持至 11:00Z，SSH 的 12:00Z 期限不变；10:00Z 后解释不含已失效 HTTPS Grant ID。
-- [ ] **先写更新与契约测试。** `TestGiteaOverlapAndRevocation`：删除/撤销 host 贡献，prefix 保留；显式 deny 仅拒绝 HTTPS，SSH 保留。`TestCatalogSelectionEvolution`：追加 git-admin/重标入口后编译替换；whole 扩展、named 固定、selector 跟随入口标签，旧引擎不变。`TestEquivalentProviderInputs`：独立构造 Controller/static 风格规范输入，省略/显式默认值及等价时区期限产生相同决策；`TestRecompilePreservesDeadlines` 两次编译同一绝对期限快照，在到期前和精确终点查询两引擎，要求期限/决策完全一致，不能生成新的持续时间；不声称已实现 provider/decoder 或内核桥接。
-- [ ] **运行新测试与示例。** `go test ./pkg/core -run 'Test(Gitea|CatalogSelection|EquivalentProvider|RecompilePreserves)|ExampleCompile' -count=1`；已有引擎应满足契约。新增未覆盖行为先观察断言失败再最小修复；任务 2 已实现的契约无需故意制造失败。确认最长前缀独占、Resource 共用最长 TTL、含到期终点等错误会被固定断言捕获。
-- [ ] **补充公开说明与格式覆盖。** 双语 README 记录已实现逻辑 Core 与待实现 M1 规划/工作流；保留 M0 实测边界和外部 Schema 待设计状态；不能将逻辑允许表述为数据包/应用实际放行。
-- [ ] **运行完整验收。** `test -z "$(gofmt -l cmd internal pkg)"`、`go test ./...`、`go test -race ./...`、`go vet ./...`、`go build ./...`、`git diff --check`；预期退出 0。`go list -deps -f '{{if not .Standard}}{{.ImportPath}}{{end}}' ./pkg/core` 的非标准库项只能是 `github.com/PicketX/PicketX/pkg/core`；go.mod/go.sum 不变。现有 Go CI 覆盖 pkg/core，验证真实结果，不能只核对配置。
-- [ ] **提交。** `test(core): verify Gitea logical authorization contract`。
-- [ ] **最终评审。** 使用 requesting-code-review 派发一次新的整个分支评审；Important/Critical 项集中修复并测试，延期 Minor 记入记录；提交实现 PR，附真实 unit/race/build/依赖证据。没有用户的集成决定，不合并。
+- [x] **先写跨场景测试。** `TestGiteaIndependentDeadlines`：dev-gitea 的 https/ssh、来源 192.0.2.10；HTTPS 10:00Z 失效，SSH 12:00Z 失效；09:00Z 两者允许，10:00Z 仅 SSH，12:00Z 全部失效，IPv6 重复。追加 11:00Z 失效的 HTTPS prefix Grant，HTTPS 维持至 11:00Z，SSH 的 12:00Z 期限不变；10:00Z 后解释不含已失效 HTTPS Grant ID。
+- [x] **先写更新与契约测试。** `TestGiteaOverlapAndRevocation`：删除/撤销 host 贡献，prefix 保留；显式 deny 仅拒绝 HTTPS，SSH 保留。`TestCatalogSelectionEvolution`：追加 git-admin/重标入口后编译替换；whole 扩展、named 固定、selector 跟随入口标签，旧引擎不变。`TestEquivalentProviderInputs`：独立构造 Controller/static 风格规范输入，省略/显式默认值及等价时区期限产生相同决策；`TestRecompilePreservesDeadlines` 两次编译同一绝对期限快照，在到期前和精确终点查询两引擎，要求期限/决策完全一致，不能生成新的持续时间；不声称已实现 provider/decoder 或内核桥接。
+- [x] **运行新测试与示例。** `go test ./pkg/core -run 'Test(Gitea|CatalogSelection|EquivalentProvider|RecompilePreserves)|ExampleCompile' -count=1`；已有引擎应满足契约。新增未覆盖行为先观察断言失败再最小修复；任务 2 已实现的契约无需故意制造失败。确认最长前缀独占、Resource 共用最长 TTL、含到期终点等错误会被固定断言捕获。
+- [x] **补充公开说明与格式覆盖。** 双语 README 记录已实现逻辑 Core 与待实现 M1 规划/工作流；保留 M0 实测边界和外部 Schema 待设计状态；不能将逻辑允许表述为数据包/应用实际放行。
+- [x] **运行完整验收。** `test -z "$(gofmt -l cmd internal pkg)"`、`go test ./...`、`go test -race ./...`、`go vet ./...`、`go build ./...`、`git diff --check`；预期退出 0。`go list -deps -f '{{if not .Standard}}{{.ImportPath}}{{end}}' ./pkg/core` 的非标准库项只能是 `github.com/PicketX/PicketX/pkg/core`；go.mod/go.sum 不变。现有 Go CI 覆盖 pkg/core，验证真实结果，不能只核对配置。
+- [x] **提交。** `test(core): verify Gitea logical authorization contract`。
+- [x] **最终评审。** 使用 requesting-code-review 派发一次新的整个分支评审；Important/Critical 项集中修复并测试，延期 Minor 记入记录；提交实现 PR，附真实 unit/race/build/依赖证据。没有用户的集成决定，不合并。
 
 ## 固定断言样式
 
@@ -145,3 +145,12 @@ if err != nil || !ssh.Allowed { t.Fatalf("ssh=%+v err=%v", ssh, err) }
 全部命名测试与公开示例执行、全量 Go unit/race/vet/build 通过、包依赖保持标准库且最终评审问题处理后，才验收 M1.1。刻意的接口/设计解释写入执行记录。
 
 本计划交付逻辑 Core。下一份聚焦设计是物理 Endpoint/Binding 规划和 Core-to-M0 契约验证：先解决目的地址/实施范围、所有权冲突与生命周期编辑，再集成 Agent。持久化/审批、可靠发布、传输/状态及 Gitea 门户/CLI 在后续增量完成。
+
+## 执行记录
+
+- 三个实现提交分别交付原语、不可变引擎、Gitea 契约；9 项原语与 14 项引擎测试先观察行为 RED，再实现 GREEN。5 项跨场景测试和公开示例验证已有引擎；实际 first-Grant-only/含到期终点的临时变异均被 Gitea 固定断言拒绝，之后恢复正确代码。
+- 全部 29 项 Core 测试/示例及 3 项现有 Controller 测试通过，没有跳过测试；命令包本身没有测试。Go unit/race/vet/build、格式及 diff 检查通过；Web npm ci/typecheck/lint/build 通过。Core 非标准库依赖只有自身，go.mod/go.sum 不变。
+- 独立整分支评审：0 Critical、0 Important；评审者独立执行非缓存 race/vet/build/格式/依赖检查。远端 [CI #38608827993](https://github.com/PicketX/PicketX/actions/runs/38608827993) 已在提交 `03efd46722dcf245f354ff56e96a3a03d8ec2b29` 成功：Go/Web 两个任务通过，Go 日志确认实际执行 pkg/core race 测试。后续验证记录文档变更不修改运行时或测试源码。
+- 延期 Minor：`Validity.NextBoundary` 对早于公元 1 年的非零查询时间，可能将未提供的 NotBefore 作为未来边界返回 zero，遮蔽实际到期边界；正常运行时间不受影响。后续可加入 IsZero 检查与历史时间回归测试。
+- 执行调整：任务 3 的最终评审/发布步骤置于全分支完成关卡，遵循 executing-plans；影响仅流程顺序，评审仍先于发布。
+- 范围裁定：物理目的地址/Binding/内核实施留后续，因此逻辑允许不证明数据包放行；持久化/审批/可靠发布/实际状态留后续，因此尚无完整浏览器到 Agent 工作流；外部 Schema/解码留后续，因此不承诺稳定协议；规模容量未作承诺，须实测后才能给出部署容量保证。这些维持已批准边界。

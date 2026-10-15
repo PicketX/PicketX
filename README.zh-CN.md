@@ -30,7 +30,7 @@ SQLite 选用 GORM 官方驱动（v1.6.0 基线）和 mattn/go-sqlite3（v1.14.5
 
 运行支持已选 SCS Session、Echo 内置 CSRF、普通/Agent 分别配置的限流、官方 gRPC/protobuf、独立 Agent Token 与可选服务端 TLS、Prometheus 指标、标准库周期任务；均待接入，见 [ADR 0002](docs/decisions/0002-runtime-support.zh-CN.md)。
 
-M0 Linux 数据面验证已在 [PicketXD](https://github.com/PicketX/PicketXD/pull/1) 实现并合并。[最终已测源码](https://github.com/PicketX/PicketXD/commit/13fdf2d9aacd79be74578ebe9c23af19a6b33d6a)在 Linux 6.17.0-1022-azure / Go 1.27.0 上通过 [17 项必需真实内核场景](https://github.com/PicketX/PicketXD/actions/runs/38547987642)。这是可复用验证基础设施，尚不是生产 Agent。[M1.1 共享网络 Core 设计](docs/superpowers/specs/2026-10-15-shared-network-core-design.zh-CN.md)已批准并合并，[实施计划](docs/superpowers/plans/2026-10-15-shared-network-core.zh-CN.md)待评审；Core 实现和 Controller 工作流集成尚未开始。
+M0 Linux 数据面验证已在 [PicketXD](https://github.com/PicketX/PicketXD/pull/1) 实现并合并。[最终已测源码](https://github.com/PicketX/PicketXD/commit/13fdf2d9aacd79be74578ebe9c23af19a6b33d6a)在 Linux 6.17.0-1022-azure / Go 1.27.0 上通过 [17 项必需真实内核场景](https://github.com/PicketX/PicketXD/actions/runs/38547987642)。这是可复用验证基础设施，尚不是生产 Agent。已批准的 [M1.1 设计](docs/superpowers/specs/2026-10-15-shared-network-core-design.zh-CN.md)与[实施计划](docs/superpowers/plans/2026-10-15-shared-network-core.zh-CN.md)已有仅依赖标准库的逻辑引擎 [`pkg/core`](pkg/core)：校验来源、选择器、入口范围和明确期限，合并匹配 Grant、优先处理 deny，并解释独立贡献与未来变化。Gitea HTTPS/SSH 固定断言覆盖重叠、撤销、不可变替换和重放不延期。物理 Endpoint/Binding 规划、Core-to-M0 集成及 Controller 工作流尚未实现；逻辑允许不代表 Agent 已实际放行。
 
 ## 本地开发
 
@@ -76,7 +76,7 @@ npm run build
 | `apps/web` | React、TypeScript、Vite、shadcn/ui、Tailwind CSS、i18next |
 | `docs` | 最新中英文产品、架构与配置模型基线 |
 
-Core 与公开协议包在实现首个契约时引入。参阅[产品设计](docs/PRODUCT_DESIGN.zh-CN.md)、[架构设计](docs/ARCHITECTURE.zh-CN.md)、[配置模型](docs/CONFIGURATION_MODEL.zh-CN.md)和 [Web 开发说明](apps/web/README.md)。
+`pkg/core` 提供演进中的网络逻辑 Go API 与可运行的 `ExampleCompile`；公开外部协议包仍暂缓。参阅[产品设计](docs/PRODUCT_DESIGN.zh-CN.md)、[架构设计](docs/ARCHITECTURE.zh-CN.md)、[配置模型](docs/CONFIGURATION_MODEL.zh-CN.md)和 [Web 开发说明](apps/web/README.md)。
 
 ## 许可证
 
