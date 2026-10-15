@@ -3,7 +3,7 @@
 > [English (default)](2026-10-15-physical-network-planner-design.md) | 简体中文
 
 - 日期：2026-10-15（Asia/Shanghai）
-- 状态：待评审的书面设计；尚未开始规划层实现
+- 状态：书面设计已批准，经 [PR #5](https://github.com/PicketX/PicketX/pull/5) 合并；[实施计划](../plans/2026-10-15-physical-network-planner.zh-CN.md)待评审；尚未开始规划层实现
 - 仓库：PicketX/PicketX，Apache-2.0，现有 Go 1.27.0 模块
 - 依据：[产品](../../PRODUCT_DESIGN.zh-CN.md)、[架构](../../ARCHITECTURE.zh-CN.md)、[配置模型](../../CONFIGURATION_MODEL.zh-CN.md)、[M1.1 逻辑 Core](2026-10-15-shared-network-core-design.zh-CN.md)
 - 基线：M1.1 [PR #4](https://github.com/PicketX/PicketX/pull/4)已合并为 `a2143104d8e17a1f6e8552a3ec1d5195d5bbd3cf`；[主干 CI](https://github.com/PicketX/PicketX/actions/runs/38661859967)通过
@@ -121,7 +121,7 @@ M1.2 纯测试不能证明数据包兼容。M1.3 必须记录真实特权 Linux/
 
 ## 8. 验收与上下文地图
 
-下列是拟定的 M1.2 验收要求，不是已实现测试结果：
+下列是已批准的 M1.2 验收要求，不是已实现测试结果：
 
 | 场景 | 必须结果 |
 | --- | --- |
@@ -143,7 +143,7 @@ M1.2 纯测试不能证明数据包兼容。M1.3 必须记录真实特权 Linux/
 | 重排、修改输入/结果、并发读取计划 | 确定性、独立所有权、只读结果 |
 | 等价 Controller/static 风格规范输入 | 投影相同，不声称已有 provider/decoder |
 
-拟定职责地图：
+已批准职责地图：
 
 | 范围 | 拟定文件 | 职责 |
 | --- | --- | --- |

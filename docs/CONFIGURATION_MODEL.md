@@ -293,7 +293,7 @@ Before publishing schemas, verify presence-sensitive decoding and re-encoding, s
 
 ## 13. Follow-up decisions
 
-The [M1.2 physical planner proposal](superpowers/specs/2026-10-15-physical-network-planner-design.md) specifies destination scope, Binding conflicts and conservative replacement rules for review; it is not an implemented external contract.
+The [approved M1.2 physical planner design](superpowers/specs/2026-10-15-physical-network-planner-design.md) specifies destination scope, Binding conflicts and conservative replacement rules. Its [implementation plan](superpowers/plans/2026-10-15-physical-network-planner.md) is pending review; it is not an implemented external contract.
 
 | Area | Still to specify |
 | --- | --- |
