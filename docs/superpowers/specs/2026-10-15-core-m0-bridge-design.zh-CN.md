@@ -3,7 +3,7 @@
 > [English (default)](2026-10-15-core-m0-bridge-design.md) | 简体中文
 
 - 日期：2026-10-15（Asia/Shanghai）
-- 状态：待评审书面设计，尚未开始桥接实现
+- 状态：已批准并经 [PR #8](https://github.com/PicketX/PicketX/pull/8) 合并；[实施计划](../plans/2026-10-15-core-m0-bridge.zh-CN.md)待评审，尚未开始桥接实现
 - 共享基线：PicketX/PicketX [PR #7](https://github.com/PicketX/PicketX/pull/7)，合并为 `e39f96e2787154a8af8e7d996b2f65aa10b6c3eb`；[已测版本](https://github.com/PicketX/PicketX/commit/64b3fd7a7adf6d37905d76f6c57637a69cefb3f1)和 [Go/Web CI](https://github.com/PicketX/PicketX/actions/runs/38701569147)
 - Agent 基线：PicketX/PicketXD `685ec06afbc6da825eb3a1e3acb54fb539cf9da3`，文件树 `0fd5e3ea2cd51473d5b961c907ff086d704e2a31`；[M0 最终内核证据](https://github.com/PicketX/PicketXD/actions/runs/38547987642)
 - 依据：[M1.2 设计，尤其第 7 节](2026-10-15-physical-network-planner-design.zh-CN.md)、[已执行 M1.2 计划](../plans/2026-10-15-physical-network-planner.zh-CN.md)、[产品](../../PRODUCT_DESIGN.zh-CN.md)、[架构](../../ARCHITECTURE.zh-CN.md)、[配置模型](../../CONFIGURATION_MODEL.zh-CN.md)
@@ -108,24 +108,24 @@ M0 当前 nftables Apply 和 conntrack Revoke 都拒绝空 Protected，须明确
 
 验证类型：`unit` 是纯函数/注入边界测试，`kernel` 是真实特权报文/状态，`both` 要求两者。仅注入失败不能满足内核部分。
 
-| 场景 | 必须证明  验证 |
+| 场景 | 必须证明 | 验证 |
 | --- | --- | --- |
-| 上下文拒绝 | 主机/发布/DNAT 后/错误命名空间/profile/能力/过宽范围/未证明 tuple 在任何后端动作前被拒  `unit` |
-| 转换与来源记录 | 明确协议/单端口、同地址族前缀、全部 Binding ID 和分域 Grant/Deny ID 保留；仅永久映射到零到期  `unit` |
-| 非法或未生效输入 | 共享层完整校验；未来/撤销/到期权限不生成当前规则；回执列出后端亚毫秒省略  `both` |
-| Gitea 形状的独立期限 | TCP/443、TCP/22，精确来源及宽 CIDR 独立期限保留；自有 tuple 的报文结果与 Core 一致  `kernel` |
-| Deny 与撤销 | 活跃 deny 优先，移除单条贡献仍保留匹配宽前缀/其他 Grant，无关入口/来源对照继续可用  `kernel` |
-| UDP | 生成的 UDP/8002 策略允许授权数据包；保护范围内已撤回自有状态不能绕过当前权限  `kernel` |
-| 原生到期 | 无 Controller/重应用时，新连接在绝对到期后的记录窗口内被拒；graceful 已建立 TCP 保留，直到后续明确 deny/清理  `kernel` |
-| 未来边界 | 驱动器激活未来 allow/deny，移除到期 deny；记录边界/应用/探测时间，过时版本不能重放旧策略，取消后不再应用  `both` |
-| 重放/延迟应用 | 临近到期重建后端及重复应用仍保留原期限；等锁/准备延迟不重启完整 TTL，也不把到期转永久  `both` |
-| 历史严格清理 | 旧发出 allow 在到期、经过后续确认应用及清理失败后仍留在历史 before；重试实际选中并移除现存撤回流  `both` |
-| 严格清理保留 | 重叠活跃 Grant、其他入口、无关/无 mark 流及其他 mark 保留；保护范围内新撤回连接持续被拒  `kernel` |
-| 应用/确认失败 | 不调用撤销器、不错误推进状态；真实非法批次保留旧可达性，模糊应用报告未知  `both` |
-| dump 中断/部分清理 | 初始 dump 不完整时不删除；错误/剩余计数保留，已确认策略不回滚，显式重试可完成  `both` |
-| Binding 所有权 | 两个 Binding 删除一个仍保留保护和剩余来源记录，最后 Grant 删除后仍保护  `both` |
-| 空自有期望 | 最后 Binding/Agent 删除走明确自有表清理；strict 历史 mark 流 Remaining=0，graceful 不删除；未管理对照仍可用  `both` |
-| NAT original/reply tuple | 入站与翻译原子提交；生成的原始 VIP TCP/8000 撤回保留独立授权 TCP/8001；观察翻译后的 Server/9000 reply，精确过滤保留独立映射  `kernel` |
+| 上下文拒绝 | 主机/发布/DNAT 后/错误命名空间/profile/能力/过宽范围/未证明 tuple 在任何后端动作前被拒 | `unit` |
+| 转换与来源记录 | 明确协议/单端口、同地址族前缀、全部 Binding ID 和分域 Grant/Deny ID 保留；仅永久映射到零到期 | `unit` |
+| 非法或未生效输入 | 共享层完整校验；未来/撤销/到期权限不生成当前规则；回执列出后端亚毫秒省略 | `both` |
+| Gitea 形状的独立期限 | TCP/443、TCP/22，精确来源及宽 CIDR 独立期限保留；自有 tuple 的报文结果与 Core 一致 | `kernel` |
+| Deny 与撤销 | 活跃 deny 优先，移除单条贡献仍保留匹配宽前缀/其他 Grant，无关入口/来源对照继续可用 | `kernel` |
+| UDP | 生成的 UDP/8002 策略允许授权数据包；保护范围内已撤回自有状态不能绕过当前权限 | `kernel` |
+| 原生到期 | 无 Controller/重应用时，新连接在绝对到期后的记录窗口内被拒；graceful 已建立 TCP 保留，直到后续明确 deny/清理 | `kernel` |
+| 未来边界 | 驱动器激活未来 allow/deny，移除到期 deny；记录边界/应用/探测时间，过时版本不能重放旧策略，取消后不再应用 | `both` |
+| 重放/延迟应用 | 临近到期重建后端及重复应用仍保留原期限；等锁/准备延迟不重启完整 TTL，也不把到期转永久 | `both` |
+| 历史严格清理 | 旧发出 allow 在到期、经过后续确认应用及清理失败后仍留在历史 before；重试实际选中并移除现存撤回流 | `both` |
+| 严格清理保留 | 重叠活跃 Grant、其他入口、无关/无 mark 流及其他 mark 保留；保护范围内新撤回连接持续被拒 | `kernel` |
+| 应用/确认失败 | 不调用撤销器、不错误推进状态；真实非法批次保留旧可达性，模糊应用报告未知 | `both` |
+| dump 中断/部分清理 | 初始 dump 不完整时不删除；错误/剩余计数保留，已确认策略不回滚，显式重试可完成 | `both` |
+| Binding 所有权 | 两个 Binding 删除一个仍保留保护和剩余来源记录，最后 Grant 删除后仍保护 | `both` |
+| 空自有期望 | 最后 Binding/Agent 删除走明确自有表清理；strict 历史 mark 流 Remaining=0，graceful 不删除；未管理对照仍可用 | `both` |
+| NAT original/reply tuple | 入站与翻译原子提交；生成的原始 VIP TCP/8000 撤回保留独立授权 TCP/8001；观察翻译后的 Server/9000 reply，精确过滤保留独立映射 | `kernel` |
 
 内核 runner 须在现有一次性命名空间路径编译/执行桥接 integration binary，将其事件纳入必需证据。重复运行先移除旧桥接结果。缺失/重复/失败/跳过必需桥接场景使门禁失败；PICKETX_KERNEL_TESTS=1 下权限/初始化失败须失败，不跳过。单元和特权作业分开，无法运行场景时也保留失败工件。
 
