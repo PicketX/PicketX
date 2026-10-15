@@ -36,7 +36,7 @@ M1.2 已实现并经 [PR #7](https://github.com/PicketX/PicketX/pull/7) 合并�
 
 每份计划只有一个权威来源，不合并 Controller/static 计划。上下文事实不能扩大请求的类别/阶段/目的范围。改指向但保留同类型 Grant/Deny ID 时拒绝；新 ID 的审批关联及原期限保留仍由发布方负责。清单和撤回记录只是期望历史，不证明已经安装，也不是删除清单。独立 M1.3 PicketXD 桥接仍需落实具体 guard/原始元组、运行时调度、实际应用历史、先确认应用再严格范围清理，以及明确空所有权清理（M0 拒绝空 Protected）。纯 Go 契约验证不证明主机/容器或数据包兼容性。用法见[包说明](pkg/networkplan/doc.go)及外部包 `ExampleCompile`。
 
-下一步 [M1.3 桥接设计](docs/superpowers/specs/2026-10-15-core-m0-bridge-design.zh-CN.md)待书面评审：在 PicketXD 隔离验证设施接入共享规划层，明确已确认历史、空自有清理与真实流量证据。尚未开始桥接实现。
+[M1.3 桥接设计](docs/superpowers/specs/2026-10-15-core-m0-bridge-design.zh-CN.md)已批准并合并；[实施计划](docs/superpowers/plans/2026-10-15-core-m0-bridge.zh-CN.md)待评审，尚未开始桥接实现。后续按[基本功能路线图](docs/BASIC_FUNCTION_ROADMAP.zh-CN.md)持续交付生产 Agent、四/七层授权与易用管理端。
 
 ## 本地开发
 

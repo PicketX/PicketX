@@ -16,7 +16,10 @@
 - [M1.2 物理网络规划设计（已批准并合并）](superpowers/specs/2026-10-15-physical-network-planner-design.zh-CN.md) / [English](superpowers/specs/2026-10-15-physical-network-planner-design.md)
 
 - [M1.2 规划层实施计划（已执行并合并）](superpowers/plans/2026-10-15-physical-network-planner.zh-CN.md) / [English](superpowers/plans/2026-10-15-physical-network-planner.md)
-- [M1.3 Core/规划层到 M0 契约桥接设计（待评审）](superpowers/specs/2026-10-15-core-m0-bridge-design.zh-CN.md) / [English](superpowers/specs/2026-10-15-core-m0-bridge-design.md)
+- [M1.3 Core/规划层到 M0 契约桥接设计（已批准并合并）](superpowers/specs/2026-10-15-core-m0-bridge-design.zh-CN.md) / [English](superpowers/specs/2026-10-15-core-m0-bridge-design.md)
+
+- [M1.3 桥接实施计划（待评审）](superpowers/plans/2026-10-15-core-m0-bridge.zh-CN.md) / [English](superpowers/plans/2026-10-15-core-m0-bridge.md)
+- [基本功能持续交付路线图](BASIC_FUNCTION_ROADMAP.zh-CN.md) / [English](BASIC_FUNCTION_ROADMAP.md)
 
 产品文档定义目标，架构定义系统边界，配置模型细化已确认的对象/选择/绑定契约。待决 Schema 明确列出，示例 YAML 不是已经实现的 API。
 

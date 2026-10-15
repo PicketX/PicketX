@@ -16,7 +16,9 @@ English is the default; Chinese editions carry the same decisions. These documen
 | M1.1 Core implementation plan (executed, merged) | [Plan](superpowers/plans/2026-10-15-shared-network-core.md) | [实施计划](superpowers/plans/2026-10-15-shared-network-core.zh-CN.md) |
 | M1.2 physical network planner design (approved, merged) | [Design](superpowers/specs/2026-10-15-physical-network-planner-design.md) | [物理网络规划](superpowers/specs/2026-10-15-physical-network-planner-design.zh-CN.md) |
 | M1.2 planner implementation plan (executed, merged) | [Plan](superpowers/plans/2026-10-15-physical-network-planner.md) | [实施计划](superpowers/plans/2026-10-15-physical-network-planner.zh-CN.md) |
-| M1.3 Core/planner-to-M0 bridge (proposed) | [Design](superpowers/specs/2026-10-15-core-m0-bridge-design.md) | [契约桥接设计](superpowers/specs/2026-10-15-core-m0-bridge-design.zh-CN.md) |
+| M1.3 Core/planner-to-M0 bridge (approved, merged) | [Design](superpowers/specs/2026-10-15-core-m0-bridge-design.md) | [契约桥接设计](superpowers/specs/2026-10-15-core-m0-bridge-design.zh-CN.md) |
+| M1.3 bridge implementation plan (awaiting review) | [Plan](superpowers/plans/2026-10-15-core-m0-bridge.md) | [实施计划](superpowers/plans/2026-10-15-core-m0-bridge.zh-CN.md) |
+| Basic-function delivery roadmap | [Roadmap](BASIC_FUNCTION_ROADMAP.md) | [持续交付路线图](BASIC_FUNCTION_ROADMAP.zh-CN.md) |
 
 The product document defines outcomes, the architecture defines system boundaries, and the configuration model refines the agreed object/selection/binding contract. Unresolved schema details are explicitly tracked; illustrative YAML is not an implemented API.
 

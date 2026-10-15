@@ -36,7 +36,7 @@ M1.2 is implemented and merged in [PR #7](https://github.com/PicketX/PicketX/pul
 
 Each plan has one authority; Controller/static plans are not merged. Context facts cannot broaden requested class/stage/destinations. Retargeting with retained typed Grant/Deny IDs fails; fresh-ID approval lineage and retention of original limits remain publisher obligations. Inventory and withdrawals are desired history, not proof of installation or a deletion list. The separate M1.3 PicketXD bridge still needs concrete guards/original tuples, runtime scheduling, applied historical inventory, apply confirmation before scoped strict cleanup and explicit empty-owned cleanup (M0 rejects empty Protected). Pure Go conformance does not establish host/container or packet compatibility. See [package guidance](pkg/networkplan/doc.go) and its external `ExampleCompile`.
 
-The next [M1.3 bridge design](docs/superpowers/specs/2026-10-15-core-m0-bridge-design.md) is proposed for written review: an isolated PicketXD conformance bridge with confirmed historical ownership, explicit empty-owned cleanup and actual packet evidence. No bridge implementation has started.
+The [M1.3 bridge design](docs/superpowers/specs/2026-10-15-core-m0-bridge-design.md) is approved and merged; its [implementation plan](docs/superpowers/plans/2026-10-15-core-m0-bridge.md) awaits review and no bridge implementation has started. The [basic-function roadmap](docs/BASIC_FUNCTION_ROADMAP.md) sequences the production Agent, L4/L7 authorization and usable management console.
 
 ## Development
 
