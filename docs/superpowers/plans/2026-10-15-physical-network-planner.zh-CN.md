@@ -12,7 +12,7 @@
 
 **设计依据：** [已批准 M1.2 设计](../specs/2026-10-15-physical-network-planner-design.zh-CN.md)，已通过 [PR #5](https://github.com/PicketX/PicketX/pull/5) 合并。
 
-**状态：** 计划经 PR #6 批准，从合并提交 `dc7158ad8583d3cfafe95c94bdef8d708bf31118` 开始执行。五项任务均已通过本地验证，发布前进行全分支评审。规划基线是 `315e0dd5617eed6cfc5055322d23b56378179cd2`；任务 1 已修复 M1.1 历史时间回归。
+**状态：** 计划经 PR #6 批准，从合并提交 `dc7158ad8583d3cfafe95c94bdef8d708bf31118` 开始执行。五项任务均已通过本地/远端验证及独立全分支评审，经 [PR #7](https://github.com/PicketX/PicketX/pull/7) 合并；[最终提交 CI](https://github.com/PicketX/PicketX/actions/runs/38701569147) 通过。规划基线是 `315e0dd5617eed6cfc5055322d23b56378179cd2`；任务 1 已修复 M1.1 历史时间回归。
 
 ## 全局约束
 
@@ -515,4 +515,4 @@ git diff --check
 
 任务 1–4 均在最小 API 桩上的断言级失败后实现；历史时间回归在实际 M1.1 代码上先失败，再修正。任务 5 为已实现行为增加跨层契约验证与公开示例，首次运行即通过，不声称人为制造过失败。这是唯一执行裁定；代价是单元实现后的验收测试可能遗漏问题，通过字面量期望和最终独立评审补足。
 
-Go 1.27.0：test、race、vet、build 均通过。32 个计划具名测试全部执行，Core（35）、规划层（27）、Controller（3）合计 65 个顶层测试/示例通过，没有跳过测试；命令入口包没有测试文件。依赖检查的非标准库输出仅 Core/规划层，go.mod/go.sum 不变。不声称已有数据包/内核验证；独立评审及最终提交 CI 证据在可用后记录到实现 PR。
+Go 1.27.0：test、race、vet、build 均通过。32 个计划具名测试全部执行，Core（35）、规划层（27）、Controller（3）合计 65 个顶层测试/示例通过，没有跳过测试；命令入口包没有测试文件。依赖检查的非标准库输出仅 Core/规划层，go.mod/go.sum 不变。不声称已有数据包/内核验证；独立评审无 Critical/Important，有一项待补 Minor：其他选择项已匹配时，未匹配 Agent selector 的诊断缺失。全部裁定和最终提交 CI 证据已记录到实现 PR。

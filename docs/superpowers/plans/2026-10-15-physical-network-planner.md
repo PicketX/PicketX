@@ -12,7 +12,7 @@
 
 **Spec:** [Approved M1.2 design](../specs/2026-10-15-physical-network-planner-design.md), approved and merged in [PR #5](https://github.com/PicketX/PicketX/pull/5).
 
-**Status:** Approved in PR #6 and executed from merged plan commit `dc7158ad8583d3cfafe95c94bdef8d708bf31118`. All five tasks are locally verified; whole-branch review follows before publication. Planning baseline is `315e0dd5617eed6cfc5055322d23b56378179cd2`. Task 1 fixes the M1.1 historical-clock regression.
+**Status:** Approved in PR #6 and executed from merged plan commit `dc7158ad8583d3cfafe95c94bdef8d708bf31118`. All five tasks are locally/remotely verified, independently reviewed and merged in [PR #7](https://github.com/PicketX/PicketX/pull/7); [final-head CI](https://github.com/PicketX/PicketX/actions/runs/38701569147) passes. Planning baseline is `315e0dd5617eed6cfc5055322d23b56378179cd2`. Task 1 fixes the M1.1 historical-clock regression.
 
 ## Global constraints
 
@@ -515,4 +515,4 @@ All 17 spec acceptance rows map to Tasks 1–5: validation/addresses/context (1�
 
 Tasks 1–4 were implemented after assertion-level red runs against minimal API stubs; the historical-clock regression failed against actual M1.1 code before correction. Task 5 adds cross-layer conformance and a public example over that implemented behavior: all pass on their first run, so no artificial failure is claimed. This is the sole execution ruling; the cost is that acceptance added after unit implementation may miss a gap, mitigated by literal expectations and the fresh final review.
 
-Go 1.27.0: test, race, vet and build pass. All 32 planned named tests ran; 65 top-level tests/examples pass across Core (35), planner (27) and Controller (3), with no skipped tests. The command entry package has no test files. Dependency inspection lists only Core/planner outside the standard library; go.mod/go.sum stay unchanged. No packet/kernel validation is claimed. Independent review and final-head CI evidence are recorded in the implementation PR when available.
+Go 1.27.0: test, race, vet and build pass. All 32 planned named tests ran; 65 top-level tests/examples pass across Core (35), planner (27) and Controller (3), with no skipped tests. The command entry package has no test files. Dependency inspection lists only Core/planner outside the standard library; go.mod/go.sum stay unchanged. No packet/kernel validation is claimed. Independent review found no Critical/Important issues and one deferred Minor: an unmatched Agent selector loses its diagnostic when another selection item matches. The implementation PR records all rulings and final-head CI evidence.

@@ -32,9 +32,11 @@ SQLite 选用 GORM 官方驱动（v1.6.0 基线）和 mattn/go-sqlite3（v1.14.5
 
 M0 Linux 数据面验证已在 [PicketXD](https://github.com/PicketX/PicketXD/pull/1) 实现并合并。[最终已测源码](https://github.com/PicketX/PicketXD/commit/13fdf2d9aacd79be74578ebe9c23af19a6b33d6a)在 Linux 6.17.0-1022-azure / Go 1.27.0 上通过 [17 项必需真实内核场景](https://github.com/PicketX/PicketXD/actions/runs/38547987642)。这是可复用验证基础设施，尚不是生产 Agent。已批准的 [M1.1 设计](docs/superpowers/specs/2026-10-15-shared-network-core-design.zh-CN.md)与[实施计划](docs/superpowers/plans/2026-10-15-shared-network-core.zh-CN.md)已有仅依赖标准库的逻辑引擎 [`pkg/core`](pkg/core)：校验来源、选择器、入口范围和明确期限，合并匹配 Grant、优先处理 deny，并解释独立贡献与未来变化。Gitea HTTPS/SSH 固定断言覆盖重叠、撤销、不可变替换和重放不延期。Core-to-M0 集成及 Controller 工作流尚未实现；逻辑允许不代表 Agent 已实际放行。
 
-已批准的 [M1.2 设计](docs/superpowers/specs/2026-10-15-physical-network-planner-design.zh-CN.md)与[已执行计划](docs/superpowers/plans/2026-10-15-physical-network-planner.zh-CN.md)现有仅依赖标准库的物理规划层 [`pkg/networkplan`](pkg/networkplan)，消费 Core 独立解析视图。它校验明确 TCP/UDP 单端口定义、可信上下文边界/能力、Binding 笛卡尔积与物理冲突；输出不可变且独立持有的清单和显式时间 allow/deny 投影，并对完整替换提供约束及旧目标撤回来源记录。入口 nil 地址使用明确上下文边界，非 nil 空地址报错；离线目标仍保留，未绑定入口不受管理。NextChange 包含未来 allow/deny 边界，不延长绝对期限。M1.1 省略开始时间时的历史时钟边界问题已修正。
+M1.2 已实现并经 [PR #7](https://github.com/PicketX/PicketX/pull/7) 合并。已批准的 [M1.2 设计](docs/superpowers/specs/2026-10-15-physical-network-planner-design.zh-CN.md)与[已执行计划](docs/superpowers/plans/2026-10-15-physical-network-planner.zh-CN.md)现有仅依赖标准库的物理规划层 [`pkg/networkplan`](pkg/networkplan)，消费 Core 独立解析视图。它校验明确 TCP/UDP 单端口定义、可信上下文边界/能力、Binding 笛卡尔积与物理冲突；输出不可变且独立持有的清单和显式时间 allow/deny 投影，并对完整替换提供约束及旧目标撤回来源记录。入口 nil 地址使用明确上下文边界，非 nil 空地址报错；离线目标仍保留，未绑定入口不受管理。NextChange 包含未来 allow/deny 边界，不延长绝对期限。M1.1 省略开始时间时的历史时钟边界问题已修正。
 
 每份计划只有一个权威来源，不合并 Controller/static 计划。上下文事实不能扩大请求的类别/阶段/目的范围。改指向但保留同类型 Grant/Deny ID 时拒绝；新 ID 的审批关联及原期限保留仍由发布方负责。清单和撤回记录只是期望历史，不证明已经安装，也不是删除清单。独立 M1.3 PicketXD 桥接仍需落实具体 guard/原始元组、运行时调度、实际应用历史、先确认应用再严格范围清理，以及明确空所有权清理（M0 拒绝空 Protected）。纯 Go 契约验证不证明主机/容器或数据包兼容性。用法见[包说明](pkg/networkplan/doc.go)及外部包 `ExampleCompile`。
+
+下一步 [M1.3 桥接设计](docs/superpowers/specs/2026-10-15-core-m0-bridge-design.zh-CN.md)待书面评审：在 PicketXD 隔离验证设施接入共享规划层，明确已确认历史、空自有清理与真实流量证据。尚未开始桥接实现。
 
 ## 本地开发
 
