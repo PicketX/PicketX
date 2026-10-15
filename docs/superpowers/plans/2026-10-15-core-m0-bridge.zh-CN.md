@@ -12,7 +12,7 @@
 
 **Spec:** [M1.3 approved design](../specs/2026-10-15-core-m0-bridge-design.zh-CN.md), [PR #8](https://github.com/PicketX/PicketX/pull/8), merged as `9d53b13e2d8a805b2a7b2f3a8ad957fcf84ea12d`.
 
-**Status:** 待计划评审；本次仅文档。实现位于 PicketXD，基线 `685ec06afbc6da825eb3a1e3acb54fb539cf9da3`，本地文件树 `0fd5e3ea2cd51473d5b961c907ff086d704e2a31` 已核对；不将本地合成提交 ID 当远端基线。
+**Status:** 保留的历史规划基线，已通过持续实施授权批准。M1.3 已由聚焦的[编译器增量](https://github.com/PicketX/PicketXD/pull/2)和[确认生命周期增量](https://github.com/PicketX/PicketXD/pull/3)交付并合并。最终 API、新增 19 项桥接场景和官方依赖修复以 Agent 仓库的已执行计划及验收记录为准；下方未勾选步骤是原始计划，不代表当前待办。[M2B](https://github.com/PicketX/PicketXD/pull/4) 也已合并，全部 43 项必需内核场景通过。生产执行、七层及管理端仍待后续推进。
 
 ## 全局约束
 

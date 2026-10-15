@@ -1,0 +1,4 @@
+apiVersion: picketx.io/v1alpha1
+kind: Configuration
+metadata: {name: empty, uid: empty-v1}
+spec: {empty: true}

@@ -12,7 +12,7 @@
 
 **Spec:** [M1.3 approved design](../specs/2026-10-15-core-m0-bridge-design.md), [PR #8](https://github.com/PicketX/PicketX/pull/8), merged as `9d53b13e2d8a805b2a7b2f3a8ad957fcf84ea12d`.
 
-**Status:** Awaiting plan review; documentation only. Implementation belongs in PicketXD at `685ec06afbc6da825eb3a1e3acb54fb539cf9da3`; local tree `0fd5e3ea2cd51473d5b961c907ff086d704e2a31` is verified. A locally reconstructed commit ID is not the remote baseline.
+**Status:** Historical planning baseline, approved through continued implementation authorization. M1.3 was delivered in the focused [compiler increment](https://github.com/PicketX/PicketXD/pull/2) and [confirmed lifecycle increment](https://github.com/PicketX/PicketXD/pull/3), both now merged. The Agent repository's executed plans and validation records describe the final APIs, 19 additional bridge scenarios and official dependency fixes; unchecked steps below are the original plan, not a current backlog. [M2B](https://github.com/PicketX/PicketXD/pull/4) is also merged, with all 43 required kernel scenarios passing. Production enforcement, L7 and management remain subsequent work.
 
 ## Global Constraints
 

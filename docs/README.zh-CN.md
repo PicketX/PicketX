@@ -4,7 +4,7 @@
 
 - [产品设计 v0.4.1](PRODUCT_DESIGN.zh-CN.md) / [English](PRODUCT_DESIGN.md)
 - [架构设计 v0.8.2](ARCHITECTURE.zh-CN.md) / [English](ARCHITECTURE.md)
-- [配置与领域模型 v0.1.0](CONFIGURATION_MODEL.zh-CN.md) / [English](CONFIGURATION_MODEL.md)
+- [配置与领域模型 v0.2.0](CONFIGURATION_MODEL.zh-CN.md) / [English](CONFIGURATION_MODEL.md)
 - [ADR 0001：RBAC 授权与定时策略同步](decisions/0001-rbac-authorization.zh-CN.md) / [English](decisions/0001-rbac-authorization.md)
 
 - [ADR 0002：运行支持组件](decisions/0002-runtime-support.zh-CN.md) / [English](decisions/0002-runtime-support.md)
@@ -16,11 +16,14 @@
 - [M1.2 物理网络规划设计（已批准并合并）](superpowers/specs/2026-10-15-physical-network-planner-design.zh-CN.md) / [English](superpowers/specs/2026-10-15-physical-network-planner-design.md)
 
 - [M1.2 规划层实施计划（已执行并合并）](superpowers/plans/2026-10-15-physical-network-planner.zh-CN.md) / [English](superpowers/plans/2026-10-15-physical-network-planner.md)
-- [M1.3 Core/规划层到 M0 契约桥接设计（已批准并合并）](superpowers/specs/2026-10-15-core-m0-bridge-design.zh-CN.md) / [English](superpowers/specs/2026-10-15-core-m0-bridge-design.md)
-
-- [M1.3 桥接实施计划（待评审）](superpowers/plans/2026-10-15-core-m0-bridge.zh-CN.md) / [English](superpowers/plans/2026-10-15-core-m0-bridge.md)
+- [M1.3 Core/规划层到 M0 契约桥接设计（已完成隔离真实内核验证）](superpowers/specs/2026-10-15-core-m0-bridge-design.zh-CN.md) / [English](superpowers/specs/2026-10-15-core-m0-bridge-design.md)
+- [M1.3 桥接实施计划（已记录实际执行链接）](superpowers/plans/2026-10-15-core-m0-bridge.zh-CN.md) / [English](superpowers/plans/2026-10-15-core-m0-bridge.md)
 - [基本功能持续交付路线图](BASIC_FUNCTION_ROADMAP.zh-CN.md) / [English](BASIC_FUNCTION_ROADMAP.md)
 
 产品文档定义目标，架构定义系统边界，配置模型细化已确认的对象/选择/绑定契约。待决 Schema 明确列出，示例 YAML 不是已经实现的 API。
 
 历史文档单独保留，旧仓库内容仍可通过 Git 历史查看。后续行为变更通过聚焦 ADR 记录并同步双语文档。
+
+- [M2A 静态配置设计](superpowers/specs/2026-10-15-static-configuration-design.zh-CN.md) / [English](superpowers/specs/2026-10-15-static-configuration-design.md)
+- [M2A 实施计划](superpowers/plans/2026-10-15-static-configuration.zh-CN.md) / [English](superpowers/plans/2026-10-15-static-configuration.md)
+- [可运行静态检查示例](../examples/static/README.zh-CN.md) / [English](../examples/static/README.md)

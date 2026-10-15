@@ -3,7 +3,7 @@
 > [English (default)](2026-10-15-core-m0-bridge-design.md) | 简体中文
 
 - 日期：2026-10-15（Asia/Shanghai）
-- 状态：已批准并经 [PR #8](https://github.com/PicketX/PicketX/pull/8) 合并；[实施计划](../plans/2026-10-15-core-m0-bridge.zh-CN.md)待评审，尚未开始桥接实现
+- 状态：隔离真实内核实现已完成；[PicketXD PR #3](https://github.com/PicketX/PicketXD/pull/3) / [最终版本 CI](https://github.com/PicketX/PicketXD/actions/runs/38750455517)，17 项 M0 + 19 项桥接必需场景通过；尚非生产 Agent
 - 共享基线：PicketX/PicketX [PR #7](https://github.com/PicketX/PicketX/pull/7)，合并为 `e39f96e2787154a8af8e7d996b2f65aa10b6c3eb`；[已测版本](https://github.com/PicketX/PicketX/commit/64b3fd7a7adf6d37905d76f6c57637a69cefb3f1)和 [Go/Web CI](https://github.com/PicketX/PicketX/actions/runs/38701569147)
 - Agent 基线：PicketX/PicketXD `685ec06afbc6da825eb3a1e3acb54fb539cf9da3`，文件树 `0fd5e3ea2cd51473d5b961c907ff086d704e2a31`；[M0 最终内核证据](https://github.com/PicketX/PicketXD/actions/runs/38547987642)
 - 依据：[M1.2 设计，尤其第 7 节](2026-10-15-physical-network-planner-design.zh-CN.md)、[已执行 M1.2 计划](../plans/2026-10-15-physical-network-planner.zh-CN.md)、[产品](../../PRODUCT_DESIGN.zh-CN.md)、[架构](../../ARCHITECTURE.zh-CN.md)、[配置模型](../../CONFIGURATION_MODEL.zh-CN.md)

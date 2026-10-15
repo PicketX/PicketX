@@ -11,7 +11,9 @@ Date: 2026-10-15. The user has approved continued delivery in several increments
 | M0 Linux backend validation | Merged in PicketXD; 17 real-kernel scenarios at the recorded tested revision |
 | M1.1 shared logical Core | Merged; union, deny precedence, independent lifetimes and immutable snapshots |
 | M1.2 physical planner | Merged; scoped per-Agent projections, conflict/retarget checks and withdrawals |
-| M1.3 shared-to-kernel bridge | [Design approved and merged](superpowers/specs/2026-10-15-core-m0-bridge-design.md); [implementation plan](superpowers/plans/2026-10-15-core-m0-bridge.md) awaiting review; no implementation yet |
+| M1.3 shared-to-kernel bridge | PicketXD PRs #2 and #3 merged; 17 M0 + 19 bridge required kernel scenarios pass; [execution links](superpowers/plans/2026-10-15-core-m0-bridge.md) |
+| M2A static configuration | Strict YAML compiler/replacement and read-only `picketx config check`; PicketX PR #10 |
+| M2B desired-state preparation | PicketXD PR #4 merged; durable reload/restart recovery, independent boundary scheduling; all 43 required kernel scenarios pass, including seven host INPUT cases; production enforcement remains pending |
 | Controller / Web | Health endpoint and frontend scaffold; business workflow, usable management screens and production Agent pending |
 
 ## Delivery sequence
@@ -20,7 +22,7 @@ The rows below subdivide the existing M1 usable-workflow goal. Their labels are 
 
 | Order | Working deliverable | Acceptance evidence |
 | --- | --- | --- |
-| 1. M1.3 bridge | Shared plan -> confirmed owned nftables state -> precise cleanup in disposable fixtures | 17 existing + 16 bridge kernel cases, dual-stack family evidence, absolute deadlines and actual applied history |
+| 1. M1.3 bridge | Shared plan -> confirmed owned nftables state -> precise cleanup in disposable fixtures | 17 existing + 19 bridge kernel cases, dual-stack family evidence, absolute deadlines and actual applied history |
 | 2. Agent runtime foundation | A runnable `picketxd`, scoped runtime configuration, one authoritative provider, static complete-candidate loading, explicit capabilities/context, shutdown and durable ownership/LKG recovery | Real Linux static deployment; invalid reload leaves confirmed state; restart/provider identity cannot renew or inherit foreign permissions; static release artifact inspection/smoke test |
 | 3. Controller access workflow | Versioned configuration/business APIs, SQLite persistence/migrations, OIDC session login, RBAC, requests, basic approval, Grant issue/revoke/expiry, authorization/audit records | API/database tests and a Gitea HTTPS/SSH independent-approval scenario; approved state remains distinct from applied state |
 | 4. Controller-to-Agent synchronization | Token-authenticated gRPC with configured plaintext/server TLS, per-Agent desired/applied generations, reconnect/full resync and absolute-time scheduling | Delayed/reordered/repeated messages cannot restore revoked/expired access; disconnected/restarting Agent has explicit freshness/failure state; no dual authority |

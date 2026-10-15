@@ -819,7 +819,7 @@ Go Backend 方向不再默认引入这些 C 库，但“纯 Go”不是许可证
 
 ## 18. 分阶段实施路线
 
-M0、M1.1 与 M1.2 已实现并合并。下一执行单元是已批准的 [M1.3 桥接设计](superpowers/specs/2026-10-15-core-m0-bridge-design.zh-CN.md)及待评审的[实施计划](superpowers/plans/2026-10-15-core-m0-bridge.zh-CN.md)。[基本功能路线图](BASIC_FUNCTION_ROADMAP.zh-CN.md)细分后续四/七层与管理端交付。保留实际测试证据，已定架构仅在发现具体冲突时重新讨论。
+M0、M1.1、M1.2 与隔离 M1.3 桥接已实现并合并。[M1.3 实施计划](superpowers/plans/2026-10-15-core-m0-bridge.zh-CN.md)链接实际执行的 Agent 增量。M2A 提供静态配置检查；已合并的 PicketXD M2B 提供持久期望准备与主机 INPUT 验证。生产执行、同步、七层与可用管理端仍在[基本功能路线图](BASIC_FUNCTION_ROADMAP.zh-CN.md)中。保留实际测试证据，已定架构仅在发现具体冲突时重新讨论。
 
 产品基线固定目标与边界，不代表所列能力均已实现。历史范围保留为架构选项；协议适配和企业集成按已验证需求分阶段推进。
 

@@ -4,12 +4,18 @@
 
 | 字段 | 内容 |
 | --- | --- |
-| 版本 | v0.1.0 |
-| 日期 | 2026-10-08 |
+| 版本 | v0.2.0 |
+| 日期 | 2026-10-15 |
 | 状态 | 模型边界与选择语义已确认；详细 Schema 继续设计 |
 | 关联文档 | [架构 v0.8.2](ARCHITECTURE.zh-CN.md)、[产品 v0.4.1](PRODUCT_DESIGN.zh-CN.md) |
 
 本文记录 2026-10-07 至 2026-10-08 的建模决策，作为配置边界、Resource/Endpoint 选择与 Agent 绑定的专项设计依据。YAML 示例是拟议契约表达，不代表已经实现的解析器、已发布的 OpenAPI/protobuf Schema 或可用于生产的完整配置。尚未确定的内容见第 13 节，不通过示例暗中定案。
+
+## M2A 实现范围
+
+[静态配置设计](superpowers/specs/2026-10-15-static-configuration-design.zh-CN.md)现明确首个 alpha 子集：严格单文件多文档 YAML；Resource、Grant、NetworkDeny、EnforcementBinding 及显式空 Configuration；必需 metadata.uid、name/uid 固定资源引用；source Subject、bounded/permanent 绝对有效期和 revoked。由 `pkg/configuration` 解码并通过 Core/networkplan 编译/替换，`picketx config check` 可只读检查，[示例](../examples/static/README.zh-CN.md)可运行。此子集内原先待定字段以该设计为准；更广的流程/协议契约继续待定。
+
+本批没有完整目录提供器、监听、LKG、控制同步或 Agent 生产应用。诊断 facts 与策略文件分离；有效候选和旧目标撤回记录均不是实际执行证明。以下较早示例用于说明选择语义；完整可解析输入还需设计要求的 UID 固定引用等字段。
 
 ## 1. 三层模型边界
 
@@ -55,7 +61,7 @@ Static Mode 下，本地 Runtime 提供执行身份和能力，不要求先向 C
 
 - `metadata.name` 标识同一种类内的对象；标签用于分组与选择，annotations 承载不参与选择的元数据。
 - **当前不引入 Namespace 对象或 `metadata.namespace`。** 声明对象在 API 版本规范化后以 `(kind, name)` 唯一；文件边界不创建独立身份域，重复定义校验失败。
-- 稳定内部标识支持来源追踪及显示信息变化后的引用；具体线上表达和删除重建语义仍待确定。
+- M2A 使用显式不透明 UID 和 name/uid 固定资源引用；持久化墓碑及更广生命周期仍待确定。
 - 默认值在语义比较、编译前统一补全；省略默认值与显式填写默认值应产生相同的规范化意图。
 - 当选择语义不同，必须区分字段缺失、显式 `null` 和空集合。解析及重新序列化不能把无效空值变成省略，从而扩大权限。
 - 必须严格校验未知字段，防止拼错的限制字段被丢弃。用户填写的 `status` 不能证明已经成功实施。
@@ -158,7 +164,7 @@ scopes:
         access: developer
 ```
 
-这是选择片段，不是完整 Grant Manifest。一个 Grant 包含**一个带类型的 Subject、一个或多个 Scope、一套共享有效期与条件**。主体或有效期不同，需要拆成不同 Grant；同一次获批申请可以生成多份 Grant。完整 Subject、有效期、条件与撤销 Schema 的字段名仍待确定。
+这是选择片段，不是完整 Grant Manifest。一个 Grant 包含**一个带类型的 Subject、一个或多个 Scope、一套共享有效期与条件**。主体或有效期不同，需要拆成不同 Grant；同一次获批申请可以生成多份 Grant。M2A 现明确 source Subject、绝对有效期和 revoked；条件/续期仍不支持并拒绝。
 
 每份 Grant 保留自己的身份与来源。有效网络权限为当前有效且匹配的 Grant 并集，再受显式拒绝与条件约束；移除一份贡献不撤销其他贡献仍提供的权限。申请人身份不是网络 Subject，数据包解析本身也不建立可信用户身份。
 
@@ -293,7 +299,7 @@ Agent 报告期望/已应用版本、观察时间、逐目标结果、能力失�
 
 ## 13. 待决事项
 
-[已批准的 M1.2 物理网络规划设计](superpowers/specs/2026-10-15-physical-network-planner-design.zh-CN.md)确定目的范围、Binding 冲突和保守替换规则；[实施计划](superpowers/plans/2026-10-15-physical-network-planner.zh-CN.md)已在纯 Go `pkg/networkplan` 库执行；外部 Schema、提供方与运行时应用尚未实现。
+[已批准的 M1.2 物理网络规划设计](superpowers/specs/2026-10-15-physical-network-planner-design.zh-CN.md)确定目的范围、Binding 冲突和保守替换规则；[实施计划](superpowers/plans/2026-10-15-physical-network-planner.zh-CN.md)已在纯 Go `pkg/networkplan` 库执行；M2A 已增加严格静态 alpha 子集；完整提供器和运行时应用仍待实现。
 
 | 领域 | 仍需确定 |
 | --- | --- |
@@ -311,4 +317,5 @@ Agent 报告期望/已应用版本、观察时间、逐目标结果、能力失�
 
 | 版本 | 日期 | 变更 |
 | --- | --- | --- |
+| v0.2.0 | 2026-10-15 | 增加 M2A 严格静态配置子集、UID 固定引用与只读检查实现范围。 |
 | v0.1.0 | 2026-10-08 | 固化三层模型边界、双 Provider、Resource/Endpoint 默认值与选择、目标 IP/CIDR 数组、多资源/多 Agent 绑定、按节点投影、不引入 Namespace 的隔离及后续问题。 |
