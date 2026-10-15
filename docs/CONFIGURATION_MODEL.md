@@ -4,12 +4,18 @@
 
 | Field | Value |
 | --- | --- |
-| Version | v0.1.0 |
-| Date | 2026-10-08 |
+| Version | v0.2.0 |
+| Date | 2026-10-15 |
 | Status | Agreed model boundaries and selection semantics; detailed schemas remain under design |
 | Related documents | [Architecture v0.8.2](ARCHITECTURE.md), [Product v0.4.1](PRODUCT_DESIGN.md) |
 
 This document records the modeling decisions made on 2026-10-07 and 2026-10-08. It is the focused design authority for configuration boundaries, Resource/Endpoint selection, and Agent bindings. YAML examples are proposed contract notation, not an implemented parser, published OpenAPI/protobuf schema, or production-ready configuration. Unsettled details are listed in section 13; examples must not silently settle them.
+
+## M2A implementation boundary
+
+The [static configuration design](superpowers/specs/2026-10-15-static-configuration-design.md) now defines an initial alpha subset: strict single-file multi-document YAML; Resource, Grant, NetworkDeny, EnforcementBinding and explicit empty Configuration; required metadata.uid and pinned name/uid Resource references; source Subject, bounded/permanent absolute validity and revoked. `pkg/configuration` decodes and compiles/replaces through Core/networkplan; `picketx config check` provides a runnable read-only [example](../examples/static/README.md). This design supersedes previously open fields only within that subset; broader workflow/protocol contracts remain deferred.
+
+This does not implement a complete directory provider, watcher, LKG, Controller synchronization or production Agent apply. Diagnostic facts are separate from policy. A valid candidate and former-target withdrawals are not execution evidence. Older fragments below illustrate selection semantics; complete parseable inputs also require the design's pinned UID references and other mandatory fields.
 
 ## 1. Three model boundaries
 
@@ -55,7 +61,7 @@ Use Kubernetes-inspired `apiVersion`, `kind`, `metadata`, `spec`, and system-mai
 
 - `metadata.name` identifies an object within its kind; labels support grouping and selection, while annotations carry non-selection metadata.
 - **No Namespace object or `metadata.namespace` in the current model.** Declarative keys are unique by `(kind, name)` after API-version normalization. File boundaries do not create separate identity domains, and duplicate definitions fail validation.
-- Stable internal identifiers support provenance and references across display changes. Their exact wire representation and delete/recreate rules remain open.
+- M2A uses explicit opaque UIDs and pinned name/uid Resource references. Persistent tombstones and broader lifecycle rules remain deferred.
 - Defaults are applied consistently before semantic comparison and compilation. Omitting a default and spelling it explicitly should produce the same canonical intent.
 - Missing, explicit `null`, and empty collections must remain distinguishable wherever they have different selection semantics. Decoders/serializers must not turn invalid emptiness into omission and thereby broaden access.
 - Strict unknown-field validation is a required guard against misspelled restrictions being discarded. `status` is not a user-authored proof of successful enforcement.
@@ -158,7 +164,7 @@ scopes:
         access: developer
 ```
 
-This is a selection fragment, not a complete Grant manifest. A Grant has **one typed Subject, one or more Scopes, and one shared validity/condition set**. Different subjects or lifetimes require separate Grants, though a single approved request can produce multiple Grants. Field names for the full Subject, validity, condition, and revocation schema remain open.
+This is a selection fragment, not a complete Grant manifest. A Grant has **one typed Subject, one or more Scopes, and one shared validity/condition set**. Different subjects or lifetimes require separate Grants, though a single approved request can produce multiple Grants. M2A now defines source Subject, absolute validity and revoked; conditions and renewal remain unsupported and are rejected.
 
 Each Grant retains its own identity and provenance. Effective network access is the union of active matching Grants constrained by explicit denies and conditions. Removing one contribution does not remove access supplied by another. Requester identity is not a network Subject, and packet inspection does not by itself establish a verified user identity.
 
@@ -293,7 +299,7 @@ Before publishing schemas, verify presence-sensitive decoding and re-encoding, s
 
 ## 13. Follow-up decisions
 
-The [approved M1.2 physical planner design](superpowers/specs/2026-10-15-physical-network-planner-design.md) specifies destination scope, Binding conflicts and conservative replacement rules. Its [implementation plan](superpowers/plans/2026-10-15-physical-network-planner.md) is executed in the pure Go `pkg/networkplan` library; external schemas, providers and runtime application remain unimplemented.
+The [approved M1.2 physical planner design](superpowers/specs/2026-10-15-physical-network-planner-design.md) specifies destination scope, Binding conflicts and conservative replacement rules. Its [implementation plan](superpowers/plans/2026-10-15-physical-network-planner.md) is executed in the pure Go `pkg/networkplan` library; M2A adds a strict static alpha subset; complete providers and runtime application remain unimplemented.
 
 | Area | Still to specify |
 | --- | --- |
@@ -311,4 +317,5 @@ Resolve these topics incrementally and synchronize both language editions. Do no
 
 | Version | Date | Change |
 | --- | --- | --- |
+| v0.2.0 | 2026-10-15 | Added M2A strict static subset, pinned UID references and read-only check implementation boundary. |
 | v0.1.0 | 2026-10-08 | Recorded three model boundaries, shared providers, Resource/Endpoint defaults and selection, IP/CIDR destination arrays, multi-resource/multi-Agent bindings, projection, isolation without Namespace, and remaining design questions. |

@@ -3,7 +3,7 @@
 > English (default) | [简体中文](2026-10-15-core-m0-bridge-design.zh-CN.md)
 
 - Date: 2026-10-15 (Asia/Shanghai)
-- Status: Proposed written design; bridge implementation has not started
+- Status: Isolated real-kernel implementation complete; [PicketXD PR #3](https://github.com/PicketX/PicketXD/pull/3) / [final-head CI](https://github.com/PicketX/PicketXD/actions/runs/38750455517), 17 M0 + 19 bridge required cases pass; not a production Agent
 - Shared baseline: PicketX/PicketX [PR #7](https://github.com/PicketX/PicketX/pull/7), merged as `e39f96e2787154a8af8e7d996b2f65aa10b6c3eb`; [tested revision](https://github.com/PicketX/PicketX/commit/64b3fd7a7adf6d37905d76f6c57637a69cefb3f1) and [Go/Web CI](https://github.com/PicketX/PicketX/actions/runs/38701569147)
 - Agent baseline: PicketX/PicketXD `685ec06afbc6da825eb3a1e3acb54fb539cf9da3`, tree `0fd5e3ea2cd51473d5b961c907ff086d704e2a31`; [M0 final kernel evidence](https://github.com/PicketX/PicketXD/actions/runs/38547987642)
 - Authority: [M1.2 design, especially section 7](2026-10-15-physical-network-planner-design.md), [executed M1.2 plan](../plans/2026-10-15-physical-network-planner.md), [product](../../PRODUCT_DESIGN.md), [architecture](../../ARCHITECTURE.md), [configuration model](../../CONFIGURATION_MODEL.md)

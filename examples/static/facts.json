@@ -1,0 +1,44 @@
+{
+  "authorityID": "static:example-v1",
+  "agents": [
+    {
+      "Name": "agent-a",
+      "Labels": {
+        "env": "dev"
+      },
+      "Capabilities": {
+        "Classes": [
+          "host-local"
+        ],
+        "Protocols": [
+          "tcp",
+          "udp"
+        ],
+        "Families": [
+          4,
+          6
+        ],
+        "Handling": [
+          "graceful",
+          "strict"
+        ],
+        "OriginalDestination": true
+      }
+    }
+  ],
+  "contexts": [
+    {
+      "AgentRef": "agent-a",
+      "ProfileRef": "host",
+      "ID": "host-v1",
+      "NetworkSpaceID": "diagnostic-only-not-live-evidence",
+      "Class": "host-local",
+      "Stage": "original-destination",
+      "Destinations": [
+        "192.0.2.100/32",
+        "2001:db8::100/128"
+      ],
+      "Handling": "graceful"
+    }
+  ]
+}
