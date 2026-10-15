@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 package networkplan
 
-import "net/netip"
+import (
+	"github.com/PicketX/PicketX/pkg/core"
+	"net/netip"
+	"time"
+)
 
 type EntryRef struct{ ResourceName, EndpointName string }
 type Protocol string
@@ -63,4 +67,68 @@ type CapabilityProfile struct {
 	Families            []Family
 	Handling            []HandlingMode
 	OriginalDestination bool
+}
+
+type ResourceSelection struct {
+	ResourceName     string
+	ResourceSelector *core.LabelSelector
+	Endpoints        core.EndpointSelection
+}
+type AgentSelection struct {
+	AgentRef string
+	Selector *core.LabelSelector
+}
+type Binding struct {
+	ID        string
+	Resources []ResourceSelection
+	Agents    []AgentSelection
+	Context   ContextRequest
+}
+type Agent struct {
+	Name         string
+	Labels       map[string]string
+	Offline      bool
+	Capabilities *CapabilityProfile
+}
+type Input struct {
+	AuthorityID  string
+	Logical      core.Snapshot
+	Networks     []NetworkDefinition
+	Agents       []Agent
+	Contexts     []ExecutionContext
+	Bindings     []Binding
+	Requirements []string
+}
+type Diagnostic struct{ Code, BindingID, ResourceName, AgentRef, EndpointName string }
+type TargetKey struct {
+	AgentRef, ContextID string
+	Entry               EntryRef
+}
+type Match struct {
+	Destination netip.Prefix
+	Protocol    Protocol
+	Port        uint16
+}
+type Protection struct {
+	Key        TargetKey
+	Context    ExecutionContext
+	BindingIDs []string
+	Matches    []Match
+	Required   CapabilityProfile
+}
+type TargetInventory struct {
+	Protection     Protection
+	Grants, Denies []core.ResolvedContribution
+}
+type Membership struct {
+	Target       TargetKey
+	Match        Match
+	Contribution core.ResolvedContribution
+}
+type Projection struct {
+	AuthorityID, AgentRef string
+	At                    time.Time
+	Protected             []Protection
+	Allow, Deny           []Membership
+	NextChange            time.Time
 }
