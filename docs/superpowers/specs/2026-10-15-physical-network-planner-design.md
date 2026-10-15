@@ -43,7 +43,7 @@ Core remains the single authority for Grant/deny validation, resolved logical me
 
 ## 3. Execution scope and address omission
 
-Every selected Agent/Binding pair must resolve to one explicit execution context. A context includes:
+Every selected Agent/Binding pair must resolve to one explicit execution context. The Binding's requested traffic class, observation stage and permitted scope belong to the single authoritative security desired state. Runtime facts and capability profiles may only resolve, narrow or reject that request: they cannot promote host ingress to transit, extend its destination scope or introduce Resources/Grants. Host facts resolve local addresses under the requested host guard; transit requires explicitly authorized scope. A Binding's profile reference and the resolved context identity have separate roles; changed resolved meaning needs a fresh context identity and replacement validation. A context includes:
 
 - Agent identity and an opaque network-space identity supplied by a trusted runtime resolver, not user-chosen strings claiming isolation.
 - A stated traffic class: host-local ingress, published-service ingress, or transit. Host installation remains the product default; the normalized context must nevertheless be explicit and resolved. Published container traffic is not automatically host-local traffic.
