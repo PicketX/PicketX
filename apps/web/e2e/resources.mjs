@@ -6,7 +6,7 @@ export async function resourceOnboarding({ operator: p, view, origin, token, pol
   await p.getByRole('button', { name: 'Desired configuration', exact: true }).click()
   await p.getByRole('button', { name: 'Reload latest into editor', exact: true }).click()
   await p.getByLabel('Policy YAML').fill(policy); await p.getByLabel('Facts JSON').fill(facts)
-  await p.getByLabel('Change reason').fill('Configure exact existing host context')
+  await p.getByLabel('Change reason', { exact: true }).fill('Configure exact existing host context')
   const seed = p.waitForResponse(r => r.url().endsWith('/console/api/v1/publication') && r.request().method() === 'PUT')
   await p.getByRole('button', { name: 'Save desired configuration', exact: true }).click()
   assert.equal((await seed).status(), 200)
