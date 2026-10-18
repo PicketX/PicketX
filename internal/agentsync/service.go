@@ -64,27 +64,19 @@ func New(authority string, l Limits) (*Service, error) {
 	}
 	return &Service{authority: authority, limits: l, credentials: make(map[[32]byte]Credential), sessions: make(map[string]*session), snapshots: make(map[string]*agentv1.Snapshot), reports: make(map[string]observed)}, nil
 }
+
+// CheckPublication validates without mutation. A durable publisher must serialize
+// credential/publication mutations across this preflight and the later Publish.
+func (s *Service) CheckPublication(c *configuration.Candidate, revision uint64) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	_, e := s.preparePublication(c, revision)
+	return e
+}
 func (s *Service) Publish(c *configuration.Candidate, revision uint64) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	if s.closed || c == nil || c.Plan() == nil || c.Hash() == "" || c.Input().AuthorityID != s.authority || revision == 0 || revision <= s.revision {
-		return fmt.Errorf("invalid Agent publication")
-	}
-	if s.candidate != nil {
-		kinds := make(map[string]string)
-		for _, o := range s.candidate.Objects() {
-			kinds[o.UID] = o.Kind
-		}
-		for _, o := range c.Objects() {
-			if k, ok := kinds[o.UID]; ok && k != o.Kind {
-				return fmt.Errorf("publication changes object kind")
-			}
-		}
-		if _, e := networkplan.Replace(s.candidate.Plan(), c.Input()); e != nil {
-			return fmt.Errorf("publication violates replacement constraints")
-		}
-	}
-	snapshots, e := s.buildScopes(c, revision, s.credentials)
+	snapshots, e := s.preparePublication(c, revision)
 	if e != nil {
 		return e
 	}
@@ -95,6 +87,30 @@ func (s *Service) Publish(c *configuration.Candidate, revision uint64) error {
 		ss.wake()
 	}
 	return nil
+}
+func (s *Service) preparePublication(c *configuration.Candidate, revision uint64) (map[string]*agentv1.Snapshot, error) {
+	if s.closed || c == nil || c.Plan() == nil || c.Hash() == "" || c.Input().AuthorityID != s.authority || revision == 0 || revision <= s.revision {
+		return nil, fmt.Errorf("invalid Agent publication")
+	}
+	if s.candidate != nil {
+		kinds := make(map[string]string)
+		for _, o := range s.candidate.Objects() {
+			kinds[o.UID] = o.Kind
+		}
+		for _, o := range c.Objects() {
+			if k, ok := kinds[o.UID]; ok && k != o.Kind {
+				return nil, fmt.Errorf("publication changes object kind")
+			}
+		}
+		if _, e := networkplan.Replace(s.candidate.Plan(), c.Input()); e != nil {
+			return nil, fmt.Errorf("publication violates replacement constraints")
+		}
+	}
+	snapshots, e := s.buildScopes(c, revision, s.credentials)
+	if e != nil {
+		return nil, e
+	}
+	return snapshots, nil
 }
 func (s *Service) buildScopes(c *configuration.Candidate, r uint64, cs map[[32]byte]Credential) (map[string]*agentv1.Snapshot, error) {
 	out := make(map[string]*agentv1.Snapshot)

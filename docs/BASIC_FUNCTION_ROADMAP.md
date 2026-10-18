@@ -16,7 +16,7 @@ Date: 2026-10-15. The user has approved continued delivery in several increments
 | M2B desired-state preparation | PicketXD PR #4 merged; durable reload/restart recovery, independent boundary scheduling; all 43 required kernel scenarios pass, including seven host INPUT cases; production enforcement remains pending |
 | Controller / Web | Health endpoint and frontend scaffold; business workflow, usable management screens and production Agent pending |
 
-M2D1 adds the [Controller-side stream foundation](AGENT_STREAM.md); production runtime/Agent provider integration is next. The static host Agent has meanwhile reached [PicketXD PR #15](https://github.com/PicketX/PicketXD/pull/15), including installation/service readiness. The M2B row above records historical preparation-stage evidence.
+M2D1 adds the [Controller-side stream foundation](AGENT_STREAM.md); [M2D2](CONTROLLER_RUNTIME.md) adds the running durable publisher; Agent provider integration is next. The static host Agent has meanwhile reached [PicketXD PR #15](https://github.com/PicketX/PicketXD/pull/15), including installation/service readiness. The M2B row above records historical preparation-stage evidence.
 
 ## Delivery sequence
 

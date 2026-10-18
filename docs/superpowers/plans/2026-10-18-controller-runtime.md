@@ -19,7 +19,7 @@
 | File | Purpose/change |
 | --- | --- |
 | `internal/runtimeconfig/config.go`, tests | Strict typed Koanf defaults/file/env/flag boundary |
-| `pkg/configuration/facts.go`, tests; `internal/cli/input.go` | Reuse exact strict facts parser; CLI wrapper preserved |
+| `pkg/configuration/facts.go`, `internal/strictjson/`, tests; `internal/cli/input.go` | Reuse exact strict facts parser; CLI wrapper preserved |
 | `internal/publication/store.go`, tests | Explicit SQLite migration, accepted record integrity/CAS/Replace/recovery |
 | `internal/agentsync/service.go`, tests | Nonmutating publication preflight using same validation as Publish |
 | `internal/controllerapp/{runtime,inputs}.go`, tests | Serial poll owner, credential parser, central HTTP/gRPC/listener lifecycle |

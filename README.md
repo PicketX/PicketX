@@ -8,21 +8,21 @@ PicketX is designed to grant time-bounded access to protected resources through 
 
 ## Project status
 
-This repository is an **initial development scaffold**. It includes shared logical authorization and physical planning libraries, an Echo v5-based Go Controller liveness endpoint and a bilingual React starting page. Authentication, approval, Grant issuance, persistence, end-to-end Agent synchronization and enforcement are not implemented. Do not use this scaffold to protect resources.
+This repository is an **initial development scaffold**. It includes shared logical authorization and physical planning libraries, an Echo v5-based Go Controller liveness endpoint and a bilingual React starting page. Browser authentication, approval, Grant issuance, business persistence and end-to-end Agent enforcement are not implemented; the Controller publisher described below has SQLite persistence and Token-authenticated synchronization. Do not use this scaffold to protect resources.
 
 The control plane and Web live here. The official Linux Agent, `picketxd`, belongs to the separate **PicketXD** repository. This initialization does not create or modify that repository.
 
-The selected backend stack is Go + Echo v5 + GORM, with go-playground/validator v10 for request fields. API documentation generation uses Swaggo v2.0.0-rc6 targeting OpenAPI 3.1, with Swagger UI v5.33.2 for documentation and interactive requests. GORM, validator, Swaggo and Swagger UI are architecture decisions; persistence, migrations, request validation and API documentation generation/display are not implemented yet.
+The selected backend stack is Go + Echo v5 + GORM, with go-playground/validator v10 for request fields. API documentation generation uses Swaggo v2.0.0-rc6 targeting OpenAPI 3.1, with Swagger UI v5.33.2 for documentation and interactive requests. GORM/SQLite now persists accepted desired publications through an explicit migration. Business schemas, validator, Swaggo and Swagger UI remain pending integration.
 
 Dependency assembly uses explicit constructors and module-level composition, with centralized lifecycle management; no DI framework is selected. See architecture section 5.7 for the design boundaries.
 
-Runtime configuration loading is selected as Koanf v2.3.8, with typed module configuration and explicit file/environment/flag precedence. It is not implemented yet; the scaffold still reads `-listen` through the standard `flag` package.
+Runtime configuration loading is selected as Koanf v2.3.8, with typed module configuration and explicit file/environment/flag precedence. It is implemented for the Controller; explicitly changed standard-library flags feed the same typed configuration boundary.
 
-Runtime logging uses standard-library `log/slog`. The scaffold already emits JSON to standard error; module logger injection, selectable formats, configurable levels and persisted authorization audit remain to be implemented.
+Runtime logging uses standard-library `log/slog`. The scaffold already emits JSON to standard error; runtime modules receive injected loggers; selectable formats/levels and persisted authorization audit remain to be implemented.
 
-The `picketx` CLI uses Cobra v1.10.2 and currently supplies read-only configuration checks. Koanf process configuration and authenticated administrative commands remain unimplemented; the Controller entry point continues to use standard-library flags.
+The `picketx` CLI uses Cobra v1.10.2 and currently supplies read-only configuration checks. The Controller now loads Koanf runtime configuration; authenticated administrative CLI commands remain unimplemented.
 
-SQLite is selected as the official GORM driver (v1.6.0 baseline) with mattn/go-sqlite3 (v1.14.52 baseline). Default Linux releases must be fully static without additional shared-library installation. PostgreSQL uses official gorm.io/driver/postgres v1.6.3 with pgx/v5 v5.10.0. Database integration and the static-CGO release pipeline are not implemented; migration tooling remains deferred.
+SQLite is selected as the official GORM driver (v1.6.0 baseline) with mattn/go-sqlite3 (v1.14.52 baseline). Default Linux releases must be fully static without additional shared-library installation. PostgreSQL uses official gorm.io/driver/postgres v1.6.3 with pgx/v5 v5.10.0. The Controller publication store and fully static SQLite artifact smoke are implemented; PostgreSQL, business migrations and release packaging remain pending.
 
 Initial enforcement scope is IP/CIDR network admission, HTTP/HTTPS authorization through existing ingress, and a local decision interface over TCP or Unix socket. NFQUEUE/mirror inspection, transparent proxy/TLS termination and native database proxies are deferred; these endpoints and integrations are not implemented yet.
 
@@ -42,7 +42,9 @@ M2A adds [`pkg/configuration`](pkg/configuration) and `picketx config check`: st
 
 M2B is merged in [PicketXD PR #4](https://github.com/PicketX/PicketXD/pull/4): `picketxd prepare` durably recovers static desired state, reloads complete configurations and schedules absolute boundaries. Its [final CI](https://github.com/PicketX/PicketXD/actions/runs/38760479190) passes all 43 required kernel scenarios, including seven host INPUT cases. Preparation reports `enforcementConfirmed=false`; production execution remains pending. The [M1.3 implementation plan](docs/superpowers/plans/2026-10-15-core-m0-bridge.md) is retained with links to the executed Agent increments. Continue through the [basic-function roadmap](docs/BASIC_FUNCTION_ROADMAP.md).
 
-M2D1 implements the [Controller Agent stream foundation](docs/AGENT_STREAM.md): public typed gRPC/protobuf, complete node snapshots, revocable Tokens, correlated Agent assertions and bounded lifecycle, tested over TCP loopback and verified TLS. Production listeners, the PicketXD Controller provider and durable revisions/enrollment remain pending; deployable Controller Mode is not claimed.
+M2D1 implements the [Controller Agent stream foundation](docs/AGENT_STREAM.md): public typed gRPC/protobuf, complete node snapshots, revocable Tokens, correlated Agent assertions and bounded lifecycle, tested over TCP loopback and verified TLS. M2D2 below adds production process assembly and durable revisions; the PicketXD Controller provider and enrollment management remain pending, so end-to-end Controller Mode is not claimed.
+
+M2D2 adds a [running Controller publisher](docs/CONTROLLER_RUNTIME.md): strict Koanf file/env/explicit-flag loading, GORM/SQLite durable complete revisions, independent credential revocation reload, optional server TLS and bounded HTTP/gRPC lifecycle. CI starts the actual fully static SQLite binary and checks a real scoped gRPC snapshot, readiness, persisted revision and SIGTERM. PicketXD remote provider and management/L7 remain subsequent work. Autonomous progress is tracked in [the delivery checkpoint](docs/AUTONOMOUS_DELIVERY.md).
 
 ## Development
 
