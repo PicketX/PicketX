@@ -8,7 +8,7 @@ PicketX 通过自助申请、策略和审批，为受保护资源提供有期限
 
 ## 项目状态
 
-当前仓库仍在开发，不是完整访问管理产品。共享Core/配置、SQLite Controller持久发布和Token认证gRPC已实现；PicketXD PR16提供原生主机Controller Provider。[管理发布API](docs/MANAGEMENT_API.zh-CN.md)增加独立主体、Casbin、修订CAS及事务审计。[浏览器工作台](docs/BROWSER_CONSOLE.zh-CN.md)增加SCS/CSRF管理密钥会话和真实完整文档发布/审计页面。人员/OIDC身份、结构化资源/Grant/审批管理与HTTP L7仍待实现，不声明生产闭环。
+当前仓库仍在开发，不是完整访问管理产品。共享Core/配置、SQLite发布、认证gRPC及原生PicketXD PR16 Provider已实现。[管理API](docs/MANAGEMENT_API.zh-CN.md)提供独立主体/Casbin/CAS/审计，[浏览器工作台](docs/BROWSER_CONSOLE.zh-CN.md)提供SCS/CSRF及真实文档发布/审计。[alpha HTTP适配器](docs/HTTP_AUTHORIZATION.zh-CN.md)增加来源HTTPRoute、限权本地决策及Nginx集成，精确CI验收见检查点。人员/OIDC、结构化资源/Grant/审批/状态管理和最终Linux联合工作流仍待完成，不声明完整生产产品。
 
 控制面与 Web 位于本仓库；官方 Linux Agent `picketxd` 属于独立的 **PicketXD** 仓库。本次初始化未创建或修改该仓库。
 
@@ -24,7 +24,7 @@ PicketX 通过自助申请、策略和审批，为受保护资源提供有期限
 
 SQLite 选用 GORM 官方驱动（v1.6.0 基线）和 mattn/go-sqlite3（v1.14.52 基线）。默认 Linux 发布包必须完整静态链接，无额外共享库安装要求。PostgreSQL 采用官方 gorm.io/driver/postgres v1.6.3，底层 pgx/v5 v5.10.0。Controller发布记录及静态SQLite实际运行检查已实现；PostgreSQL、业务迁移与发布打包仍待接入。
 
-首期执行范围为 IP/CIDR 网络准入、现有入口提供 HTTP/HTTPS 授权、本地 TCP 或 Unix Socket 决策接口。NFQUEUE/镜像探测、透明代理/TLS 终止及原生数据库代理均后移；这些端点与集成尚未实现。
+首期执行范围为IP/CIDR网络准入、现有入口HTTP/HTTPS授权和本地TCP/Unix决策接口。[alpha HTTP适配器](docs/HTTP_AUTHORIZATION.zh-CN.md)新增来源HTTPRoute、限权本地TCP/Unix决策、持久审计及Nginx集成，精确CI验收见检查点；不是已验证用户授权或完整产品。NFQUEUE/镜像探测、透明代理/TLS终止及原生数据库代理仍后移。
 
 管理API使用Casbin3.11.0和官方GORM adapter3.41.0，支持独立主体可信角色、多角色deny优先和可观察周期重载。浏览器会话每次请求解析同一可信角色；人员身份和按资源委派待实现，见[ADR 0001](docs/decisions/0001-rbac-authorization.zh-CN.md)及[实际边界](docs/MANAGEMENT_API.zh-CN.md)。
 

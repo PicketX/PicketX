@@ -41,9 +41,10 @@ func TestGeneratedManagementContract(t *testing.T) {
 		t.Fatal(spec.OpenAPI)
 	}
 	for path, methods := range map[string]map[string][]string{
-		"/api/v1/publication": {"get": {"200", "401", "403", "429", "503"}, "put": {"200", "400", "401", "403", "412", "413", "415", "428", "429", "503"}},
-		"/api/v1/audit":       {"get": {"200", "400", "401", "403", "429", "503"}},
-		"/api/v1/me":          {"get": {"200", "401", "429", "503"}},
+		"/api/v1/publication":    {"get": {"200", "401", "403", "429", "503"}, "put": {"200", "400", "401", "403", "412", "413", "415", "428", "429", "503"}},
+		"/api/v1/audit":          {"get": {"200", "400", "401", "403", "429", "503"}},
+		"/api/v1/http-decisions": {"get": {"200", "400", "401", "403", "429", "503"}},
+		"/api/v1/me":             {"get": {"200", "401", "429", "503"}},
 	} {
 		for method, codes := range methods {
 			op, ok := spec.Paths[path][method]
@@ -127,7 +128,7 @@ func TestBrowserOpenAPIContract(t *testing.T) {
 	for _, route := range []struct {
 		path, method string
 		private      bool
-	}{{"session", "get", false}, {"login", "post", false}, {"logout", "post", false}, {"me", "get", true}, {"publication", "get", true}, {"publication", "put", true}, {"audit", "get", true}} {
+	}{{"session", "get", false}, {"login", "post", false}, {"logout", "post", false}, {"me", "get", true}, {"publication", "get", true}, {"publication", "put", true}, {"audit", "get", true}, {"http-decisions", "get", true}} {
 		op := spec.Paths["/console/api/v1/"+route.path][route.method]
 		if op.OperationID == "" {
 			t.Fatal("missing browser route", route)
@@ -141,5 +142,26 @@ func TestBrowserOpenAPIContract(t *testing.T) {
 	s := spec.Components.SecuritySchemes["BrowserCookie"]
 	if s.In != "cookie" || s.Name != "picketx_session" {
 		t.Fatal(s)
+	}
+}
+func TestAuthorizationContractHasSeparateCallerSecurity(t *testing.T) {
+	raw, e := os.ReadFile("../../docs/api/swagger.json")
+	if e != nil {
+		t.Fatal(e)
+	}
+	var spec struct {
+		Paths map[string]map[string]struct {
+			Security  []map[string]any `json:"security"`
+			Responses map[string]any   `json:"responses"`
+		} `json:"paths"`
+	}
+	if e = json.Unmarshal(raw, &spec); e != nil {
+		t.Fatal(e)
+	}
+	for _, r := range []struct{ path, method, success string }{{"/authz/v1/decisions", "post", "200"}, {"/authz/v1/nginx", "get", "204"}} {
+		op := spec.Paths[r.path][r.method]
+		if len(op.Security) != 1 || op.Security[0]["IngressBearer"] == nil || op.Responses[r.success] == nil || op.Responses["503"] == nil {
+			t.Fatal(r, op)
+		}
 	}
 }

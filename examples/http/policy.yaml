@@ -1,0 +1,47 @@
+# SPDX-License-Identifier: Apache-2.0
+# Loopback-only acceptance/example policy. Replace host and sources deliberately.
+apiVersion: picketx.io/v1alpha1
+kind: Resource
+metadata: {name: http-app, uid: http-app-v1}
+spec: {endpoints: [{name: web, network: {protocol: TCP, port: 443}}]}
+---
+apiVersion: picketx.io/v1alpha1
+kind: Resource
+metadata: {name: private-app, uid: private-app-v1}
+spec: {endpoints: [{name: web, network: {protocol: TCP, port: 443}}]}
+---
+apiVersion: picketx.io/v1alpha1
+kind: Grant
+metadata: {name: loopback4, uid: loopback4-v1}
+spec:
+  subject: {type: source, cidr: 127.0.0.1/32}
+  scopes: [{resourceRef: {name: http-app, uid: http-app-v1}, endpointNames: [web]}]
+  validity: {mode: permanent}
+---
+apiVersion: picketx.io/v1alpha1
+kind: Grant
+metadata: {name: loopback6, uid: loopback6-v1}
+spec:
+  subject: {type: source, cidr: '::1/128'}
+  scopes: [{resourceRef: {name: http-app, uid: http-app-v1}, endpointNames: [web]}]
+  validity: {mode: permanent}
+---
+apiVersion: picketx.io/v1alpha1
+kind: HTTPRoute
+metadata: {name: http-app, uid: route-v1}
+spec:
+  resourceRef: {name: http-app, uid: http-app-v1}
+  endpointName: web
+  host: __HOST__
+  methods: [GET]
+  paths: [/allowed]
+---
+apiVersion: picketx.io/v1alpha1
+kind: HTTPRoute
+metadata: {name: private-app, uid: route-private-v1}
+spec:
+  resourceRef: {name: private-app, uid: private-app-v1}
+  endpointName: web
+  host: __HOST__
+  methods: [GET]
+  paths: [/private]

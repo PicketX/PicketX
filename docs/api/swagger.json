@@ -24,6 +24,67 @@
                 },
                 "type": "object"
             },
+            "controller.HTTPAuditResponse": {
+                "properties": {
+                    "events": {
+                        "items": {
+                            "$ref": "#/components/schemas/publication.HTTPAuditEvent"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "next_after": {
+                        "type": "integer"
+                    }
+                },
+                "type": "object"
+            },
+            "controller.HTTPDecisionRequest": {
+                "properties": {
+                    "host": {
+                        "maxLength": 253,
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "method": {
+                        "enum": [
+                            "GET",
+                            "HEAD",
+                            "POST",
+                            "PUT",
+                            "PATCH",
+                            "DELETE",
+                            "OPTIONS"
+                        ],
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "route": {
+                        "maxLength": 128,
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "source": {
+                        "maxLength": 45,
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "uri": {
+                        "maxLength": 8192,
+                        "type": "string",
+                        "minLength": 1
+                    }
+                },
+                "required": [
+                    "host",
+                    "method",
+                    "route",
+                    "source",
+                    "uri"
+                ],
+                "type": "object",
+                "additionalProperties": false
+            },
             "controller.IdentityResponse": {
                 "properties": {
                     "id": {
@@ -154,12 +215,100 @@
                     }
                 },
                 "type": "object"
+            },
+            "publication.HTTPAuditEvent": {
+                "properties": {
+                    "allowed": {
+                        "type": "boolean"
+                    },
+                    "at": {
+                        "type": "string"
+                    },
+                    "cache_ttl": {
+                        "type": "integer"
+                    },
+                    "caller": {
+                        "type": "string"
+                    },
+                    "deny_ids": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "grant_ids": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "id": {
+                        "type": "integer"
+                    },
+                    "next_change": {
+                        "type": "string"
+                    },
+                    "reason": {
+                        "type": "string"
+                    },
+                    "revision": {
+                        "type": "integer"
+                    },
+                    "route": {
+                        "type": "string"
+                    },
+                    "source": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "publication.HTTPDecision": {
+                "properties": {
+                    "allowed": {
+                        "type": "boolean"
+                    },
+                    "cache_ttl": {
+                        "type": "integer"
+                    },
+                    "deny_ids": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "grant_ids": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "next_change": {
+                        "type": "string"
+                    },
+                    "reason": {
+                        "type": "string"
+                    },
+                    "revision": {
+                        "type": "integer"
+                    }
+                },
+                "type": "object"
             }
         },
         "securitySchemes": {
             "BrowserCookie": {
                 "in": "cookie",
                 "name": "picketx_session",
+                "type": "apiKey"
+            },
+            "IngressBearer": {
+                "in": "header",
+                "name": "Authorization",
                 "type": "apiKey"
             },
             "ManagementBearer": {
@@ -271,6 +420,103 @@
                     }
                 ],
                 "summary": "Read change audit in ascending keyset order",
+                "tags": [
+                    "management"
+                ]
+            }
+        },
+        "/api/v1/http-decisions": {
+            "get": {
+                "operationId": "httpDecisionAudit",
+                "parameters": [
+                    {
+                        "description": "Exclusive event ID, default0",
+                        "in": "query",
+                        "name": "after",
+                        "schema": {
+                            "minimum": 0,
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "description": "Page size, default50",
+                        "in": "query",
+                        "name": "limit",
+                        "schema": {
+                            "maximum": 100,
+                            "minimum": 1,
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.HTTPAuditResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "429": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "503": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    }
+                },
+                "security": [
+                    {
+                        "ManagementBearer": []
+                    }
+                ],
+                "summary": "Read durable minimal HTTP decision audit in ascending keyset order",
                 "tags": [
                     "management"
                 ]
@@ -553,6 +799,233 @@
                 ]
             }
         },
+        "/authz/v1/decisions": {
+            "post": {
+                "description": "Dedicated loopback/Unix listener only. Caller supplies trusted context; exact canonical Host/method/path required. Source is not a verified user. Server time, no caching; durable minimal audit before allow. Query is not audited. No administrative routes on this listener.",
+                "operationId": "decideHTTP",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/controller.HTTPDecisionRequest",
+                                "summary": "context",
+                                "description": "Trusted request context (no client time/identity claims)"
+                            }
+                        }
+                    },
+                    "description": "Trusted request context (no client time/identity claims)",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/publication.HTTPDecision"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "413": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "415": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "429": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "503": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    }
+                },
+                "security": [
+                    {
+                        "IngressBearer": []
+                    }
+                ],
+                "summary": "Decide an exact HTTP request using source Grants and route constraints",
+                "tags": [
+                    "authorization"
+                ]
+            }
+        },
+        "/authz/v1/nginx": {
+            "get": {
+                "description": "Each X-PicketX-* header must occur exactly once. Internal ingress sets a fixed route UID and actual source/Host/original method/request URI; never forward client authorization headers to this listener.204 allows,403 denies; other statuses must fail closed.",
+                "operationId": "nginxHTTPAuthorization",
+                "parameters": [
+                    {
+                        "description": "Pinned route UID",
+                        "in": "header",
+                        "name": "X-PicketX-Route",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Trusted unmapped unzoned source IP",
+                        "in": "header",
+                        "name": "X-PicketX-Source",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Actual routing authority",
+                        "in": "header",
+                        "name": "X-PicketX-Host",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Original HTTP method",
+                        "in": "header",
+                        "name": "X-PicketX-Method",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Original request URI",
+                        "in": "header",
+                        "name": "X-PicketX-URI",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Allowed"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "429": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "503": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    }
+                },
+                "security": [
+                    {
+                        "IngressBearer": []
+                    }
+                ],
+                "summary": "Nginx internal auth_request callback, no body or cache",
+                "tags": [
+                    "authorization"
+                ]
+            }
+        },
         "/console/api/v1/audit": {
             "get": {
                 "operationId": "browserAudit",
@@ -642,6 +1115,103 @@
                     }
                 ],
                 "summary": "Read bounded append-only publication audit (exclusive cursor)",
+                "tags": [
+                    "console"
+                ]
+            }
+        },
+        "/console/api/v1/http-decisions": {
+            "get": {
+                "operationId": "browserHTTPAudit",
+                "parameters": [
+                    {
+                        "description": "Exclusive event ID, default0",
+                        "in": "query",
+                        "name": "after",
+                        "schema": {
+                            "minimum": 0,
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "description": "Page size, default50",
+                        "in": "query",
+                        "name": "limit",
+                        "schema": {
+                            "maximum": 100,
+                            "minimum": 1,
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.HTTPAuditResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "429": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "503": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    }
+                },
+                "security": [
+                    {
+                        "BrowserCookie": []
+                    }
+                ],
+                "summary": "Read bounded minimal HTTP authorization decision audit",
                 "tags": [
                     "console"
                 ]

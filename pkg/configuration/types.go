@@ -106,6 +106,13 @@ type enforcement struct {
 type emptySpec struct {
 	Empty bool `json:"empty"`
 }
+type httpRouteSpec struct {
+	ResourceRef  resourceRef `json:"resourceRef"`
+	EndpointName string      `json:"endpointName"`
+	Host         string      `json:"host"`
+	Methods      []string    `json:"methods"`
+	Paths        []string    `json:"paths"`
+}
 
 // Bundle owns decoded policy and cannot be changed through exported fields.
 type Bundle struct {

@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"net/netip"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -19,6 +21,10 @@ import (
 )
 
 type Config struct {
+	Authz struct {
+		Enabled                       bool
+		Network, Address, Credentials string
+	}
 	HTTPListen            string
 	Poll, Shutdown        time.Duration
 	Database, Credentials string
@@ -41,6 +47,7 @@ type Config struct {
 
 func defaults() map[string]any {
 	return map[string]any{
+		"authz.enabled": false, "authz.network": "tcp", "authz.address": "", "authz.credentials": "",
 		"http.listen": "127.0.0.1:8080", "poll": "1s", "shutdown": "5s", "database": "", "credentials": "", "source.mode": "file", "source.policy": "", "source.facts": "",
 		"management.credentials": "", "management.reload": "30s", "management.warn_rules": 10000, "management.warn_load_percent": 50, "management.requests_per_second": 128, "management.burst": 256,
 		"browser.enabled": false, "browser.origin": "", "browser.assets": "",
@@ -130,6 +137,10 @@ func Load(path string, env, overrides map[string]string) (Config, error) {
 		}
 	}
 	c.HTTPListen = k.String("http.listen")
+	c.Authz.Enabled = k.Bool("authz.enabled")
+	c.Authz.Network = k.String("authz.network")
+	c.Authz.Address = k.String("authz.address")
+	c.Authz.Credentials = k.String("authz.credentials")
 	c.Database = k.String("database")
 	c.Credentials = k.String("credentials")
 	c.Source.Policy = k.String("source.policy")
@@ -166,6 +177,31 @@ func Load(path string, env, overrides map[string]string) (Config, error) {
 	return c, nil
 }
 func (c Config) Validate() error {
+	if c.Authz.Enabled {
+		if !c.Agent.Enabled || c.Authz.Credentials == "" {
+			return fmt.Errorf("authorization requires authority and independent credentials")
+		}
+		switch c.Authz.Network {
+		case "tcp":
+			host, port, e := net.SplitHostPort(c.Authz.Address)
+			if e != nil {
+				return fmt.Errorf("authorization requires loopback IP:port")
+			}
+			ip, e := netip.ParseAddr(host)
+			p, pe := strconv.Atoi(port)
+			if e != nil || !ip.IsLoopback() || ip.Is4In6() || ip.Zone() != "" || pe != nil || p < 0 || p > 65535 {
+				return fmt.Errorf("authorization requires loopback IP:port")
+			}
+		case "unix":
+			if !filepath.IsAbs(c.Authz.Address) {
+				return fmt.Errorf("authorization socket requires absolute path")
+			}
+		default:
+			return fmt.Errorf("unsupported authorization listener")
+		}
+	} else if c.Authz.Address != "" || c.Authz.Credentials != "" {
+		return fmt.Errorf("authorization settings require enabled listener")
+	}
 	for _, addr := range []string{c.HTTPListen, c.Agent.Listen} {
 		_, p, e := net.SplitHostPort(addr)
 		if e != nil {

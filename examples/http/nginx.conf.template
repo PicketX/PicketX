@@ -1,0 +1,51 @@
+# SPDX-License-Identifier: Apache-2.0
+# Substitute the placeholders into a PRIVATE file (contains an ingress Token).
+# External ingress owns TLS/application forwarding. This loopback test topology
+# intentionally uses HTTP. See README for trust/topology restrictions.
+worker_processes 1;
+pid __PREFIX__/nginx.pid;
+error_log stderr error;
+events { worker_connections 128; }
+http {
+    access_log off;
+    keepalive_timeout 30s;
+    server {
+        listen 127.0.0.1:__PORT__;
+        server_name _;
+        location / {
+            set $picketx_method $request_method;
+            set $picketx_route route-v1;
+            auth_request /_picketx_auth;
+            proxy_pass http://127.0.0.1:__APP_PORT__;
+            proxy_set_header Host application.internal;
+            proxy_set_header X-PicketX-Route "";
+            proxy_set_header X-PicketX-Source "";
+        }
+        location = /private {
+            set $picketx_method $request_method;
+            set $picketx_route route-private-v1;
+            auth_request /_picketx_auth;
+            proxy_pass http://127.0.0.1:__APP_PORT__;
+            proxy_set_header Host private-application.internal;
+        }
+        location = /_picketx_auth {
+            internal;
+            proxy_pass http://127.0.0.1:__AUTHZ_PORT__/authz/v1/nginx;
+            proxy_method GET;
+            proxy_pass_request_body off;
+            proxy_pass_request_headers off;
+            proxy_set_header Content-Length "";
+            proxy_set_header Host localhost;
+            proxy_set_header Authorization "Bearer __TOKEN__";
+            proxy_set_header X-PicketX-Route $picketx_route;
+            proxy_set_header X-PicketX-Source $remote_addr;
+            proxy_set_header X-PicketX-Host $http_host;
+            proxy_set_header X-PicketX-Method $picketx_method;
+            proxy_set_header X-PicketX-URI $request_uri;
+            proxy_cache off;
+            proxy_connect_timeout 1s;
+            proxy_read_timeout 2s;
+            proxy_send_timeout 2s;
+        }
+    }
+}

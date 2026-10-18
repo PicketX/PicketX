@@ -8,7 +8,7 @@ PicketX is designed to grant time-bounded access to protected resources through 
 
 ## Project status
 
-This repository is under active development, not a complete access-management product. Shared Core/configuration, the SQLite Controller publisher and Token-authenticated gRPC are implemented. PicketXD PR16 supplies the supported native host Controller Provider. The [managed publication API](docs/MANAGEMENT_API.md) adds independent principals, Casbin, revision CAS and transactional audit. The [operator browser console](docs/BROWSER_CONSOLE.md) adds SCS/CSRF access-key sessions and live complete-document publication/audit pages. Human/OIDC login, structured resource/Grant/approval management and HTTP L7 remain pending; no complete production workflow is claimed.
+This repository is under active development, not a complete access-management product. Shared Core/configuration, SQLite publication, authenticated gRPC and the native PicketXD PR16 Provider are implemented. The [managed API](docs/MANAGEMENT_API.md) supplies independent principals/Casbin/CAS/audit; the [browser console](docs/BROWSER_CONSOLE.md) supplies SCS/CSRF and live document publication/audit. The [alpha HTTP adapter](docs/HTTP_AUTHORIZATION.md) adds source-backed HTTPRoute, scoped local decisions and Nginx integration; exact CI acceptance is in the checkpoint. Human/OIDC login, structured resource/Grant/approval/status management and final combined Linux workflow remain; no complete production product is claimed.
 
 The control plane and Web live here. The official Linux Agent, `picketxd`, belongs to the separate **PicketXD** repository. This initialization does not create or modify that repository.
 
@@ -24,7 +24,7 @@ The `picketx` CLI uses Cobra v1.10.2 and currently supplies read-only configurat
 
 SQLite is selected as the official GORM driver (v1.6.0 baseline) with mattn/go-sqlite3 (v1.14.52 baseline). Default Linux releases must be fully static without additional shared-library installation. PostgreSQL uses official gorm.io/driver/postgres v1.6.3 with pgx/v5 v5.10.0. The Controller publication store and fully static SQLite artifact smoke are implemented; PostgreSQL, business migrations and release packaging remain pending.
 
-Initial enforcement scope is IP/CIDR network admission, HTTP/HTTPS authorization through existing ingress, and a local decision interface over TCP or Unix socket. NFQUEUE/mirror inspection, transparent proxy/TLS termination and native database proxies are deferred; these endpoints and integrations are not implemented yet.
+Initial enforcement scope is IP/CIDR network admission, HTTP/HTTPS authorization through existing ingress, and a local decision interface over TCP or Unix socket. The [alpha HTTP adapter](docs/HTTP_AUTHORIZATION.md) adds source-backed HTTPRoute, scoped local TCP/Unix decisions, durable audit and Nginx integration; exact CI acceptance is in the checkpoint. It is not verified-user authorization or complete product acceptance. NFQUEUE/mirror inspection, transparent proxy/TLS termination and native database proxies remain deferred.
 
 Management API RBAC uses Casbin3.11.0 and official GORM adapter3.41.0, with trusted independent-principal roles, combined deny precedence and observable periodic reload. Browser sessions resolve these same trusted roles on every request; human identities and per-resource delegation remain pending. See [ADR 0001](docs/decisions/0001-rbac-authorization.md) and the [implemented boundary](docs/MANAGEMENT_API.md).
 

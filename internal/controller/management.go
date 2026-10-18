@@ -35,6 +35,10 @@ type AuditResponse struct {
 	Events    []publication.AuditEvent `json:"events"`
 	NextAfter int64                    `json:"next_after"`
 }
+type HTTPAuditResponse struct {
+	Events    []publication.HTTPAuditEvent `json:"events"`
+	NextAfter int64                        `json:"next_after"`
+}
 type IdentityResponse struct {
 	ID         string   `json:"id"`
 	Roles      []string `json:"roles"`
@@ -68,6 +72,7 @@ func registerManagement(e *echo.Echo, service *management.Service, limits Manage
 	group.GET("/publication", h.getPublication)
 	group.PUT("/publication", h.putPublication)
 	group.GET("/audit", h.audit)
+	group.GET("/http-decisions", h.httpAudit)
 	group.GET("/me", h.me)
 }
 func apiError(c *echo.Context, status int, code string) error {
@@ -211,6 +216,9 @@ func (h *managementHTTP) putPublication(c *echo.Context) error {
 // @Failure 400,401,403,429,503 {object} APIError
 // @Router /api/v1/audit [get]
 func (h *managementHTTP) audit(c *echo.Context) error {
+	return h.auditPage(c, false)
+}
+func (h *managementHTTP) auditPage(c *echo.Context, httpDecisions bool) error {
 	p, e := h.principal(c, "audit:read")
 	if e != nil {
 		return mappedError(c, e)
@@ -239,6 +247,17 @@ func (h *managementHTTP) audit(c *echo.Context) error {
 	if after < 0 || limit < 1 || limit > 100 {
 		return apiError(c, 400, "invalid_query")
 	}
+	if httpDecisions {
+		events, e := h.service.HTTPAudit(p, after, limit)
+		if e != nil {
+			return mappedError(c, e)
+		}
+		next := after
+		if len(events) > 0 {
+			next = events[len(events)-1].ID
+		}
+		return c.JSON(200, HTTPAuditResponse{Events: events, NextAfter: next})
+	}
 	events, e := h.service.Audit(p, after, limit)
 	if e != nil {
 		return mappedError(c, e)
@@ -249,6 +268,19 @@ func (h *managementHTTP) audit(c *echo.Context) error {
 	}
 	return c.JSON(200, AuditResponse{Events: events, NextAfter: next})
 }
+
+// httpAudit godoc
+// @Summary Read durable minimal HTTP decision audit in ascending keyset order
+// @ID httpDecisionAudit
+// @Tags management
+// @Security ManagementBearer
+// @Produce json
+// @Param after query integer false "Exclusive event ID, default0" minimum(0)
+// @Param limit query integer false "Page size, default50" minimum(1) maximum(100)
+// @Success 200 {object} HTTPAuditResponse
+// @Failure 400,401,403,429,503 {object} APIError
+// @Router /api/v1/http-decisions [get]
+func (h *managementHTTP) httpAudit(c *echo.Context) error { return h.auditPage(c, true) }
 
 // me godoc
 // @Summary Read authenticated API principal and current permitted operations
