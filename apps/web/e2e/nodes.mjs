@@ -6,6 +6,7 @@ import { join } from 'node:path'
 import { createHash, randomBytes } from 'node:crypto'
 
 export async function nodeObservations({ operator, view, temp, evidence }) {
+  await operator.setViewportSize({ width: 1440, height: 1000 })
   await operator.getByRole('button', { name: 'Nodes', exact: true }).click()
   await operator.getByText('No credentialed Agent scopes.', { exact: true }).waitFor()
   const token = randomBytes(32).toString('hex')
@@ -16,6 +17,8 @@ export async function nodeObservations({ operator, view, temp, evidence }) {
   await operator.getByText('No report received', { exact: true }).waitFor()
   await operator.getByText('Disconnected', { exact: true }).waitFor()
   assert.equal(await operator.getByText('Agent reported applied', { exact: true }).count(), 0)
+  assert.equal(operator.viewportSize().width, 1440)
+  assert(await operator.evaluate(() => document.documentElement.scrollWidth <= innerWidth))
   await operator.screenshot({ path: join(evidence, 'nodes-desktop.png'), fullPage: true })
   await operator.route('**/console/api/v1/agent-observations', route => route.abort())
   await operator.getByRole('button', { name: 'Refresh nodes', exact: true }).click()

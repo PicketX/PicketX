@@ -20,12 +20,14 @@ Even a fresh matching report is a point-in-time assertion, not guaranteed curren
 reachability, verified revocation or continuous health. There is no heartbeat yet.
 
 The UI requests on entry and every 15 seconds without overlap, pauses in hidden
-tabs, refreshes on visibility resume and cancels on exit. Manual refresh is
+tabs, requests a refresh on visibility resume and cancels on exit. If a request
+is still in flight on resume, it finishes first; the next periodic poll refreshes
+again (an immediate queued follow-up remains a documented minor item). Manual refresh is
 available. Read failures retain clearly historical data; browser/report age does
 not reset merely by refreshing the page. Hashes are expandable; mobile cards wrap.
 
 Observation state is process-local and disappears on Controller restart; removed
-credential scopes disappear. Readiness/delivery failure returns503 instead of an
+credential scopes disappear. Readiness/delivery failure returns 503 instead of an
 apparently current old delivery view. There is no historical status database,
 cross-Controller aggregation, automatic Agent enrollment or kernel change here.
 Source policies, absolute expiry, LKG and existing Agent enforcement are unchanged.

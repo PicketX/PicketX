@@ -38,7 +38,8 @@ Context map reviewed against current sources; spec self-review found no conflict
 2. Pending revision must not inherit prior APPLIED: Task1 mismatch test.
 3. Clock skew must not produce fresh status: Task1 negative age and untrusted clock test.
 4. Revocation/failure must not leak old live state: Task2 runtime/auth tests.
-5. Hidden/unmounted UI must ignore obsolete responses: Task3 real browser lifecycle test.
+5. Hidden/unmounted UI must ignore obsolete responses: Task3 disposal/abort guards;
+   delayed-response/visibility race browser regression is explicitly deferred below.
 
 ### Task 1: Atomic service observations
 Produces `Service.Observations() (Observations, error)`; private `observationsAt(time.Time)`
@@ -79,6 +80,10 @@ Ruling: keep observations in memory — no stale restart resurrection; cost no h
 Ruling: show credentialed scopes only — explicit inventory boundary; cost no enrollment inventory.
 Ruling: no heartbeat/kernel change — avoid compatibility expansion; cost no continuous proof.
 Baseline full Go: only actual Unix socket EPERM locally; required nativeCI retained.
+Independent review91ef769..cb61530: no Critical/Important. Deferred Minor items are
+queued visibility-resume refresh while an old request is active, and delayed-response/
+unmount/visibility race browser assertions. Existing settled navigation is tested;
+do not claim full lifecycle race coverage. Exact-source native CI/visual gate required.
 
 ## UI design review
 Reuse background #f5f7fa, text #18283b, action #145da0, muted #526174,
