@@ -24,7 +24,7 @@ React polls the real endpoint, retaining explicitly historical data on error.
 | internal/management/service.go | Authorized observation operation |
 | internal/controller/observations.go, management.go, browser.go | Bearer/cookie GET and DTO docs |
 | apps/web/src/features/nodes/Nodes.tsx, App.tsx, locales/* | Real polling cards and navigation |
-| scripts/test-console.mjs | Existing real browser fixture and new observation scenarios |
+| apps/web/e2e/console.mjs, nodes.mjs | Existing real browser fixture and new observation scenarios |
 | internal/controllerapp/observations_test.go | Actual gRPC/HTTP assertions, not kernel proof |
 | docs/api/* | Regenerated OpenAPI contract |
 

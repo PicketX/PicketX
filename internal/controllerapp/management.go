@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/PicketX/PicketX/internal/agentsync"
+
 	"github.com/PicketX/PicketX/internal/management"
 	"github.com/PicketX/PicketX/internal/publication"
 )
@@ -24,6 +26,17 @@ func (p *publisher) initializeManaged() error {
 }
 
 func (p *publisher) Snapshot() (publication.Document, error) { return p.store.Snapshot() }
+
+// AgentObservations cannot present a pre-commit delivery revision as current
+// while a management commit/delivery or credential reload is still in flight.
+func (p *publisher) AgentObservations() (agentsync.Observations, error) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	if p.failed || !p.ready.Load() {
+		return agentsync.Observations{}, management.ErrUnavailable
+	}
+	return p.service.Observations()
+}
 func (p *publisher) Audit(after int64, limit int) ([]publication.AuditEvent, error) {
 	return p.store.Audit(after, limit)
 }

@@ -4,6 +4,7 @@ package management
 
 import (
 	"errors"
+	"github.com/PicketX/PicketX/internal/agentsync"
 	"github.com/PicketX/PicketX/internal/publication"
 )
 
@@ -36,6 +37,19 @@ func New(access Access, repository Repository) *Service {
 	return &Service{access: access, repository: repository}
 }
 func (s *Service) Authenticate(token string) (Principal, error) { return s.access.Authenticate(token) }
+
+func (s *Service) AgentObservations(p Principal) (agentsync.Observations, error) {
+	if e := s.Check(p, "publication:read"); e != nil {
+		return agentsync.Observations{}, e
+	}
+	repo, ok := s.repository.(interface {
+		AgentObservations() (agentsync.Observations, error)
+	})
+	if !ok {
+		return agentsync.Observations{}, ErrUnavailable
+	}
+	return repo.AgentObservations()
+}
 func (s *Service) ResolveSession(id, fingerprint string) (Principal, error) {
 	resolver, ok := s.access.(interface {
 		ResolveSession(string, string) (Principal, error)

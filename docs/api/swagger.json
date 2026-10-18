@@ -1,6 +1,94 @@
 {
     "components": {
         "schemas": {
+            "agentsync.NodeObservation": {
+                "properties": {
+                    "agent_ref": {
+                        "type": "string"
+                    },
+                    "connection": {
+                        "enum": [
+                            "connected",
+                            "disconnected"
+                        ],
+                        "type": "string"
+                    },
+                    "desired_revision": {
+                        "type": "string"
+                    },
+                    "desired_sha256": {
+                        "type": "string"
+                    },
+                    "fresh_for_millis": {
+                        "type": "integer"
+                    },
+                    "freshness": {
+                        "enum": [
+                            "unknown",
+                            "stale",
+                            "fresh"
+                        ],
+                        "type": "string"
+                    },
+                    "matches_desired": {
+                        "type": "boolean"
+                    },
+                    "report": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/agentsync.ReportedState"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    }
+                },
+                "type": "object"
+            },
+            "agentsync.Observations": {
+                "properties": {
+                    "authority": {
+                        "type": "string"
+                    },
+                    "nodes": {
+                        "items": {
+                            "$ref": "#/components/schemas/agentsync.NodeObservation"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "observed_at": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "agentsync.ReportedState": {
+                "properties": {
+                    "observed_at": {
+                        "type": "string"
+                    },
+                    "phase": {
+                        "enum": [
+                            "RECEIVED",
+                            "APPLIED",
+                            "FAILED"
+                        ],
+                        "type": "string"
+                    },
+                    "received_at": {
+                        "type": "string"
+                    },
+                    "revision": {
+                        "type": "string"
+                    },
+                    "sha256": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
             "configuration.EndpointView": {
                 "properties": {
                     "name": {
@@ -919,6 +1007,83 @@
         "url": ""
     },
     "paths": {
+        "/api/v1/agent-observations": {
+            "get": {
+                "description": "Process-local point-in-time view. APPLIED is Agent-reported, not kernel proof. Freshness uses Controller receive time and current reporting session, strictly below60 seconds. matches_desired is separate; new revision or reconnect never refreshes an old report. No heartbeat guarantee. Revisions are decimal strings. No query parameters.",
+                "operationId": "agentObservations",
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/agentsync.Observations"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "429": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "503": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    }
+                },
+                "security": [
+                    {
+                        "ManagementBearer": []
+                    }
+                ],
+                "summary": "Read credentialed Agent scopes and unverified execution assertions",
+                "tags": [
+                    "management"
+                ]
+            }
+        },
         "/api/v1/audit": {
             "get": {
                 "operationId": "readAudit",
@@ -2588,6 +2753,83 @@
                 "summary": "Nginx internal auth_request callback, no body or cache",
                 "tags": [
                     "authorization"
+                ]
+            }
+        },
+        "/console/api/v1/agent-observations": {
+            "get": {
+                "description": "Same assertion/freshness boundaries as the Bearer route. publication:read required. No query parameters.",
+                "operationId": "browserAgentObservations",
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/agentsync.Observations"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "429": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "503": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    }
+                },
+                "security": [
+                    {
+                        "BrowserCookie": []
+                    }
+                ],
+                "summary": "Read Agent observations with current operator cookie identity",
+                "tags": [
+                    "browser"
                 ]
             }
         },
