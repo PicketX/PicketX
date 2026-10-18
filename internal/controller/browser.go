@@ -3,21 +3,19 @@ package controller
 
 import (
 	"crypto/sha256"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
-	"mime"
 	"net"
 	"net/http"
 	"net/url"
 	"os"
 	"path"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/PicketX/PicketX/internal/management"
-	"github.com/PicketX/PicketX/internal/strictjson"
 	"github.com/alexedwards/scs/v2"
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v5"
@@ -31,6 +29,9 @@ type Browser struct {
 	sessions *scs.SessionManager
 	origin   *url.URL
 	assets   string
+	// Fixed stripes bound memory even for attacker-chosen cookie values. The
+	// lock covers Load through Commit, so logout cannot race an idle re-commit.
+	stripes [64]sync.Mutex
 }
 
 func NewBrowser(service *management.Service, origin, assets string) (*Browser, error) {
@@ -100,6 +101,12 @@ func (b *Browser) wrap(next http.Handler) http.Handler {
 			return
 		}
 		if strings.HasPrefix(r.URL.Path, "/console/api/") {
+			if cookie, err := r.Cookie(b.sessions.Cookie.Name); err == nil && cookie.Value != "" {
+				sum := sha256.Sum256([]byte(cookie.Value))
+				lock := &b.stripes[int(sum[0])%len(b.stripes)]
+				lock.Lock()
+				defer lock.Unlock()
+			}
 			session.ServeHTTP(w, r)
 			return
 		}
@@ -126,63 +133,13 @@ func (b *Browser) register(e *echo.Echo, limits ManagementLimits) {
 		ErrorHandler: func(c *echo.Context, _ error) error { return apiError(c, 400, "invalid_peer") }, DenyHandler: func(c *echo.Context, _ string, _ error) error { return apiError(c, 429, "rate_limited") },
 	}))
 	g.Use(middleware.CSRFWithConfig(middleware.CSRFConfig{CookieName: "picketx_csrf", CookiePath: "/console/", CookieSecure: b.origin.Scheme == "https", CookieHTTPOnly: true, CookieSameSite: http.SameSiteStrictMode, ErrorHandler: func(c *echo.Context, _ error) error { return apiError(c, 403, "csrf_rejected") }}))
-	g.GET("/session", func(c *echo.Context) error {
-		p, err := b.principal(c)
-		if err != nil && !errors.Is(err, management.ErrUnauthorized) {
-			return mappedError(c, err)
-		}
-		return c.JSON(200, struct {
-			Authenticated bool                  `json:"authenticated"`
-			CSRF          string                `json:"csrf"`
-			Identity      *management.Principal `json:"identity,omitempty"`
-		}{err == nil, c.Get("csrf").(string), func() *management.Principal {
-			if err == nil {
-				return &p
-			}
-			return nil
-		}()})
-	})
-	g.POST("/login", func(c *echo.Context) error {
-		media, _, err := mime.ParseMediaType(c.Request().Header.Get("Content-Type"))
-		if err != nil || media != "application/json" {
-			return apiError(c, 415, "json_required")
-		}
-		raw, err := io.ReadAll(io.LimitReader(c.Request().Body, 4097))
-		if err != nil || len(raw) > 4096 {
-			return apiError(c, 413, "request_too_large")
-		}
-		var input struct {
-			Token string `json:"token" validate:"required,min=32,max=256"`
-		}
-		if strictjson.Decode(raw, &input) != nil || h.validate.Struct(input) != nil {
-			return apiError(c, 400, "invalid_login")
-		}
-		p, err := b.service.Authenticate(input.Token)
-		if err != nil {
-			return mappedError(c, err)
-		}
-		ctx := c.Request().Context()
-		if err = b.sessions.Destroy(ctx); err != nil {
-			return mappedError(c, err)
-		}
-		if err = b.sessions.RenewToken(ctx); err != nil {
-			return mappedError(c, err)
-		}
-		sum := sha256.Sum256([]byte(input.Token))
-		b.sessions.Put(ctx, "id", p.ID)
-		b.sessions.Put(ctx, "credential", hex.EncodeToString(sum[:]))
-		return c.JSON(200, p)
-	})
-	g.POST("/logout", func(c *echo.Context) error {
-		if err := b.sessions.Destroy(c.Request().Context()); err != nil {
-			return mappedError(c, err)
-		}
-		return c.NoContent(204)
-	})
-	g.GET("/me", h.me)
-	g.GET("/publication", h.getPublication)
-	g.PUT("/publication", h.putPublication)
-	g.GET("/audit", h.audit)
+	g.GET("/session", b.session)
+	g.POST("/login", func(c *echo.Context) error { return b.login(c, h.validate) })
+	g.POST("/logout", b.logout)
+	g.GET("/me", h.browserMe)
+	g.GET("/publication", h.browserPublication)
+	g.PUT("/publication", h.browserReplace)
+	g.GET("/audit", h.browserAudit)
 	if b.assets != "" {
 		e.GET("/console", func(c *echo.Context) error { return c.Redirect(308, "/console/") })
 		e.GET("/console/*", b.asset)

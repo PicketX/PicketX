@@ -16,7 +16,7 @@ import (
 	"github.com/PicketX/PicketX/internal/managementaccess"
 )
 
-func browserFixture(t *testing.T) (http.Handler, string) {
+func browserFixture(t *testing.T) (http.Handler, string, *Browser) {
 	t.Helper()
 	_, s, creds := managementFixture(t)
 	a, e := managementaccess.New(s.GORM(), managementaccess.Settings{Credentials: creds, Reload: time.Second, WarnRules: 10000, WarnLoadPercent: 50}, slog.New(slog.NewTextHandler(io.Discard, nil)))
@@ -28,7 +28,7 @@ func browserFixture(t *testing.T) (http.Handler, string) {
 	if e != nil {
 		t.Fatal(e)
 	}
-	return NewHandlerWithBrowser(nil, service, ManagementLimits{1000, 1000}, b), creds
+	return NewHandlerWithBrowser(nil, service, ManagementLimits{1000, 1000}, b), creds, b
 }
 
 type browserClient struct {
@@ -68,7 +68,7 @@ func (b *browserClient) bootstrap(t *testing.T) {
 	b.csrf = body.CSRF
 }
 func TestBrowserSessionCSRFIsolationRevocationAndLogout(t *testing.T) {
-	h, creds := browserFixture(t)
+	h, creds, _ := browserFixture(t)
 	b := browserClient{h: h, cookies: map[string]*http.Cookie{}}
 	b.bootstrap(t)
 	login := `{"token":"` + managementToken + `"}`
@@ -130,5 +130,48 @@ func TestBrowserSessionCSRFIsolationRevocationAndLogout(t *testing.T) {
 	}
 	if w = b.request("GET", "/console/api/v1/me", "", "", ""); w.Code != 401 {
 		t.Fatal("revoked session", w.Code, w.Body.String())
+	}
+}
+
+func TestBrowserInFlightIdleRefreshCannotReviveLogout(t *testing.T) {
+	h, _, browser := browserFixture(t)
+	b := browserClient{h: h, cookies: map[string]*http.Cookie{}}
+	b.bootstrap(t)
+	if w := b.request("POST", "/console/api/v1/login", `{"token":"`+managementToken+`"}`, "http://127.0.0.1:8080", b.csrf); w.Code != 200 {
+		t.Fatal(w.Code)
+	}
+	old := *b.cookies["picketx_session"]
+	entered, resume, done := make(chan struct{}), make(chan struct{}), make(chan struct{})
+	pending := browser.wrap(browser.sessions.LoadAndSave(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_ = browser.sessions.GetString(r.Context(), "id")
+		close(entered)
+		<-resume
+		w.WriteHeader(200)
+	})))
+	go func() {
+		defer close(done)
+		r := httptest.NewRequest("GET", "http://127.0.0.1:8080/console/api/v1/me", nil)
+		r.AddCookie(&old)
+		pending.ServeHTTP(httptest.NewRecorder(), r)
+	}()
+	<-entered
+	logout := make(chan *httptest.ResponseRecorder, 1)
+	go func() { logout <- b.request("POST", "/console/api/v1/logout", `{}`, "http://127.0.0.1:8080", b.csrf) }()
+	var result *httptest.ResponseRecorder
+	select {
+	case result = <-logout:
+	case <-time.After(100 * time.Millisecond):
+	}
+	close(resume)
+	<-done
+	if result == nil {
+		result = <-logout
+	}
+	if result.Code != 204 {
+		t.Fatal(result.Code)
+	}
+	b.cookies[old.Name] = &old
+	if w := b.request("GET", "/console/api/v1/me", "", "", ""); w.Code != 401 {
+		t.Fatal("in-flight idle refresh resurrected logout", w.Code, w.Body.String())
 	}
 }

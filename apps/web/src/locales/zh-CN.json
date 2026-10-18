@@ -1,14 +1,4 @@
 {
-  "tagline": "简单、无需专用客户端的访问授权。",
-  "title": "在需要时，获得访问权限。",
-  "description": "为资源申请有期限的访问权限，继续使用你熟悉的应用与工具。",
-  "status": "项目已初始化",
-  "statusDescription": "这是 PicketX 的开发起点，认证、权限申请与执行功能尚未实现。",
-  "portal": "访问门户",
-  "portalDescription": "发现资源、申请访问并查看当前权限。",
-  "admin": "管理中心",
-  "adminDescription": "管理资源、审批申请并查看实际执行状态。",
-  "planned": "规划中",
-  "language": "语言",
-  "footer": "PicketX · 开发初始化骨架"
+  "language": "语言", "loginTitle": "管理访问，明确边界。", "loginDescription": "登录以查看和发布本 Controller 管理的配置。", "desiredBoundary": "这里只展示期望状态。保存配置不表示节点已应用。", "signIn": "登录", "accessKey": "访问密钥", "keyHelp": "使用独立管理访问密钥换取服务端会话，密钥不会写入浏览器存储。", "sessionBoundary": "单 Controller 会话最长8小时，空闲30分钟失效。重启或凭据轮换后需重新登录。", "loading": "加载中…", "retry": "重试", "operatorConsole": "管理工作台", "navigation": "工作台导航", "configuration": "期望配置", "audit": "审计", "signOut": "退出登录", "refresh": "刷新状态", "status": "发布状态", "authority": "权威来源", "editorRevision": "编辑基线修订", "lastRead": "最后成功读取", "notRead": "尚未读取", "enforcement": "节点应用", "notConfirmed": "此视图无法确认", "policyAndFacts": "策略与绑定事实", "editorHelp": "编辑完整策略与事实文档。接受之前运行共享校验。", "readOnly": "只读访问，当前角色不能发布修改。", "unsaved": "未保存草稿", "inSync": "编辑内容未修改", "policyYaml": "策略 YAML", "factsJson": "事实 JSON", "changeReason": "变更原因", "reasonHelp": "说明此次修改，原因将写入追加式发布审计。", "reloadLatest": "重新载入最新配置", "save": "保存期望配置", "noConfiguration": "无法读取配置，请刷新重试。", "publicationHistory": "发布历史", "auditHelp": "配置变更与接受结果在同一事务中记录。这不是执行报告或请求决策日志。", "emptyAudit": "尚无配置变更记录。", "revisionNumber": "修订 {{revision}}", "digest": "配置摘要", "moreAudit": "加载更多审计", "discard": "放弃未保存草稿并载入最新配置？", "expired": "会话已过期或访问已撤销，请重新登录。", "conflict": "修订已改变。草稿已保留，请显式重新载入后再编辑。", "saved": "期望配置已保存，尚未确认节点应用。", "staleFailed": "上次读取失败，显示的数据可能已过时。", "staleAge": "此视图已超过一分钟，请刷新后再使用。", "requestFailed": "请求失败，请检查连接和 Controller 就绪状态后重试。",
+  "errors": { "unauthorized": "访问密钥未被接受，请核对密钥或联系管理员。", "forbidden": "当前角色不允许此操作。", "rate_limited": "请求过于频繁，请稍后重试。", "invalid_login": "请输入有效的管理访问密钥。", "csrf_rejected": "无法验证请求，请刷新页面并重新登录。", "invalid_publication": "策略或事实未通过校验，请检查两个文档；草稿已保留。", "management_unavailable": "管理服务不可用，请检查就绪状态和凭据配置。", "session_unavailable": "会话服务不可用，请检查 Controller 就绪状态。", "request_too_large": "请求超过大小限制，请缩减文档后重试。", "revision_required": "编辑器没有修订基线，请重新载入最新配置。" }
 }

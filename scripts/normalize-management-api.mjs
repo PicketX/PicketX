@@ -7,4 +7,7 @@ spec.servers = [{url: "/"}];
 const request = spec.components.schemas["controller.PublicationRequest"];
 request.additionalProperties = false;
 for (const property of Object.values(request.properties)) property.minLength = 1;
+const login = spec.components.schemas["controller.LoginRequest"];
+login.additionalProperties = false;
+login.properties.token.minLength = 32;
 fs.writeFileSync(path, JSON.stringify(spec, null, 4) + "\n");

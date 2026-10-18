@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // Real browser → built React → real Controller → SQLite. No API fixtures.
 import assert from 'node:assert/strict'
-import { mkdtemp, readFile, writeFile, rm } from 'node:fs/promises'
+import { mkdtemp, mkdir, readFile, writeFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { resolve, join } from 'node:path'
 import { createHash, randomBytes } from 'node:crypto'
@@ -12,6 +12,8 @@ import { chromium } from 'playwright'
 
 const root = resolve(import.meta.dirname, '../../..')
 const temp = await mkdtemp(join(tmpdir(), 'picketx-browser-'))
+const evidence = process.env.PICKETX_BROWSER_EVIDENCE_DIR ?? join(temp, 'screenshots')
+await mkdir(evidence, { recursive: true })
 const token = randomBytes(32).toString('hex'), viewer = randomBytes(32).toString('hex')
 const hash = x => createHash('sha256').update(x).digest('hex')
 let child, browser, logs = ''
@@ -36,7 +38,8 @@ browser: {enabled: true, origin: ${JSON.stringify(origin)}, assets: ${JSON.strin
 `, { mode: 0o600 })
   const built = spawnSync('go', ['build', '-o', join(temp, 'controller'), './cmd/picketx-controller'], { cwd: root, encoding: 'utf8' })
   assert.equal(built.status, 0, built.stderr)
-  child = spawn(join(temp, 'controller'), ['-config', join(temp, 'runtime.yaml')], { cwd: root, stdio: ['ignore', 'pipe', 'pipe'] })
+  const runtimeEnv = Object.fromEntries(Object.entries(process.env).filter(([name]) => !name.startsWith('PICKETX_')))
+  child = spawn(join(temp, 'controller'), ['-config', join(temp, 'runtime.yaml')], { cwd: root, env: runtimeEnv, stdio: ['ignore', 'pipe', 'pipe'] })
   child.stdout.on('data', x => { logs += x }); child.stderr.on('data', x => { logs += x })
   let ready = false
   for (let n = 0; n < 100; n++) {
@@ -88,7 +91,7 @@ browser: {enabled: true, origin: ${JSON.stringify(origin)}, assets: ${JSON.strin
   await page.getByText('Browser actual publish', { exact: true }).waitFor()
   await page.getByText('Concurrent external update', { exact: true }).waitFor()
   await page.setViewportSize({ width: 1440, height: 1000 })
-  await page.screenshot({ path: join(temp, 'audit-desktop.png'), fullPage: true })
+  await page.screenshot({ path: join(evidence, 'audit-desktop.png'), fullPage: true })
   const viewerContext = await browser.newContext({ viewport: { width: 375, height: 812 }, reducedMotion: 'reduce' })
   const view = await viewerContext.newPage(); await view.goto(`${origin}/console/`)
   await view.getByLabel('Access key', { exact: true }).fill(viewer)
@@ -97,7 +100,7 @@ browser: {enabled: true, origin: ${JSON.stringify(origin)}, assets: ${JSON.strin
   assert(await view.getByLabel('Policy YAML').isDisabled())
   assert(await view.getByRole('button', { name: 'Save desired configuration', exact: true }).isDisabled())
   assert(await view.evaluate(() => document.documentElement.scrollWidth <= innerWidth))
-  await view.screenshot({ path: join(temp, 'viewer-mobile.png'), fullPage: true })
+  await view.screenshot({ path: join(evidence, 'viewer-mobile.png'), fullPage: true })
   const forbidden = await view.evaluate(async () => {
     const { csrf } = await (await fetch('/console/api/v1/session')).json()
     return (await fetch('/console/api/v1/publication', { method: 'PUT', headers: { 'X-CSRF-Token': csrf, 'Content-Type': 'application/json', 'If-Match': '"3"' }, body: '{}' })).status
@@ -108,10 +111,12 @@ browser: {enabled: true, origin: ${JSON.stringify(origin)}, assets: ${JSON.strin
   await page.getByLabel('Access key', { exact: true }).waitFor()
   assert.deepEqual(errors, [])
   console.log('PASS real Chromium → React → SCS/CSRF → management API → SQLite: publish, audit, conflict/draft, read failure, viewer, mobile, credential revocation')
-  console.log(`Screenshots: ${temp}`)
+  console.log(`Screenshots: ${evidence}`)
 } finally {
+  if (browser?.contexts()[0]?.pages()[0]) await browser.contexts()[0].pages()[0].screenshot({ path: join(evidence, 'last-state.png'), fullPage: true }).catch(() => {})
   await browser?.close()
-  if (child && child.exitCode === null) { const exited = once(child, 'exit'); child.kill('SIGTERM'); await exited; assert.equal(child.exitCode, 0, logs) }
+  if (child && child.exitCode === null) { const exited = once(child, 'exit'); child.kill('SIGTERM'); await exited }
+  if (child) assert.equal(child.exitCode, 0, logs)
   // Preserve evidence on request; otherwise securely remove generated credentials.
   if (process.env.PICKETX_KEEP_BROWSER_EVIDENCE !== '1') await rm(temp, { recursive: true, force: true })
 }

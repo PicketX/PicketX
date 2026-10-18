@@ -70,6 +70,14 @@ jobs:
           go-version-file: go.mod
           cache: false
       - name: Real Chromium console against Controller and SQLite
+        env:
+          PICKETX_BROWSER_EVIDENCE_DIR: ${{ runner.temp }}/console-evidence
         run: |
           npx playwright install --with-deps chromium
           npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: console-browser-screenshots
+          path: ${{ runner.temp }}/console-evidence/*.png
+          if-no-files-found: ignore
