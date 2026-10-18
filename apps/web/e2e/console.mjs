@@ -74,6 +74,11 @@ authz: {enabled: true, network: tcp, address: "127.0.0.1:${authzPort}", credenti
   await page.getByText('Desired configuration saved. Node application is not confirmed.', { exact: true }).waitFor()
   const accepted = await fetch(`${origin}/api/v1/publication`, { headers: { Authorization: `Bearer ${token}` } })
   const document = await accepted.json(); assert.equal(document.policy, policy); assert.equal(document.revision, 2)
+  // New structured workflow must be a real navigable page, not only an API.
+  await page.getByRole('button', { name: 'Grants', exact: true }).click({ timeout: 5000 })
+  await page.getByRole('heading', { name: 'Grant access', exact: true }).waitFor()
+  await page.getByLabel('Source IP or CIDR', { exact: true }).waitFor()
+  await page.getByRole('button', { name: 'Desired configuration', exact: true }).click()
   assert.equal(await page.evaluate(() => localStorage.length + sessionStorage.length), 0)
   const cookies = await context.cookies(); const cookie = cookies.find(c => c.name === 'picketx_session')
   assert(cookie.httpOnly && cookie.sameSite === 'Strict' && cookie.path === '/console/')
