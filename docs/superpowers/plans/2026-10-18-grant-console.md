@@ -194,3 +194,25 @@ edge paths remain a coverage gap, not an applied-state guarantee.
 Final: Ruling: parent owns exact-head CI/static artifacts/expected-head integration
 — reviewer did not perform external checks — cost: merge must wait for root's raw
 evidence on the final tree and main; intermediate GREEN is not sufficient.
+
+### Fixed code acceptance (2026-10-18T14:34Z)
+
+Final: fixed Important1 — TestStructuredGrantAcceptedRepresentationDoesNotExpand
+(three real accepted inputs) and TestStructuredGrantEscapingHeavyDurableRevocation
+(actual SQLite active revoke/close/reopen/audit) RED→GREEN; complete native suite
+161/423 GREEN, zero fail/skip/race. Layout/table supplements pass. No Critical or
+unresolved Important remains; Minor2 stays explicitly deferred, not silently fixed.
+One review/one fix pass; no re-review or fabricated formal approval.
+
+Local2d321d5f991d83290da570dfa167f759f534b573, remote72d970d51d745655252897272963b2f2561cc796
+and fetched actual CIcheckout2d5eadd4d62e42fcb251b76d05f09ce30256e118 have identical
+tree1d5cf8e66823156b985d17c5ca6a5ecaecd5ece6 (fetch/show/diff verified). CI39136155132
+Go117700970764/Web117700970967 both GREEN. Raw logs confirm full race/vet/build,
+gofmt, pinned protocol/Swaggo/local OpenAPI and actual static SQLite Controller/CLI
+gates, real Unix execution without skip, actual Chromium Grant forms→SCS/CAS→
+Nginx→application union/revoke/audit/CAS/failure/viewer-mobile plus all old flows.
+Artifact12139816302 downloaded/verified SHA25651458611104a13a53b7c161a102580645ef90e2142831f90bd442b5bd6708350;
+desktop and375px viewer inspected. Local ordinary/race only known Unix EPERM;
+new regressions, vet/build, locked Web ci/typecheck/oxlint/build pass. Final metadata
+head must still pass full exact-head CI; expected-head merge and main verification
+will be appended durably to PR17. No Agent/native combined or complete product claim.

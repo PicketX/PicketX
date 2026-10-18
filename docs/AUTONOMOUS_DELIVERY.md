@@ -14,13 +14,33 @@ Grant issue/revoke and real React management/ingress acceptance through existing
 database authority/CAS/RBAC/transaction audit. No competing implementation while
 this lease is live. Remaining: resource/binding/approval/status workflows,
 verified human identity and final combined Linux/browser acceptance. Do not pause
-the automation at this partial milestone. Code CI39134161791 Go157/412 and actual
-structured browser→SCS/CAS→Nginx/application flows passed, but independent review
-found imported-policy serialization expansion blocking revoke. Large escaping/
-dense source and real SQLite reopen regressions RED→GREEN now retain source/local
-boolean edits and unchanged limits. Whole fixed-tree CI remains pending; do not
-merge from earlier GREEN evidence. Minor deferred: generated endpoint-name schema
-constraints. No competing implementation while this live PR is under verification.
+the automation at this partial milestone.
+
+Heartbeat2026-10-18T14:34Z; lease until15:00Z or merged+green main/explicit handoff.
+Fixed code acceptance: local2d321d5f991d83290da570dfa167f759f534b573,
+remote72d970d51d745655252897272963b2f2561cc796 and fetched actual CI checkout
+2d5eadd4d62e42fcb251b76d05f09ce30256e118 share tree1d5cf8e66823156b985d17c5ca6a5ecaecd5ece6.
+CI39136155132 Go117700970764/Web117700970967 both GREEN. Raw161 top-level/423
+total tests, zero fail/skip/race; actual Unix socket, complete vet/build/pinned
+generation/local OpenAPI and fully-static SQLite Controller/CLI checks passed.
+Actual structured browser→SCS/CAS→Nginx/application independent union/revoke,
+absolute deadline, audit, concurrent412/draft, failed read, IPv6/viewer-mobile and
+all prior HTTP scenarios passed. Artifact12139816302 independently downloaded;
+SHA25651458611104a13a53b7c161a102580645ef90e2142831f90bd442b5bd6708350 matches
+API; desktop/mobile visually inspected. Independent review's one Important
+serialization-expansion blocker fixed in one RED→GREEN pass: large escaping/dense
+source plus real SQLite active revoke/reopen, source-local semantic-checked edits,
+unchanged byte/object limits. No Critical or unresolved Important. Minor deferred:
+generated endpoint-name uniqueness/item-length schema; runtime remains strict.
+Local full suites still honestly fail Unix EPERM only; native CI executes it.
+
+This final metadata-only commit still needs complete exact-head CI before
+expected-head merge/main verification. Exact final head/tree/CI and main results
+are appended to PR17 after checking. Once merged with green main, this lease
+automatically releases: do not wait15:00Z or redo Grant management. Next:
+structured Resource/Endpoint/Binding editing and truthful Agent/decision/audit
+pages, basic request/approval workflow and verified identity, then final combined
+browser/HTTP/Agent/Linux acceptance. Keep database authority and strict CAS.
 
 ## Trusted HTTP increment (active)
 
