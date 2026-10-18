@@ -40,10 +40,16 @@ Context map self-review: no new package or migration, no other worktree touched.
 ### Task 1: Complete Binding removal slice
 **Files:** All mapped above.
 **Interfaces:** Bundle.RemoveBinding(uid)([]byte,error); Service.RemoveBinding(p,expected,reason,uid)(InventoryChange,error); POST bindings/{uid}/remove with reason/acknowledge_unprotection,200 UID/revision and ETag.
-- [ ] Write TestBindingRemovalHTTP and reject/atomic tests; run focused Go command, expect404 RED. Add source boundary tests before transform implementation.
-- [ ] Implement exact source removal with whole-object comparison; wire service/HTTP/strict schema. Run `go test ./pkg/configuration ./internal/controller ./internal/management -count=1`, expectPASS.
-- [ ] Add actual browser removal acceptance before UI; publish test-only commit and observe native missing-action RED.
-- [ ] Implement removal draft and bilingual warning/confirmation/rebase. Run locked npm ci/typecheck/lint/build and native browser acceptance, expectGREEN.
-- [ ] Run full Go ordinary/race/vet/build; record local Unix EPERM if still present and require native suite without skip. Generate/reproduce OpenAPI.
-- [ ] Commit with git-commit skill; task-done focused Go+Web; fresh full-branch independent review, fix Important/Critical RED→GREEN.
+- [x] Write TestBindingRemovalHTTP and reject/atomic tests; run focused Go command, expect404 RED. Add source boundary tests before transform implementation.
+- [x] Implement exact source removal with whole-object comparison; wire service/HTTP/strict schema. Run `go test ./pkg/configuration ./internal/controller ./internal/management -count=1`, expectPASS.
+- [x] Add actual browser removal acceptance before UI; publish test-only commit and observe native missing-action RED.
+- [ ] Implement removal draft and bilingual warning/confirmation/rebase. Locked npm checks passed; exact final native browser acceptance still required.
+- [ ] Run full Go ordinary/race/vet/build; local Unix EPERM recorded, native suite without skip remains required. OpenAPI generated/reproduced by CI.
+- [ ] Commit with git-commit skill; fresh full-branch independent review completed, two Important findings in single fix pass; final native receipt GREEN/task-done pending.
 - [ ] Record exact heads/trees/raw CI and review; expected-head merge, verify main CI, release lease in PR.
+
+## Integration evidence
+PR23 and AUTONOMOUS_DELIVERY.md contain RED evidence, local checks, exact code
+trees, independent review and deferred source-comment Minor. Final immutable
+native acceptance and merge/main verification are recorded in PR23 after they
+actually execute; unchecked integration steps must not be inferred from this plan.
