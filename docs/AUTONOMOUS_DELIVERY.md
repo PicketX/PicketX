@@ -1,5 +1,63 @@
 # Autonomous delivery checkpoint
 
+## Node observations (active)
+
+Owner codex/node-observations; heartbeat2026-10-18T17:58Z; lease until19:15Z or
+merged+green main/explicit handoff. Existing isolated branch codex/resource-onboarding.
+Core PR20/main819d343dd107bf1a32a8ba1ad769fb933964b068 accepted, tree184b1176c1a2aa4abde3a0863665bcad1f21756a,
+CI39148069494 GREEN172/434 and real browser/Unix/static gates. PR20 lease released.
+Agent95a5f7f/CI39118687475 unchanged; neither repo has an open PR at acquisition.
+Plan: docs/superpowers/plans/2026-10-19-node-observations.md. Implement atomic
+credential-scope report/current-session/freshness projection, authenticated API
+and real Nodes page. No kernel proof or protocol heartbeat claim. Preserve PR20
+deferred minors and remaining lifecycle/identity/approval/combined Linux acceptance.
+Do not compete while this delivery is active. Overall task remains incomplete.
+
+PR21 browser RED CI39151001045 / Web117744459046 failed exactly on the missing
+Nodes navigation after all existing real browser/Nginx scenarios passed. Its Go
+job caught unformatted new Swag annotations; gofmt corrected them. Remote upload
+initially lost the generator executable bit; f6f50d85 restored it and matched
+local tree70a5f5346d221db3dbf68ed4fddb20024a64bb45. No forced ref update.
+API/service tests cover current-session freshness, unknown/stale/disconnected,
+decimal revisions, credential removal, live auth and actual gRPC→HTTP reports.
+UI uses existing visual tokens and read-only cards, no applied-access success
+claim; freshness helper missing-module RED→GREEN covers boundary/clock/suspend.
+Browser credential fixture corrected to the existing agent_ref JSON contract.
+Local complete ordinary/race tests encounter the known Unix socket EPERM;
+native CI must pass that scenario. Full review, final CI and merge remain pending.
+Usage and limits: [Node observations](NODE_OBSERVATIONS.md).
+
+Independent read-only whole-branch review covered local91ef769..cb61530 (all
+production changes), with focused observation race tests and browser age helper
+independently passing. No Critical/Important findings. Deferred Minor items:
+1. Visibility resume while an older request is active does not queue an immediate
+   follow-up; the next periodic poll refreshes. Conservative request-age handling
+   marks old data historical, so this is a latency/lifecycle limitation, not an
+   access-success claim. Add queued resume refresh in a focused follow-up.
+2. Browser tests cover settled navigation, not delayed response/unmount/visibility
+   races. Disposal/abort guards exist; dedicated race assertions remain next.
+Reviewer exclusions accepted: actual kernel/continuous health is outside protocol
+assertions; restart history/enrollment is excluded by the above design rulings;
+reviewer did not inspect screenshots or run full native CI, which remain root gates.
+The preliminary suspected final-refresh-button issue was retracted after tracing
+the distinct browser pages; no speculative production change was made.
+Locked Web ci/typecheck/lint/build, Go vet/build and pinned OpenAPI reproduction/
+local-only validation passed. Complete local ordinary/race only failed Unix EPERM,
+without race warnings. No skips were added. Overall delivery remains incomplete.
+
+Code localcb61530 / remote9b9af29ef8680e5c99101948764f85fa386ef8c4 and actual
+CI checkout88a7f2aa5c9242694335d102623fad3c8ce47d4b share tree
+4124ac667359f158c18d21549ef442edd28a7406. CI39151648543 Web117746347962 passed
+locked build and real Chromium/Nginx/application suites, plus Nodes credential
+reload/empty/unreported/disconnected/failed-read/history/re-entry/viewer/mobile.
+Artifact12144758965 SHA256656b11e0a0ea932abb5f3d31b389b2b7bd9652fa9931ea2f7dd1f03c5e5cfbed
+was downloaded and inspected. Mobile error/viewer layouts pass; inspection found
+the nominal desktop capture inherited375px from the preceding test. The fixture
+now explicitly sets/asserts1440px and checks overflow before its desktop capture.
+This is a test-only correction, not a new production change. Final CI must rerun.
+Final head/required raw logs/main outcome will be recorded in PR21 after verification;
+lease releases only after merged+green main. No product completion or automation pause.
+
 ## HTTPRoute console (active)
 
 Heartbeat2026-10-18T16:42Z; owner `codex/http-route-console`, existing isolated

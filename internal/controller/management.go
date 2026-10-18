@@ -78,6 +78,7 @@ func registerManagement(e *echo.Echo, service *management.Service, limits Manage
 	group.POST("/grants", h.issueGrant)
 	group.POST("/grants/:uid/revoke", h.revokeGrant)
 	group.GET("/inventory", h.inventory)
+	group.GET("/agent-observations", h.agentObservations)
 	group.POST("/resources", h.createResource)
 	group.POST("/bindings", h.createBinding)
 	group.POST("/http-routes", h.createHTTPRoute)

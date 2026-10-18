@@ -20,6 +20,8 @@ The table preserves original slice evidence. Durable publication, PicketXD PR16'
 
 ## Delivery sequence
 
+[Node observations](NODE_OBSERVATIONS.md) adds authenticated read-only report/current-stream/freshness views and the live Nodes page; no independent or continuous kernel proof is claimed.
+
 The rows below subdivide the existing M1 usable-workflow goal. Their labels are work packages, not commitments to stable schemas. Each gets a focused design/plan before implementation; later evidence may adjust task boundaries without reopening settled architecture.
 
 | Order | Working deliverable | Acceptance evidence |

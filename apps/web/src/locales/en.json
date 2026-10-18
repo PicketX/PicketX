@@ -1,4 +1,16 @@
 {
+  "nodes": {
+    "title": "Nodes", "observations": "Node observations", "help": "Credentialed Agent scopes · read-only Controller observations", "refresh": "Refresh nodes",
+    "boundary": "An Agent report is a point-in-time assertion, not independent kernel verification or a guarantee of current access. Connection, freshness and target match are separate.",
+    "failedRetained": "Refresh failed. Retained observations are historical.", "failed": "Unable to load node observations. Retry refresh.", "historical": "Browser observations are out of date. Treat retained values as historical.",
+    "lastSuccess": "Last successful read {{at}}", "polling": "Refreshes every 15 seconds while visible", "empty": "No credentialed Agent scopes.",
+    "connection": "Stream at last read", "connectionHistorical": "Historical stream state", "connected": "Connected", "disconnected": "Disconnected",
+    "desired": "Distributed target", "report": "Latest Agent report", "unreported": "No report received",
+    "phase": { "RECEIVED": "Agent reported received", "APPLIED": "Agent reported applied", "FAILED": "Agent reported failed" },
+    "fresh": "Recent report from the same active stream", "stale": "Historical report — not a current application claim",
+    "matches": "Revision and hash matched the target at last read", "mismatch": "Revision or hash did not match the target at last read",
+    "received": "Controller receipt time", "agentTime": "Agent observation time (untrusted)"
+  },
   "routes": {
     "title": "HTTP routes", "management": "HTTP route management", "boundary": "Desired request selectors only. Source Grants and trusted ingress setup are separate; creation does not confirm access.",
     "refresh": "Refresh routes", "rebase": "Use latest route revision", "rebaseConfirm": "Keep this route draft and use the latest revision? Review the pinned TCP endpoint and selectors before retrying.", "base": "Route operation base {{base}} · observed revision {{observed}}",

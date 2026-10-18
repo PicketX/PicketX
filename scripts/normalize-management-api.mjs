@@ -4,6 +4,10 @@ import fs from "node:fs";
 const path = "docs/api/swagger.json";
 const spec = JSON.parse(fs.readFileSync(path, "utf8"));
 spec.servers = [{url: "/"}];
+// An unreported Agent is represented by explicit null, never an empty assertion.
+spec.components.schemas["agentsync.NodeObservation"].properties.report = {
+  oneOf: [{ $ref: "#/components/schemas/agentsync.ReportedState" }, { type: "null" }],
+};
 const request = spec.components.schemas["controller.PublicationRequest"];
 request.additionalProperties = false;
 for (const property of Object.values(request.properties)) property.minLength = 1;

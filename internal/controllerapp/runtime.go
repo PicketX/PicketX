@@ -28,6 +28,7 @@ type AgentService interface {
 	ReplaceCredentials([]agentsync.Credential) error
 	CheckPublication(*configuration.Candidate, uint64) error
 	Publish(*configuration.Candidate, uint64) error
+	Observations() (agentsync.Observations, error)
 	Close()
 }
 type Dependencies struct {

@@ -1,5 +1,32 @@
 # 自动交付检查点
 
+## 节点观测（进行中）
+
+负责人codex/node-observations，心跳2026-10-18T17:58Z，租约至19:15Z或合并且main全绿/明确交接。
+PR20/main819d343dd107bf1a32a8ba1ad769fb933964b068、树184b1176c1a2aa4abde3a0863665bcad1f21756a、
+CI39148069494已验收172/434，PR20租约已释放。Agent95a5f7f/CI39118687475不变。
+PR21原子节点投影与鉴权API已实现，浏览器RED CI39151001045/Web117744459046确认仅缺少Nodes导航，
+此前真实浏览器/Nginx场景通过。同轮Go格式检查发现Swag注释未格式化，已gofmt修正。
+上传曾丢失生成脚本执行位，远端f6f50d85修正后与本地树70a5f5346d221db3dbf68ed4fddb20024a64bb45一致。
+当前接入真实Nodes页，保留既有视觉样式，独立展示目标/连接/报告新鲜度，不宣称内核证明。
+本地完整普通/race遇到既有Unix socket EPERM，必须以原生CI覆盖；完整评审、最终CI/合并尚待完成。
+使用边界见[NODE_OBSERVATIONS.zh-CN.md](NODE_OBSERVATIONS.zh-CN.md)。后续仍需生命周期、身份/审批和组合Linux验收。
+下文旧“进行中”标题为历史记录，不应阻止本轮推进。
+
+独立全分支只读评审覆盖本地91ef769..cb61530，独立观测race测试和浏览器年龄辅助测试通过，
+无Critical/Important。保留两项Minor：旧请求在途时恢复可见不会排队立即补读（下一次轮询刷新，
+年龄保守计算不会伪称当前访问成功）；浏览器尚缺延迟响应/卸载/可见性竞态回归。
+评审未判断真实内核/持续健康、进程重启历史/完整注册管理，均符合明确范围；原生完整CI和截图由主执行继续验收。
+曾怀疑末尾刷新按钮缺失，追踪独立page/operator后已撤回，无需修改生产逻辑。
+锁文件Web检查、Go vet/build、固定OpenAPI重现和本地schema验证通过；完整本地普通/race仅既有Unix EPERM失败，未增加skip。
+
+本地cb61530、远端9b9af29ef8680e5c99101948764f85fa386ef8c4、CI检出88a7f2aa5c9242694335d102623fad3c8ce47d4b
+树同为4124ac667359f158c18d21549ef442edd28a7406。CI39151648543/Web117746347962通过全部真实浏览器/Nginx场景及
+Nodes凭据热重载、空/未报告/断开、失败历史保留、重新进入和Viewer/手机场景。
+已下载检查产物12144758965，SHA256656b11e0a0ea932abb5f3d31b389b2b7bd9652fa9931ea2f7dd1f03c5e5cfbed。
+手机错误态/Viewer布局正常；发现名义桌面截图继承375px，已测试侧明确设置/断言1440px和无溢出，最终CI需重跑。
+最终head、必需原始日志与main结果完成后写入PR21；仅合并且main全绿才释放租约，不宣称产品完成或暂停任务。
+
 ## HTTPRoute 工作台（进行中）
 
 心跳2026-10-18T16:57Z；负责人`codex/http-route-console`，沿用隔离分支
@@ -115,3 +142,11 @@ vet/build、固定生成/OpenAPI及全静态SQLite/管理Controller/CLI通过。
 最终仅验收元数据/文档头仍须完整CI，然后按expected head合并并复核main；精确最终/main CI在核对后追加到PR14，合并且main全绿才释放租约。无未解决评审发现或延后小项。
 
 下一段：SCS浏览器登录/CSRF与可信成员新鲜度、对象/Grant/审批API和真实React页面、基础HTTP可信入口及受控TCP/Unix决策接口，最后浏览器→API→授权→代理→应用与Linux联合验收。保持选定栈、IPv6、单来源、绝对期限和审批/下发/应用分离，不强制mTLS。管理页使用frontend-design/ui-ux-pro-max，体现加载/失败/空/过时状态。不长期只堆库或样例UI，目标完成前不暂停。
+
+# 节点观测接续（进行中）
+
+负责人 codex/node-observations；心跳2026-10-18T17:45Z，租约至19:15Z或合并且main CI通过/明确交接。
+Core PR20/main819d343、树184b1176、CI39148069494已验收172/434及真实浏览器/Unix/静态检查，旧租约释放。
+Agent95a5f7f/CI39118687475未变，两仓库起始无开放PR。
+计划 docs/superpowers/plans/2026-10-19-node-observations.md：当前凭据作用域的原子报告/连接/新鲜度、鉴权API及真实节点页面。
+不声明内核独立证明或协议心跳；保留PR20小项及生命周期/身份审批/联合Linux验收缺口。请勿竞争实现，整体未完成。
