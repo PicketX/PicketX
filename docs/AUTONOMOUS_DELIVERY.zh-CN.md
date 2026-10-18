@@ -1,5 +1,44 @@
 # 自动交付检查点
 
+## HTTPRoute 工作台（进行中）
+
+心跳2026-10-18T16:57Z；负责人`codex/http-route-console`，沿用隔离分支
+`codex/resource-onboarding`；租约至18:15Z或合并且main全绿/明确交接。
+PR19已验收main38e4f93c02a1c1fb72131b612a315c2fd6207a44、树ed5135eff3f2c1ad09980f13846f55729786a84c，
+mainCI39142252279通过167/429；旧PR18/19租约已释放，下文进行中标题为历史记录。
+Agent95a5f7f/CI39118687475不变且通过。接手时两仓库无开放PR。
+计划/上下文图：docs/superpowers/plans/2026-10-19-http-route-console.md。
+
+[PR20](https://github.com/PicketX/PicketX/pull/20)实现严格固定TCP目标的HTTPRoute创建API、
+真实路由目录/表单，不改变facts、唯一权威、CAS/审计与入口信任边界。
+本地84588c8b93a60a5893aca67b3a10145f43fd26f8、远端f43fcdf564b1de60f86b6916a30399fe8ba7b0b7、
+实际CI检出23c3ab184585330c40da0866bb872c581089870d源码树同为708ae952da90843ce3980e671876ff5c96d60f3c。
+CI39147016947 Go117732810809/Web117732810602通过：172顶层/434总测试，零fail/skip/race；
+真实Unix与100次重复、完整vet/build、协议/OpenAPI重现、全静态SQLite文件/管理模式Controller、
+CAS/审计/重启/SIGTERM及CLI检查通过。本地完整普通/race仅Unix socketEPERM失败，未跳过或声称本地全绿；
+锁文件npm ci/typecheck/lint/build本地及原生均通过。
+
+真实Chromium创建路由→生成UID显式调用方/Nginx配置→来源拒绝/Grant/应用访问/撤销通过；
+Host/方法/路径/来源隔离、412草稿保留、读取失败、Viewer与375px界面通过；旧Grant/Resource/Binding、
+IPv6/并集/deny/绝对期限场景仍通过。API404/OpenAPI及浏览器缺失导航均RED→GREEN；浏览器RED为
+CI39146482257/Web117731241046。截图artifact12143592283摘要
+a9e4bdcac115e28fd914ade466a8a186ca5a9efc435cb6b9b92cfc7f6c4195c0已核对，桌面/手机错误表单/只读截图已检查。
+独立全分支评审94d615e..2840135通过，无Critical/Important。评审独立运行HTTPRoute控制器与完整
+configuration/publication测试并查看手机截图；完整原生CI与浏览器原始证据由执行者核验，评审未重复运行。
+评审后无实现变更，仅验收文档。
+
+两项非阻塞后续：①进入路由页不主动刷新，普通刷新不更新已初始化的空草稿目标目录/版本，
+需点“使用最新路由版本”；CAS仍安全。后续只对无冲突空草稿自动更新并补资源创建→路由导航回归。
+②补“POST已提交但响应丢失”和“POST成功但立即读目录失败”的浏览器回归，检查无重复POST、
+保留/清空草稿差异及显式重载。当前实现保守处理，尚缺这两个精确故障分支的浏览器覆盖。
+
+范围裁决及代价：调用方/入口凭据与配置保留独立可信部署权威（初始接入仍需人工显式配置）；
+路由编辑删除仍高级配置（结构化生命周期未完成）；人员身份/OIDC/审批独立（尚无用户自助流程）；
+实时应用状态/内核/TLS/活跃流终止不改且不宣称完成（尚无最终特权Linux联合或生产产品验收）。
+最终文档head CI、expected-head合并及main全绿仍为必需门禁，精确SHA/树/CI执行后追加至PR20；
+仅合并且main通过才自动释放租约。下一段优先真实期望/应用节点状态及过时/断连/未知状态，再补生命周期等剩余项。
+创建不等于来源放行或入口自动配置。生命周期、节点登记、身份/审批、新鲜期望/应用状态与最终特权Linux联合验收仍待完成，勿暂停整体任务。
+
 ## PR18 main CI 修复（进行中）
 
 心跳2026-10-18T15:43Z；负责人 `codex/resource-onboarding`；租约延长至16:30Z，

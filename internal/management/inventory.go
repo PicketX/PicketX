@@ -10,12 +10,13 @@ import (
 )
 
 type InventoryPage struct {
-	Authority  string                            `json:"authority"`
-	Revision   uint64                            `json:"revision"`
-	ObservedAt time.Time                         `json:"observed_at"`
-	Resources  []configuration.InventoryResource `json:"resources"`
-	Bindings   []configuration.InventoryBinding  `json:"bindings"`
-	Contexts   []configuration.InventoryContext  `json:"contexts"`
+	HTTPRoutes []configuration.InventoryHTTPRoute `json:"http_routes"`
+	Authority  string                             `json:"authority"`
+	Revision   uint64                             `json:"revision"`
+	ObservedAt time.Time                          `json:"observed_at"`
+	Resources  []configuration.InventoryResource  `json:"resources"`
+	Bindings   []configuration.InventoryBinding   `json:"bindings"`
+	Contexts   []configuration.InventoryContext   `json:"contexts"`
 }
 type InventoryChange struct {
 	UID      string `json:"uid"`
@@ -27,7 +28,7 @@ func (s *Service) Inventory(p Principal) (InventoryPage, error) {
 	if err != nil {
 		return InventoryPage{}, err
 	}
-	out := InventoryPage{Authority: doc.Authority, Revision: doc.Revision, ObservedAt: time.Now().UTC(), Resources: []configuration.InventoryResource{}, Bindings: []configuration.InventoryBinding{}, Contexts: []configuration.InventoryContext{}}
+	out := InventoryPage{Authority: doc.Authority, Revision: doc.Revision, ObservedAt: time.Now().UTC(), Resources: []configuration.InventoryResource{}, Bindings: []configuration.InventoryBinding{}, Contexts: []configuration.InventoryContext{}, HTTPRoutes: []configuration.InventoryHTTPRoute{}}
 	if doc.Policy == "" {
 		return out, nil
 	}
@@ -43,7 +44,28 @@ func (s *Service) Inventory(p Principal) (InventoryPage, error) {
 	out.Resources = inventory.Resources
 	out.Bindings = inventory.Bindings
 	out.Contexts = inventory.Contexts
+	out.HTTPRoutes = inventory.HTTPRoutes
 	return out, nil
+}
+
+func (s *Service) CreateHTTPRoute(p Principal, expected uint64, reason string, in configuration.InventoryHTTPRoute) (InventoryChange, error) {
+	doc, b, err := s.grantBase(p, expected, reason)
+	if err != nil {
+		return InventoryChange{}, err
+	}
+	in.UID, err = inventoryUID("route-")
+	if err != nil {
+		return InventoryChange{}, err
+	}
+	policy, err := b.AddHTTPRoute(in)
+	if err != nil {
+		return InventoryChange{}, ErrInvalid
+	}
+	changed, err := s.Replace(p, expected, reason, string(policy), doc.Facts)
+	if err != nil {
+		return InventoryChange{}, err
+	}
+	return InventoryChange{in.UID, changed.Revision}, nil
 }
 func inventoryUID(prefix string) (string, error) {
 	var data [16]byte

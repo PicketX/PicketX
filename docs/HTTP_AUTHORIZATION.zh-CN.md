@@ -10,6 +10,25 @@
 
 路由匹配仍须来源有有效Grant且没有有效NetworkDeny；Grant并集、独立绝对期限、未来生效、撤销与deny优先不变。时间由服务端提供。申请人、Cookie、X-Forwarded-For、声明用户名都不是已验证请求身份。本alpha不支持要求验证用户身份的策略，也不降级为IP允许。HTTP允许不代表内核应用或绕过已有网络门禁；未配置网络Binding的资源可明确仅用HTTP集成。本段未提供Agent HTTP执行或Controller断连HTTPProvider。
 
+## 结构化管理
+
+数据库权威模式下，工作台“HTTP 路由”页可创建与查看精确路由。选择固定的
+Resource 和 TCP 端点，填写实际请求 Host（含端口）、明确勾选方法并逐行填写
+精确路径。必须填写原因并使用当前版本；Viewer 不可写。失败或冲突保留草稿，
+对结果不确定的请求应先检查路由列表，再明确使用最新版本重试。
+
+Bearer API 为 `POST /api/v1/http-routes`，要求强 `If-Match` 与最大16KiB严格JSON：
+
+```json
+{"name":"app-read","resource_name":"app","resource_uid":"app-v1","endpoint_name":"web","host":"app.example","methods":["GET"],"paths":["/allowed"],"reason":"发布精确只读路由"}
+```
+
+成功返回201 `{uid,revision}`及ETag；`GET /api/v1/inventory`新增`http_routes`。
+Cookie入口使用`/console/api/v1`并要求Origin/CSRF。完整候选由共享编译器验证，
+审计与发布原子提交。创建**不会**增加来源Grant、配置调用方、修改入口或证明
+应用可访问。需独立将生成UID写入私有调用方允许列表和固定入口映射，再为目标
+来源签发Grant。编辑与删除仍使用高级期望配置编辑器。
+
 ## 独立本地监听器
 
 默认关闭，通过已有严格Koanf文件/环境配置启用：

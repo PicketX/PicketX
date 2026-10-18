@@ -31,6 +31,30 @@ HTTP allows do not confirm or bypass any configured network gate. Resources with
 network Bindings may explicitly use this HTTP-only integration. No Agent HTTP enforcement
 or Controller-disconnected HTTP provider is supplied here.
 
+## Structured management
+
+In database-authority mode, use **HTTP routes** in the operator console to create
+and inspect exact routes. Select a pinned Resource and TCP Endpoint, enter the
+actual request Host (including port), explicitly select methods and list exact
+paths. A reason and current revision are required. Viewer roles cannot write.
+Failed/conflicting operations retain drafts; inspect the catalog and explicitly
+use the latest route revision before retrying an ambiguous result.
+
+The corresponding Bearer API is `POST /api/v1/http-routes` with strong `If-Match`
+and strict JSON (maximum16KiB), for example:
+
+```json
+{"name":"app-read","resource_name":"app","resource_uid":"app-v1","endpoint_name":"web","host":"app.example","methods":["GET"],"paths":["/allowed"],"reason":"Expose exact read route"}
+```
+
+The server returns201 `{uid,revision}` and ETag; `GET /api/v1/inventory` includes
+`http_routes`. Cookie equivalents use `/console/api/v1` plus Origin/CSRF. The
+publication compiler validates the complete candidate and audit commits atomically.
+Creation does **not** add source Grants, configure a caller, change ingress or
+prove live application. Independently add the generated UID to the private caller
+allowlist and fixed ingress mapping, then grant the intended source. Editing and
+removal still use the advanced desired-configuration editor.
+
 ## Separate local listener
 
 Disabled by default. Add runtime settings (file/env through existing strict Koanf):

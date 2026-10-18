@@ -41,15 +41,18 @@ type InventoryContext struct {
 	Selectable   bool     `json:"selectable"`
 }
 type Inventory struct {
-	Resources []InventoryResource `json:"resources"`
-	Bindings  []InventoryBinding  `json:"bindings"`
-	Contexts  []InventoryContext  `json:"contexts"`
+	HTTPRoutes []InventoryHTTPRoute `json:"http_routes"`
+	Resources  []InventoryResource  `json:"resources"`
+	Bindings   []InventoryBinding   `json:"bindings"`
+	Contexts   []InventoryContext   `json:"contexts"`
 }
 
 func (b *Bundle) Inventory(f Facts) Inventory {
-	out := Inventory{Resources: []InventoryResource{}, Bindings: []InventoryBinding{}, Contexts: []InventoryContext{}}
+	out := Inventory{Resources: []InventoryResource{}, Bindings: []InventoryBinding{}, Contexts: []InventoryContext{}, HTTPRoutes: []InventoryHTTPRoute{}}
 	for _, o := range b.objects {
 		switch s := o.Spec.(type) {
+		case httpRouteSpec:
+			out.HTTPRoutes = append(out.HTTPRoutes, InventoryHTTPRoute{o.Metadata.Name, o.Metadata.UID, s.ResourceRef.Name, s.ResourceRef.UID, s.EndpointName, s.Host, slices.Clone(s.Methods), slices.Clone(s.Paths)})
 		case resourceSpec:
 			r := InventoryResource{Name: o.Metadata.Name, UID: o.Metadata.UID, Endpoints: []InventoryEndpoint{}}
 			for _, e := range s.Endpoints {
@@ -71,6 +74,29 @@ func (b *Bundle) Inventory(f Facts) Inventory {
 		out.Contexts = append(out.Contexts, v)
 	}
 	return out
+}
+
+type InventoryHTTPRoute struct {
+	Name         string   `json:"name"`
+	UID          string   `json:"uid"`
+	ResourceName string   `json:"resource_name"`
+	ResourceUID  string   `json:"resource_uid"`
+	EndpointName string   `json:"endpoint_name"`
+	Host         string   `json:"host"`
+	Methods      []string `json:"methods"`
+	Paths        []string `json:"paths"`
+}
+
+// AddHTTPRoute preserves existing source. The complete candidate compiler must
+// validate the pinned TCP target and selectors before the result is published.
+func (b *Bundle) AddHTTPRoute(in InventoryHTTPRoute) ([]byte, error) {
+	if strings.TrimSpace(in.Name) == "" || len(in.Name) > 128 || !uidPattern.MatchString(in.UID) {
+		return nil, fmt.Errorf("invalid HTTPRoute")
+	}
+	return b.appendObject(document{APIVersion, "HTTPRoute", metadata{Name: in.Name, UID: in.UID}, httpRouteSpec{
+		ResourceRef: resourceRef{Name: in.ResourceName, UID: in.ResourceUID}, EndpointName: in.EndpointName,
+		Host: in.Host, Methods: slices.Clone(in.Methods), Paths: slices.Clone(in.Paths),
+	}})
 }
 
 func (b *Bundle) appendObject(o document) ([]byte, error) {

@@ -8,7 +8,7 @@ const request = spec.components.schemas["controller.PublicationRequest"];
 request.additionalProperties = false;
 for (const property of Object.values(request.properties)) property.minLength = 1;
 const login = spec.components.schemas["controller.LoginRequest"];
-for (const name of ["controller.IssueGrantRequest", "controller.RevokeGrantRequest", "controller.CreateResourceRequest", "controller.ResourceEndpointRequest", "controller.CreateBindingRequest"]) {
+for (const name of ["controller.IssueGrantRequest", "controller.RevokeGrantRequest", "controller.CreateResourceRequest", "controller.ResourceEndpointRequest", "controller.CreateBindingRequest", "controller.CreateHTTPRouteRequest"]) {
   const grant = spec.components.schemas[name];
   grant.additionalProperties = false;
   for (const field of Object.values(grant.properties)) if (field.type === "string") field.minLength = 1;
@@ -19,6 +19,11 @@ for (const name of ["controller.IssueGrantRequest", "controller.CreateBindingReq
   Object.assign(names.items, { minLength: 1, maxLength: 1024 });
 }
 const endpoint = spec.components.schemas["controller.ResourceEndpointRequest"].properties;
+const route = spec.components.schemas["controller.CreateHTTPRouteRequest"].properties;
+Object.assign(route.methods, { minItems: 1, maxItems: 7, uniqueItems: true });
+route.methods.items = { type: "string", enum: ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"] };
+Object.assign(route.paths, { minItems: 1, maxItems: 128, uniqueItems: true });
+Object.assign(route.paths.items, { minLength: 1, maxLength: 8192 });
 // rc6 promotes dive,required from each address to the optional parent list.
 const endpointSchema = spec.components.schemas["controller.ResourceEndpointRequest"];
 endpointSchema.required = endpointSchema.required.filter(name => name !== "addresses");

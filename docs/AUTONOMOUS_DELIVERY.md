@@ -1,5 +1,72 @@
 # Autonomous delivery checkpoint
 
+## HTTPRoute console (active)
+
+Heartbeat2026-10-18T16:42Z; owner `codex/http-route-console`, existing isolated
+branch `codex/resource-onboarding`; lease until18:15Z or merged+green main/explicit
+handoff. PR19 accepted main38e4f93c02a1c1fb72131b612a315c2fd6207a44,
+treeed5135eff3f2c1ad09980f13846f55729786a84c; mainCI39142252279 Go117718888580/
+Web117718888927 GREEN167/429, zero fail/skip/race, actual Unix plus100 repetitions,
+static SQLite/managed runtime and real Chromium/Nginx/application checks passed.
+PR18/19 leases released; older active headings below are historical. Agent
+95a5f7f/CI39118687475 unchanged GREEN. No open PRs at acquisition.
+Plan/context map: docs/superpowers/plans/2026-10-19-http-route-console.md.
+Structured exact HTTPRoute create/read API+page only; preserve authority/CAS/audit,
+facts and explicit caller/ingress scope. Actual browser→API→Nginx→application
+must pass. Local full Go baseline only Unix socket EPERM; native gate mandatory.
+Remaining: lifecycle, enrollment, identity/approval, fresh desired/applied status
+and combined privileged Linux product acceptance. Do not pause the overall task.
+
+[PR20](https://github.com/PicketX/PicketX/pull/20) code evidence:
+local84588c8b93a60a5893aca67b3a10145f43fd26f8, remote
+f43fcdf564b1de60f86b6916a30399fe8ba7b0b7 and actual CI checkout
+23c3ab184585330c40da0866bb872c581089870d share
+tree708ae952da90843ce3980e671876ff5c96d60f3c. CI39147016947 Go117732810809/
+Web117732810602 GREEN:172 top-level/434 total, zero fail/skip/race; actual Unix
+and100 repetitions, full vet/build, pinned protocol/OpenAPI, static SQLite file/
+managed Controller/CAS/audit/restart/SIGTERM and CLI checks passed. Local complete
+ordinary/race ran with only known Unix socketEPERM; never claimed local full green.
+Locked npm ci/typecheck/lint/build passed locally and natively.
+
+Real Chromium route creation→explicit generated UID caller allowlist/Nginx mapping
+→source deny/Grant/application/revoke passed, plus exact Host/method/path/source
+isolation, CAS412/retained draft, failed reads, Viewer and375px layouts. Existing
+Grant/Resource/Binding and Nginx IPv6/union/deny/deadline cases remain green.
+API404/OpenAPI and browser missing-navigation RED→GREEN (browser RED
+CI39146482257/Web117731241046). Artifact12143592283 downloaded, SHA256
+a9e4bdcac115e28fd914ade466a8a186ca5a9efc435cb6b9b92cfc7f6c4195c0 matches API;
+desktop, mobile create/error and Viewer images inspected.
+
+One fresh independent whole-branch review94d615e..2840135 is ready to merge,
+no Critical/Important findings. Reviewer independently passed HTTPRoute controller
+and full configuration/publication tests, inspected mobile image and test source;
+remote raw full CI/browser were independently verified by executor, not rerun by
+reviewer. No implementation changes after review; remaining changes are docs.
+
+Deferred minors (nonblocking):
+1. Tab activation does not refresh route observations; ordinary refresh does not
+   update an initialized target catalog/base even with pristine draft. Explicit
+   Use latest route revision works and CAS is safe. Follow-up: refresh on entry
+   and auto-rebase only pristine/unambiguous drafts, with create-Resource→route test.
+2. Add browser regressions for committed POST/lost response and successful POST/
+   immediate inventory-read failure; assert no duplicate POST, correct retained
+   versus cleared draft and explicit rebase. Current code is conservative, but
+   those exact failure branches are not directly covered by browser faults.
+
+Rulings (review scope exclusions and costs):
+- Keep caller/ingress credential/configuration separate trusted deployment authority;
+  cost: initial setup still needs explicit operator configuration.
+- Route edit/delete remains advanced configuration; cost: incomplete structured lifecycle.
+- Verified person/OIDC/approval remains separate from source routing; cost: no user self-service.
+- Live applied status/kernel/TLS/active-stream termination remain unchanged and
+  unclaimed; cost: no combined privileged Linux or complete production acceptance.
+
+Final documentation head CI, expected-head merge and main CI still required.
+Immutable final SHA/tree/CI evidence is appended to PR20 after execution; this
+lease releases automatically only after merged+green main. Next prioritize fresh
+desired/applied node status (with explicit stale/disconnected/unknown states),
+then lifecycle/enrollment/identity/approval and combined Linux acceptance.
+
 ## PR18 main CI repair (active)
 
 Heartbeat2026-10-18T15:43Z; owner `codex/resource-onboarding`; lease extended
