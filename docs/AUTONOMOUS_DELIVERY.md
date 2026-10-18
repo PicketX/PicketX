@@ -1,5 +1,18 @@
 # Autonomous delivery checkpoint
 
+## Node observation lifecycle (active)
+
+Owner codex/node-lifecycle; heartbeat2026-10-18T18:40Z; lease until19:40Z or
+merged+green main/explicit handoff. Existing isolated codex/resource-onboarding.
+Core PR21 mainb85b8602667983908104feb175b1d70f6c68f30c/treebf94b545058c132fad1c1893d211381686940bbe
+and CI39152332200 GREEN; PR21 lease RELEASED. Agent95a5f7f/CI39118687475 GREEN.
+Both repositories have no open PRs at acquisition. Close PR21 deferred visibility
+queue and delayed-read/unmount tests only; preserve all product scope boundaries.
+Plan: docs/superpowers/plans/2026-10-19-node-observation-lifecycle.md.
+Overall product remains incomplete; next larger work is management lifecycle,
+identity/approval and combined privileged Linux/browser acceptance, not more status
+libraries. Final exact-head evidence and lease release will be in this increment's PR.
+
 ## Node observations (active)
 
 Owner codex/node-observations; heartbeat2026-10-18T17:58Z; lease until19:15Z or
