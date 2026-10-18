@@ -1,5 +1,59 @@
 # Autonomous delivery checkpoint
 
+## Safe Resource removal (active)
+
+Owner codex/resource-removal; heartbeat2026-10-18T21:10Z; lease until22:10Z or
+merged+green main/explicit handoff. Core b091326eb7ad3694c697650b29a66beacffe6920,
+tree874d9475272e82206b820d6a021558a1ff547227/CI39165277571 GREEN, PR24 released.
+Agent95a5f7f/CI39118687475 GREEN; no open PRs at acquisition. Existing clean
+isolated worktree retained. Plan: superpowers/plans/2026-10-19-resource-removal.md.
+Only unused Resource definition removal; incoming references always block, no
+cascade/service stop. Real API/UI/CAS/audit/CSRF and native browser validation.
+Also close PR24 direct-SQLite assertion Minor. Remaining editing/reference
+lifecycle, human identity/approval and combined Linux/browser acceptance unchanged.
+Final immutable commits/CI/review and lease release belong in this increment's PR.
+
+[PR25](https://github.com/PicketX/PicketX/pull/25): API tests observed404 RED,
+then passed removal/reference refusal (expired/revoked Grant, NetworkDeny, dynamic
+Endpoint selection, Binding, HTTPRoute), strict JSON/auth/CAS/CSRF/audit rollback,
+explicit empty and direct SQLite source/facts assertions. PR24 cached-only Minor
+is closed by direct SQLite verification. Local focused normal/race, vet/build and
+locked npm checks pass; complete local normal/race fail only the existing Unix
+socket EPERM. No skip/bypass. Native RED39167060292/Web117792095444 passed real
+Nginx/Grant/Binding flows then failed at the missing Remove Resource action. Its
+Go job117792095201 caught one unformatted new adapter; repository gofmt now clean.
+UI now shares the existing single removal draft, explicit same-UID rebase/reset,
+strict receipt validation and bilingual errors; reference409 does not cascade.
+Full exact-head native CI, screenshots and independent branch review pending.
+
+Independent whole-branch review2716c95..786093d found one Important: sole imported
+Resource UID empty-binding-removal collided with the synthesized Configuration
+identity. TestResourceRemovalEmptyMarkerIdentity reproduced real API400 RED;
+the marker now always uses a distinct UID and the real publication/audit test is
+GREEN. One blocking-fix pass; no re-review. Focused full packages and local vet/build
+pass; complete local normal/race retain only the documented Unix EPERM limitation.
+Native exact final-head suite remains required before merge.
+
+Native Web39167521611/job117793473512 passed the full real Chromium/Controller/
+SQLite/Nginx/application suite, including revoked-Grant refusal, Resource create/
+cancel/remove, stale/rebase, malformed receipt, externally removed target and audit.
+Artifact12150928857 SHA256/API digest3d0d311be6cfe52929e5834f94b680726ed45dbe3c19ea3522f3c9e0e43fbcae
+matched the downloaded ZIP. Inspected375px confirmation and1440px success/list
+screenshots; no horizontal overflow. Tree0e72540861f06474891fbd1bb1ea70819c9386ac
+matches local786093d/remote f74a55e; this is pre-identity-fix evidence, not final CI.
+
+Deferred Minor: a pristine revision0 Controller with no publication returns400
+invalid_publication rather than404 for removal of an absent UID; no mutation and
+no selectable UI target. Optional new-reference-after-rebase browser coverage is
+future strengthening; backend reference guard and CAS remain mandatory.
+Rulings: retain the appended separator's surviving newline (normalizing it would
+violate byte retention; possible cost cosmetic whitespace); root owns native CI/
+screenshots (cost if assumed: unsafe merge); editing/cascade and Agent/kernel/
+combined acceptance remain outside this unused-definition operation (cost if
+overclaimed: false product completion). Next: Resource/Endpoint/Binding editing,
+reference lifecycle and human identity/request/approval, then combined Linux/
+browser acceptance. Do not stop the task on this increment.
+
 ## Binding source retention (active)
 
 Owner codex/binding-source-retention; heartbeat2026-10-18T20:39Z; lease until21:39Z

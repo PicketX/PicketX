@@ -32,6 +32,11 @@ page. This increment introduces no second authority or tables.
    This is **not Grant revocation**: other Bindings and existing Grants remain.
    Last-Binding removal withdraws PicketX protection, not just its allow rules.
    Accepted removal is desired state, not confirmation of Agent application.
+6. To clean up an unused definition, select **Remove Resource**, review its exact
+   UID and Endpoints, enter a reason and acknowledge definition-only removal.
+   Grant (including revoked/expired), NetworkDeny, Binding and HTTPRoute references
+   all block removal. Nothing is cascaded or silently revoked. Review references
+   manually in their page or Desired configuration; removal does not stop an app.
 
 The form has one active Resource, Binding or removal draft. Switching form type/clearing
 asks before discarding; switching console tabs preserves it. Refresh updates only
@@ -62,6 +67,7 @@ Bearer `/api/v1` and session/Origin/CSRF `/console/api/v1` share current
 | POST `/api/v1/resources` | name, endpoints[{name,protocol,port,addresses?}], reason;201 uid/revision and ETag. Server generates UID. |
 | POST `/api/v1/bindings` | name, resource_name/resource_uid, endpoint_names, agent_name/context_id, reason;201 uid/revision and ETag. Server generates UID. |
 | POST `/api/v1/bindings/{uid}/remove` | reason, acknowledge_unprotection:true;200 uid/revision and ETag. Missing/wrong-kind UID404; stale revision412 before lookup. |
+| POST `/api/v1/resources/{uid}/remove` | reason, acknowledge_removal:true;200 uid/revision and ETag. Missing/wrong-kind404; any incoming reference409 resource_in_use; stale412 before lookup. |
 
 All mutations require strong current If-Match (missing428, stale412), strict
 JSON16KiB, no duplicate/unknown/null fields, nonblank reason<=512 bytes and names
@@ -69,8 +75,12 @@ JSON16KiB, no duplicate/unknown/null fields, nonblank reason<=512 bytes and name
 Address arrays are optional, never null/empty; named endpoint selections must be
 nonempty and unique. All responses are no-store. Complete accepted policy retains
 its unchanged4MiB/4096-object bounds; full inventory is bounded by existing input
-limits, not silently truncated. Creation/read and Binding removal are available,
+limits, not silently truncated. Creation/read, Binding and unused Resource removal are available,
 **not full CRUD**.
+
+Known alpha edge: before the first publication (revision0), an absent removal
+target currently returns400 invalid_publication instead of404. Nothing is mutated;
+the console has no selectable target in this state.
 
 The transformation preserves existing policy bytes and facts, appending compact
 JSON (valid YAML); the sole explicit-empty Configuration marker is replaced for
@@ -83,7 +93,7 @@ the same source, projection and audit. No policy-file poller writes this databas
 authority, and file mode does not gain these management writes.
 Removal uses parser document boundaries, retains surviving source bytes, and
 strictly re-decodes/compares every resulting object against exactly one removed
-Binding. Structured removal requires UTF-8; unsupported encoding is rejected
+Binding or unused Resource. Structured removal requires UTF-8; unsupported encoding is rejected
 without modifying the publication. An explicit column-zero `...` terminator and
 its inline comment are removed with the Binding; following blank lines, comments
 and directives retain their original bytes, including trailing comments when the
@@ -102,7 +112,7 @@ conflict/draft, failed reads, viewer denial and375px layout, alongside the exist
 real Nginx/application authorization suite. Exact pass/fail, tested trees, review
 and CI are recorded in [the checkpoint](AUTONOMOUS_DELIVERY.md) and PR18.
 
-Resource/Endpoint editing/deletion, Binding editing, context enrollment, human
+Resource/Endpoint editing, Endpoint deletion, Binding editing, context enrollment, human
 identity/requests/approval and final combined Linux workflow remain. HTTPRoute
 creation and desired/applied node observations are already delivered. No new
 kernel execution evidence or completed product is

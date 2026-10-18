@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import assert from 'node:assert/strict'
 import { join } from 'node:path'
+import { resourceRemoval } from './resource-removal.mjs'
 
 export async function resourceOnboarding({ operator: p, view, origin, token, policy, facts, evidence }) {
   await p.getByRole('button', { name: 'Desired configuration', exact: true }).click()
@@ -147,6 +148,7 @@ export async function resourceOnboarding({ operator: p, view, origin, token, pol
   const retainedGrants = await (await fetch(`${origin}/api/v1/grants?limit=100`, { headers })).json()
   assert(retainedGrants.grants.some(grant => grant.uid === g.uid && grant.revoked))
   console.log('PASS actual browser Binding removal warning/cancel/acknowledgement/CAS/rebase; other Binding and Grant retained')
+  await resourceRemoval({ p, origin, headers, referencedUID: resource.uid, evidence })
   await p.getByRole('button', { name: 'New Resource', exact: true }).click()
   await p.getByLabel('Resource name', { exact: true }).fill('retained-read-failure')
   await p.route('**/console/api/v1/inventory', r => r.abort())
@@ -160,9 +162,10 @@ export async function resourceOnboarding({ operator: p, view, origin, token, pol
   assert.equal(await view.getByLabel('Resource name', { exact: true }).count(), 0)
   assert.equal(await view.getByRole('button', { name: 'Create Binding', exact: true }).count(), 0)
   assert.equal(await view.getByRole('button', { name: 'Remove Binding', exact: true }).count(), 0)
+  assert.equal(await view.getByRole('button', { name: 'Remove Resource', exact: true }).count(), 0)
   assert(await view.evaluate(() => document.documentElement.scrollWidth <= innerWidth))
   await view.screenshot({ path: join(evidence, 'resources-viewer-mobile.png'), fullPage: true })
-  for (const path of ['resources', 'bindings', 'bindings/binding-gitea-v1/remove']) {
+  for (const path of ['resources', 'bindings', 'bindings/binding-gitea-v1/remove', 'resources/resource-gitea-v1/remove']) {
     const status = await view.evaluate(async path => {
       const { csrf } = await (await fetch('/console/api/v1/session')).json()
       return (await fetch(`/console/api/v1/${path}`, { method: 'POST', headers: { 'X-CSRF-Token': csrf, 'Content-Type': 'application/json', 'If-Match': '"1"' }, body: '{}' })).status

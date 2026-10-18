@@ -22,6 +22,13 @@ func (b *Bundle) RemoveBinding(uid string) ([]byte, error) {
 	if index < 0 {
 		return nil, ErrBindingNotFound
 	}
+	return b.removeDocument(index)
+}
+
+// removeDocument preserves all surviving semantic objects and source bytes.
+// Callers enforce kind-specific lifecycle/reference restrictions first.
+func (b *Bundle) removeDocument(index int) ([]byte, error) {
+	uid := b.objects[index].Metadata.UID
 	// Decode accepts YAML's UTF-16 encodings, but the source editor uses UTF-8
 	// byte coordinates. Reject unsupported presentation before indexing lines.
 	if !utf8.Valid(b.source) {
@@ -57,7 +64,7 @@ func (b *Bundle) RemoveBinding(uid string) ([]byte, error) {
 		}
 	}
 	if start < 0 {
-		return nil, ErrBindingNotFound
+		return nil, fmt.Errorf("target document not found in source")
 	}
 	// Document.Line identifies the next document, not the end of this one.
 	// An explicit column-zero end marker closes the removed document sooner;
@@ -76,7 +83,13 @@ func (b *Bundle) RemoveBinding(uid string) ([]byte, error) {
 		break
 	}
 	if len(expected) == 0 {
-		empty := []byte("apiVersion: picketx.io/v1alpha1\nkind: Configuration\nmetadata: {name: empty, uid: empty-binding-removal}\nspec: {empty: true}\n")
+		// A valid imported target may itself use our conventional marker UID.
+		// The new Configuration must not reuse it across an immutable kind boundary.
+		emptyUID := "empty-binding-removal"
+		if uid == emptyUID {
+			emptyUID = "empty-document-removal"
+		}
+		empty := []byte(fmt.Sprintf("apiVersion: picketx.io/v1alpha1\nkind: Configuration\nmetadata: {name: empty, uid: %s}\nspec: {empty: true}\n", emptyUID))
 		return append(empty, b.source[end:]...), nil
 	}
 	out := append(slices.Clone(b.source[:start]), b.source[end:]...)
@@ -90,7 +103,7 @@ func (b *Bundle) RemoveBinding(uid string) ([]byte, error) {
 	}
 	got, err := json.Marshal(next.objects)
 	if err != nil || !bytes.Equal(want, got) {
-		return nil, fmt.Errorf("Binding removal changed unrelated policy")
+		return nil, fmt.Errorf("document removal changed unrelated policy")
 	}
 	return out, nil
 }

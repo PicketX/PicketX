@@ -80,6 +80,7 @@ func registerManagement(e *echo.Echo, service *management.Service, limits Manage
 	group.GET("/inventory", h.inventory)
 	group.GET("/agent-observations", h.agentObservations)
 	group.POST("/resources", h.createResource)
+	group.POST("/resources/:uid/remove", h.removeResource)
 	group.POST("/bindings", h.createBinding)
 	group.POST("/bindings/:uid/remove", h.removeBinding)
 	group.POST("/http-routes", h.createHTTPRoute)
@@ -104,6 +105,10 @@ func mappedError(c *echo.Context, e error) error {
 		return apiError(c, 404, "grant_not_found")
 	case errors.Is(e, management.ErrBindingNotFound):
 		return apiError(c, 404, "binding_not_found")
+	case errors.Is(e, management.ErrResourceNotFound):
+		return apiError(c, 404, "resource_not_found")
+	case errors.Is(e, management.ErrResourceInUse):
+		return apiError(c, 409, "resource_in_use")
 	default:
 		return apiError(c, 503, "management_unavailable")
 	}

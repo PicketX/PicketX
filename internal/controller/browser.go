@@ -191,6 +191,7 @@ func (b *Browser) register(e *echo.Echo, limits ManagementLimits) {
 	g.GET("/grants", h.browserGrants)
 	g.GET("/inventory", h.browserInventory)
 	g.POST("/resources", h.browserCreateResource)
+	g.POST("/resources/:uid/remove", h.browserRemoveResource)
 	g.POST("/bindings", h.browserCreateBinding)
 	g.POST("/bindings/:uid/remove", h.browserRemoveBinding)
 	g.POST("/http-routes", h.browserCreateHTTPRoute)

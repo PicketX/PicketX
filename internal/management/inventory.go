@@ -25,6 +25,30 @@ type InventoryChange struct {
 }
 
 var ErrBindingNotFound = errors.New("Binding not found")
+var ErrResourceNotFound = errors.New("Resource not found")
+var ErrResourceInUse = errors.New("Resource is referenced")
+
+func (s *Service) RemoveResource(p Principal, expected uint64, reason, uid string) (InventoryChange, error) {
+	doc, b, err := s.grantBase(p, expected, reason)
+	if err != nil {
+		return InventoryChange{}, err
+	}
+	policy, err := b.RemoveResource(uid)
+	if errors.Is(err, configuration.ErrResourceNotFound) {
+		return InventoryChange{}, ErrResourceNotFound
+	}
+	if errors.Is(err, configuration.ErrResourceInUse) {
+		return InventoryChange{}, ErrResourceInUse
+	}
+	if err != nil {
+		return InventoryChange{}, ErrInvalid
+	}
+	changed, err := s.Replace(p, expected, reason, string(policy), doc.Facts)
+	if err != nil {
+		return InventoryChange{}, err
+	}
+	return InventoryChange{uid, changed.Revision}, nil
+}
 
 func (s *Service) RemoveBinding(p Principal, expected uint64, reason, uid string) (InventoryChange, error) {
 	doc, b, err := s.grantBase(p, expected, reason)

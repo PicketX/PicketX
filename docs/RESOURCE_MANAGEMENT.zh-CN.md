@@ -26,6 +26,10 @@ Resource/Endpoint 和明确主机 Binding。创建资源**不授予访问**；Bi
    选择和执行设置，填写原因并确认可能导致服务失去保护，然后提交或取消。
    这**不是撤销 Grant**：其他 Binding 和已有 Grant 不变。最后一个 Binding
    被移除会撤下 PicketX 保护，而不是只撤销允许规则；接受修改不证明 Agent 已应用。
+6. 清理未使用定义时，选择**移除资源**，核对精确 UID 和入口，填写原因并确认
+   仅删除定义。Grant（包括已撤销/过期）、NetworkDeny、Binding、HTTPRoute
+   的任何引用都会阻止删除，不级联修改或暗中撤销。请先在对应页面或期望配置中
+   人工审查引用；移除定义不会停止应用。
 
 每次只有一份资源、Binding 或移除草稿。切换表单类型或清空时先确认；切换工作台页签
 保留草稿。刷新仅改变观察清单，不改变草稿 CAS 基线或选择目录；显式更新基线
@@ -51,12 +55,16 @@ Bearer `/api/v1` 与会话/Origin/CSRF `/console/api/v1` 共用当前
 | POST `/api/v1/resources` | name、endpoints[{name,protocol,port,addresses?}]、reason；201返回服务端生成的 uid、revision 和 ETag。 |
 | POST `/api/v1/bindings` | name、resource_name/resource_uid、endpoint_names、agent_name/context_id、reason；201返回服务端生成的 uid、revision 和 ETag。 |
 | POST `/api/v1/bindings/{uid}/remove` | reason、acknowledge_unprotection:true；200返回 uid/revision 和 ETag。不存在或非 Binding UID 返回404；先检查修订，陈旧412。 |
+| POST `/api/v1/resources/{uid}/remove` | reason、acknowledge_removal:true；200返回 uid/revision 和 ETag。不存在/类型不符404；存在任何引用409 resource_in_use；先检查修订，陈旧412。 |
 
 写入必须带当前强 If-Match（缺失428、陈旧412），严格 JSON16KiB，拒绝重复、
 未知、null字段，原因非空且最多512字节，新名称最多128字节，既有引用名称最多
 1024。地址数组可省略，但不能null/空；具名入口选择非空且唯一。响应no-store。
 保留策略4MiB/4096对象边界，清单受既有输入上限约束，不静默截断。
-支持创建/读取和移除 Binding，**并非完整 CRUD**。
+支持创建/读取、移除 Binding 和未引用资源，**并非完整 CRUD**。
+
+已知 alpha 边界：首次发布前（修订0），移除不存在目标目前返回400
+invalid_publication而非404，不会产生修改；工作台在此状态没有可选目标。
 
 保留既有策略字节和事实，追加紧凑 JSON（有效 YAML）；首个资源替换唯一的
 显式空 Configuration。根据当前事实查找精确上下文并原样复制契约，客户端不能
@@ -64,7 +72,7 @@ Bearer `/api/v1` 与会话/Origin/CSRF `/console/api/v1` 共用当前
 执行不可变身份校验、修订 CAS、事务审计与分发；审计失败整体回滚，SQLite重开
 恢复相同源码、投影和审计。数据库权威不受文件轮询回写，文件模式不获得管理写入。
 移除使用解析器文档边界，保留存活文档字节；重新严格解码并核对所有对象，确保
-只移除目标 Binding。结构化移除要求 UTF-8；不支持的编码会被拒绝，不改变发布。
+只移除目标 Binding 或未引用资源。结构化移除要求 UTF-8；不支持的编码会被拒绝，不改变发布。
 行首显式 `...` 终止符及其同行注释随 Binding 移除；其后的空行、注释和指令保留
 原始字节，包括唯一 Binding 替换为显式空 Configuration 时的尾部注释。被移除
 文档内部的注释随文档移除，语义策略对象和事实仍保留。浏览器仅在收到目标 UID、递增修订及匹配的强
@@ -77,6 +85,6 @@ CSRF、CAS、审计回滚、持久重开。浏览器验收覆盖真实资源→B
 冲突草稿、失败读取、Viewer拒绝和375px布局，并保留真实Nginx/应用授权套件。
 精确通过/失败、源码树、评审及CI见[检查点](AUTONOMOUS_DELIVERY.md)和PR18。
 
-资源/入口编辑删除、Binding编辑、上下文注册、人员身份/申请审批及最终Linux
+资源/入口编辑、入口删除、Binding编辑、上下文注册、人员身份/申请审批及最终Linux
 联合流程仍待完成。结构化HTTPRoute创建和真实期望/应用节点观察已交付。
 本段不声明新增内核执行证据或产品整体完成。
