@@ -10,6 +10,7 @@ import { spawn, spawnSync } from 'node:child_process'
 import { once } from 'node:events'
 import { chromium } from 'playwright'
 import { freePort, startIngress } from './ingress.mjs'
+import { resourceOnboarding } from './resources.mjs'
 
 const root = resolve(import.meta.dirname, '../../..')
 const temp = await mkdtemp(join(tmpdir(), 'picketx-browser-'))
@@ -75,6 +76,8 @@ authz: {enabled: true, network: tcp, address: "127.0.0.1:${authzPort}", credenti
   const accepted = await fetch(`${origin}/api/v1/publication`, { headers: { Authorization: `Bearer ${token}` } })
   const document = await accepted.json(); assert.equal(document.policy, policy); assert.equal(document.revision, 2)
   // New structured workflow must be a real navigable page, not only an API.
+  await page.getByRole('button', { name: 'Resources', exact: true }).click({ timeout: 5000 })
+  await page.getByRole('heading', { name: 'Resource onboarding', exact: true }).waitFor()
   await page.getByRole('button', { name: 'Grants', exact: true }).click({ timeout: 5000 })
   await page.getByRole('heading', { name: 'Grant access', exact: true }).waitFor()
   await page.getByLabel('Source IP or CIDR', { exact: true }).waitFor()
@@ -261,6 +264,7 @@ spec:
   await writeFile(callersPath, '{"callers":[]}', { mode: 0o600 }); await ingress.verifyCallerRevoked()
   await writeFile(callersPath, '{"callers":null}', { mode: 0o600 }); await ingress.verifyUnavailable()
   console.log('PASS actual browser publication → source authorization → Nginx → application; revoke/deadline/audit/IPv6/scoped caller removal')
+  await resourceOnboarding({ operator, view, origin, token, policy, facts, evidence })
   // Removal invalidates the next real request even when the browser holds a cookie.
   await writeFile(principalPath, '{"principals":[]}', { mode: 0o600 })
   await page.getByRole('button', { name: 'Refresh status', exact: true }).click()

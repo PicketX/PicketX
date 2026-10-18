@@ -72,6 +72,99 @@
                 },
                 "type": "object"
             },
+            "configuration.InventoryBinding": {
+                "properties": {
+                    "agents": {
+                        "type": "string"
+                    },
+                    "enforcement": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "resources": {
+                        "description": "JSON preserves imported named/all/selector selections without claiming matches.",
+                        "type": "string"
+                    },
+                    "uid": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "configuration.InventoryContext": {
+                "properties": {
+                    "agent_name": {
+                        "type": "string"
+                    },
+                    "class": {
+                        "type": "string"
+                    },
+                    "destinations": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "handling": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "profile": {
+                        "type": "string"
+                    },
+                    "selectable": {
+                        "type": "boolean"
+                    },
+                    "stage": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "configuration.InventoryEndpoint": {
+                "properties": {
+                    "addresses": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "port": {
+                        "type": "integer"
+                    },
+                    "protocol": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "configuration.InventoryResource": {
+                "properties": {
+                    "endpoints": {
+                        "items": {
+                            "$ref": "#/components/schemas/configuration.InventoryEndpoint"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "uid": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
             "configuration.ResourceView": {
                 "properties": {
                     "endpoints": {
@@ -112,6 +205,92 @@
                     }
                 },
                 "type": "object"
+            },
+            "controller.CreateBindingRequest": {
+                "properties": {
+                    "agent_name": {
+                        "maxLength": 1024,
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "context_id": {
+                        "maxLength": 1024,
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "endpoint_names": {
+                        "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 1024
+                        },
+                        "maxItems": 64,
+                        "minItems": 1,
+                        "type": "array",
+                        "uniqueItems": true
+                    },
+                    "name": {
+                        "maxLength": 128,
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "reason": {
+                        "maxLength": 512,
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "resource_name": {
+                        "maxLength": 1024,
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "resource_uid": {
+                        "maxLength": 128,
+                        "type": "string",
+                        "minLength": 1
+                    }
+                },
+                "required": [
+                    "agent_name",
+                    "context_id",
+                    "endpoint_names",
+                    "name",
+                    "reason",
+                    "resource_name",
+                    "resource_uid"
+                ],
+                "type": "object",
+                "additionalProperties": false
+            },
+            "controller.CreateResourceRequest": {
+                "properties": {
+                    "endpoints": {
+                        "items": {
+                            "$ref": "#/components/schemas/controller.ResourceEndpointRequest"
+                        },
+                        "maxItems": 64,
+                        "minItems": 1,
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "name": {
+                        "maxLength": 128,
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "reason": {
+                        "maxLength": 512,
+                        "type": "string",
+                        "minLength": 1
+                    }
+                },
+                "required": [
+                    "endpoints",
+                    "name",
+                    "reason"
+                ],
+                "type": "object",
+                "additionalProperties": false
             },
             "controller.HTTPAuditResponse": {
                 "properties": {
@@ -205,12 +384,14 @@
                     },
                     "endpoint_names": {
                         "items": {
-                            "type": "string"
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 1024
                         },
                         "maxItems": 256,
                         "minItems": 1,
                         "type": "array",
-                        "uniqueItems": false
+                        "uniqueItems": true
                     },
                     "name": {
                         "maxLength": 128,
@@ -286,6 +467,47 @@
                     "facts",
                     "policy",
                     "reason"
+                ],
+                "type": "object",
+                "additionalProperties": false
+            },
+            "controller.ResourceEndpointRequest": {
+                "properties": {
+                    "addresses": {
+                        "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 128
+                        },
+                        "maxItems": 64,
+                        "minItems": 1,
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "name": {
+                        "maxLength": 128,
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "port": {
+                        "minimum": 1,
+                        "type": "integer",
+                        "maximum": 65535
+                    },
+                    "protocol": {
+                        "enum": [
+                            "TCP",
+                            "UDP"
+                        ],
+                        "type": "string",
+                        "minLength": 1
+                    }
+                },
+                "required": [
+                    "addresses",
+                    "name",
+                    "port",
+                    "protocol"
                 ],
                 "type": "object",
                 "additionalProperties": false
@@ -371,6 +593,52 @@
                     "resources": {
                         "items": {
                             "$ref": "#/components/schemas/configuration.ResourceView"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "revision": {
+                        "type": "integer"
+                    }
+                },
+                "type": "object"
+            },
+            "management.InventoryChange": {
+                "properties": {
+                    "revision": {
+                        "type": "integer"
+                    },
+                    "uid": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "management.InventoryPage": {
+                "properties": {
+                    "authority": {
+                        "type": "string"
+                    },
+                    "bindings": {
+                        "items": {
+                            "$ref": "#/components/schemas/configuration.InventoryBinding"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "contexts": {
+                        "items": {
+                            "$ref": "#/components/schemas/configuration.InventoryContext"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "observed_at": {
+                        "type": "string"
+                    },
+                    "resources": {
+                        "items": {
+                            "$ref": "#/components/schemas/configuration.InventoryResource"
                         },
                         "type": "array",
                         "uniqueItems": false
@@ -625,6 +893,154 @@
                     }
                 ],
                 "summary": "Read change audit in ascending keyset order",
+                "tags": [
+                    "management"
+                ]
+            }
+        },
+        "/api/v1/bindings": {
+            "post": {
+                "operationId": "createBinding",
+                "parameters": [
+                    {
+                        "description": "Strong current revision",
+                        "in": "header",
+                        "name": "If-Match",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/controller.CreateBindingRequest",
+                                "summary": "binding",
+                                "description": "Pinned resource, explicit endpoints, agent/context identity, audit reason"
+                            }
+                        }
+                    },
+                    "description": "Pinned resource, explicit endpoints, agent/context identity, audit reason",
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/management.InventoryChange"
+                                }
+                            }
+                        },
+                        "description": "Created",
+                        "headers": {
+                            "ETag": {
+                                "description": "Strong accepted revision",
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "412": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "413": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "415": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "428": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "429": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "503": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    }
+                },
+                "security": [
+                    {
+                        "ManagementBearer": []
+                    }
+                ],
+                "summary": "Bind named Endpoints to an exact existing host context without changing its settings",
                 "tags": [
                     "management"
                 ]
@@ -1173,6 +1589,90 @@
                 ]
             }
         },
+        "/api/v1/inventory": {
+            "get": {
+                "operationId": "readInventory",
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/management.InventoryPage"
+                                }
+                            }
+                        },
+                        "description": "OK",
+                        "headers": {
+                            "ETag": {
+                                "description": "Strong publication revision",
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "429": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "503": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    }
+                },
+                "security": [
+                    {
+                        "ManagementBearer": []
+                    }
+                ],
+                "summary": "Read complete bounded desired Resource/Binding/context inventory (not live status)",
+                "tags": [
+                    "management"
+                ]
+            }
+        },
         "/api/v1/me": {
             "get": {
                 "operationId": "readCurrentPrincipal",
@@ -1445,6 +1945,154 @@
                     }
                 ],
                 "summary": "Atomically replace desired configuration with audit and revision precondition",
+                "tags": [
+                    "management"
+                ]
+            }
+        },
+        "/api/v1/resources": {
+            "post": {
+                "operationId": "createResource",
+                "parameters": [
+                    {
+                        "description": "Strong current revision",
+                        "in": "header",
+                        "name": "If-Match",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/controller.CreateResourceRequest",
+                                "summary": "resource",
+                                "description": "Strict JSON16KiB; omitted addresses use binding scope, empty/null rejected"
+                            }
+                        }
+                    },
+                    "description": "Strict JSON16KiB; omitted addresses use binding scope, empty/null rejected",
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/management.InventoryChange"
+                                }
+                            }
+                        },
+                        "description": "Created",
+                        "headers": {
+                            "ETag": {
+                                "description": "Strong accepted revision",
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "412": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "413": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "415": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "428": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "429": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "503": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    }
+                },
+                "security": [
+                    {
+                        "ManagementBearer": []
+                    }
+                ],
+                "summary": "Create a Resource with named network Endpoints; does not grant or confirm access",
                 "tags": [
                     "management"
                 ]
@@ -1766,6 +2414,172 @@
                     }
                 ],
                 "summary": "Read bounded append-only publication audit (exclusive cursor)",
+                "tags": [
+                    "console"
+                ]
+            }
+        },
+        "/console/api/v1/bindings": {
+            "post": {
+                "operationId": "browserCreateBinding",
+                "parameters": [
+                    {
+                        "description": "Strong revision",
+                        "in": "header",
+                        "name": "If-Match",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Exact configured origin",
+                        "in": "header",
+                        "name": "Origin",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Session CSRF token",
+                        "in": "header",
+                        "name": "X-CSRF-Token",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/controller.CreateBindingRequest",
+                                "summary": "binding",
+                                "description": "Binding and reason"
+                            }
+                        }
+                    },
+                    "description": "Binding and reason",
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/management.InventoryChange"
+                                }
+                            }
+                        },
+                        "description": "Created",
+                        "headers": {
+                            "ETag": {
+                                "description": "Strong accepted revision",
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "412": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "413": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "415": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "428": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "429": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "503": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    }
+                },
+                "security": [
+                    {
+                        "BrowserCookie": []
+                    }
+                ],
+                "summary": "Create explicit-context Binding using the operator session and CSRF protection",
                 "tags": [
                     "console"
                 ]
@@ -2321,6 +3135,90 @@
                 ]
             }
         },
+        "/console/api/v1/inventory": {
+            "get": {
+                "operationId": "browserInventory",
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/management.InventoryPage"
+                                }
+                            }
+                        },
+                        "description": "OK",
+                        "headers": {
+                            "ETag": {
+                                "description": "Strong revision",
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "429": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "503": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    }
+                },
+                "security": [
+                    {
+                        "BrowserCookie": []
+                    }
+                ],
+                "summary": "Read desired resource inventory in the operator session",
+                "tags": [
+                    "console"
+                ]
+            }
+        },
         "/console/api/v1/login": {
             "post": {
                 "description": "Exact Origin required. Native Echo CSRF protects login: same-origin Sec-Fetch-Site, or bootstrap X-CSRF-Token plus CSRF cookie for legacy clients. Login body limited to4096bytes. Absolute8h/idle30m; restart invalidates sessions. Current credentials and roles rechecked each request. Access key is not saved in session.",
@@ -2838,6 +3736,172 @@
                     }
                 ],
                 "summary": "Atomically save desired configuration and audit with revision precondition",
+                "tags": [
+                    "console"
+                ]
+            }
+        },
+        "/console/api/v1/resources": {
+            "post": {
+                "operationId": "browserCreateResource",
+                "parameters": [
+                    {
+                        "description": "Strong revision",
+                        "in": "header",
+                        "name": "If-Match",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Exact configured origin",
+                        "in": "header",
+                        "name": "Origin",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Session CSRF token",
+                        "in": "header",
+                        "name": "X-CSRF-Token",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/controller.CreateResourceRequest",
+                                "summary": "resource",
+                                "description": "Resource and reason"
+                            }
+                        }
+                    },
+                    "description": "Resource and reason",
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/management.InventoryChange"
+                                }
+                            }
+                        },
+                        "description": "Created",
+                        "headers": {
+                            "ETag": {
+                                "description": "Strong accepted revision",
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "412": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "413": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "415": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "428": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "429": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "503": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    }
+                },
+                "security": [
+                    {
+                        "BrowserCookie": []
+                    }
+                ],
+                "summary": "Create Resource using the operator session and CSRF protection",
                 "tags": [
                     "console"
                 ]
