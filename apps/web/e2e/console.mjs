@@ -76,6 +76,8 @@ authz: {enabled: true, network: tcp, address: "127.0.0.1:${authzPort}", credenti
   const accepted = await fetch(`${origin}/api/v1/publication`, { headers: { Authorization: `Bearer ${token}` } })
   const document = await accepted.json(); assert.equal(document.policy, policy); assert.equal(document.revision, 2)
   // New structured workflow must be a real navigable page, not only an API.
+  await page.getByRole('button', { name: 'HTTP routes', exact: true }).click({ timeout: 5000 })
+  await page.getByRole('heading', { name: 'HTTP route management', exact: true }).waitFor()
   await page.getByRole('button', { name: 'Resources', exact: true }).click({ timeout: 5000 })
   await page.getByRole('heading', { name: 'Resource onboarding', exact: true }).waitFor()
   await page.getByRole('button', { name: 'Grants', exact: true }).click({ timeout: 5000 })
