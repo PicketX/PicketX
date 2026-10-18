@@ -1,0 +1,14 @@
+# Runtime only; no desired policy objects or raw Agent Tokens belong here.
+http:
+  listen: 127.0.0.1:8080
+agent:
+  enabled: true
+  listen: 127.0.0.1:9090
+  authority: static:example-v1
+source:
+  policy: examples/static/gitea.yaml
+  facts: examples/static/facts.json
+database: var/controller/controller.sqlite
+credentials: var/credentials.json
+poll: 1s
+shutdown: 5s

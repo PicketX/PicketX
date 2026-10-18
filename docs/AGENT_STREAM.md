@@ -2,7 +2,7 @@
 
 English (default) | [简体中文](AGENT_STREAM.zh-CN.md)
 
-M2D1 provides a Controller-internal service, public typed protobuf and generated Go client. It is tested over actual protobuf/gRPC streams, including TCP loopback and verified server TLS. It does not yet wire the production Controller entry point or PicketXD provider. Run `go test -count=1 -race -v ./internal/agentsync ./pkg/agentsnapshot` to exercise the foundation. Kernel enforcement, provider-bound remote LKG, durable revisions, enrollment/administration and production configuration remain the next integration work.
+M2D1 provides a Controller-internal service, public typed protobuf and generated Go client. It is tested over actual protobuf/gRPC streams, including TCP loopback and verified server TLS. [M2D2](CONTROLLER_RUNTIME.md) now wires the Controller entry point and durable publisher; the PicketXD provider remains pending. Run `go test -count=1 -race -v ./internal/agentsync ./pkg/agentsnapshot` to exercise the foundation. Remote kernel enforcement, provider-bound remote LKG and enrollment/administration remain pending.
 
 ## Controller assembly contract
 

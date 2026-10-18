@@ -8,21 +8,21 @@ PicketX 通过自助申请、策略和审批，为受保护资源提供有期限
 
 ## 项目状态
 
-当前仓库是**开发初始化骨架**，包含共享逻辑授权与物理规划库、基于 Echo v5 的 Go Controller 存活检查和中英文 React 起始页。尚未实现认证、审批、Grant 签发、数据库、Agent 同步或执行功能，不能用于保护实际资源。
+当前仓库是**开发初始化骨架**，包含共享逻辑授权与物理规划库、基于 Echo v5 的 Go Controller 存活检查和中英文 React 起始页。已接入SQLite持久发布与Token认证同步服务；浏览器认证、审批、Grant签发、业务数据、Agent远程执行仍未完成，不能把当前Controller当成完整访问管理系统。
 
 控制面与 Web 位于本仓库；官方 Linux Agent `picketxd` 属于独立的 **PicketXD** 仓库。本次初始化未创建或修改该仓库。
 
-后端技术栈已确定为 Go + Echo v5 + GORM，请求字段校验采用 go-playground/validator v10。API 文档生成采用 Swaggo v2.0.0-rc6，目标规范为 OpenAPI 3.1，文档展示与交互请求采用 Swagger UI v5.33.2。GORM、validator、Swaggo 和 Swagger UI 当前为架构选型，持久化、迁移、请求参数校验与 API 文档生成/展示尚未实现。
+后端技术栈已确定为 Go + Echo v5 + GORM，请求字段校验采用 go-playground/validator v10。API 文档生成采用 Swaggo v2.0.0-rc6，目标规范为 OpenAPI 3.1，文档展示与交互请求采用 Swagger UI v5.33.2。GORM/SQLite已通过显式迁移持久保存接受的发布记录；业务表、validator、Swaggo和Swagger UI仍待接入。
 
 依赖组装采用显式构造函数注入、按模块组合和集中生命周期管理，不引入 DI 框架；设计边界见架构第 5.7 节。
 
-运行配置加载选用 Koanf v2.3.8，通过带类型配置传入模块，并明确文件/环境变量/参数覆盖顺序。尚未接入运行代码，当前骨架仍通过标准库 `flag` 读取 `-listen`。
+运行配置加载选用 Koanf v2.3.8，通过带类型配置传入模块，并明确文件/环境变量/参数覆盖顺序。已接入Controller；只有显式变更的标准库参数才覆盖同一配置加载边界。
 
 运行日志使用标准库 `log/slog`。当前骨架已向标准错误输出 JSON；模块 Logger 注入、格式选择、级别配置和独立持久化授权审计尚未实现。
 
-`picketx` CLI 使用 Cobra v1.10.2，现提供只读配置检查。Koanf 进程配置及经过认证的管理命令仍待实现，Controller 入口继续使用标准库参数解析。
+`picketx` CLI 使用 Cobra v1.10.2，现提供只读配置检查。Controller已接入Koanf进程配置；经过认证的管理命令仍待实现。
 
-SQLite 选用 GORM 官方驱动（v1.6.0 基线）和 mattn/go-sqlite3（v1.14.52 基线）。默认 Linux 发布包必须完整静态链接，无额外共享库安装要求。PostgreSQL 采用官方 gorm.io/driver/postgres v1.6.3，底层 pgx/v5 v5.10.0。数据库接入及静态 CGO 发布流水线尚未实现，迁移工具继续暂缓。
+SQLite 选用 GORM 官方驱动（v1.6.0 基线）和 mattn/go-sqlite3（v1.14.52 基线）。默认 Linux 发布包必须完整静态链接，无额外共享库安装要求。PostgreSQL 采用官方 gorm.io/driver/postgres v1.6.3，底层 pgx/v5 v5.10.0。Controller发布记录及静态SQLite实际运行检查已实现；PostgreSQL、业务迁移与发布打包仍待接入。
 
 首期执行范围为 IP/CIDR 网络准入、现有入口提供 HTTP/HTTPS 授权、本地 TCP 或 Unix Socket 决策接口。NFQUEUE/镜像探测、透明代理/TLS 终止及原生数据库代理均后移；这些端点与集成尚未实现。
 
@@ -42,7 +42,9 @@ M2A 新增 [`pkg/configuration`](pkg/configuration) 和 `picketx config check`�
 
 M2B 已在 [PicketXD PR #4](https://github.com/PicketX/PicketXD/pull/4) 合并：`picketxd prepare` 可持久恢复静态期望、重载完整配置并调度绝对时间边界。[最终 CI](https://github.com/PicketX/PicketXD/actions/runs/38760479190) 通过全部 43 项必需内核场景，包括 7 项主机 INPUT 场景。准备命令报告 `enforcementConfirmed=false`，生产执行仍待实现。[M1.3 实施计划](docs/superpowers/plans/2026-10-15-core-m0-bridge.zh-CN.md)保留并链接实际执行的 Agent 增量，后续沿[基本功能路线图](docs/BASIC_FUNCTION_ROADMAP.zh-CN.md)推进。
 
-M2D1 已实现 [Controller Agent 同步流基础](docs/AGENT_STREAM.zh-CN.md)：公开类型化 gRPC/protobuf、节点完整投影、可撤销/轮换 Token、应用报告关联和有界生命周期；真实流测试覆盖 TCP 回环和正常 TLS 校验。生产监听、PicketXD Controller Provider、持久 revision/注册管理仍待接入，尚不能声明 Controller Mode 可部署。
+M2D1 已实现 [Controller Agent 同步流基础](docs/AGENT_STREAM.zh-CN.md)：公开类型化 gRPC/protobuf、节点完整投影、可撤销/轮换 Token、应用报告关联和有界生命周期；真实流测试覆盖 TCP 回环和正常 TLS 校验。下文M2D2接入生产进程与持久revision；PicketXD Controller Provider和注册管理仍待接入，尚不能声明完整Controller Mode可部署。
+
+M2D2 新增 [可运行Controller发布服务](docs/CONTROLLER_RUNTIME.zh-CN.md)：严格Koanf配置、GORM/SQLite持久版本、独立凭据重载/撤销、可选服务端TLS及有界HTTP/gRPC生命周期。CI启动真正静态SQLite二进制，检查真实gRPC快照、就绪、持久revision和SIGTERM。Agent远程Provider、管理端和L7继续推进，进度见[自动交付检查点](docs/AUTONOMOUS_DELIVERY.zh-CN.md)。
 
 ## 本地开发
 

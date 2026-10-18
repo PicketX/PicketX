@@ -2,7 +2,7 @@
 
 [English](AGENT_STREAM.md) | 简体中文
 
-M2D1 提供 Controller 内部服务、公开类型化 protobuf 和 Go 客户端；测试使用真实 protobuf/gRPC 流、TCP 回环及正常证书校验的服务端 TLS。尚未装配生产 Controller 入口或 PicketXD Provider，不代表已远程驱动内核。运行 `go test -count=1 -race -v ./internal/agentsync ./pkg/agentsnapshot`。远程 Provider/LKG、持久 revision、注册管理和生产配置后续接入。
+M2D1 提供 Controller 内部服务、公开类型化 protobuf 和 Go 客户端；测试使用真实 protobuf/gRPC 流、TCP 回环及正常证书校验的服务端 TLS。[M2D2](CONTROLLER_RUNTIME.zh-CN.md)已装配Controller入口、持久发布及运行配置；PicketXD Provider仍待接入，不代表已远程驱动内核。运行 `go test -count=1 -race -v ./internal/agentsync ./pkg/agentsnapshot`。远程Provider/LKG与注册管理后续接入。
 
 ## 装配契约
 

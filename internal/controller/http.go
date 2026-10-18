@@ -10,6 +10,11 @@ import (
 
 // NewHandler serves process liveness only. Authorization is not implemented yet.
 func NewHandler() http.Handler {
+	return NewHandlerWithReadiness(nil)
+}
+
+// NewHandlerWithReadiness adds a detail-free module readiness probe.
+func NewHandlerWithReadiness(ready func() bool) http.Handler {
 	e := echo.New()
 	e.GET("/healthz", func(c *echo.Context) error {
 		c.Response().Header().Set("Cache-Control", "no-store")
@@ -22,5 +27,17 @@ func NewHandler() http.Handler {
 		c.Response().Header().Set("Content-Type", "application/json")
 		return c.NoContent(http.StatusOK)
 	})
+	if ready != nil {
+		probe := func(c *echo.Context) error {
+			c.Response().Header().Set("Cache-Control", "no-store")
+			code := http.StatusOK
+			if !ready() {
+				code = http.StatusServiceUnavailable
+			}
+			return c.NoContent(code)
+		}
+		e.GET("/readyz", probe)
+		e.HEAD("/readyz", probe)
+	}
 	return e
 }

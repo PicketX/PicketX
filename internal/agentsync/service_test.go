@@ -631,3 +631,24 @@ func TestTCPLoopbackStream(t *testing.T) {
 	}
 	code(t, st, codes.Unauthenticated)
 }
+
+func TestPublicationPreflightDoesNotMutate(t *testing.T) {
+	s, c := setup(t, limits())
+	desired := candidate(t, false)
+	if e := s.CheckPublication(desired, 1); e != nil {
+		t.Fatal(e)
+	}
+	if s.revision != 0 || s.candidate != nil || len(s.snapshots) != 0 {
+		t.Fatal("preflight published state")
+	}
+	if e := s.Publish(desired, 1); e != nil {
+		t.Fatal(e)
+	}
+	st := connect(t, c, tokenA, true)
+	if x := recv(t, st); x.Revision != 1 {
+		t.Fatal(x)
+	}
+	if e := s.CheckPublication(desired, 1); e == nil {
+		t.Fatal("preflight ignored revision guard")
+	}
+}
