@@ -59,6 +59,7 @@ export async function startIngress({ root, temp, authzPort, token }) {
       console.log('PASS real Nginx keepalive target/method/path/source-header isolation; denied calls never reached application')
     },
     async verifyDenied() { const before = count; const r = await request(); assert.equal(r.status, 403, logs); assert.equal(count, before); assert.equal(r.socket, connection) },
+    async verifyPrivate(allowed) { const before = count; const r = await request({ path: '/private' }); assert.equal(r.status, allowed ? 200 : 403, logs); assert.equal(r.socket, connection, 'Reevaluate Grant changes on the same connection'); assert.equal(count, before + (allowed ? 1 : 0)); if (allowed) assert.equal(r.body, 'protected real HTTP application') },
     async verifyUnavailable() { const before = count; const r = await request(); assert(r.status >= 500); assert.equal(count, before) },
     async verifyCallerRevoked() { const before = count; const r = await request(); assert.equal(r.status, 401); assert.equal(count, before) },
     async close() { agent.destroy(); if (nginx.exitCode === null) { const exited = once(nginx, 'exit'); nginx.kill('SIGTERM'); await exited }; await new Promise(r => app.close(r)); assert.equal(nginx.exitCode, 0, logs) },

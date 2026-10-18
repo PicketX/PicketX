@@ -239,6 +239,7 @@
                     }
                 },
                 "required": [
+                    "duration_seconds",
                     "endpoint_names",
                     "name",
                     "reason",
@@ -1883,12 +1884,12 @@
                 },
                 "security": [
                     {
-                        "BrowserSession": []
+                        "BrowserCookie": []
                     }
                 ],
                 "summary": "Read source Grants in the operator session",
                 "tags": [
-                    "browser"
+                    "console"
                 ]
             },
             "post": {
@@ -1904,10 +1905,18 @@
                         }
                     },
                     {
-                        "description": "Session CSRF token",
+                        "description": "Exact configured public origin",
+                        "in": "header",
+                        "name": "Origin",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Session CSRF token (legacy clients)",
                         "in": "header",
                         "name": "X-CSRF-Token",
-                        "required": true,
                         "schema": {
                             "type": "string"
                         }
@@ -2030,15 +2039,12 @@
                 },
                 "security": [
                     {
-                        "BrowserSession": []
-                    },
-                    {
-                        "BrowserCSRF": []
+                        "BrowserCookie": []
                     }
                 ],
                 "summary": "Issue a bounded source Grant in the operator session",
                 "tags": [
-                    "browser"
+                    "console"
                 ]
             }
         },
@@ -2065,10 +2071,18 @@
                         }
                     },
                     {
-                        "description": "Session CSRF token",
+                        "description": "Exact configured public origin",
+                        "in": "header",
+                        "name": "Origin",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Session CSRF token (legacy clients)",
                         "in": "header",
                         "name": "X-CSRF-Token",
-                        "required": true,
                         "schema": {
                             "type": "string"
                         }
@@ -2201,15 +2215,12 @@
                 },
                 "security": [
                     {
-                        "BrowserSession": []
-                    },
-                    {
-                        "BrowserCSRF": []
+                        "BrowserCookie": []
                     }
                 ],
                 "summary": "Revoke a source Grant in the operator session",
                 "tags": [
-                    "browser"
+                    "console"
                 ]
             }
         },

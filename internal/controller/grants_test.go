@@ -134,3 +134,30 @@ func TestStructuredGrantHTTPCurrentRBAC(t *testing.T) {
 		t.Fatal(fmt.Sprint(w.Code), w.Body.String())
 	}
 }
+
+func TestStructuredGrantAuditFailureIsAtomic(t *testing.T) {
+	h, store, _ := managementFixture(t)
+	p, err := os.ReadFile("../../examples/static/gitea.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	f, err := os.ReadFile("../../examples/static/facts.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	body, _ := json.Marshal(map[string]string{"policy": string(p), "facts": string(f), "reason": "inventory"})
+	if w := request(h, "PUT", "/api/v1/publication", string(body), managementToken, `"0"`); w.Code != 200 {
+		t.Fatal(w.Code, w.Body.String())
+	}
+	if err = store.GORM().Exec("DROP TABLE controller_audit").Error; err != nil {
+		t.Fatal(err)
+	}
+	issue := `{"name":"atomic","source":"192.0.2.10","resource_name":"gitea","resource_uid":"resource-gitea-v1","endpoint_names":["https"],"duration_seconds":60,"reason":"must be audited"}`
+	if w := request(h, "POST", "/api/v1/grants", issue, managementToken, `"1"`); w.Code != 503 {
+		t.Fatal(w.Code, w.Body.String())
+	}
+	doc, err := store.Snapshot()
+	if err != nil || doc.Revision != 1 || doc.Policy != string(p) {
+		t.Fatal("partial Grant persisted", doc, err)
+	}
+}

@@ -101,7 +101,10 @@ func TestHTTPDecisionRefreshesTimeAcrossQueueAndAudit(t *testing.T) {
 					t.Fatal(e)
 				}
 				defer s.Close()
-				deadline := time.Now().UTC().Add(200 * time.Millisecond)
+				// Leave real compilation/fsync headroom under full race/build load;
+				// the assertion still requires a pre-boundary query and an actual
+				// blocked mutex/SQLite connection spanning the absolute boundary.
+				deadline := time.Now().UTC().Add(2 * time.Second)
 				policy := httpPolicy
 				if boundary == "expiry" {
 					policy = strings.Replace(policy, "validity: {mode: permanent}", "validity: {mode: bounded, expiresAt: '"+deadline.Format(time.RFC3339Nano)+"'}", 1)

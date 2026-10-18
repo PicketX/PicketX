@@ -24,7 +24,7 @@ type IssueGrantRequest struct {
 	ResourceName    string   `json:"resource_name" validate:"required,max=1024"`
 	ResourceUID     string   `json:"resource_uid" validate:"required,max=128"`
 	EndpointNames   []string `json:"endpoint_names" validate:"required,min=1,max=256,dive,required,max=1024"`
-	DurationSeconds int      `json:"duration_seconds" validate:"gte=60,lte=86400"`
+	DurationSeconds int      `json:"duration_seconds" validate:"required,gte=60,lte=86400"`
 	Reason          string   `json:"reason" validate:"required,max=512"`
 }
 type RevokeGrantRequest struct {
@@ -216,8 +216,8 @@ func (h *managementHTTP) revokeGrant(c *echo.Context) error {
 // browserGrants godoc
 // @Summary Read source Grants in the operator session
 // @ID browserGrants
-// @Tags browser
-// @Security BrowserSession
+// @Tags console
+// @Security BrowserCookie
 // @Produce json
 // @Param after query string false "Exclusive UID; requires If-Match"
 // @Param limit query integer false "Default50,max100"
@@ -230,13 +230,13 @@ func (h *managementHTTP) browserGrants(c *echo.Context) error { return h.grants(
 // browserIssueGrant godoc
 // @Summary Issue a bounded source Grant in the operator session
 // @ID browserIssueGrant
-// @Tags browser
-// @Security BrowserSession
-// @Security BrowserCSRF
+// @Tags console
+// @Security BrowserCookie
 // @Accept json
 // @Produce json
 // @Param If-Match header string true "Strong revision"
-// @Param X-CSRF-Token header string true "Session CSRF token"
+// @Param Origin header string true "Exact configured public origin"
+// @Param X-CSRF-Token header string false "Session CSRF token (legacy clients)"
 // @Param grant body IssueGrantRequest true "Grant and reason"
 // @Success 201 {object} management.GrantChange
 // @Failure 400,401,403,412,413,415,428,429,503 {object} APIError
@@ -246,14 +246,14 @@ func (h *managementHTTP) browserIssueGrant(c *echo.Context) error { return h.iss
 // browserRevokeGrant godoc
 // @Summary Revoke a source Grant in the operator session
 // @ID browserRevokeGrant
-// @Tags browser
-// @Security BrowserSession
-// @Security BrowserCSRF
+// @Tags console
+// @Security BrowserCookie
 // @Accept json
 // @Produce json
 // @Param uid path string true "Grant UID"
 // @Param If-Match header string true "Strong revision"
-// @Param X-CSRF-Token header string true "Session CSRF token"
+// @Param Origin header string true "Exact configured public origin"
+// @Param X-CSRF-Token header string false "Session CSRF token (legacy clients)"
 // @Param revoke body RevokeGrantRequest true "Reason"
 // @Success 200 {object} management.GrantChange
 // @Failure 400,401,403,404,412,413,415,428,429,503 {object} APIError
