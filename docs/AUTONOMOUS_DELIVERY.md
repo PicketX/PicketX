@@ -1,5 +1,18 @@
 # Autonomous delivery checkpoint
 
+## HTTPRoute removal (active)
+
+Owner codex/http-route-removal; heartbeat2026-10-18T21:49Z; lease until22:49Z or
+merged+green main/explicit handoff. Core5ddfd7a2c92ca30a495e9e3ec766b6beb0b65fa4,
+tree59ba4458e8e528f28a1623512b93341bce31edd6/mainCI39168327944 GREEN; PR25 released.
+Agent95a5f7f/CI39118687475 GREEN; no open PRs in either repo at acquisition.
+Existing isolated clean worktree retained with identical source tree. Plan/spec:
+superpowers/{plans,specs}/2026-10-19-http-route-removal.md. Complete L7 route lifecycle
+before wider Resource edits: exact UID, CAS/auth/audit, live UI and real Nginx denial
+after removal with an active Grant. No cascade/runtime allowlist or kernel change.
+Remaining Resource/Endpoint/Binding editing, human identity/approval and combined
+Linux/browser acceptance unchanged. Final immutable evidence/release belongs in PR.
+
 ## Safe Resource removal (active)
 
 Owner codex/resource-removal; heartbeat2026-10-18T21:10Z; lease until22:10Z or
