@@ -1,5 +1,12 @@
 # 自动交付检查点
 
+当前心跳2026-10-18T15:02Z：资源接入增量 `codex/resource-onboarding`，租约至16:00Z或合并且main全绿/明确交接。
+Core PR17已验收：main92b2d5f5e1f00c1ae32e219fa1cf9bd45deceee5，树12e206a694ec648a91738cdbbce0cde69bb2ba72，
+mainCI39137171776通过161顶层/423总测试及真实浏览器/Nginx/Unix/静态产物；旧租约已释放。Agent95a5f7f/CI39118687475不变且通过。
+接手时两仓库无开放PR。本段设计/计划为2026-10-18-resource-onboarding，新增真实资源/Endpoint与显式既有上下文Binding创建及React目录。
+保留唯一权威、CAS、审计和原始facts；不推断已应用。已有对象变更、节点登记、审批/身份、真实节点状态及组合Linux验收仍待后续。
+本地完整Go基线仅Unix socket EPERM失败；不得跳过，必须以原生CI执行验收。租约内不要竞争实现。
+
 最新心跳2026-10-18T12:27Z：PR15修复后代码已验收，远端ecddce298d5b18933680808593191e469fc68d22/树ab3b87c3f0cb440189257d2adab69d60a7e0dcfc与本地7b27b24、实际CI检出4fa673c一致。CI39127108548完整Go/Web成功：原始日志139顶层/368总测试、无fail/skip/race、vet/build/固定生成/OpenAPI与真实静态运行检查；真实Chromium包含只读焦点/选择/键盘滚动/禁止编辑和后端403。截图12135394967摘要0bcded1a0a9fd54a2072f83d2153660812cc14eee1ddcc2bee7fb8ae029097fd下载校验并目视复核。
 
 一次独立全分支评审发现锁可用性和viewer键盘访问两项问题，均经单次修复流程RED→GREEN，无遗留发现。陌生Cookie不加锁、有效会话精确锁不碰撞、等待可取消且回收引用；退出重放保护仍通过。首次只读CI39126597617为RED；39126806452即时读取滚动状态失败，改为等待真实键盘滚动后，39127108548完整GREEN。评审独立运行普通/相关race，未复跑浏览器/远端CI/静态/Web，主执行者负责这些证据。

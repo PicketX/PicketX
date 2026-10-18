@@ -1,5 +1,20 @@
 # Autonomous delivery checkpoint
 
+## Resource onboarding (active)
+
+Heartbeat2026-10-18T15:02Z; owner `codex/resource-onboarding`, lease until16:00Z
+or merged+green main/explicit handoff. Core PR17 accepted main92b2d5f5e1f00c1ae32e219fa1cf9bd45deceee5,
+tree12e206a694ec648a91738cdbbce0cde69bb2ba72, mainCI39137171776 GREEN161/423,
+real browser/Nginx/Unix/static gates passed; its lease released. Agent95a5f7f/
+CI39118687475 unchanged GREEN. No open PRs at acquisition. Design and plan:
+docs/superpowers/specs/2026-10-18-resource-onboarding-design.md and
+docs/superpowers/plans/2026-10-18-resource-onboarding.md. Implement real structured
+Resource/Endpoint and explicit-context Binding creation plus live React inventory.
+Preserve current authority/CAS/audit and facts. Existing object mutation, enrollment,
+approval/identity, truthful node status and combined Linux acceptance remain.
+Local baseline full Go fails only TestAuthorizationRuntimeTCPUnixAndShutdown/unix
+with socket EPERM; native CI must execute without skip. Do not compete with this lease.
+
 ## Structured Grant increment (active)
 
 Heartbeat2026-10-18T13:42Z; owner `codex/grant-console`, lease until15:00Z or
