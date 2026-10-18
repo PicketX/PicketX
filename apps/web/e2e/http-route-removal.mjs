@@ -42,11 +42,20 @@ export async function httpRouteRemoval({ operator, view, api, route, ingressPort
     await ingress.verifyExactRoute(true)
     await open(route.uid); await reason.fill('Retire browser route'); await ack.check()
     // Ambiguous success is not a receipt and must not erase intent or repeat a write.
-    for (const status of [200, 204]) {
-      await operator.route(`**/console/api/v1/http-routes/${route.uid}/remove`, r => r.fulfill({ status, ...(status === 200 ? { contentType: 'application/json', body: '{}' } : {}) }))
+    for (const status of [200, 204, 202]) {
+      const current = await api('/publication')
+      const next = current.data.revision + 1
+      let attempts = 0
+      await operator.route(`**/console/api/v1/http-routes/${route.uid}/remove`, r => {
+        attempts++
+        return r.fulfill({ status, ...(status === 200 ? { contentType: 'application/json', body: '{}' } : status === 202 ? { contentType: 'application/json', headers: { ETag: `"${next}"` }, body: JSON.stringify({ uid: route.uid, revision: next }) } : {}) })
+      })
       const pending = operator.waitForResponse(r => r.url().endsWith(`/${route.uid}/remove`))
       await confirm.click(); assert.equal((await pending).status(), status)
       await operator.waitForFunction(() => document.querySelector('.http-routes-section')?.getAttribute('aria-busy') === 'false')
+      assert.equal(await confirm.count(), 1, `HTTP ${status} must retain removal intent`)
+      assert.equal(await operator.locator('.route-result').count(), 0, 'Ambiguous response must not announce completed removal')
+      assert.equal(attempts, 1, 'No automatic mutation retry')
       assert.equal(await reason.inputValue(), 'Retire browser route'); assert(await confirm.isDisabled())
       await operator.unroute(`**/console/api/v1/http-routes/${route.uid}/remove`)
       await rebase(); assert(!(await ack.isChecked())); await ack.check()
