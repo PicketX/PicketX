@@ -13,6 +13,16 @@ but incomplete responses. No kernel/backend/identity change. Resource editing,
 identity/approval and combined Linux/browser acceptance remain outstanding.
 PR will carry immutable CI/head evidence and final release.
 
+[PR27](https://github.com/PicketX/PicketX/pull/27) tests-only head a167eb19/tree
+b2d9c4586bf07952906a8457c9f0eabe1db011e6: native39173419763 Web117811055627
+RED as expected: publication202 was accepted without an alert. Local actual
+transport regression also RED on unexpected201. Implementation adds explicit
+200/201 status contracts, preserves existing removal body checks, and blocks
+ambiguous publication retry with bilingual reconciliation guidance. Local helper
+and locked Web typecheck/lint/build GREEN. Full local Go normal suite fails only
+TestAuthorizationRuntimeTCPUnixAndShutdown/unix: socket operation not permitted;
+vet/build pass. Native full Go/Web gates and independent review still required.
+
 ## HTTPRoute removal (active)
 
 Owner codex/http-route-removal; heartbeat2026-10-18T22:07Z; lease until23:07Z or

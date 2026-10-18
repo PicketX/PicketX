@@ -22,6 +22,7 @@ export async function rejectedMutationReceipt({ p, path, section, submit, labels
     await p.waitForFunction(selector => document.querySelector(selector)?.getAttribute('aria-busy') === 'false', section)
     for (const [i, label] of labels.entries()) assert.equal(await p.getByLabel(label, { exact: true }).inputValue(), values[i], `${path}: ambiguous receipt must preserve ${label}`)
     assert(await p.getByRole('button', { name: submit, exact: true }).isDisabled(), `${path}: reconcile before another write`)
+    if (path === '/publication') await p.locator('.editor-section .stale').waitFor()
     assert.equal(await p.locator(`${section} .feedback.success:visible`).count(), 0, `${path}: no completion claim`)
     assert.deepEqual(await snapshot(), before, `${path}: intercepted write did not alter real Controller state`)
     console.log(`PASS ${path}: ${abort ? 'transport failure' : status} retains draft, no completion, retry blocked, real Controller unchanged`)

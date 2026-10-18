@@ -26,6 +26,7 @@ from actual node application. This is a bounded correction, not a new API.
 | --- | --- |
 | apps/web/src/lib/console.ts | Shared transport, optional exact success status |
 | apps/web/src/App.tsx | Publication 200 and ambiguous-write retry lock |
+| apps/web/src/locales/{en,zh-CN}.json | Publication reconciliation guidance |
 | apps/web/src/features/{resources,grants,http-routes}/*.tsx | Explicit status at each management mutation |
 | apps/web/e2e/request.mjs | Real helper status/error/ETag/204 regression |
 | apps/web/e2e/{console,resources,resource-removal,http-routes}.mjs | Actual form intent and recovery with response fault injection |

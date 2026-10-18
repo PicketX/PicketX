@@ -85,7 +85,7 @@ export function Grants({ csrf, canWrite, onUnauthorized, onDirty, onBusy }: Prop
     if (Object.keys(invalid).length) { setFields(invalid); setError(t('grants.fixFields')); return }
     const controller = new AbortController(); controllers.add(controller); setBusy(true); setError(''); setFields({}); setNotice('')
     try {
-      await request('/grants', { signal: controller.signal, method: 'POST', headers: { 'Content-Type': 'application/json', 'If-Match': base, 'X-CSRF-Token': csrf }, body: JSON.stringify({ name: form.name, source: form.source, resource_name: resource!.name, resource_uid: resource!.uid, endpoint_names: form.endpoints, duration_seconds: Number(form.duration), reason: form.reason }) })
+      await request('/grants', { signal: controller.signal, method: 'POST', headers: { 'Content-Type': 'application/json', 'If-Match': base, 'X-CSRF-Token': csrf }, body: JSON.stringify({ name: form.name, source: form.source, resource_name: resource!.name, resource_uid: resource!.uid, endpoint_names: form.endpoints, duration_seconds: Number(form.duration), reason: form.reason }) }, 201)
       if (controller.signal.aborted) return
       setForm(empty); setNotice(t('grants.issued'))
       // A failed follow-up read must not permit a duplicate POST with the old base.
@@ -98,7 +98,7 @@ export function Grants({ csrf, canWrite, onUnauthorized, onDirty, onBusy }: Prop
     e.preventDefault(); if (busy || !revoke || !revokeReason.trim() || !canWrite || conflict || !base) return
     const controller = new AbortController(); controllers.add(controller); setBusy(true); setError(''); setNotice('')
     try {
-      await request(`/grants/${encodeURIComponent(revoke.uid)}/revoke`, { signal: controller.signal, method: 'POST', headers: { 'Content-Type': 'application/json', 'If-Match': base, 'X-CSRF-Token': csrf }, body: JSON.stringify({ reason: revokeReason }) })
+      await request(`/grants/${encodeURIComponent(revoke.uid)}/revoke`, { signal: controller.signal, method: 'POST', headers: { 'Content-Type': 'application/json', 'If-Match': base, 'X-CSRF-Token': csrf }, body: JSON.stringify({ reason: revokeReason }) }, 200)
       if (controller.signal.aborted) return
       setRevoke(null); setRevokeReason(''); setNotice(t('grants.revoked')); setConflict(true)
       await read(controller.signal, true)

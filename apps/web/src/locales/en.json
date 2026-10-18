@@ -1,4 +1,5 @@
 {
+  "publicationConflictHelp": "Writing is blocked. Your draft is retained, but the change may have committed. Inspect the latest status and audit, then explicitly reload the latest configuration into the editor before retrying.",
   "nodes": {
     "title": "Nodes", "observations": "Node observations", "help": "Credentialed Agent scopes · read-only Controller observations", "refresh": "Refresh nodes",
     "boundary": "An Agent report is a point-in-time assertion, not independent kernel verification or a guarantee of current access. Connection, freshness and target match are separate.",

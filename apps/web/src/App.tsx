@@ -125,10 +125,15 @@ export default function App() {
     e.preventDefault(); if (busy || !draft || !canWrite || conflict) return
     setBusy(true); setError(''); setNotice('')
     try {
-      const result = await request<Publication>('/publication', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': session?.csrf ?? '', 'If-Match': draft.etag }, body: JSON.stringify({ policy: draft.policy, facts: draft.facts, reason }) })
+      const result = await request<Publication>('/publication', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': session?.csrf ?? '', 'If-Match': draft.etag }, body: JSON.stringify({ policy: draft.policy, facts: draft.facts, reason }) }, 200)
       setAccepted(result.data); setDraft({ ...result.data, etag: result.etag }); setReason(''); setNotice(t('saved')); setLastRead(Date.now()); setReadFailed(false)
       try { const events = await request<AuditPage>('/audit?limit=50'); setAudit(events.data.events ?? []); setCursor(events.data.next_after); setHasMore((events.data.events?.length ?? 0) === 50) } catch (e) { fail(e, true) }
-    } catch (e) { fail(e) } finally { setBusy(false) }
+    } catch (e) {
+      // An unknown outcome is not proof of rollback. Inspect and explicitly
+      // reload the editor before attempting another publication.
+      if (!(e instanceof APIError) || e.status >= 500) setConflict(true)
+      fail(e)
+    } finally { setBusy(false) }
   }
   async function moreAudit() {
     if (busy) return
@@ -163,6 +168,7 @@ export default function App() {
       <div hidden={tab !== 'routes'}><HTTPRoutes csrf={session.csrf} canWrite={canWrite} onUnauthorized={() => fail(new APIError(401, 'unauthorized'))} onDirty={setRouteDirty} onBusy={setRouteBusy} /></div>
       {tab === 'nodes' && <Nodes onUnauthorized={() => fail(new APIError(401, 'unauthorized'))} />}
       {tab === 'publication' ? <section className="editor-section"><div className="section-heading"><div><h2>{t('policyAndFacts')}</h2><p>{canWrite ? t('editorHelp') : t('readOnly')}</p></div><span className="draft-state">{dirty ? t('unsaved') : t('inSync')}</span></div>
+        {conflict && <p className="stale" role="status">{t('publicationConflictHelp')}</p>}
         {draft ? <form onSubmit={e => void save(e)}><div className="editors"><div><label htmlFor="policy">{t('policyYaml')}</label><textarea id="policy" spellCheck={false} value={draft.policy} onChange={e => setDraft({ ...draft, policy: e.target.value })} readOnly={!canWrite} disabled={busy} required /></div><div><label htmlFor="facts">{t('factsJson')}</label><textarea id="facts" spellCheck={false} value={draft.facts} onChange={e => setDraft({ ...draft, facts: e.target.value })} readOnly={!canWrite} disabled={busy} required /></div></div>
           <div className="save-area"><div><label htmlFor="reason">{t('changeReason')}</label><input id="reason" value={reason} onChange={e => setReason(e.target.value)} maxLength={512} disabled={!canWrite || busy} required /><p className="hint">{t('reasonHelp')}</p></div><div className="actions"><Button type="button" variant="outline" disabled={busy} onClick={() => void refresh(true)}>{t('reloadLatest')}</Button><Button type="submit" disabled={busy || !canWrite || !reason.trim() || conflict}>{t('save')}</Button></div></div>
         </form> : !busy && <p>{t('noConfiguration')}</p>}
