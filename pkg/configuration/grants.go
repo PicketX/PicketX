@@ -127,9 +127,19 @@ func (b *Bundle) AddGrant(in GrantInput) ([]byte, error) {
 		delete(endpoints, name)
 	}
 	expires := in.ExpiresAt.UTC().Format(time.RFC3339Nano)
-	objects := slices.Clone(b.objects)
-	objects = append(objects, document{APIVersion, "Grant", metadata{Name: in.Name, UID: in.UID}, contributionSpec{Subject: subject{"source", source.String()}, Scopes: []scope{{ResourceRef: resourceRef{in.ResourceName, in.ResourceUID}, EndpointNames: slices.Clone(in.EndpointNames), Actions: []string{"connect"}}}, Validity: validity{Mode: "bounded", ExpiresAt: &expires}}})
-	return encodeDocuments(objects)
+	newGrant := document{APIVersion, "Grant", metadata{Name: in.Name, UID: in.UID}, contributionSpec{Subject: subject{"source", source.String()}, Scopes: []scope{{ResourceRef: resourceRef{in.ResourceName, in.ResourceUID}, EndpointNames: slices.Clone(in.EndpointNames), Actions: []string{"connect"}}}, Validity: validity{Mode: "bounded", ExpiresAt: &expires}}}
+	var out bytes.Buffer
+	out.Write(b.source)
+	out.WriteString("\n---\n")
+	encoder := json.NewEncoder(&out)
+	encoder.SetEscapeHTML(false)
+	if err := encoder.Encode(newGrant); err != nil {
+		return nil, err
+	}
+	if _, err := Decode(out.Bytes()); err != nil {
+		return nil, err
+	}
+	return out.Bytes(), nil
 }
 
 func (b *Bundle) RevokeGrant(uid string) ([]byte, error) {
@@ -139,26 +149,30 @@ func (b *Bundle) RevokeGrant(uid string) ([]byte, error) {
 			continue
 		}
 		s := o.Spec.(contributionSpec)
+		if s.Revoked {
+			return slices.Clone(b.source), nil
+		}
 		s.Revoked = true
 		objects[i].Spec = s
-		return encodeDocuments(objects)
-	}
-	return nil, ErrGrantNotFound
-}
-func encodeDocuments(objects []document) ([]byte, error) {
-	var out bytes.Buffer
-	for i, o := range objects {
-		if i > 0 {
-			out.WriteString("\n---\n")
-		}
-		data, err := json.MarshalIndent(o, "", "  ")
+		out, err := revokeSource(b.source, uid)
 		if err != nil {
 			return nil, err
 		}
-		out.Write(data)
+		next, err := Decode(out)
+		if err != nil {
+			return nil, err
+		}
+		// Parser coordinates are only an editing aid. Strictly decode again and
+		// require the complete semantic result to equal exactly one revoked flag.
+		expected, err := json.Marshal(objects)
+		if err != nil {
+			return nil, err
+		}
+		actual, err := json.Marshal(next.objects)
+		if err != nil || !bytes.Equal(expected, actual) {
+			return nil, fmt.Errorf("revocation changed unrelated policy")
+		}
+		return out, nil
 	}
-	if _, err := Decode(out.Bytes()); err != nil {
-		return nil, err
-	}
-	return out.Bytes(), nil
+	return nil, ErrGrantNotFound
 }

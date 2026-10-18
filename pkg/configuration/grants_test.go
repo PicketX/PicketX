@@ -2,6 +2,8 @@
 package configuration
 
 import (
+	"bytes"
+	"encoding/json"
 	"os"
 	"reflect"
 	"strings"
@@ -190,6 +192,142 @@ func TestStructuredGrantCatalogDetachedSelectorAndHTTPRoute(t *testing.T) {
 		}
 		if !found {
 			t.Fatal("lost object", old.Metadata.UID)
+		}
+	}
+}
+
+func TestStructuredGrantAcceptedRepresentationDoesNotExpand(t *testing.T) {
+	base, err := os.ReadFile("../../examples/static/gitea.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, tc := range []struct {
+		name, annotation string
+		nearLimit        bool
+	}{
+		{name: "HTML escaping", annotation: strings.Repeat("<", 800000)},
+		{name: "JSON quote escaping", annotation: strings.Repeat(`"`, 2200000)},
+		{name: "dense input", nearLimit: true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			// Put the large annotation on the Grant itself, not only an unrelated Resource.
+			template := strings.Replace(string(base), "metadata: {name: browser, uid: grant-browser-v1}", "metadata: {name: browser, uid: grant-browser-v1, annotations: {note: '__NOTE__'}}", 1)
+			text := strings.Replace(template, "__NOTE__", tc.annotation, 1)
+			if tc.nearLimit {
+				text = strings.Replace(template, "__NOTE__", strings.Repeat("x", MaxBytes-len(template)+len("__NOTE__")-64), 1)
+			}
+			b, err := Decode([]byte(text))
+			if err != nil {
+				t.Fatal(err)
+			}
+			factsData, err := os.ReadFile("../../examples/static/facts.json")
+			if err != nil {
+				t.Fatal(err)
+			}
+			var facts Facts
+			if err = json.Unmarshal(factsData, &facts); err != nil {
+				t.Fatal(err)
+			}
+			previous, err := Compile(b, facts)
+			if err != nil {
+				t.Fatal("original input not valid", err)
+			}
+			out, err := b.RevokeGrant("grant-browser-v1")
+			if err != nil {
+				t.Fatal("valid accepted Grant cannot be revoked", err)
+			}
+			if len(out) > MaxBytes {
+				t.Fatal("shared bound bypassed")
+			}
+			next, err := Decode(out)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if _, _, err = Replace(previous, next, facts); err != nil {
+				t.Fatal(err)
+			}
+			if len(out) > len(text)+32 {
+				t.Fatal("rewrote unrelated representation", len(text), len(out))
+			}
+			if !tc.nearLimit {
+				added, err := b.AddGrant(GrantInput{Name: "another", UID: "new-source-v1", Source: "::1", ResourceName: "gitea", ResourceUID: "resource-gitea-v1", EndpointNames: []string{"https"}, ExpiresAt: time.Now().Add(time.Hour)})
+				if err != nil {
+					t.Fatal("unrelated representation blocked issue", err)
+				}
+				if !bytes.HasPrefix(added, []byte(text)) {
+					t.Fatal("issue rewrites accepted input")
+				}
+			}
+		})
+	}
+}
+
+func TestStructuredGrantSourceLocalRevokeYAMLLayouts(t *testing.T) {
+	base, err := os.ReadFile("../../examples/static/gitea.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, value := range []string{"false", `!!bool 'false'`, `!!bool "f\x61lse"`, "!!bool |-\n    false"} {
+		t.Run(value, func(t *testing.T) {
+			text := strings.Replace(string(base), "  subject: {type: source, cidr: 198.51.100.9}", "  revoked: "+value+" # retained\n  subject: {type: source, cidr: 198.51.100.9}", 1)
+			// A block scalar's comment belongs on its header, not its content.
+			text = strings.Replace(text, "!!bool |-\n    false # retained", "!!bool |- # retained\n    false", 1)
+			b, err := Decode([]byte(text))
+			if err != nil {
+				t.Fatal(err)
+			}
+			out, err := b.RevokeGrant("grant-browser-v1")
+			if err != nil {
+				t.Fatal(err)
+			}
+			n, err := Decode(out)
+			if err != nil {
+				t.Fatal(err)
+			}
+			_, gs := n.GrantCatalog()
+			if !gs[0].Revoked || gs[1].Revoked {
+				t.Fatal(gs)
+			}
+		})
+	}
+	for _, prefix := range []string{"", "\ufeff", "# 中文 policy\n"} {
+		// JSON flow mapping with an explicit boolean, Unicode before its column,
+		// CRLF, and directives exercise real parser positions, not a YAML regex.
+		text := prefix + strings.Replace(string(base), "metadata: {name: browser, uid: grant-browser-v1}", "metadata: {name: 浏览器, uid: grant-browser-v1}", 1)
+		b, err := Decode([]byte(strings.ReplaceAll(text, "\n", "\r\n")))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, err = b.RevokeGrant("grant-browser-v1"); err != nil {
+			t.Fatal(err)
+		}
+	}
+	resource := strings.Split(string(base), "\n---\n")[0]
+	for _, flag := range []string{"", ", revoked: false", `, revoked: !!bool "false"`} {
+		for _, separator := range []string{"\n", "\r\n", "\r", "\u0085", "\u2028", "\u2029"} {
+			raw := resource + `
+---
+{apiVersion: picketx.io/v1alpha1, kind: Grant, metadata: {name: 浏览器, uid: grant-browser-v1}, spec: !!map { ? # first explicit key
+subject : {type: source, cidr: '::1'}, scopes: [{resourceRef: {name: gitea, uid: resource-gitea-v1}}], validity: {mode: permanent}` + flag + `}}
+...
+`
+			input := []byte(strings.ReplaceAll(raw, "\n", separator))
+			b, err := Decode(input)
+			if err != nil {
+				t.Fatal("layout not accepted", separator, flag, err)
+			}
+			out, err := b.RevokeGrant("grant-browser-v1")
+			if err != nil {
+				t.Fatal("flow/Unicode line position", separator, flag, err)
+			}
+			next, err := Decode(out)
+			if err != nil {
+				t.Fatal(err)
+			}
+			_, grants := next.GrantCatalog()
+			if len(grants) != 1 || !grants[0].Revoked {
+				t.Fatal(grants)
+			}
 		}
 	}
 }

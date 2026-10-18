@@ -25,7 +25,7 @@ func Decode(data []byte) (*Bundle, error) {
 		return nil, fmt.Errorf("configuration exceeds %d bytes", MaxBytes)
 	}
 	dec := yaml.NewDecoder(bytes.NewReader(data))
-	b := &Bundle{}
+	b := &Bundle{source: slices.Clone(data)}
 	names, uids := map[string]bool{}, map[string]bool{}
 	for {
 		var node yaml.Node

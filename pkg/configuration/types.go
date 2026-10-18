@@ -117,5 +117,6 @@ type httpRouteSpec struct {
 // Bundle owns decoded policy and cannot be changed through exported fields.
 type Bundle struct {
 	objects []document
+	source  []byte
 	hash    string
 }

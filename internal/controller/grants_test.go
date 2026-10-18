@@ -161,3 +161,73 @@ func TestStructuredGrantAuditFailureIsAtomic(t *testing.T) {
 		t.Fatal("partial Grant persisted", doc, err)
 	}
 }
+
+func TestStructuredGrantEscapingHeavyDurableRevocation(t *testing.T) {
+	h, store, _ := managementFixture(t)
+	p, err := os.ReadFile("../../examples/static/gitea.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	f, err := os.ReadFile("../../examples/static/facts.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	expiry := time.Now().UTC().Add(time.Hour).Format(time.RFC3339Nano)
+	policy := strings.Replace(string(p), "2026-10-15T10:00:00Z", expiry, 1)
+	policy = strings.Replace(policy, "metadata: {name: browser, uid: grant-browser-v1}", "metadata: {name: browser, uid: grant-browser-v1, annotations: {note: '"+strings.Repeat("<", 800000)+"'}}", 1)
+	raw, err := json.Marshal(map[string]string{"policy": policy, "facts": string(f), "reason": "accept escaping-heavy source"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if w := request(h, "PUT", "/api/v1/publication", string(raw), managementToken, `"0"`); w.Code != 200 {
+		t.Fatal("initial policy not accepted", w.Code, w.Body.String())
+	}
+	if w := request(h, "POST", "/api/v1/grants/grant-browser-v1/revoke", `{"reason":"withdraw active large imported Grant"}`, managementToken, `"1"`); w.Code != 200 {
+		t.Fatal("cannot durably revoke accepted Grant", w.Code, w.Body.String())
+	}
+	var files []struct{ Name, File string }
+	if err = store.GORM().Raw("PRAGMA database_list").Scan(&files).Error; err != nil {
+		t.Fatal(err)
+	}
+	path := ""
+	for _, file := range files {
+		if file.Name == "main" {
+			path = file.File
+		}
+	}
+	if path == "" {
+		t.Fatal("no durable database file")
+	}
+	if err = store.Close(); err != nil {
+		t.Fatal(err)
+	}
+	reopened, err := publication.OpenMode(path, "static:example-v1", "database")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer reopened.Close()
+	doc, err := reopened.Snapshot()
+	if err != nil || doc.Revision != 2 || doc.Facts != string(f) {
+		t.Fatal(doc.Revision, err)
+	}
+	candidate, _ := reopened.Current()
+	grants := candidate.Input().Logical.Grants
+	found := false
+	for _, g := range grants {
+		if g.ID == "grant-browser-v1" {
+			found = true
+			if !g.Revoked || g.Validity.ExpiresAt.Format(time.RFC3339Nano) != expiry {
+				t.Fatal("revocation/absolute deadline not durable", g)
+			}
+		} else if g.Revoked {
+			t.Fatal("unrelated Grant revoked", g)
+		}
+	}
+	if !found {
+		t.Fatal("Grant identity disappeared")
+	}
+	events, err := reopened.Audit(0, 100)
+	if err != nil || len(events) != 2 || events[1].Reason != "withdraw active large imported Grant" {
+		t.Fatal(events, err)
+	}
+}

@@ -19,8 +19,9 @@ publication CAS/audit transaction. A second Grant database/publisher duplicates
 authority; client YAML mutation puts trusted domain logic in the browser. Reject
 both alternatives. The database remains the sole managed authority; preserve
 facts and every unrelated Grant/NetworkDeny/HTTPRoute/Binding and immutable UID.
-Canonical JSON documents separated by YAML document markers retain JSON field
-names and validated omission semantics. Full shared decode/compiler validation
+Preserve accepted UTF-8 source and append a compact JSON Grant document; edit a
+revocation boolean by parser coordinates and validate the exact complete semantic
+change (revised after the independent review below). Full shared decode/compiler validation
 still gates the complete candidate.
 
 New Grants pin a Resource name+UID and nonempty explicit Endpoint names, get a
@@ -140,3 +141,56 @@ wrong is misleading task attribution, not an untested production change.
 One fresh whole-branch review, findings/rulings, final source/CI acceptance and
 expected-head merge/main verification remain pending. Do not infer acceptance
 from this ledger's intermediate code evidence.
+
+### Independent whole-branch review and one fix pass
+
+Fresh read-only reviewer `grants_review` (gpt-6-astra/high, no inherited history),
+range113461ba99bf070139ba7b8858d7eba996c5ce7f..a4ecfa121679478ce8ea9175b469ff56e3928231,
+found no Critical, one Important, one Minor. It independently ran complete
+ordinary Go (only known Unix EPERM failed), configuration/controller/publication
+tests, focused Grant race, vet/build, Web lint and diff checks. It did not run
+Web ci/typecheck/build/browser, full race, remote CI or static artifacts; root
+owns those gates. No formal GitHub approval or unperformed check is claimed.
+
+Important1 accepted: whole-policy MarshalIndent/HTML escaping expanded valid
+imported state beyond4MiB and blocked revoke. Three accepted large annotation
+fixtures (800k '<',2.2M quotes, dense source within64bytes of4MiB) and real
+management API→SQLite active-Grant revoke/reopen were observed RED. Fix retains
+owned original UTF-8 source, appends compact non-HTML JSON for new Grants, edits
+only the target bool using yaml.v3 coordinates, then re-decodes and compares the
+ENTIRE semantic result against exactly that revoked flag. Other bytes/facts,
+identities and deadlines stay intact; no raised byte/object limit or validation
+bypass. All three and durable reopen are GREEN. Coordinate regressions include
+flow/block mappings, explicit keys, tagged/quoted/escaped/block bools, Unicode,
+BOM, CR/LF/CRLF/NEL/LS/PS. Fresh full verification/CI pending at this entry.
+
+Final: minor (deferred): generated endpoint_names item min/max length and
+uniqueItems are looser than actual validation. Runtime and current React client
+still validate; normalize the Swaggo schema and assert it in a following slice.
+
+Final: Ruling: use source-local edits instead of whole-policy normalization —
+otherwise imported representations prevent a security-sensitive revoke — cost:
+coordinate handling complexity, guarded by full semantic equality and layout
+tests. A genuinely larger new state still must fit unchanged input bounds.
+
+Final: Ruling: Resource/Binding CRUD, approval/OIDC and verified human identity
+remain out of this increment — an existing-resource admin Grant workflow is the
+chosen vertical slice — cost: the full product goal remains unfinished.
+Final: Ruling: native Agent/kernel/apply-status and final combined Linux/browser
+acceptance remain separate — no Agent source changed and desired validity is not
+application — cost: no new combined execution or node-freshness guarantee here.
+Final: Ruling: explicit catalog rebase remains intentional — refreshing a preserved
+draft must not silently advance CAS — cost: operators must use the explicit button.
+Final: Ruling: retain publication audit, not a new per-Grant history schema —
+trusted actor/reason and atomic changes reuse existing authority — cost: broader
+historical object reconstruction is not supplied.
+Final: Ruling: retain baseline full-publication UID lifecycle rules — new operations
+pin identity and never alter old deadlines/targets — cost: broader baseline edits
+are not newly certified by this focused review.
+Final: Ruling: additional dropped-success/cancellation/>50-row browser scenarios
+were code-inspected, not independently executed — existing normal/conflict/failure
+browser flows and backend CAS/cursor checks are real — cost: those extra frontend
+edge paths remain a coverage gap, not an applied-state guarantee.
+Final: Ruling: parent owns exact-head CI/static artifacts/expected-head integration
+— reviewer did not perform external checks — cost: merge must wait for root's raw
+evidence on the final tree and main; intermediate GREEN is not sufficient.

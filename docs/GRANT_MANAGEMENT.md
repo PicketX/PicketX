@@ -59,9 +59,14 @@ and revocable; a dynamic selection is not relabeled as a fixed current list.
 The server transforms the accepted publication, preserves facts exactly, then
 passes the complete candidate through existing shared validation/immutable-ID
 checks and the same expected-revision transaction/audit/distribution owner. There
-is no second Grant table or background policy-file writer. Policy formatting and
-comments are normalized into canonical JSON documents (valid multi-document YAML);
-unrelated object semantics, labels, selectors and independent deadlines remain.
+is no second Grant table or background policy-file writer. Accepted UTF-8 policy
+is retained: issuance appends one compact JSON document (valid multi-document
+YAML); revocation uses parser coordinates to edit only the Grant boolean. It
+strictly re-decodes and compares the entire result against the exact intended
+semantic change. This avoids indentation/escaping expansion of imported policy,
+including large annotations. The new state must still fit the unchanged4MiB and
+object bounds; adding an object/flag requires room. Unrelated object semantics,
+labels, selectors and independent deadlines remain.
 Existing file mode does not gain management writes. No business migration or
 Agent/protocol/kernel change is introduced.
 
