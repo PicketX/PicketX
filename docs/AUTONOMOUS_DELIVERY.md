@@ -1,5 +1,9 @@
 # Autonomous delivery checkpoint
 
+## Trusted HTTP increment (active)
+
+Heartbeat2026-10-18T12:48Z; owner `codex/http-authorization`, lease until14:15Z or merged+green main/explicit handoff. Core PR15 is accepted at main74575a48f56ca6b3d62f697e2189bd22168abcd3/tree9f0df77fb627d1930e25d8bb3b2f1c163362b624, main CI39127783270 Go/Web success139/368; prior lease released. Agent main95a5f7f/main CI39118687475 remains accepted. Both repos have no open PR. Plan/spec/context map: docs/superpowers/plans/2026-10-18-http-authorization.md. Next actual slice: source-backed HTTPRoute, scoped local TCP/Unix decisions, durable decision audit and actual Nginx/browser/application acceptance. No completion claimed; structured management/approval/status and identity remain. Do not compete with this live lease.
+
 ## Browser console handoff (current)
 
 Heartbeat 2026-10-18T12:27:00Z. Owner `codex/browser-console`, [PR15](https://github.com/PicketX/PicketX/pull/15); lease until2026-10-18T13:30:00Z, auto-release only after merged/green main or explicit handoff. Prior PR14 lease released. Accepted Core main0ccfa8ff8522fb95d93b7898f8b0a1ed9dfcc65a/tree3f49d6f51cc0cba29ada9f3a65a7d845a849e06d; main CI39121855312 green128/357, zero fail/skip/race; Go/Web/static SQLite-managed-runtime checks passed. Agent remains95a5f7f/CI39118687475. Neither repository had an open PR at acquisition.
