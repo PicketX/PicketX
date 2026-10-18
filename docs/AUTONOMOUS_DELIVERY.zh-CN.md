@@ -1,5 +1,16 @@
 # 自动交付检查点
 
+## 节点观测生命周期（进行中）
+
+负责人codex/node-lifecycle，心跳2026-10-18T18:40Z，租约至19:40Z或合并且main全绿/明确交接。
+Core PR21已验收mainb85b8602667983908104feb175b1d70f6c68f30c、树bf94b545058c132fad1c1893d211381686940bbe、
+CI39152332200通过；PR21租约已释放。Agent95a5f7f/CI39118687475通过，接手时两仓库无开放PR。
+PR22仅补PR21两项延后内容：恢复可见时合并补读、延迟响应/卸载竞态回归。沿用隔离分支，
+不改API、领域、协议或内核。计划见docs/superpowers/plans/2026-10-19-node-observation-lifecycle.md。
+本地浏览器因缺少Nginx受阻，不跳过；原生CI必须完整执行真实Controller/Nginx测试。
+最终精确head/CI及租约释放记录于PR22。产品尚未整体完成，后续推进管理生命周期、身份/审批
+和组合特权Linux/浏览器验收，不继续堆状态库。
+
 ## 节点观测（进行中）
 
 负责人codex/node-observations，心跳2026-10-18T17:58Z，租约至19:15Z或合并且main全绿/明确交接。

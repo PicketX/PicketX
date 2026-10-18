@@ -26,8 +26,10 @@ export function Nodes({ onUnauthorized }: { onUnauthorized: () => void }) {
   useEffect(() => {
     let disposed = false
     let active: AbortController | null = null
+    let resumePending = false
     async function load() {
       if (disposed || active || document.hidden) return
+      resumePending = false
       const controller = new AbortController(); active = controller
       const wall = Date.now(), monotonic = performance.now()
       setBusy(true)
@@ -38,18 +40,32 @@ export function Nodes({ onUnauthorized }: { onUnauthorized: () => void }) {
         setClock({ wall: Date.now(), monotonic: performance.now() })
       } catch (error) {
         if (disposed) return
-        if (error instanceof APIError && error.status === 401) unauthorized()
+        if (error instanceof APIError && error.status === 401) {
+          resumePending = false
+          unauthorized()
+        }
         else setFailed(true)
-      } finally { active = null; if (!disposed) setBusy(false) }
+      } finally {
+        active = null
+        if (!disposed) {
+          if (resumePending && !document.hidden) void load()
+          else setBusy(false)
+        }
+      }
     }
     refresh.current = () => { void load() }
     queueMicrotask(() => { void load() })
     const poll = window.setInterval(() => { void load() }, 15000)
     const tick = window.setInterval(() => setClock({ wall: Date.now(), monotonic: performance.now() }), 1000)
-    const visible = () => { if (!document.hidden) void load() }
+    const visible = () => {
+      if (document.hidden) return
+      // Coalesce resumes without overlapping reads or queuing periodic polls.
+      if (active) resumePending = true
+      else void load()
+    }
     document.addEventListener('visibilitychange', visible)
     return () => {
-      disposed = true; active?.abort(); refresh.current = () => {}
+      disposed = true; resumePending = false; active?.abort(); refresh.current = () => {}
       window.clearInterval(poll); window.clearInterval(tick)
       document.removeEventListener('visibilitychange', visible)
     }

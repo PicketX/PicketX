@@ -27,7 +27,7 @@ export async function nodeLifecycle({ operator }) {
     await page.route(endpoint, async route => {
       try {
         const headers = { ...route.request().headers() }
-        if (unauthenticated) delete headers.cookie
+        if (unauthenticated) headers.cookie = ''
         const response = await route.fetch({ headers })
         assert.equal(response.status(), unauthenticated ? 401 : 200)
         ready.resolve()
