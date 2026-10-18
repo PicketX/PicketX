@@ -8,7 +8,7 @@ PicketX is designed to grant time-bounded access to protected resources through 
 
 ## Project status
 
-This repository is under active development, not a complete access-management product. Shared Core/configuration, the SQLite Controller publisher and Token-authenticated gRPC are implemented. PicketXD PR16 supplies the supported native host Controller Provider. The [managed publication API](docs/MANAGEMENT_API.md) adds independent principals, Casbin, revision CAS and transactional audit. The [operator browser console](docs/BROWSER_CONSOLE.md) adds SCS/CSRF access-key sessions and live complete-document publication/audit pages. Human/OIDC login, structured resource/Grant/approval management and HTTP L7 remain pending; no complete production workflow is claimed.
+This repository is under active development, not a complete access-management product. Shared Core/configuration, SQLite publication, authenticated gRPC and the native PicketXD PR16 Provider are implemented. The [managed API](docs/MANAGEMENT_API.md) supplies independent principals/Casbin/CAS/audit; the [browser console](docs/BROWSER_CONSOLE.md) supplies SCS/CSRF and live document publication/audit. The [alpha HTTP adapter](docs/HTTP_AUTHORIZATION.md) adds source-backed HTTPRoute, scoped local decisions and Nginx integration; exact CI acceptance is in the checkpoint. Human/OIDC login, structured resource/Grant/approval/status management and final combined Linux workflow remain; no complete production product is claimed.
 
 The control plane and Web live here. The official Linux Agent, `picketxd`, belongs to the separate **PicketXD** repository. This initialization does not create or modify that repository.
 

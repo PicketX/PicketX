@@ -16,7 +16,7 @@ Date: 2026-10-15. The user has approved continued delivery in several increments
 | M2B desired-state preparation | PicketXD PR #4 merged; durable reload/restart recovery, independent boundary scheduling; all 43 required kernel scenarios pass, including seven host INPUT cases; production enforcement remains pending |
 | Controller / Web | Health endpoint and frontend scaffold; business workflow, usable management screens and production Agent pending |
 
-The table preserves original slice evidence. Controller [durable publication](CONTROLLER_RUNTIME.md), [PicketXD PR16](https://github.com/PicketX/PicketXD/pull/16)'s native remote Provider and [managed publication](MANAGEMENT_API.md)'s independent Token/Casbin/CAS/audit API are implemented. The [operator console](BROWSER_CONSOLE.md) adds SCS/CSRF sessions and actual complete-document publication/audit pages, not easy structured resource/Grant/approval workflows. Human/OIDC login, structured management, HTTP L7 and combined browser/proxy/application acceptance remain. Exact heads/CI and limits are in [the checkpoint](AUTONOMOUS_DELIVERY.md).
+The table preserves original slice evidence. Durable publication, PicketXD PR16's native Provider, the independent Token/Casbin/CAS/audit API and SCS/CSRF live document console are implemented. The [alpha HTTP increment](HTTP_AUTHORIZATION.md) adds source-backed HTTPRoute/local decisions and actual Nginx/browser/application acceptance; exact pass/fail and source evidence are in [the checkpoint](AUTONOMOUS_DELIVERY.md). Human/OIDC, structured resource/Grant/approval/status management, verified protocol identities and final combined Linux workflow remain. Alpha integration is not complete product acceptance.
 
 ## Delivery sequence
 

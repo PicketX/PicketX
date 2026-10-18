@@ -107,8 +107,12 @@ Back up the complete private DB while stopped before deploying an upgrade; older
 cannot read schema3. File/database ownership remains bound; policy file polling cannot overwrite
 managed intent. Each valid scoped decision is serialized with publication, evaluated against the
 accepted revision, then durably records caller/route/source/revision/result/reason/contributing
-IDs/time **before** returning. Audit failure returns503, never an allow. Raw URI/query/Host/method,
-body, headers and credentials are not stored. Repeated callbacks create records; retention and
+IDs/time **before** returning. Audit failure returns503, never an allow.
+Evaluation time is refreshed after the publication lock. If a relevant Grant/deny boundary
+passes during durable audit, recompute and append a fresh decision before returning; at most
+two evaluations, then503 if boundaries keep advancing. Intermediate records are decisions,
+not proof of forwarding. This is not an atomic reservation of an application's operation.
+Raw URI/query/Host/method, body, headers and credentials are not stored. Repeated callbacks create records; retention and
 capacity controls are not implemented, so provision disk and monitor growth. Single-process
 SQLite serialization is intentional; no HA/throughput guarantee.
 

@@ -56,4 +56,6 @@ source必须规范IPv4/IPv6主机地址，不能CIDR、mapped或zone。未知/�
 
 ## 验证与后续
 
+获得发布锁后重新获取服务端时间；若持久审计期间跨过Grant/deny边界，则重新求值并追加新决策，最多两次，持续变化返回503。中间记录只是决策，不是转发证明，也不是对应用操作的原子预留。
+
 测试覆盖严格模型/Grant/deny/期限、审计故障/重开/升级、凭据撤销/RBAC、真实TCP/Unix生命周期。实际CI必须运行有auth_request的真实Nginx及Chromium/Go/SQLite/HTTP应用，验证keepalive逐请求目标/方法/路径/伪造来源头隔离、浏览器发布/撤销/期限和最小审计。本地Unix EPERM及缺少Nginx/Chromium不计通过，必需能力交由Linux CI。结构化资源/Grant/审批/状态页面、人员/OIDC、HTTP已验证用户策略、生产HTTPS及最终Linux联合工作流仍待完成。

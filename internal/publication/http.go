@@ -48,23 +48,33 @@ func (s *Store) DecideHTTP(caller string, q httpauth.Query) (HTTPDecision, error
 	if !s.candidate.HTTP().HasRoute(q.Route) {
 		return HTTPDecision{}, ErrHTTPRoute
 	}
-	d, e := s.candidate.HTTP().Decide(q)
-	if e != nil {
-		return HTTPDecision{}, e
+	// The caller's earlier timestamp may precede a long mutex/SQLite wait. Refresh
+	// under the publication boundary and check again AFTER durability. A boundary
+	// crossed during insertion requires a fresh decision and fresh audit, never an
+	// old allow. Bound retries: rapidly changing intent fails closed, not a hot loop.
+	for attempt := 0; attempt < 2; attempt++ {
+		q.At = time.Now().UTC()
+		d, e := s.candidate.HTTP().Decide(q)
+		if e != nil {
+			return HTTPDecision{}, e
+		}
+		out := HTTPDecision{Allowed: d.Allowed, Reason: string(d.Reason), Revision: s.revision, GrantIDs: d.GrantIDs, DenyIDs: d.DenyIDs, NextChange: d.NextChange}
+		if out.GrantIDs == nil {
+			out.GrantIDs = []string{}
+		}
+		if out.DenyIDs == nil {
+			out.DenyIDs = []string{}
+		}
+		grants, _ := json.Marshal(out.GrantIDs)
+		denies, _ := json.Marshal(out.DenyIDs)
+		if e = s.db.Exec("INSERT INTO controller_http_audit(caller,route,source,revision,allowed,reason,grants,denies,at) VALUES(?,?,?,?,?,?,?,?,?)", caller, q.Route, q.Source.String(), int64(s.revision), out.Allowed, out.Reason, string(grants), string(denies), q.At).Error; e != nil {
+			return HTTPDecision{}, &PersistenceError{Err: e}
+		}
+		if out.NextChange.IsZero() || time.Now().Before(out.NextChange) {
+			return out, nil
+		}
 	}
-	out := HTTPDecision{Allowed: d.Allowed, Reason: string(d.Reason), Revision: s.revision, GrantIDs: d.GrantIDs, DenyIDs: d.DenyIDs, NextChange: d.NextChange}
-	if out.GrantIDs == nil {
-		out.GrantIDs = []string{}
-	}
-	if out.DenyIDs == nil {
-		out.DenyIDs = []string{}
-	}
-	grants, _ := json.Marshal(out.GrantIDs)
-	denies, _ := json.Marshal(out.DenyIDs)
-	if e = s.db.Exec("INSERT INTO controller_http_audit(caller,route,source,revision,allowed,reason,grants,denies,at) VALUES(?,?,?,?,?,?,?,?,?)", caller, q.Route, q.Source.String(), int64(s.revision), out.Allowed, out.Reason, string(grants), string(denies), q.At.UTC()).Error; e != nil {
-		return HTTPDecision{}, &PersistenceError{Err: e}
-	}
-	return out, nil
+	return HTTPDecision{}, fmt.Errorf("HTTP decision changed during durable audit")
 }
 func (s *Store) HTTPAudit(after int64, limit int) ([]HTTPAuditEvent, error) {
 	s.mu.Lock()

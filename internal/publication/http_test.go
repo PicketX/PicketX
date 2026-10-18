@@ -2,6 +2,7 @@
 package publication
 
 import (
+	"context"
 	"github.com/PicketX/PicketX/pkg/httpauth"
 	"net/netip"
 	"path/filepath"
@@ -86,5 +87,86 @@ func TestHTTPDecisionDurableAuditFailureAndUpgrade(t *testing.T) {
 	defer s.Close()
 	if _, e = s.DecideHTTP("nginx", q); e != nil {
 		t.Fatal("schema2 upgrade", e)
+	}
+}
+
+// A request waiting for publication or SQLite has not admitted an application
+// operation. A previously captured time cannot authorize after a hard boundary.
+func TestHTTPDecisionRefreshesTimeAcrossQueueAndAudit(t *testing.T) {
+	for _, boundary := range []string{"expiry", "deny-activation"} {
+		for _, wait := range []string{"publication", "database"} {
+			t.Run(boundary+"/"+wait, func(t *testing.T) {
+				s, e := OpenMode(filepath.Join(t.TempDir(), "private", "state.sqlite"), "test", "database")
+				if e != nil {
+					t.Fatal(e)
+				}
+				defer s.Close()
+				deadline := time.Now().UTC().Add(200 * time.Millisecond)
+				policy := httpPolicy
+				if boundary == "expiry" {
+					policy = strings.Replace(policy, "validity: {mode: permanent}", "validity: {mode: bounded, expiresAt: '"+deadline.Format(time.RFC3339Nano)+"'}", 1)
+				} else {
+					policy += `---
+apiVersion: picketx.io/v1alpha1
+kind: NetworkDeny
+metadata: {name: timed-deny, uid: timed-deny-v1}
+spec:
+  subject: {type: source, cidr: 127.0.0.1}
+  scopes: [{resourceRef: {name: app, uid: app-v1}}]
+  validity: {mode: bounded, notBefore: '` + deadline.Format(time.RFC3339Nano) + `', expiresAt: '` + deadline.Add(time.Hour).Format(time.RFC3339Nano) + `'}
+`
+				}
+				if _, e = s.AcceptManaged(0, "admin", "deadline", []byte(policy), []byte(`{"authorityID":"test","agents":[],"contexts":[]}`), nil); e != nil {
+					t.Fatal(e)
+				}
+				q := httpauth.Query{Route: "route-v1", Source: netip.MustParseAddr("127.0.0.1"), Host: "app.example", Method: "GET", URI: "/allowed", At: time.Now().UTC()}
+				if !q.At.Before(deadline) {
+					t.Fatal("fixture exhausted deadline before queue")
+				}
+				release := func() {}
+				db, _ := s.db.DB()
+				before := db.Stats().WaitCount
+				if wait == "publication" {
+					s.mu.Lock()
+					release = s.mu.Unlock
+				} else {
+					conn, e := db.Conn(context.Background())
+					if e != nil {
+						t.Fatal(e)
+					}
+					release = func() { conn.Close() }
+				}
+				var got HTTPDecision
+				var resultErr error
+				done := make(chan struct{})
+				go func() { defer close(done); got, resultErr = s.DecideHTTP("nginx", q) }()
+				if wait == "database" {
+					until := time.Now().Add(time.Second)
+					for db.Stats().WaitCount == before && time.Now().Before(until) {
+						time.Sleep(time.Millisecond)
+					}
+					if db.Stats().WaitCount == before {
+						release()
+						<-done
+						t.Fatal("did not block on actual SQLite connection")
+					}
+				}
+				if d := time.Until(deadline); d > 0 {
+					<-time.After(d)
+				}
+				release()
+				select {
+				case <-done:
+				case <-time.After(time.Second):
+					t.Fatal("decision stalled")
+				}
+				if resultErr != nil || got.Allowed {
+					t.Fatalf("returned stale boundary decision: %+v %v", got, resultErr)
+				}
+				if boundary == "deny-activation" && got.Reason != "explicit-deny" {
+					t.Fatalf("deny activation ignored: %+v", got)
+				}
+			})
+		}
 	}
 }

@@ -146,8 +146,19 @@ authz: {enabled: true, network: tcp, address: "127.0.0.1:${authzPort}", credenti
   await ingress.verifyAllowedAndIsolation()
   const application = await context.newPage(); await application.goto(`${ingress.url}/allowed`)
   assert.equal(await application.locator('body').textContent(), 'protected real HTTP application')
+  await application.screenshot({ path: join(evidence, 'http-application.png'), fullPage: true })
   const ipv6 = await fetch(`http://127.0.0.1:${authzPort}/authz/v1/decisions`, { method: 'POST', headers: { Authorization: `Bearer ${ingressToken}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ route: 'route-v1', source: '::1', host: `127.0.0.1:${ingress.port}`, method: 'GET', uri: '/allowed' }) })
   assert.equal(ipv6.status, 200); assert.equal((await ipv6.json()).allowed, true)
+  const explicitDeny = `${httpPolicy}\n---
+apiVersion: picketx.io/v1alpha1
+kind: NetworkDeny
+metadata: {name: http-block, uid: http-block-v1}
+spec:
+  subject: {type: source, cidr: 127.0.0.1/32}
+  scopes: [{resourceRef: {name: http-app, uid: http-app-v1}, endpointNames: [web]}]
+  validity: {mode: permanent}
+`
+  await publishHTTP(explicitDeny, 'Browser explicit HTTP deny wins'); await ingress.verifyDenied()
   await publishHTTP(httpPolicy.replace('subject: {type: source, cidr: 127.0.0.1/32}', 'revoked: true\n  subject: {type: source, cidr: 127.0.0.1/32}'), 'Browser revoke HTTP source')
   await ingress.verifyDenied(); const denied = await application.reload(); assert.equal(denied.status(), 403)
   const expiry = new Date(Date.now() + 2500)
@@ -158,6 +169,7 @@ authz: {enabled: true, network: tcp, address: "127.0.0.1:${authzPort}", credenti
   const decisionAudit = await operator.evaluate(async () => (await fetch('/console/api/v1/http-decisions?limit=100')).json())
   assert(decisionAudit.events.some(e => e.allowed && e.grant_ids.includes('loopback4-v1')))
   assert(decisionAudit.events.some(e => !e.allowed && e.reason === 'no-active-grant'))
+  assert(decisionAudit.events.some(e => !e.allowed && e.reason === 'explicit-deny' && e.deny_ids.includes('http-block-v1')))
   assert(decisionAudit.events.every(e => !('uri' in e) && !('host' in e)))
   await writeFile(callersPath, '{"callers":[]}', { mode: 0o600 }); await ingress.verifyCallerRevoked()
   await writeFile(callersPath, '{"callers":null}', { mode: 0o600 }); await ingress.verifyUnavailable()

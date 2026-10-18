@@ -18,12 +18,34 @@ import (
 )
 
 func TestAuthorizationRuntimeTCPUnixAndShutdown(t *testing.T) {
-	for _, network := range []string{"tcp", "unix"} {
+	for _, network := range []string{"tcp", "tcp6", "unix"} {
 		t.Run(network, func(t *testing.T) {
 			c := fixture(t)
+			original, e := os.ReadFile(c.Source.Policy)
+			if e != nil {
+				t.Fatal(e)
+			}
+			// Existing static examples intentionally have historical deadlines. This
+			// runtime acceptance fixture gives both independent Grants a future bound.
+			policy := strings.ReplaceAll(string(original), "2026-10-15T10:00:00Z", time.Now().UTC().Add(time.Hour).Format(time.RFC3339Nano))
+			policy = strings.ReplaceAll(policy, "2026-10-15T12:00:00Z", time.Now().UTC().Add(2*time.Hour).Format(time.RFC3339Nano))
+			policy = strings.ReplaceAll(policy, "endpointNames: [ssh]", "endpointNames: [https]")
+			write(t, c.Source.Policy, append([]byte(policy), []byte(`
+---
+apiVersion: picketx.io/v1alpha1
+kind: HTTPRoute
+metadata: {name: gitea-web, uid: route-v1}
+spec: {resourceRef: {name: gitea, uid: resource-gitea-v1}, endpointName: https, host: app.example, methods: [GET], paths: [/allowed]}
+`)...))
 			c.Authz.Enabled = true
 			c.Authz.Network = network
+			if network == "tcp6" {
+				c.Authz.Network = "tcp"
+			}
 			c.Authz.Address = "127.0.0.1:0"
+			if network == "tcp6" {
+				c.Authz.Address = "[::1]:0"
+			}
 			if network == "unix" {
 				dir := filepath.Join(t.TempDir(), "private")
 				if e := os.Mkdir(dir, 0700); e != nil {
@@ -79,6 +101,25 @@ func TestAuthorizationRuntimeTCPUnixAndShutdown(t *testing.T) {
 			r.Body.Close()
 			if r.StatusCode != 401 {
 				t.Fatal(r.StatusCode)
+			}
+			source := "198.51.100.9"
+			if network == "tcp6" {
+				source = "2001:db8:1::9"
+			}
+			req, e := http.NewRequest("POST", url, strings.NewReader(`{"route":"route-v1","source":"`+source+`","host":"app.example","method":"GET","uri":"/allowed"}`))
+			if e != nil {
+				t.Fatal(e)
+			}
+			req.Header.Set("Authorization", "Bearer "+adminToken)
+			req.Header.Set("Content-Type", "application/json")
+			r, e = client.Do(req)
+			if e != nil {
+				t.Fatal(e)
+			}
+			raw, e := io.ReadAll(r.Body)
+			r.Body.Close()
+			if e != nil || r.StatusCode != 200 || !strings.Contains(string(raw), `"allowed":true`) {
+				t.Fatal("real scoped decision", r.StatusCode, string(raw), e)
 			}
 			r, e = client.Get(strings.TrimSuffix(url, "/authz/v1/decisions") + "/api/v1/publication")
 			if e != nil {
