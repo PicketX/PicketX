@@ -70,5 +70,5 @@
 
 - [x] Request one independent whole-branch review from base0b2c5e9 to final head, including the spec and Review Focus above.
 - [x] Independent review: no Critical/Important/Minor findings or declined judgments; complete ordinary and focused race suites independently passed. No fix pass required.
-- [ ] Verify local/remote tree equality, push using expected remote SHA, create PR and inspect required raw CI evidence.
+- [x] Verify local/remote tree equality, push using expected remote SHA, create PR and inspect required raw CI evidence: corrected code headf8536e6/tree27daea2, CI39121161170/checkout96108c0 same tree,128/357 no fail/skip/race; all static/protocol/OpenAPI/Web gates passed. Final docs-only head remains fully gated.
 - [ ] Merge only expected reviewed head after checks; verify main CI, persist exact evidence and release lease.

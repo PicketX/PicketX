@@ -14,4 +14,8 @@
 
 随后CI39120860780在setup-node失败：错用不存在的apps/web/.node-version（原始job117656009194），必需测试被跳过，不算验收。新增TestDocumentationCINodeVersionFilesExist先复现同一路径失败，再改为根目录.node-version；这只是已评审生产树之外的工作流/测试修正，未改生产行为，须重跑全部检查。
 
+修正后代码验收通过：远端headf8536e6b447b9da5454dadbb9f235b492dd27e39，树27daea21709eb7682f8d7f0dc9b551e72a4abbb8；实际CI检出96108c071c0c009b4b95b54c9899307df07c376b同树。CI39121161170的Go/Web均通过。原始Go job117656881965确认128顶层/357总测试，无fail/skip/race，vet/build、协议/OpenAPI重生成、本地OpenAPI3.1校验、真实全静态文件SQLite/gRPC及管理Token/Casbin/HTTP CAS/审计/重启/SIGTERM、CLI绝对期限/撤回检查通过。Web job117656882175确认npm ci/typecheck/lint/build通过。未改Agent内核，不能把旧PR16证据当成本段新内核测试。
+
+最终仅验收元数据/文档头仍须完整CI，然后按expected head合并并复核main；精确最终/main CI在核对后追加到PR14，合并且main全绿才释放租约。无未解决评审发现或延后小项。
+
 下一段：SCS浏览器登录/CSRF与可信成员新鲜度、对象/Grant/审批API和真实React页面、基础HTTP可信入口及受控TCP/Unix决策接口，最后浏览器→API→授权→代理→应用与Linux联合验收。保持选定栈、IPv6、单来源、绝对期限和审批/下发/应用分离，不强制mTLS。管理页使用frontend-design/ui-ux-pro-max，体现加载/失败/空/过时状态。不长期只堆库或样例UI，目标完成前不暂停。
