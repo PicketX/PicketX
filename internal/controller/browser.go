@@ -189,6 +189,9 @@ func (b *Browser) register(e *echo.Echo, limits ManagementLimits) {
 	g.GET("/audit", h.browserAudit)
 	g.GET("/http-decisions", h.browserHTTPAudit)
 	g.GET("/grants", h.browserGrants)
+	g.GET("/inventory", h.browserInventory)
+	g.POST("/resources", h.browserCreateResource)
+	g.POST("/bindings", h.browserCreateBinding)
 	g.POST("/grants", h.browserIssueGrant)
 	g.POST("/grants/:uid/revoke", h.browserRevokeGrant)
 	if b.assets != "" {

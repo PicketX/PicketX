@@ -8,11 +8,23 @@ const request = spec.components.schemas["controller.PublicationRequest"];
 request.additionalProperties = false;
 for (const property of Object.values(request.properties)) property.minLength = 1;
 const login = spec.components.schemas["controller.LoginRequest"];
-for (const name of ["controller.IssueGrantRequest", "controller.RevokeGrantRequest"]) {
+for (const name of ["controller.IssueGrantRequest", "controller.RevokeGrantRequest", "controller.CreateResourceRequest", "controller.ResourceEndpointRequest", "controller.CreateBindingRequest"]) {
   const grant = spec.components.schemas[name];
   grant.additionalProperties = false;
   for (const field of Object.values(grant.properties)) if (field.type === "string") field.minLength = 1;
 }
+for (const name of ["controller.IssueGrantRequest", "controller.CreateBindingRequest"]) {
+  const names = spec.components.schemas[name].properties.endpoint_names;
+  names.uniqueItems = true;
+  Object.assign(names.items, { minLength: 1, maxLength: 1024 });
+}
+const endpoint = spec.components.schemas["controller.ResourceEndpointRequest"].properties;
+// rc6 promotes dive,required from each address to the optional parent list.
+const endpointSchema = spec.components.schemas["controller.ResourceEndpointRequest"];
+endpointSchema.required = endpointSchema.required.filter(name => name !== "addresses");
+Object.assign(endpoint.port, { minimum: 1, maximum: 65535 });
+Object.assign(endpoint.addresses, { minItems: 1, maxItems: 64 });
+Object.assign(endpoint.addresses.items, { minLength: 1, maxLength: 128 });
 login.additionalProperties = false;
 login.properties.token.minLength = 32;
 const decision = spec.components.schemas["controller.HTTPDecisionRequest"];

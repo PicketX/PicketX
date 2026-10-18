@@ -16,7 +16,7 @@
 | M2B 期望状态准备 | PicketXD PR #4 已合并；持久重载/重启恢复、独立边界调度；全部 43 项必需内核场景通过，包括 7 项主机 INPUT 场景；生产执行仍待实现 |
 | Controller / Web | 健康检查与前端骨架；业务闭环、可用管理页面及生产 Agent 待实现 |
 
-上表保留原始证据。Controller持久发布、PicketXD PR16原生Provider、独立Token/Casbin/CAS/审计API及SCS/CSRF真实文档工作台已实现。[alpha HTTP增量](HTTP_AUTHORIZATION.zh-CN.md)增加来源HTTPRoute/本地决策及真实Nginx/浏览器/应用验收；[结构化Grant](GRANT_MANAGEMENT.zh-CN.md)增加管理员签发/撤销和期望有效期页面。精确通过/失败与源码证据见[检查点](AUTONOMOUS_DELIVERY.md)。人员/OIDC、资源/绑定CRUD、审批/新鲜应用状态、已验证协议身份及最终Linux联合工作流仍待完成，alpha集成不等于完整产品验收。
+上表保留原始证据。Controller持久发布、PicketXD PR16原生Provider、独立Token/Casbin/CAS/审计API及SCS/CSRF真实文档工作台已实现。[alpha HTTP增量](HTTP_AUTHORIZATION.zh-CN.md)增加来源HTTPRoute/本地决策及真实Nginx/浏览器/应用验收；[结构化Grant](GRANT_MANAGEMENT.zh-CN.md)支持管理员签发/撤销，[资源接入](RESOURCE_MANAGEMENT.zh-CN.md)增加资源/入口和精确既有上下文Binding创建。精确通过/失败与源码证据见[检查点](AUTONOMOUS_DELIVERY.md)。人员/OIDC、资源/绑定编辑删除、结构化HTTPRoute、审批/新鲜应用状态、已验证协议身份及最终Linux联合工作流仍待完成，alpha集成不等于完整产品验收。
 
 ## 交付顺序
 

@@ -3,9 +3,9 @@
 [English](GRANT_MANAGEMENT.md) | 简体中文
 
 [管理工作台](BROWSER_CONSOLE.zh-CN.md)的授权页使用现有单一数据库权威，
-提供管理员操作，不提供自助审批或已验证人员身份。请先在期望配置页发布
-Resource/Endpoint/Binding 和可信 HTTPRoute。资源/绑定 CRUD、审批和新鲜节点
-应用状态仍是后续工作，应用自身凭据仍然必需。
+提供管理员操作，不提供自助审批或已验证人员身份。可在[资源页](RESOURCE_MANAGEMENT.zh-CN.md)
+创建 Resource/Endpoint/Binding；主机事实和可信 HTTPRoute 仍用期望配置。
+资源/绑定编辑删除、审批和新鲜节点应用状态仍是后续工作，应用自身凭据仍然必需。
 
 1. 配置资源后打开授权页，显式“使用最新 Grant 修订”。输入唯一名称、实际来源
    IP/CIDR，选择固定 UID 的资源与具名 Endpoint、期限、原因。CIDR 向整个匹配

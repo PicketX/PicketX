@@ -4,9 +4,10 @@ English | [简体中文](GRANT_MANAGEMENT.zh-CN.md)
 
 The [operator console](BROWSER_CONSOLE.md) now has a Grants page backed by the
 same sole database authority as complete publication. It is an administrator
-workflow, not self-service approval or verified human identity. Configure existing
-Resources/Endpoints/Bindings and trusted HTTPRoutes in Desired configuration first.
-Resource/Binding CRUD, approval and fresh applied-node status remain separate work.
+workflow, not self-service approval or verified human identity. Create
+Resources/Endpoints/Bindings on [Resources](RESOURCE_MANAGEMENT.md); configured host
+facts and trusted HTTPRoutes still use Desired configuration. Resource/Binding
+editing/removal, approval and fresh applied-node status remain separate work.
 
 1. Open Grants and explicitly **Use latest Grant revision** after configuring
    inventory. Choose a unique Grant name, actual source IP/CIDR, pinned Resource

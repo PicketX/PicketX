@@ -77,6 +77,9 @@ func registerManagement(e *echo.Echo, service *management.Service, limits Manage
 	group.GET("/grants", h.grants)
 	group.POST("/grants", h.issueGrant)
 	group.POST("/grants/:uid/revoke", h.revokeGrant)
+	group.GET("/inventory", h.inventory)
+	group.POST("/resources", h.createResource)
+	group.POST("/bindings", h.createBinding)
 }
 func apiError(c *echo.Context, status int, code string) error {
 	return c.JSON(status, APIError{Code: code})

@@ -10,6 +10,7 @@ import { spawn, spawnSync } from 'node:child_process'
 import { once } from 'node:events'
 import { chromium } from 'playwright'
 import { freePort, startIngress } from './ingress.mjs'
+import { resourceOnboarding } from './resources.mjs'
 
 const root = resolve(import.meta.dirname, '../../..')
 const temp = await mkdtemp(join(tmpdir(), 'picketx-browser-'))
@@ -69,12 +70,14 @@ authz: {enabled: true, network: tcp, address: "127.0.0.1:${authzPort}", credenti
   const facts = await readFile(join(root, 'examples/static/facts.json'), 'utf8')
   await page.getByLabel('Policy YAML').fill(policy)
   await page.getByLabel('Facts JSON').fill(facts)
-  await page.getByLabel('Change reason').fill('Browser actual publish')
+  await page.getByLabel('Change reason', { exact: true }).fill('Browser actual publish')
   await page.getByRole('button', { name: 'Save desired configuration', exact: true }).click()
   await page.getByText('Desired configuration saved. Node application is not confirmed.', { exact: true }).waitFor()
   const accepted = await fetch(`${origin}/api/v1/publication`, { headers: { Authorization: `Bearer ${token}` } })
   const document = await accepted.json(); assert.equal(document.policy, policy); assert.equal(document.revision, 2)
   // New structured workflow must be a real navigable page, not only an API.
+  await page.getByRole('button', { name: 'Resources', exact: true }).click({ timeout: 5000 })
+  await page.getByRole('heading', { name: 'Resource onboarding', exact: true }).waitFor()
   await page.getByRole('button', { name: 'Grants', exact: true }).click({ timeout: 5000 })
   await page.getByRole('heading', { name: 'Grant access', exact: true }).waitFor()
   await page.getByLabel('Source IP or CIDR', { exact: true }).waitFor()
@@ -85,7 +88,7 @@ authz: {enabled: true, network: tcp, address: "127.0.0.1:${authzPort}", credenti
   assert(!cookies.some(c => c.value.includes(token)))
   const draft = `${policy}\n# retained unsaved draft\n`
   await page.getByLabel('Policy YAML').fill(draft)
-  await page.getByLabel('Change reason').fill('Will conflict')
+  await page.getByLabel('Change reason', { exact: true }).fill('Will conflict')
   const external = await fetch(`${origin}/api/v1/publication`, { method: 'PUT', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json', 'If-Match': accepted.headers.get('etag') }, body: JSON.stringify({ policy: original, facts: originalFacts, reason: 'Concurrent external update' }) })
   assert.equal(external.status, 200)
   await page.getByRole('button', { name: 'Save desired configuration', exact: true }).click()
@@ -142,7 +145,7 @@ authz: {enabled: true, network: tcp, address: "127.0.0.1:${authzPort}", credenti
   const httpFacts = JSON.stringify({ authorityID: 'static:example-v1', agents: [], contexts: [] })
   const publishHTTP = async (value, reason) => {
     await operator.getByLabel('Policy YAML').fill(value); await operator.getByLabel('Facts JSON').fill(httpFacts)
-    await operator.getByLabel('Change reason').fill(reason)
+    await operator.getByLabel('Change reason', { exact: true }).fill(reason)
     const response = operator.waitForResponse(r => r.url().endsWith('/console/api/v1/publication') && r.request().method() === 'PUT')
     await operator.getByRole('button', { name: 'Save desired configuration', exact: true }).click()
     assert.equal((await response).status(), 200)
@@ -261,6 +264,7 @@ spec:
   await writeFile(callersPath, '{"callers":[]}', { mode: 0o600 }); await ingress.verifyCallerRevoked()
   await writeFile(callersPath, '{"callers":null}', { mode: 0o600 }); await ingress.verifyUnavailable()
   console.log('PASS actual browser publication → source authorization → Nginx → application; revoke/deadline/audit/IPv6/scoped caller removal')
+  await resourceOnboarding({ operator, view, origin, token, policy, facts, evidence })
   // Removal invalidates the next real request even when the browser holds a cookie.
   await writeFile(principalPath, '{"principals":[]}', { mode: 0o600 })
   await page.getByRole('button', { name: 'Refresh status', exact: true }).click()

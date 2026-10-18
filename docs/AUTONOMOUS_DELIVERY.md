@@ -1,5 +1,79 @@
 # Autonomous delivery checkpoint
 
+## Resource onboarding (active)
+
+Heartbeat2026-10-18T15:28Z; owner `codex/resource-onboarding`, lease until16:00Z
+or merged+green main/explicit handoff. Core PR17 accepted main92b2d5f5e1f00c1ae32e219fa1cf9bd45deceee5,
+tree12e206a694ec648a91738cdbbce0cde69bb2ba72, mainCI39137171776 GREEN161/423,
+real browser/Nginx/Unix/static gates passed; its lease released. Agent95a5f7f/
+CI39118687475 unchanged GREEN. No open PRs at acquisition. Design and plan:
+docs/superpowers/specs/2026-10-18-resource-onboarding-design.md and
+docs/superpowers/plans/2026-10-18-resource-onboarding.md. Implement real structured
+Resource/Endpoint and explicit-context Binding creation plus live React inventory.
+Preserve current authority/CAS/audit and facts. Existing object mutation, enrollment,
+approval/identity, truthful node status and combined Linux acceptance remain.
+Local baseline full Go fails only TestAuthorizationRuntimeTCPUnixAndShutdown/unix
+with socket EPERM; native CI must execute without skip. Do not compete with this lease.
+
+[PR18](https://github.com/PicketX/PicketX/pull/18) code acceptance:
+local1d272a14d495d970924cbb1c8a2e1d04df718046,
+remote f040e70aea47a3a0205c726aa3b30ec981c46fa7 and actual CI checkout
+52f11cd70064a24b4c022af3f78dad1b29fe7cf9 share
+tree36a5b1161e30dbb32912e1b5fd8abd3407697c3d. CI39140082943
+Go117712526496/Web117712526381 GREEN. Raw167 top-level/429 total, zero
+fail/skip/race; actual Unix socket, full vet/build, pinned protocol/OpenAPI
+reproduction/local validation and fully static SQLite/managed Controller/CLI
+checks passed. Local full ordinary/race-count1 ran and only Unix EPERM failed;
+this is not a local full-suite success and no required scenario was skipped.
+Locked npm ci/typecheck/lint/build passed locally and natively.
+
+Actual Chromium Resource/dual-stack Endpoint→exact host Binding→Grant/revoke,
+412/preserved draft, failed reads, Viewer denial,375px create/read layouts,
+unchanged facts and persisted audit passed, along with all existing real
+Nginx/application source isolation/union/deny/revoke/deadline/IPv6 cases.
+Artifact12140969029 downloaded; SHA256
+1637544b82b004e55fecb0d52c3c3ba9484a6b3c230f6d2f9b23a83498676f7f
+matches API. Desktop, Resource/Binding mobile forms and Viewer mobile inspected.
+Missing Resources navigation was observed RED in CI39139004218/Web117709345450
+before UI implementation. API route404 and Grant item/optional-address schema
+tests also observed RED→GREEN. Test-only integration corrections: exact reason
+label selection (CI39139499263); concurrent resource test must change semantic
+content, not send an idempotent publication (CI39139761084).
+
+One fresh independent whole-branch review of92b2d5f..1d272a1 found no Critical
+or Important issue. Reviewer independently passed TestInventory and related
+configuration/controller/management/publication/networkplan race suites,
+diff check, and inspected Binding mobile. Full browser/native/remote CI evidence
+was verified by the executor, not independently rerun by the reviewer.
+Deferred Minor: form/DTO character count versus domain128-UTF8-byte name limit
+can reject43 CJK characters with generic feedback. Backend safely rejects;
+follow-up should add byte-specific inline validation/help and boundary regression.
+PR17's deferred Grant endpoint_names schema constraints are fixed here.
+
+Rulings and their costs:
+- Serialize Resource/Binding drafts: prevents hidden CAS-base advance; costs extra
+  form navigation for batch work.
+- Reuse existing console tokens/components after no verified matching UI pattern:
+  verified error-summary guidance applied; cost is less tailored layout polish.
+- Defer editing/removal: accurate create/read scope and advanced editor remain;
+  lifecycle changes still need advanced configuration.
+- Defer Agent enrollment and structured HTTPRoutes: current trusted configuration
+  remains available; initial deployment still needs advanced configuration.
+- Defer human identity/request/approval: administrator operation only; no requester
+  self-service yet.
+- Do not claim live application/combined privileged Linux completion: no Agent
+  change and desired state explicitly labeled; product acceptance remains pending.
+- Do not claim PostgreSQL/multi-Controller readiness: single-Controller SQLite
+  remains the supported persistence scope; deployment choices remain limited.
+
+Only final acceptance documentation changed after review. Final accurate-head CI,
+expected-head merge and main CI must still be verified; their immutable SHA/tree/
+run results are appended to PR18 after execution. Lease releases automatically
+only after merged+green main, not at an earlier code-only acceptance. Next:
+structured HTTPRoute and fresh desired/applied status management, then identity/
+approval/lifecycle gaps and combined browser→API→L4/L7→application Linux acceptance.
+Do not pause the overall task at this partial milestone.
+
 ## Structured Grant increment (active)
 
 Heartbeat2026-10-18T13:42Z; owner `codex/grant-console`, lease until15:00Z or
