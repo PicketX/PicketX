@@ -42,25 +42,25 @@ Binding/Grant lifecycle remains compiler authority. Context map self-reviewed.
 ### Task 1: Inventory and strict create API
 **Files:** configuration/inventory*, management/inventory.go, controller/inventory*, route registrations, API normalization/contract.
 **Interfaces:** consumes Snapshot/Replace and Bundle; produces Inventory(p) and CreateResource/CreateBinding(p,expected,reason,input), GET inventory and POST resources/bindings on bearer+cookie namespaces.
-- [ ] Write TestInventoryResourceAndBindingHTTP: current fixture -> create dual-stack resource -> bind exact existing context -> compiled projection, unchanged facts/audit; missing routes RED.
-- [ ] Write input/CAS/RBAC/atomic-audit/empty-marker/preservation/context-collision cases; ensure actual rejected writes leave revision/content unchanged.
-- [ ] Implement detached typed inventory and bounded compact source additions; existing complete Replace is mandatory.
-- [ ] Generate OpenAPI; regression asserts endpoint_names uniqueItems and item1..1024 on existing Grant API, strict new DTO bounds.
-- [ ] Run go test ./pkg/configuration ./internal/controller ./internal/management -count=1; expected PASS. Commit.
+- [x] Write TestInventoryResourceAndBindingHTTP: current fixture -> create dual-stack resource -> bind exact existing context -> compiled projection, unchanged facts/audit; missing routes RED.
+- [x] Write input/CAS/RBAC/atomic-audit/empty-marker/preservation/context-collision cases; ensure actual rejected writes leave revision/content unchanged.
+- [x] Implement detached typed inventory and bounded compact source additions; existing complete Replace is mandatory.
+- [x] Generate OpenAPI; regression asserts endpoint_names uniqueItems and item1..1024 on existing Grant API, strict new DTO bounds.
+- [x] Run go test ./pkg/configuration ./internal/controller ./internal/management -count=1; expected PASS. Commit.
 
 ### Task 2: Real resource onboarding page
 **Files:** Resources.tsx, App.tsx, locales/index.css, e2e/console.mjs.
 **Interfaces:** consumes Task1 inventory/resource/binding JSON and ETag; produces Resources props csrf/canWrite/onUnauthorized/onDirty/onBusy.
-- [ ] Add browser create-resource/bind/context-details/Grant-selection flow before page implementation, run native CI and observe missing navigation RED.
-- [ ] Implement two forms, explicit rebase, preserved drafts, read/error/empty/stale, viewer, bounded lists and existing theme/a11y/i18n.
-- [ ] Add concurrent mutation412, failed read, viewer denial and375px screenshot/overflow acceptance.
-- [ ] Run locked npm ci/typecheck/lint/build plus actual Chromium CI; expected GREEN. Commit.
+- [x] Add browser create-resource/bind/context-details/Grant-selection flow before page implementation, run native CI and observe missing navigation RED.
+- [x] Implement two forms, explicit rebase, preserved drafts, read/error/empty/stale, viewer, bounded lists and existing theme/a11y/i18n.
+- [x] Add concurrent mutation412, failed read, viewer denial and375px screenshot/overflow acceptance.
+- [x] Run locked npm ci/typecheck/lint/build plus actual Chromium CI; expected GREEN. Commit.
 
 ### Task 3: Acceptance and integration
 **Files:** focused bilingual docs/checkpoints; all branch changes reviewed.
 **Interfaces:** consumes exact tested source and raw CI evidence; produces accepted main/checkpoint.
-- [ ] Full go test ./..., race/vet/build; local Unix EPERM honestly recorded, required native CI no skips. Full locked Web checks.
-- [ ] Fresh independent whole-branch review; Important/Critical RED→GREEN fix pass, minors recorded.
+- [x] Full go test ./..., race/vet/build; local Unix EPERM honestly recorded, required native CI no skips. Full locked Web checks.
+- [x] Fresh independent whole-branch review; Important/Critical RED→GREEN fix pass, minors recorded.
 - [ ] Verify local/remote/tested tree and final head, required CI logs; expected-head merge; verify main CI, release lease.
 
 ## Ledger
@@ -68,3 +68,13 @@ Base Core92b2d5f5e1f00c1ae32e219fa1cf9bd45deceee5/tree12e206a694ec648a91738cdbbc
 mainCI39137171776 GREEN161/423. Agent95a5f7f/CI39118687475 unchanged and GREEN.
 No open PRs at acquisition. Existing host-owned isolated worktree reused.
 Pre-flight: Task1 JSON/ETag and Task2 consumer match; Task3 exact-source/native gates consume both. No interface conflict.
+
+Task1 local3eaa629: API404 and schema failures observed before corrections; focused
+Go packages passed. Task2 local1d272a1/tree36a5b116: native browser39140082943
+GREEN after missing-navigation RED39139004218; locked Web checks passed.
+Full native Go167/429 zero fail/skip/race; local full runs only UnixEPERM.
+Fresh whole-branch review92b2d5f..1d272a1: no Critical/Important; Unicode name
+byte-limit feedback Minor deferred. Rulings, screenshot digest, exact heads/raw
+CI and scope boundaries persisted in AUTONOMOUS_DELIVERY.md. Final docs-only
+head must pass CI, expected-head merge and main CI before Task3 integration is
+complete; final immutable evidence appended to PR18 after execution.

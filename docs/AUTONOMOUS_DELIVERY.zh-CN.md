@@ -1,11 +1,37 @@
 # 自动交付检查点
 
-当前心跳2026-10-18T15:02Z：资源接入增量 `codex/resource-onboarding`，租约至16:00Z或合并且main全绿/明确交接。
+当前心跳2026-10-18T15:28Z：资源接入增量 `codex/resource-onboarding`，租约至16:00Z或合并且main全绿/明确交接。
 Core PR17已验收：main92b2d5f5e1f00c1ae32e219fa1cf9bd45deceee5，树12e206a694ec648a91738cdbbce0cde69bb2ba72，
 mainCI39137171776通过161顶层/423总测试及真实浏览器/Nginx/Unix/静态产物；旧租约已释放。Agent95a5f7f/CI39118687475不变且通过。
 接手时两仓库无开放PR。本段设计/计划为2026-10-18-resource-onboarding，新增真实资源/Endpoint与显式既有上下文Binding创建及React目录。
 保留唯一权威、CAS、审计和原始facts；不推断已应用。已有对象变更、节点登记、审批/身份、真实节点状态及组合Linux验收仍待后续。
 本地完整Go基线仅Unix socket EPERM失败；不得跳过，必须以原生CI执行验收。租约内不要竞争实现。
+
+PR18代码验收：本地1d272a14d495d970924cbb1c8a2e1d04df718046、远端f040e70aea47a3a0205c726aa3b30ec981c46fa7、
+实际CI检出52f11cd70064a24b4c022af3f78dad1b29fe7cf9同树36a5b1161e30dbb32912e1b5fd8abd3407697c3d。
+CI39140082943 Go117712526496/Web117712526381全绿：167顶层/429总测试，无fail/skip/race；真实Unix、
+vet/build、固定生成/OpenAPI及全静态SQLite/管理Controller/CLI通过。本地完整普通/race-count1实际运行，
+仅Unix EPERM失败，不声明本地全通过；Web锁文件安装/typecheck/lint/build本地与原生均通过。
+
+真实Chromium资源/双栈入口→精确主机Binding→Grant签发撤销、412保留草稿、读取失败、Viewer拒绝、
+375px创建/只读布局、facts不变和持久审计通过，保留所有真实Nginx/应用来源隔离、并集、deny、撤销、绝对期限与IPv6场景。
+截图12140969029下载并校验SHA2561637544b82b004e55fecb0d52c3c3ba9484a6b3c230f6d2f9b23a83498676f7f，
+桌面及两类手机表单/Viewer目视检查。UI实现前CI39139004218真实缺少Resources导航RED；API404及Grant条目/
+可选地址schema测试RED→GREEN。后续只修测试：精确原因标签避免歧义；并发CAS必须真正改变语义而非幂等发布。
+
+一次独立全分支评审无Critical/Important；独立跑TestInventory和配置/controller/管理/publication/networkplan
+相关race、diff检查及Binding手机截图，未独立重跑完整浏览器/远端CI，由主执行者负责原始证据。
+延后小项：表单/DTO按字符限制，领域按128 UTF-8字节限制，43个中文字符可能得到通用拒绝提示；后端安全拒绝，
+后续补字节级行内提示与边界回归。PR17延后endpoint_names schema约束已补齐。
+
+裁定及代价：资源/Binding单草稿防止暗中更新CAS（批量操作需多切换）；沿用现有样式并应用可访问错误汇总
+（无匹配设计模式，布局个性化有限）；编辑删除仍高级配置（生命周期不够易用）；Agent注册/HTTPRoute表单延后
+（初始部署仍需高级配置）；人员身份/申请审批延后（无申请人自助）；不宣称真实应用/组合内核完成（整体验收未完）；
+不宣称PostgreSQL/多Controller可用（目前限单Controller SQLite）。
+
+评审后仅交付文档收尾。仍须最终准确head完整CI、expected-head合并和main CI复核，执行后的精确SHA/树/运行记录
+追加在PR18；仅合并且main全绿释放租约。下一步结构化HTTPRoute和真实期望/应用状态，再身份审批/生命周期与
+浏览器→API→L4/L7→应用的Linux联合验收。此局部里程碑不暂停总任务。
 
 最新心跳2026-10-18T12:27Z：PR15修复后代码已验收，远端ecddce298d5b18933680808593191e469fc68d22/树ab3b87c3f0cb440189257d2adab69d60a7e0dcfc与本地7b27b24、实际CI检出4fa673c一致。CI39127108548完整Go/Web成功：原始日志139顶层/368总测试、无fail/skip/race、vet/build/固定生成/OpenAPI与真实静态运行检查；真实Chromium包含只读焦点/选择/键盘滚动/禁止编辑和后端403。截图12135394967摘要0bcded1a0a9fd54a2072f83d2153660812cc14eee1ddcc2bee7fb8ae029097fd下载校验并目视复核。
 
