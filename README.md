@@ -8,17 +8,17 @@ PicketX is designed to grant time-bounded access to protected resources through 
 
 ## Project status
 
-This repository is an **initial development scaffold**. It includes shared logical authorization and physical planning libraries, an Echo v5-based Go Controller liveness endpoint and a bilingual React starting page. Browser authentication, approval, Grant issuance, business persistence and end-to-end Agent enforcement are not implemented; the Controller publisher described below has SQLite persistence and Token-authenticated synchronization. Do not use this scaffold to protect resources.
+This repository is under active development, not a complete access-management product. Shared Core/configuration, the SQLite Controller publisher and Token-authenticated gRPC are implemented. PicketXD PR16 now supplies the supported native host Controller Provider. The [managed publication API](docs/MANAGEMENT_API.md) adds independent API principals, Casbin, revision CAS and transactional change audit. Browser login, approval, usable management screens and HTTP L7 remain pending; no complete production workflow is claimed.
 
 The control plane and Web live here. The official Linux Agent, `picketxd`, belongs to the separate **PicketXD** repository. This initialization does not create or modify that repository.
 
-The selected backend stack is Go + Echo v5 + GORM, with go-playground/validator v10 for request fields. API documentation generation uses Swaggo v2.0.0-rc6 targeting OpenAPI 3.1, with Swagger UI v5.33.2 for documentation and interactive requests. GORM/SQLite now persists accepted desired publications through an explicit migration. Business schemas, validator, Swaggo and Swagger UI remain pending integration.
+The backend uses Go + Echo v5 + GORM, with validator v10 and pinned Swaggo v2.0.0-rc6/OpenAPI3.1 integrated for management. GORM/SQLite persists publications, source binding and change audit through explicit migrations. Swagger UI v5.33.2 rendering and broader workflow schemas remain pending.
 
 Dependency assembly uses explicit constructors and module-level composition, with centralized lifecycle management; no DI framework is selected. See architecture section 5.7 for the design boundaries.
 
 Runtime configuration loading is selected as Koanf v2.3.8, with typed module configuration and explicit file/environment/flag precedence. It is implemented for the Controller; explicitly changed standard-library flags feed the same typed configuration boundary.
 
-Runtime logging uses standard-library `log/slog`. The scaffold already emits JSON to standard error; runtime modules receive injected loggers; selectable formats/levels and persisted authorization audit remain to be implemented.
+Runtime logging uses standard-library `log/slog`, JSON stderr and injected module loggers. Managed configuration audit is separately persisted; selectable formats/levels and request-time authorization records remain pending.
 
 The `picketx` CLI uses Cobra v1.10.2 and currently supplies read-only configuration checks. The Controller now loads Koanf runtime configuration; authenticated administrative CLI commands remain unimplemented.
 
@@ -26,7 +26,7 @@ SQLite is selected as the official GORM driver (v1.6.0 baseline) with mattn/go-s
 
 Initial enforcement scope is IP/CIDR network admission, HTTP/HTTPS authorization through existing ingress, and a local decision interface over TCP or Unix socket. NFQUEUE/mirror inspection, transparent proxy/TLS termination and native database proxies are deferred; these endpoints and integrations are not implemented yet.
 
-Authorization is selected as Casbin RBAC with the official GORM Adapter. The business layer supplies the current user's trusted groups/roles; shared rules use in-process enforcement and configurable periodic policy synchronization, with startup scale/cost recommendations. ABAC is deferred until needed. This is not implemented; see [ADR 0001](docs/decisions/0001-rbac-authorization.md).
+Management API RBAC uses Casbin3.11.0 and official GORM adapter3.41.0, with trusted independent-principal roles, combined deny precedence and observable periodic reload. Browser identities and per-resource delegation remain pending. See [ADR 0001](docs/decisions/0001-rbac-authorization.md) and the [implemented boundary](docs/MANAGEMENT_API.md).
 
 Runtime support selections are SCS Sessions, Echo built-in CSRF and separately configured ordinary/Agent rate limits, official gRPC/protobuf with independent Agent Tokens and optional server TLS, Prometheus metrics and standard-library periodic jobs. The Controller-side stream foundation is implemented below; other runtime integration remains pending. See [ADR 0002](docs/decisions/0002-runtime-support.md).
 
@@ -44,7 +44,7 @@ M2B is merged in [PicketXD PR #4](https://github.com/PicketX/PicketXD/pull/4): `
 
 M2D1 implements the [Controller Agent stream foundation](docs/AGENT_STREAM.md): public typed gRPC/protobuf, complete node snapshots, revocable Tokens, correlated Agent assertions and bounded lifecycle, tested over TCP loopback and verified TLS. M2D2 below adds production process assembly and durable revisions; the PicketXD Controller provider and enrollment management remain pending, so end-to-end Controller Mode is not claimed.
 
-M2D2 adds a [running Controller publisher](docs/CONTROLLER_RUNTIME.md): strict Koanf file/env/explicit-flag loading, GORM/SQLite durable complete revisions, independent credential revocation reload, optional server TLS and bounded HTTP/gRPC lifecycle. CI starts the actual fully static SQLite binary and checks a real scoped gRPC snapshot, readiness, persisted revision and SIGTERM. PicketXD remote provider and management/L7 remain subsequent work. Autonomous progress is tracked in [the delivery checkpoint](docs/AUTONOMOUS_DELIVERY.md).
+M2D2 adds a [running Controller publisher](docs/CONTROLLER_RUNTIME.md): strict Koanf file/env/explicit-flag loading, GORM/SQLite durable complete revisions, independent credential revocation reload, optional server TLS and bounded HTTP/gRPC lifecycle. The subsequent [PicketXD PR16](https://github.com/PicketX/PicketXD/pull/16) verifies actual Core/SQLite→Agent→IPv4/IPv6 TCP/UDP allow/revoke/withdraw with provider-bound LKG. This management increment adds explicit database authority and a real authenticated API, not a UI or L7 adapter. Static CI checks actual file and managed SQLite/Casbin/API/audit/restart/SIGTERM binaries. See [delivery checkpoint](docs/AUTONOMOUS_DELIVERY.md) for exact acceptance/remaining limits; historical M0–M2D1 paragraphs above describe their original slices, not current completion.
 
 ## Development
 

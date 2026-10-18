@@ -117,7 +117,7 @@ func TestMigrationAndOverflow(t *testing.T) {
 	if _, e = s.Accept(data, facts, nil); e == nil {
 		t.Fatal("revision overflow accepted")
 	}
-	if e = s.db.Exec("UPDATE controller_schema SET version=2").Error; e != nil {
+	if e = s.db.Exec("UPDATE controller_schema SET version=99").Error; e != nil {
 		t.Fatal(e)
 	}
 	_ = s.Close()

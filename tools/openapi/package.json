@@ -1,0 +1,10 @@
+{
+  "name": "picketx-openapi-checks",
+  "private": true,
+  "scripts": {
+    "validate": "node validate.mjs"
+  },
+  "devDependencies": {
+    "@apidevtools/swagger-parser": "13.1.0"
+  }
+}

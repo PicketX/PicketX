@@ -13,6 +13,7 @@ import (
 	"io"
 	"log/slog"
 	"os"
+	"sync"
 	"sync/atomic"
 )
 
@@ -65,6 +66,7 @@ func decodeCredentials(data []byte) ([]agentsync.Credential, error) {
 }
 
 type publisher struct {
+	mu             sync.Mutex
 	cfg            runtimeconfig.Config
 	service        AgentService
 	store          *publication.Store
@@ -72,6 +74,8 @@ type publisher struct {
 	ready          atomic.Bool
 	credentialHash [32]byte
 	problem        string
+	failed         bool
+	fatal          func(error)
 }
 
 func (p *publisher) credentials() bool {
@@ -97,6 +101,11 @@ func (p *publisher) credentials() bool {
 	return true
 }
 func (p *publisher) reload() error {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	if p.failed {
+		return fmt.Errorf("publication owner failed")
+	}
 	previousProblem := p.problem
 	p.problem = ""
 	credentialsOK := p.credentials()
@@ -105,6 +114,10 @@ func (p *publisher) reload() error {
 		if p.problem != previousProblem {
 			p.log.Warn("runtime input rejected", "code", p.problem)
 		}
+		return nil
+	}
+	if p.cfg.Source.Mode == "database" {
+		p.ready.Store(true)
 		return nil
 	}
 

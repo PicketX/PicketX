@@ -30,6 +30,18 @@ jobs:
           scripts/generate-agent-protocol.sh
           git diff --exit-code -- pkg/protocol/agent/v1alpha1
       - run: go vet ./...
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+      - name: Reproduce and validate management OpenAPI 3.1 contract
+        run: |
+          export GOBIN="$RUNNER_TEMP/management-tools"
+          go install github.com/swaggo/swag/v2/cmd/swag@v2.0.0-rc6
+          export PATH="$GOBIN:$PATH"
+          scripts/generate-management-api.sh
+          git diff --exit-code -- docs/api
+          npm ci --ignore-scripts --prefix tools/openapi
+          npm run validate --prefix tools/openapi
       - run: go test -count=1 -race -v ./...
       - run: go build ./...
       - name: Static SQLite Controller artifact
