@@ -67,6 +67,37 @@ func TestBindingRemovalBrowserAndContract(t *testing.T) {
 
 const removalBody = `{"reason":"retire protection","acknowledge_unprotection":true}`
 
+func TestBindingRemovalRetainsBoundaryCommentsHTTP(t *testing.T) {
+	h, store, _ := managementFixture(t)
+	original, err := os.ReadFile("../../examples/static/gitea.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	facts, err := os.ReadFile("../../examples/static/facts.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	parts := strings.Split(string(original), "---\n")
+	suffix := "\n# preserve operator rationale\n---\n" + strings.Join(parts[:3], "---\n")
+	policy := parts[3] + "...\n" + suffix
+	raw, _ := json.Marshal(map[string]string{"policy": policy, "facts": string(facts), "reason": "annotated publication"})
+	if w := request(h, "PUT", "/api/v1/publication", string(raw), managementToken, `"0"`); w.Code != 200 {
+		t.Fatal(w.Code, w.Body.String())
+	}
+	w := request(h, "POST", "/api/v1/bindings/binding-gitea-v1/remove", removalBody, managementToken, `"1"`)
+	if w.Code != 200 || w.Header().Get("ETag") != `"2"` {
+		t.Fatal(w.Code, w.Body.String())
+	}
+	doc, err := store.Snapshot()
+	if err != nil || doc.Revision != 2 || doc.Policy != suffix || doc.Facts != string(facts) {
+		t.Fatal("persisted source/facts mismatch", err, doc.Policy)
+	}
+	audit, err := store.Audit(0, 100)
+	if err != nil || len(audit) != 2 || audit[1].Reason != "retire protection" {
+		t.Fatal("audit", audit, err)
+	}
+}
+
 func TestBindingRemovalHTTP(t *testing.T) {
 	h, store, _ := managementFixture(t)
 	_, facts := inventorySeed(t, h, false)

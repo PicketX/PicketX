@@ -84,9 +84,11 @@ authority, and file mode does not gain these management writes.
 Removal uses parser document boundaries, retains surviving source bytes, and
 strictly re-decodes/compares every resulting object against exactly one removed
 Binding. Structured removal requires UTF-8; unsupported encoding is rejected
-without modifying the publication. Known alpha limitation: an inter-document
-comment after the removed document's explicit `...` terminator may be removed
-with it. Semantic policy objects and facts are still preserved.
+without modifying the publication. An explicit column-zero `...` terminator and
+its inline comment are removed with the Binding; following blank lines, comments
+and directives retain their original bytes, including trailing comments when the
+last Binding is replaced by the explicit-empty Configuration. Comments within the
+removed document are removed with it. Semantic policy objects and facts are preserved.
 The browser requires the matching UID, advancing revision and corresponding
 strong ETag receipt before reporting acceptance. Malformed successful responses
 retain the draft and block retry until explicit reconciliation.

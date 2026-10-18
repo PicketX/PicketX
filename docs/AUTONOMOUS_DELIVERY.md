@@ -2,7 +2,7 @@
 
 ## Binding source retention (active)
 
-Owner codex/binding-source-retention; heartbeat2026-10-18T20:40Z; lease until21:40Z
+Owner codex/binding-source-retention; heartbeat2026-10-18T20:39Z; lease until21:39Z
 or merged+green main/explicit handoff. Core main1c3777812b77b009ad1f925ada24508e5cee20e8,
 tree54ff3fe404a0899ef941ef397bdb7fdee6416497/CI39162242128 GREEN. PR23 lease released.
 Agent95a5f7f/CI39118687475 GREEN. Neither repository has an open PR at acquisition.
@@ -11,6 +11,19 @@ for broader lifecycle operations. Plan: superpowers/plans/2026-10-19-binding-sou
 No UI/API/Agent/kernel semantic change. Next remains management lifecycle, identity/
 approval and combined Linux/browser acceptance; product completion is not established.
 Final exact commits/trees/CI and lease release will be recorded in this increment's PR.
+
+[PR24](https://github.com/PicketX/PicketX/pull/24) closes PR23's explicit-terminator
+comment limitation. Source and actual authenticated SQLite API tests reproduced
+lost boundary comments before the fix; deletion now stops after the terminator
+line, preserving following bytes, directives and final-document comments. The
+explicit-empty replacement also retains its trailing comments. Coverage includes
+first/middle/last positions, six YAML breaks and scalar text resembling markers.
+Focused Go passed; full ordinary Go hit only the known local Unix socket EPERM;
+Go vet/build and locked npm ci/typecheck/lint/build passed. No bypass or test skip.
+Exact-head native full Go/race/Unix/static/Web/browser CI and independent review
+are still required. Immutable final evidence and release will be recorded in PR24.
+No UI changed, so no new visual design claim. This fixes the previous deferred
+Minor; remaining lifecycle/identity/combined acceptance scope above is unchanged.
 
 ## Binding removal (active)
 
