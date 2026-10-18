@@ -1,5 +1,22 @@
 # Autonomous delivery checkpoint
 
+## HTTPRoute console (active)
+
+Heartbeat2026-10-18T16:42Z; owner `codex/http-route-console`, existing isolated
+branch `codex/resource-onboarding`; lease until18:15Z or merged+green main/explicit
+handoff. PR19 accepted main38e4f93c02a1c1fb72131b612a315c2fd6207a44,
+treeed5135eff3f2c1ad09980f13846f55729786a84c; mainCI39142252279 Go117718888580/
+Web117718888927 GREEN167/429, zero fail/skip/race, actual Unix plus100 repetitions,
+static SQLite/managed runtime and real Chromium/Nginx/application checks passed.
+PR18/19 leases released; older active headings below are historical. Agent
+95a5f7f/CI39118687475 unchanged GREEN. No open PRs at acquisition.
+Plan/context map: docs/superpowers/plans/2026-10-19-http-route-console.md.
+Structured exact HTTPRoute create/read API+page only; preserve authority/CAS/audit,
+facts and explicit caller/ingress scope. Actual browser→API→Nginx→application
+must pass. Local full Go baseline only Unix socket EPERM; native gate mandatory.
+Remaining: lifecycle, enrollment, identity/approval, fresh desired/applied status
+and combined privileged Linux product acceptance. Do not pause the overall task.
+
 ## PR18 main CI repair (active)
 
 Heartbeat2026-10-18T15:43Z; owner `codex/resource-onboarding`; lease extended
