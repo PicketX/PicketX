@@ -5,8 +5,10 @@ const endpoint = '**/console/api/v1/agent-observations'
 const isObservation = request => new URL(request.url()).pathname === '/console/api/v1/agent-observations'
 
 export async function nodeLifecycle({ operator }) {
-  // Share the real authenticated session, but isolate browser clock/visibility controls.
-  const page = await operator.context().newPage()
+  // Copy the real authenticated session into an isolated cookie jar: the deliberate
+  // 401 must not clear cookies used by the later credential-revocation acceptance.
+  const context = await operator.context().browser().newContext({ storageState: await operator.context().storageState() })
+  const page = await context.newPage()
   const errors = []
   page.on('pageerror', error => errors.push(error.message))
   let reads = 0
@@ -97,5 +99,5 @@ export async function nodeLifecycle({ operator }) {
     assert.equal(reads, start + 1, '401 discards queued work before logout cleanup')
     assert.deepEqual(errors, [])
     console.log('PASS real Nodes responses with controlled delay/visibility/clock: coalesced resume, hidden pause, retry, unmount abort, actual 401; no OS/background or kernel assertion')
-  } finally { await page.close() }
+  } finally { await context.close() }
 }
