@@ -179,3 +179,44 @@ func TestResourceRemovalCookieCSRF(t *testing.T) {
 		t.Fatal("CAS", w.Code)
 	}
 }
+
+func TestResourceRemovalOpenAPI(t *testing.T) {
+	raw, err := os.ReadFile("../../docs/api/swagger.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var spec struct {
+		Paths map[string]map[string]struct {
+			Security  []map[string][]string
+			Responses map[string]any
+		}
+		Components struct {
+			Schemas map[string]struct {
+				AdditionalProperties *bool
+				Required             []string
+				Properties           map[string]struct {
+					Const     *bool
+					MaxLength int
+				}
+			}
+		}
+	}
+	if err = json.Unmarshal(raw, &spec); err != nil {
+		t.Fatal(err)
+	}
+	for prefix, security := range map[string]string{"/api/v1": "ManagementBearer", "/console/api/v1": "BrowserCookie"} {
+		op := spec.Paths[prefix+"/resources/{uid}/remove"]["post"]
+		if len(op.Security) != 1 || op.Security[0][security] == nil {
+			t.Fatal("security", prefix)
+		}
+		for _, code := range []string{"200", "400", "401", "403", "404", "409", "412", "413", "415", "428", "429", "503"} {
+			if _, ok := op.Responses[code]; !ok {
+				t.Fatal(prefix, code)
+			}
+		}
+	}
+	s := spec.Components.Schemas["controller.RemoveResourceRequest"]
+	if s.AdditionalProperties == nil || *s.AdditionalProperties || len(s.Required) != 2 || s.Properties["reason"].MaxLength != 512 || s.Properties["acknowledge_removal"].Const == nil || !*s.Properties["acknowledge_removal"].Const {
+		t.Fatal("unsafe removal schema", s)
+	}
+}

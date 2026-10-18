@@ -13,6 +13,19 @@ Also close PR24 direct-SQLite assertion Minor. Remaining editing/reference
 lifecycle, human identity/approval and combined Linux/browser acceptance unchanged.
 Final immutable commits/CI/review and lease release belong in this increment's PR.
 
+[PR25](https://github.com/PicketX/PicketX/pull/25): API tests observed404 RED,
+then passed removal/reference refusal (expired/revoked Grant, NetworkDeny, dynamic
+Endpoint selection, Binding, HTTPRoute), strict JSON/auth/CAS/CSRF/audit rollback,
+explicit empty and direct SQLite source/facts assertions. PR24 cached-only Minor
+is closed by direct SQLite verification. Local focused normal/race, vet/build and
+locked npm checks pass; complete local normal/race fail only the existing Unix
+socket EPERM. No skip/bypass. Native RED39167060292/Web117792095444 passed real
+Nginx/Grant/Binding flows then failed at the missing Remove Resource action. Its
+Go job117792095201 caught one unformatted new adapter; repository gofmt now clean.
+UI now shares the existing single removal draft, explicit same-UID rebase/reset,
+strict receipt validation and bilingual errors; reference409 does not cascade.
+Full exact-head native CI, screenshots and independent branch review pending.
+
 ## Binding source retention (active)
 
 Owner codex/binding-source-retention; heartbeat2026-10-18T20:39Z; lease until21:39Z
