@@ -4,6 +4,7 @@ import './node-freshness.mjs'
 import { writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { createHash, randomBytes } from 'node:crypto'
+import { nodeLifecycle } from './node-lifecycle.mjs'
 
 export async function nodeObservations({ operator, view, temp, evidence }) {
   await operator.setViewportSize({ width: 1440, height: 1000 })
@@ -38,4 +39,5 @@ export async function nodeObservations({ operator, view, temp, evidence }) {
   await view.screenshot({ path: join(evidence, 'nodes-viewer-mobile.png'), fullPage: true })
   await operator.setViewportSize({ width: 1440, height: 1000 })
   console.log('PASS real Nodes API/credential reload → browser empty/unreported/disconnected, failed refresh/history, re-entry, viewer/mobile; no kernel assertion')
+  await nodeLifecycle({ operator })
 }
