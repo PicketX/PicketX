@@ -36,6 +36,15 @@ func New(access Access, repository Repository) *Service {
 	return &Service{access: access, repository: repository}
 }
 func (s *Service) Authenticate(token string) (Principal, error) { return s.access.Authenticate(token) }
+func (s *Service) ResolveSession(id, fingerprint string) (Principal, error) {
+	resolver, ok := s.access.(interface {
+		ResolveSession(string, string) (Principal, error)
+	})
+	if !ok {
+		return Principal{}, ErrUnavailable
+	}
+	return resolver.ResolveSession(id, fingerprint)
+}
 func (s *Service) Check(p Principal, operation string) error {
 	ok, e := s.access.Allowed(p, operation)
 	if e != nil {

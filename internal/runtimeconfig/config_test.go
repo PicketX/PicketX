@@ -29,6 +29,35 @@ func TestDefaultsAndPrecedence(t *testing.T) {
 		t.Fatal("present empty env ignored")
 	}
 }
+
+func TestBrowserRequiresManagedAuthorityAndExplicitSecureOrigin(t *testing.T) {
+	base := map[string]string{"agent.enabled": "true", "agent.authority": "controller:test", "database": "state/db.sqlite", "credentials": "agent.json", "source.mode": "database", "management.credentials": "principals.json", "browser.enabled": "true", "browser.origin": "https://control.example"}
+	c, e := Load("", nil, base)
+	if e != nil {
+		t.Fatal("valid browser config", e)
+	}
+	if !c.Browser.Enabled || c.Browser.Origin != "https://control.example" {
+		t.Fatal(c)
+	}
+	for _, origin := range []string{"", "http://control.example", "https://control.example/", "https://user@control.example", "https://control.example?x=1", "https://control.example#x", "https://control.example/a"} {
+		base["browser.origin"] = origin
+		if _, e = Load("", nil, base); e == nil {
+			t.Fatal("invalid browser origin accepted", origin)
+		}
+	}
+	for _, origin := range []string{"http://127.0.0.1:8080", "http://[::1]:8080", "http://localhost:5173"} {
+		base["browser.origin"] = origin
+		if _, e = Load("", nil, base); e != nil {
+			t.Fatal(origin, e)
+		}
+	}
+	if _, e = Load("", nil, map[string]string{"browser.enabled": "true", "browser.origin": "https://control.example"}); e == nil {
+		t.Fatal("file-mode browser accepted")
+	}
+	if _, e = Load("", nil, map[string]string{"browser.assets": "dist"}); e == nil {
+		t.Fatal("ignored disabled browser setting")
+	}
+}
 func TestRejectInvalidConfig(t *testing.T) {
 	for _, s := range []string{"unknown: true", "agent: {enabled: null}", "poll: 0s", "agent: {enabled: true}", "http: {listen: true}", "http: {listen: '127.0.0.1:1', listen: '127.0.0.1:2'}", "---\nhttp: {listen: '127.0.0.1:1'}\n---\npoll: 1s", "agent: {unknown: {}}", "agent: {max_frame: 4194305}", "http: {listen: broken}", "agent: {tls_cert: cert}", "agent: &x {enabled: false}\nsource: *x"} {
 		t.Run(s, func(t *testing.T) {

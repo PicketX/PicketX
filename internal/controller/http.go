@@ -20,9 +20,16 @@ func NewHandlerWithReadiness(ready func() bool) http.Handler {
 }
 
 func NewHandlerWithManagement(ready func() bool, service *management.Service, limits ManagementLimits) http.Handler {
+	return NewHandlerWithBrowser(ready, service, limits, nil)
+}
+
+func NewHandlerWithBrowser(ready func() bool, service *management.Service, limits ManagementLimits, browser *Browser) http.Handler {
 	e := echo.New()
 	if service != nil {
 		registerManagement(e, service, limits)
+	}
+	if browser != nil {
+		browser.register(e, limits)
 	}
 	e.GET("/healthz", func(c *echo.Context) error {
 		c.Response().Header().Set("Cache-Control", "no-store")
@@ -46,6 +53,9 @@ func NewHandlerWithManagement(ready func() bool, service *management.Service, li
 		}
 		e.GET("/readyz", probe)
 		e.HEAD("/readyz", probe)
+	}
+	if browser != nil {
+		return browser.wrap(e)
 	}
 	return e
 }

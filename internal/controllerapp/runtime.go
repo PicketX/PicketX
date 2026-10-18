@@ -129,7 +129,14 @@ func Run(ctx context.Context, c runtimeconfig.Config, log *slog.Logger, d Depend
 		}
 		return p.ready.Load() && (access == nil || access.Ready())
 	}
-	server := &http.Server{Handler: controller.NewHandlerWithManagement(ready, managementService, controller.ManagementLimits{RequestsPerSecond: c.Management.RequestsPerSecond, Burst: c.Management.Burst}), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 10 * time.Second, WriteTimeout: 10 * time.Second, IdleTimeout: 60 * time.Second}
+	var browser *controller.Browser
+	if c.Browser.Enabled {
+		browser, e = controller.NewBrowser(managementService, c.Browser.Origin, c.Browser.Assets)
+		if e != nil {
+			return e
+		}
+	}
+	server := &http.Server{Handler: controller.NewHandlerWithBrowser(ready, managementService, controller.ManagementLimits{RequestsPerSecond: c.Management.RequestsPerSecond, Burst: c.Management.Burst}, browser), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 10 * time.Second, WriteTimeout: 10 * time.Second, IdleTimeout: 60 * time.Second}
 	workerCtx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	accessDone := make(chan struct{})

@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/PicketX/PicketX/internal/agentsync"
+	"github.com/PicketX/PicketX/internal/management"
 	"github.com/knadh/koanf/providers/confmap"
 	"github.com/knadh/koanf/v2"
 	"go.yaml.in/yaml/v3"
@@ -27,6 +28,10 @@ type Config struct {
 		Reload                                               time.Duration
 		WarnRules, WarnLoadPercent, RequestsPerSecond, Burst int
 	}
+	Browser struct {
+		Enabled        bool
+		Origin, Assets string
+	}
 	Agent struct {
 		Enabled                            bool
 		Listen, Authority, TLSCert, TLSKey string
@@ -38,6 +43,7 @@ func defaults() map[string]any {
 	return map[string]any{
 		"http.listen": "127.0.0.1:8080", "poll": "1s", "shutdown": "5s", "database": "", "credentials": "", "source.mode": "file", "source.policy": "", "source.facts": "",
 		"management.credentials": "", "management.reload": "30s", "management.warn_rules": 10000, "management.warn_load_percent": 50, "management.requests_per_second": 128, "management.burst": 256,
+		"browser.enabled": false, "browser.origin": "", "browser.assets": "",
 		"agent.enabled": false, "agent.listen": "127.0.0.1:9090", "agent.authority": "", "agent.tls_cert": "", "agent.tls_key": "",
 		"agent.max_credentials": 128, "agent.max_streams": 128, "agent.max_frame": 4 << 20, "agent.establish_per_second": 128, "agent.messages_per_second": 32, "agent.hello_timeout": "5s", "agent.send_timeout": "10s",
 	}
@@ -134,6 +140,9 @@ func Load(path string, env, overrides map[string]string) (Config, error) {
 	c.Management.WarnLoadPercent = k.Int("management.warn_load_percent")
 	c.Management.RequestsPerSecond = k.Int("management.requests_per_second")
 	c.Management.Burst = k.Int("management.burst")
+	c.Browser.Enabled = k.Bool("browser.enabled")
+	c.Browser.Origin = k.String("browser.origin")
+	c.Browser.Assets = k.String("browser.assets")
 	c.Agent.Enabled = k.Bool("agent.enabled")
 	c.Agent.Listen = k.String("agent.listen")
 	c.Agent.Authority = k.String("agent.authority")
@@ -200,6 +209,16 @@ func (c Config) Validate() error {
 	}
 	if c.Management.Reload <= 0 || c.Management.Reload > 24*time.Hour || c.Management.WarnRules < 1 || c.Management.WarnRules > 100000000 || c.Management.WarnLoadPercent < 1 || c.Management.WarnLoadPercent > 1000 || c.Management.RequestsPerSecond < 1 || c.Management.RequestsPerSecond > 100000 || c.Management.Burst < 1 || c.Management.Burst > 100000 {
 		return fmt.Errorf("invalid management lifecycle or limits")
+	}
+	if c.Browser.Enabled {
+		if c.Source.Mode != "database" {
+			return fmt.Errorf("browser requires database authority")
+		}
+		if e := management.ValidateBrowserOrigin(c.Browser.Origin); e != nil {
+			return e
+		}
+	} else if c.Browser.Origin != "" || c.Browser.Assets != "" {
+		return fmt.Errorf("browser settings require enabled browser")
 	}
 	return nil
 }

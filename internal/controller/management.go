@@ -44,6 +44,7 @@ type IdentityResponse struct {
 type managementHTTP struct {
 	service  *management.Service
 	validate *validator.Validate
+	resolve  func(*echo.Context) (management.Principal, error)
 }
 
 func registerManagement(e *echo.Echo, service *management.Service, limits ManagementLimits) {
@@ -75,7 +76,9 @@ func apiError(c *echo.Context, status int, code string) error {
 func mappedError(c *echo.Context, e error) error {
 	switch {
 	case errors.Is(e, management.ErrUnauthorized):
-		c.Response().Header().Set("WWW-Authenticate", "Bearer")
+		if strings.HasPrefix(c.Request().URL.Path, "/api/v1/") {
+			c.Response().Header().Set("WWW-Authenticate", "Bearer")
+		}
 		return apiError(c, 401, "unauthorized")
 	case errors.Is(e, management.ErrForbidden):
 		return apiError(c, 403, "forbidden")
@@ -88,6 +91,13 @@ func mappedError(c *echo.Context, e error) error {
 	}
 }
 func (h *managementHTTP) principal(c *echo.Context, operation string) (management.Principal, error) {
+	if h.resolve != nil {
+		p, e := h.resolve(c)
+		if e == nil && operation != "" {
+			e = h.service.Check(p, operation)
+		}
+		return p, e
+	}
 	values := c.Request().Header.Values("Authorization")
 	if len(values) != 1 || !strings.HasPrefix(values[0], "Bearer ") {
 		return management.Principal{}, management.ErrUnauthorized

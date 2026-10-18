@@ -8,7 +8,7 @@ PicketX 通过自助申请、策略和审批，为受保护资源提供有期限
 
 ## 项目状态
 
-当前仓库仍在开发，不是完整访问管理产品。共享Core/配置、SQLite Controller持久发布和Token认证gRPC已实现；PicketXD PR16已提供受支持的原生主机Controller Provider。[管理发布API](docs/MANAGEMENT_API.zh-CN.md)增加独立API主体、Casbin、修订CAS与事务变更审计。浏览器登录、审批、易用页面与HTTP L7仍未完成，不能声明生产业务闭环。
+当前仓库仍在开发，不是完整访问管理产品。共享Core/配置、SQLite Controller持久发布和Token认证gRPC已实现；PicketXD PR16提供原生主机Controller Provider。[管理发布API](docs/MANAGEMENT_API.zh-CN.md)增加独立主体、Casbin、修订CAS及事务审计。[浏览器工作台](docs/BROWSER_CONSOLE.zh-CN.md)增加SCS/CSRF管理密钥会话和真实完整文档发布/审计页面。人员/OIDC身份、结构化资源/Grant/审批管理与HTTP L7仍待实现，不声明生产闭环。
 
 控制面与 Web 位于本仓库；官方 Linux Agent `picketxd` 属于独立的 **PicketXD** 仓库。本次初始化未创建或修改该仓库。
 
@@ -26,9 +26,9 @@ SQLite 选用 GORM 官方驱动（v1.6.0 基线）和 mattn/go-sqlite3（v1.14.5
 
 首期执行范围为 IP/CIDR 网络准入、现有入口提供 HTTP/HTTPS 授权、本地 TCP 或 Unix Socket 决策接口。NFQUEUE/镜像探测、透明代理/TLS 终止及原生数据库代理均后移；这些端点与集成尚未实现。
 
-管理API已用Casbin3.11.0和官方GORM adapter3.41.0，支持独立主体可信角色、多角色deny优先和可观察周期重载。浏览器身份和按资源委派仍待实现，见[ADR 0001](docs/decisions/0001-rbac-authorization.zh-CN.md)及[实际边界](docs/MANAGEMENT_API.zh-CN.md)。
+管理API使用Casbin3.11.0和官方GORM adapter3.41.0，支持独立主体可信角色、多角色deny优先和可观察周期重载。浏览器会话每次请求解析同一可信角色；人员身份和按资源委派待实现，见[ADR 0001](docs/decisions/0001-rbac-authorization.zh-CN.md)及[实际边界](docs/MANAGEMENT_API.zh-CN.md)。
 
-运行支持已选 SCS Session、Echo 内置 CSRF、普通/Agent 分别配置的限流、官方 gRPC/protobuf、独立 Agent Token 与可选服务端 TLS、Prometheus 指标、标准库周期任务；Controller 侧同步流基础已实现（见下文），其他运行时仍待接入，见 [ADR 0002](docs/decisions/0002-runtime-support.zh-CN.md)。
+运行支持已接SCS2.9.0浏览器会话、Echo原生CSRF、普通/Agent独立限流、官方gRPC、独立Agent Token与可选服务端TLS；指标及更广集成待实现，见[ADR 0002](docs/decisions/0002-runtime-support.zh-CN.md)。
 
 M0 Linux 数据面验证已在 [PicketXD](https://github.com/PicketX/PicketXD/pull/1) 实现并合并。[最终已测源码](https://github.com/PicketX/PicketXD/commit/13fdf2d9aacd79be74578ebe9c23af19a6b33d6a)在 Linux 6.17.0-1022-azure / Go 1.27.0 上通过 [17 项必需真实内核场景](https://github.com/PicketX/PicketXD/actions/runs/38547987642)。这是可复用验证基础设施，尚不是生产 Agent。已批准的 [M1.1 设计](docs/superpowers/specs/2026-10-15-shared-network-core-design.zh-CN.md)与[实施计划](docs/superpowers/plans/2026-10-15-shared-network-core.zh-CN.md)已有仅依赖标准库的逻辑引擎 [`pkg/core`](pkg/core)：校验来源、选择器、入口范围和明确期限，合并匹配 Grant、优先处理 deny，并解释独立贡献与未来变化。Gitea HTTPS/SSH 固定断言覆盖重叠、撤销、不可变替换和重放不延期。Controller 工作流尚未实现；逻辑允许不代表 Agent 已实际放行。
 
@@ -66,7 +66,7 @@ npm ci
 npm run dev
 ```
 
-访问 Vite 输出的地址。前后端独立构建，Vite 将 `/healthz` 代理到本地 Controller。Controller 暂未托管 Web 静态资源。
+前后端独立构建。要运行工作台，须先按[浏览器部署说明](docs/BROWSER_CONSOLE.zh-CN.md)启用数据库权威、管理凭据及准确浏览器Origin，默认仅健康服务不能登录。Vite代理/healthz及/console/api；配置后的Controller可托管/console/构建资源。
 
 ## 验证
 

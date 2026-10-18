@@ -3,6 +3,7 @@ module github.com/PicketX/PicketX
 go 1.27.0
 
 require (
+	github.com/alexedwards/scs/v2 v2.9.0
 	github.com/casbin/casbin/v3 v3.11.0
 	github.com/casbin/gorm-adapter/v3 v3.41.0
 	github.com/go-playground/validator/v10 v10.30.5

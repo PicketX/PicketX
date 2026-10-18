@@ -106,3 +106,40 @@ func TestDocumentationCINodeVersionFilesExist(t *testing.T) {
 		}
 	}
 }
+
+func TestBrowserOpenAPIContract(t *testing.T) {
+	raw, e := os.ReadFile("../../docs/api/swagger.json")
+	if e != nil {
+		t.Fatal(e)
+	}
+	var spec struct {
+		Paths map[string]map[string]struct {
+			OperationID string           `json:"operationId"`
+			Security    []map[string]any `json:"security"`
+		} `json:"paths"`
+		Components struct {
+			SecuritySchemes map[string]struct{ In, Name string } `json:"securitySchemes"`
+		} `json:"components"`
+	}
+	if e = json.Unmarshal(raw, &spec); e != nil {
+		t.Fatal(e)
+	}
+	for _, route := range []struct {
+		path, method string
+		private      bool
+	}{{"session", "get", false}, {"login", "post", false}, {"logout", "post", false}, {"me", "get", true}, {"publication", "get", true}, {"publication", "put", true}, {"audit", "get", true}} {
+		op := spec.Paths["/console/api/v1/"+route.path][route.method]
+		if op.OperationID == "" {
+			t.Fatal("missing browser route", route)
+		}
+		if route.private {
+			if len(op.Security) != 1 || op.Security[0]["BrowserCookie"] == nil {
+				t.Fatal("browser auth contract", route, op)
+			}
+		}
+	}
+	s := spec.Components.SecuritySchemes["BrowserCookie"]
+	if s.In != "cookie" || s.Name != "picketx_session" {
+		t.Fatal(s)
+	}
+}
