@@ -3,13 +3,37 @@ package configuration
 
 import (
 	"bytes"
+	"encoding/binary"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
 	"strings"
 	"testing"
+	"unicode/utf16"
 )
+
+func TestRemoveBindingRejectsUTF16WithoutPanic(t *testing.T) {
+	raw, err := os.ReadFile("../../examples/static/gitea.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	units := utf16.Encode([]rune(strings.ReplaceAll(string(raw), "\n", "\u2028")))
+	data := []byte{0xff, 0xfe}
+	for _, unit := range units {
+		data = binary.LittleEndian.AppendUint16(data, unit)
+	}
+	b, err := Decode(data)
+	if err != nil {
+		t.Fatal("fixture must be accepted", err)
+	}
+	if _, err = b.RemoveBinding("binding-gitea-v1"); err == nil {
+		t.Fatal("unsupported encoding accepted")
+	}
+	if !bytes.Equal(b.source, data) {
+		t.Fatal("source mutated")
+	}
+}
 
 func TestRemoveBindingPreservesSurvivingDocuments(t *testing.T) {
 	raw, err := os.ReadFile("../../examples/static/gitea.yaml")

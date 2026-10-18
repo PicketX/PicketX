@@ -95,6 +95,27 @@ export async function resourceOnboarding({ operator: p, view, origin, token, pol
   await bindingCard.getByRole('button', { name: 'Remove Binding', exact: true }).click()
   await p.getByLabel('Removal reason', { exact: true }).fill('Retire browser binding protection')
   await p.getByRole('checkbox', { name: 'I understand this may leave services unprotected', exact: true }).check()
+  const removalBase = await fetch(`${origin}/api/v1/inventory`, { headers })
+  const baseRevision = (await removalBase.json()).revision
+  for (const receipt of [
+    { status: 204 },
+    { status: 200, contentType: 'application/json', body: '{}' },
+    { status: 200, contentType: 'application/json', headers: { ETag: `"${baseRevision + 1}"` }, body: JSON.stringify({ uid: 'different-binding', revision: baseRevision + 1 }) },
+    { status: 200, contentType: 'application/json', headers: { ETag: `"${baseRevision}"` }, body: JSON.stringify({ uid: result.uid, revision: baseRevision }) },
+    { status: 200, contentType: 'application/json', headers: { ETag: `W/"${baseRevision + 1}"` }, body: JSON.stringify({ uid: result.uid, revision: baseRevision + 1 }) },
+  ]) {
+    await p.route(`**${removalPath}`, route => route.fulfill(receipt))
+    await p.getByRole('button', { name: 'Confirm Binding removal', exact: true }).click()
+    await p.locator('.resources-section [role="alert"]').waitFor()
+    assert.equal(await p.getByLabel('Removal reason', { exact: true }).inputValue(), 'Retire browser binding protection')
+    assert(await p.getByRole('button', { name: 'Confirm Binding removal', exact: true }).isDisabled())
+    assert((await (await fetch(`${origin}/api/v1/inventory`, { headers })).json()).bindings.some(b => b.uid === result.uid))
+    await p.unroute(`**${removalPath}`)
+    p.once('dialog', d => d.accept())
+    await p.getByRole('button', { name: 'Use latest resource revision', exact: true }).click()
+    await p.getByRole('checkbox', { name: 'I understand this may leave services unprotected', exact: true }).check()
+  }
+  console.log('PASS malformed removal receipts retain draft and block retry until explicit rebase; actual Controller state unchanged')
   await p.getByRole('button', { name: 'Grants', exact: true }).click()
   await p.getByRole('button', { name: 'Resources', exact: true }).click()
   assert.equal(await p.getByLabel('Removal reason', { exact: true }).inputValue(), 'Retire browser binding protection')
@@ -109,6 +130,7 @@ export async function resourceOnboarding({ operator: p, view, origin, token, pol
   p.once('dialog', d => d.accept())
   await p.getByRole('button', { name: 'Use latest resource revision', exact: true }).click()
   assert.equal(await p.getByLabel('Removal reason', { exact: true }).inputValue(), 'Retire browser binding protection')
+  await p.waitForFunction(() => document.querySelector('.resources-section')?.getAttribute('aria-busy') === 'false')
   assert.equal(await p.getByRole('checkbox', { name: 'I understand this may leave services unprotected', exact: true }).isChecked(), false)
   await p.setViewportSize({ width: 375, height: 812 })
   assert(await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth))
