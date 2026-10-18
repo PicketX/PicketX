@@ -146,3 +146,39 @@ func TestRejectUnsafeFilesAndFacts(t *testing.T) {
 		}
 	}
 }
+
+// A stale writer that opened an existing row must not overwrite a newer UPDATE.
+func TestStaleUpdateCannotReplacePersistedRevision(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "private", "controller.sqlite")
+	policy, facts := inputs(t)
+	seed := open(t, path)
+	if _, e := seed.Accept(policy, facts, nil); e != nil {
+		t.Fatal(e)
+	}
+	_ = seed.Close()
+	a := open(t, path)
+	b := open(t, path)
+	winner := bytes.Replace(policy, []byte("10:00:00Z"), []byte("11:00:00Z"), 1)
+	stale := bytes.Replace(policy, []byte("grant-browser-v1"), []byte("grant-browser-stale"), 1)
+	if changed, e := a.Accept(winner, facts, nil); e != nil || !changed {
+		t.Fatal(changed, e)
+	}
+	accepted, revision := a.Current()
+	if revision != 2 {
+		t.Fatal(revision)
+	}
+	if changed, e := b.Accept(stale, facts, nil); e == nil || changed {
+		t.Fatal("stale UPDATE replaced revision2", changed, e)
+	}
+	_, staleRevision := b.Current()
+	if staleRevision != 1 {
+		t.Fatal("failed CAS advanced stale in-memory state", staleRevision)
+	}
+	_ = a.Close()
+	_ = b.Close()
+	reopened := open(t, path)
+	actual, revision := reopened.Current()
+	if revision != 2 || actual.Hash() != accepted.Hash() {
+		t.Fatal("persisted winner replaced", revision, actual.Hash(), accepted.Hash())
+	}
+}
