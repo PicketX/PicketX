@@ -70,11 +70,14 @@ type process struct {
 }
 
 func start(t *testing.T, c runtimeconfig.Config) *process {
+	return startWithService(t, c, nil)
+}
+func startWithService(t *testing.T, c runtimeconfig.Config, factory func(string, agentsync.Limits) (AgentService, error)) *process {
 	t.Helper()
 	ctx, cancel := context.WithCancel(context.Background())
 	p := &process{cancel: cancel, done: make(chan error, 1)}
 	addrs := make(chan string, 2)
-	deps := Dependencies{Listen: func(network, addr string) (net.Listener, error) {
+	deps := Dependencies{NewService: factory, Listen: func(network, addr string) (net.Listener, error) {
 		l, e := net.Listen(network, addr)
 		if e == nil {
 			addrs <- l.Addr().String()

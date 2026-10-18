@@ -28,6 +28,8 @@ type Store struct {
 	revision  uint64
 	semantic  string
 	closed    bool
+	mode      string
+	document  Document
 }
 
 // PersistenceError means durability failed; the runtime must stop and reopen.
@@ -45,8 +47,15 @@ type record struct {
 }
 
 func Open(path, authority string) (out *Store, err error) {
+	return OpenMode(path, authority, "file")
+}
+
+func OpenMode(path, authority, mode string) (out *Store, err error) {
 	if path == "" || authority == "" {
 		return nil, fmt.Errorf("invalid publication database identity")
+	}
+	if mode != "file" && mode != "database" {
+		return nil, fmt.Errorf("invalid publication source mode")
 	}
 	abs, e := filepath.Abs(path)
 	if e != nil {
@@ -86,7 +95,7 @@ func Open(path, authority string) (out *Store, err error) {
 			_ = sqlDB.Close()
 		}
 	}()
-	s := &Store{db: db, authority: authority}
+	s := &Store{db: db, authority: authority, mode: mode}
 	e = db.Transaction(func(tx *gorm.DB) error {
 		if e := tx.Exec("CREATE TABLE IF NOT EXISTS controller_schema (id INTEGER PRIMARY KEY CHECK(id=1), version INTEGER NOT NULL)").Error; e != nil {
 			return e
@@ -100,10 +109,27 @@ func Open(path, authority string) (out *Store, err error) {
 			if e := tx.Exec("CREATE TABLE controller_publication (id INTEGER PRIMARY KEY CHECK(id=1), authority TEXT NOT NULL, revision INTEGER NOT NULL CHECK(revision>0), policy BLOB NOT NULL, facts BLOB NOT NULL, digest TEXT NOT NULL)").Error; e != nil {
 				return e
 			}
-			return tx.Exec("INSERT INTO controller_schema(id,version) VALUES(1,1)").Error
+			if e := tx.Exec("INSERT INTO controller_schema(id,version) VALUES(1,1)").Error; e != nil {
+				return e
+			}
+			version.Version = 1
 		}
-		if version.Version != 1 {
+		if version.Version == 1 {
+			if e := migrateManaged(tx, mode); e != nil {
+				return e
+			}
+			version.Version = 2
+		}
+		if version.Version != 2 {
 			return fmt.Errorf("unsupported publication schema version")
+		}
+		var source struct{ Mode string }
+		result := tx.Raw("SELECT mode FROM controller_source WHERE id=1").Scan(&source)
+		if result.Error != nil {
+			return result.Error
+		}
+		if result.RowsAffected != 1 || source.Mode != mode {
+			return fmt.Errorf("publication source mode mismatch")
 		}
 		return nil
 	})
@@ -126,6 +152,7 @@ func Open(path, authority string) (out *Store, err error) {
 		s.candidate = c
 		s.semantic = semantic
 		s.revision = uint64(r.Revision)
+		s.document = Document{Authority: authority, Revision: s.revision, Policy: string(r.Policy), Facts: string(r.Facts)}
 	}
 	return s, nil
 }
@@ -137,6 +164,14 @@ func (s *Store) Current() (*configuration.Candidate, uint64) {
 func (s *Store) Accept(policy, facts []byte, preflight func(*configuration.Candidate, uint64) error) (bool, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	if s.mode != "file" {
+		return false, fmt.Errorf("file publication disabled")
+	}
+	return s.accept(policy, facts, "", "", preflight)
+}
+
+// accept requires s.mu. A managed audit and publication are committed together.
+func (s *Store) accept(policy, facts []byte, actor, reason string, preflight func(*configuration.Candidate, uint64) error) (bool, error) {
 	if s.closed {
 		return false, fmt.Errorf("publication store closed")
 	}
@@ -160,14 +195,20 @@ func (s *Store) Accept(policy, facts []byte, preflight func(*configuration.Candi
 	r.Digest = recordDigest(r)
 	e = s.db.Transaction(func(tx *gorm.DB) error {
 		if s.revision == 0 {
-			return tx.Exec("INSERT INTO controller_publication(id,authority,revision,policy,facts,digest) VALUES(1,?,?,?,?,?)", r.Authority, r.Revision, r.Policy, r.Facts, r.Digest).Error
+			if e := tx.Exec("INSERT INTO controller_publication(id,authority,revision,policy,facts,digest) VALUES(1,?,?,?,?,?)", r.Authority, r.Revision, r.Policy, r.Facts, r.Digest).Error; e != nil {
+				return e
+			}
+		} else {
+			result := tx.Exec("UPDATE controller_publication SET revision=?,policy=?,facts=?,digest=? WHERE id=1 AND authority=? AND revision=?", r.Revision, r.Policy, r.Facts, r.Digest, s.authority, int64(s.revision))
+			if result.Error != nil {
+				return result.Error
+			}
+			if result.RowsAffected != 1 {
+				return fmt.Errorf("publication revision changed externally")
+			}
 		}
-		result := tx.Exec("UPDATE controller_publication SET revision=?,policy=?,facts=?,digest=? WHERE id=1 AND authority=? AND revision=?", r.Revision, r.Policy, r.Facts, r.Digest, s.authority, int64(s.revision))
-		if result.Error != nil {
-			return result.Error
-		}
-		if result.RowsAffected != 1 {
-			return fmt.Errorf("publication revision changed externally")
+		if s.mode == "database" {
+			return insertAudit(tx, actor, reason, next, semantic)
 		}
 		return nil
 	})
@@ -177,6 +218,7 @@ func (s *Store) Accept(policy, facts []byte, preflight func(*configuration.Candi
 	s.candidate = c
 	s.revision = next
 	s.semantic = semantic
+	s.document = Document{Authority: s.authority, Revision: next, Policy: string(policy), Facts: string(facts)}
 	return true, nil
 }
 func (s *Store) Close() error {

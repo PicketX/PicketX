@@ -3,6 +3,7 @@
 package controller
 
 import (
+	"github.com/PicketX/PicketX/internal/management"
 	"net/http"
 
 	"github.com/labstack/echo/v5"
@@ -15,7 +16,14 @@ func NewHandler() http.Handler {
 
 // NewHandlerWithReadiness adds a detail-free module readiness probe.
 func NewHandlerWithReadiness(ready func() bool) http.Handler {
+	return NewHandlerWithManagement(ready, nil, ManagementLimits{})
+}
+
+func NewHandlerWithManagement(ready func() bool, service *management.Service, limits ManagementLimits) http.Handler {
 	e := echo.New()
+	if service != nil {
+		registerManagement(e, service, limits)
+	}
 	e.GET("/healthz", func(c *echo.Context) error {
 		c.Response().Header().Set("Cache-Control", "no-store")
 		return c.JSON(http.StatusOK, struct {

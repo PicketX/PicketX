@@ -4,6 +4,24 @@ The Button and Card source files in `apps/web/src/components/ui` are copied from
 
 The project Apache-2.0 license does not replace third-party licenses. Go module and npm package dependencies retain their own license files. Binary distributions must retain applicable dependency notices.
 
+Management integration adds Casbin v3.11.0 and official GORM adapter v3.41.0
+(Apache-2.0), validator v10.30.5 (MIT, Copyright 2015 Dean Karn) and Echo's built-in
+rate limiter. Sources: https://github.com/casbin/casbin/tree/v3.11.0,
+https://github.com/casbin/gorm-adapter/tree/v3.41.0,
+https://github.com/go-playground/validator/tree/v10.30.5.
+The official adapter also links its upstream driver dependencies; runtime still uses
+the existing official SQLite/mattn connection. In particular go-sql-driver/mysql
+v1.9.3 retains MPL-2.0 (https://github.com/go-sql-driver/mysql/tree/v1.9.3), and
+modernc.org/libc v1.67.4 retains its Libc Authors BSD-style notices. These unmodified
+upstream sources remain available at their pinned module versions; their licenses
+must accompany binary distributions. They do not change PicketX's own Apache license
+or establish support for those databases. No GPL Agent implementation is imported.
+
+Build-only management documentation uses Swaggo v2.0.0-rc6 (MIT) and locked
+@apidevtools/swagger-parser v13.1.0 (MIT), including its Ajv/OpenAPI schema dependencies.
+Retain their package license files if distributing build tooling. No Swagger UI assets
+are bundled by this increment. Redocly CLI was removed; it is not a runtime/build dependency.
+
 ## shadcn/ui
 
 MIT License

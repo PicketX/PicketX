@@ -42,10 +42,10 @@
 
 **Interfaces:** `OpenMode(path, authority, mode string) (*Store,error)`; `Snapshot() (Document,error)`; `AcceptManaged(expected uint64, actor,reason string, policy,facts []byte, preflight func(*configuration.Candidate,uint64) error) (bool,error)`; `Audit(after int64,limit int) ([]AuditEvent,error)`; `GORM() *gorm.DB` for assembly-only adapter reuse.
 
-- [ ] Write mode binding/migration, stale-noop, concurrent writer and rollback/reopen tests in `internal/publication/managed_test.go`.
-- [ ] Run `go test ./internal/publication` and observe missing managed behavior.
-- [ ] Implement the interfaces, keeping original `Accept` file-only and migration/audit atomic.
-- [ ] Run `go test -count=1 ./...`; expected all pass; commit.
+- [x] Write mode binding/migration, stale-noop, concurrent writer and rollback/reopen tests in `internal/publication/managed_test.go`.
+- [x] Run `go test ./internal/publication` and observe missing managed behavior.
+- [x] Implement the interfaces, keeping original `Accept` file-only and migration/audit atomic.
+- [x] Run `go test -count=1 ./...`; expected all pass; commit1482a3d.
 
 ### Task 2: Trusted management principals and Casbin
 

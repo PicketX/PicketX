@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"github.com/PicketX/PicketX/internal/agentsync"
 	"github.com/PicketX/PicketX/internal/controller"
+	"github.com/PicketX/PicketX/internal/management"
+	"github.com/PicketX/PicketX/internal/managementaccess"
 	"github.com/PicketX/PicketX/internal/publication"
 	"github.com/PicketX/PicketX/internal/runtimeconfig"
 	"github.com/PicketX/PicketX/pkg/configuration"
@@ -65,6 +67,9 @@ func Run(ctx context.Context, c runtimeconfig.Config, log *slog.Logger, d Depend
 	var agentListener net.Listener
 	var agentServer *grpc.Server
 	var p *publisher
+	var access *managementaccess.Access
+	var managementService *management.Service
+	failures := make(chan error, 3)
 	if c.Agent.Enabled {
 		agentListener, e = d.Listen("tcp", c.Agent.Listen)
 		if e != nil {
@@ -80,14 +85,30 @@ func Run(ctx context.Context, c runtimeconfig.Config, log *slog.Logger, d Depend
 		}
 		defer svc.Close()
 		p = &publisher{cfg: c, service: svc, log: log}
+		p.fatal = func(e error) {
+			select {
+			case failures <- e:
+			default:
+			}
+		}
 		if !p.credentials() {
 			return fmt.Errorf("initial Agent credentials rejected")
 		}
-		p.store, e = publication.Open(c.Database, c.Agent.Authority)
+		p.store, e = publication.OpenMode(c.Database, c.Agent.Authority, c.Source.Mode)
 		if e != nil {
 			return e
 		}
 		defer p.store.Close()
+		if c.Source.Mode == "database" {
+			access, e = managementaccess.New(p.store.GORM(), managementaccess.Settings{Credentials: c.Management.Credentials, Reload: c.Management.Reload, WarnRules: c.Management.WarnRules, WarnLoadPercent: c.Management.WarnLoadPercent}, log)
+			if e != nil {
+				return e
+			}
+			if e = p.initializeManaged(); e != nil {
+				return e
+			}
+			managementService = management.New(access, p)
+		}
 		if candidate, r := p.store.Current(); candidate != nil {
 			if e = svc.Publish(candidate, r); e != nil {
 				return e
@@ -106,12 +127,17 @@ func Run(ctx context.Context, c runtimeconfig.Config, log *slog.Logger, d Depend
 		if p == nil {
 			return true
 		}
-		return p.ready.Load()
+		return p.ready.Load() && (access == nil || access.Ready())
 	}
-	server := &http.Server{Handler: controller.NewHandlerWithReadiness(ready), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 10 * time.Second, WriteTimeout: 10 * time.Second, IdleTimeout: 60 * time.Second}
+	server := &http.Server{Handler: controller.NewHandlerWithManagement(ready, managementService, controller.ManagementLimits{RequestsPerSecond: c.Management.RequestsPerSecond, Burst: c.Management.Burst}), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 10 * time.Second, WriteTimeout: 10 * time.Second, IdleTimeout: 60 * time.Second}
 	workerCtx, cancel := context.WithCancel(ctx)
 	defer cancel()
-	failures := make(chan error, 3)
+	accessDone := make(chan struct{})
+	if access != nil {
+		go func() { defer close(accessDone); access.Run(workerCtx) }()
+	} else {
+		close(accessDone)
+	}
 	pollDone := make(chan struct{})
 	if p != nil {
 		go func() {
@@ -157,6 +183,7 @@ func Run(ctx context.Context, c runtimeconfig.Config, log *slog.Logger, d Depend
 	}
 	cancel()
 	<-pollDone
+	<-accessDone
 	if p != nil {
 		p.ready.Store(false)
 		p.service.Close()
