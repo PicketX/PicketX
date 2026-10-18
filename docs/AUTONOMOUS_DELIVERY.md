@@ -1,5 +1,18 @@
 # Autonomous delivery checkpoint
 
+## Management mutation completion (active)
+
+Owner codex/mutation-completion; heartbeat2026-10-18T22:40Z; lease until23:40Z
+or merged+green main/explicit release. Core d2b866d84c3830de7f6c51ad916d6cd492cf1b17,
+tree9d66e56952db00d144151c25b61bf86c62aee2fc/mainCI39171281137 GREEN; PR26 released.
+Agent95a5f7f/mainCI39118687475 GREEN; no open PRs in either repo at acquisition.
+Existing isolated clean worktree retained. Plan/spec:
+superpowers/{plans,specs}/2026-10-19-mutation-completion.md. Extend precise success
+status handling to existing management mutations; preserve drafts on accepted
+but incomplete responses. No kernel/backend/identity change. Resource editing,
+identity/approval and combined Linux/browser acceptance remain outstanding.
+PR will carry immutable CI/head evidence and final release.
+
 ## HTTPRoute removal (active)
 
 Owner codex/http-route-removal; heartbeat2026-10-18T22:07Z; lease until23:07Z or

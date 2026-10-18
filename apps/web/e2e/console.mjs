@@ -13,6 +13,7 @@ import { freePort, startIngress } from './ingress.mjs'
 import { resourceOnboarding } from './resources.mjs'
 import { httpRouteManagement } from './http-routes.mjs'
 import { nodeObservations } from './nodes.mjs'
+import { rejectedMutationReceipt } from './mutation-receipts.mjs'
 
 const root = resolve(import.meta.dirname, '../../..')
 const temp = await mkdtemp(join(tmpdir(), 'picketx-browser-'))
@@ -73,6 +74,14 @@ authz: {enabled: true, network: tcp, address: "127.0.0.1:${authzPort}", credenti
   await page.getByLabel('Policy YAML').fill(policy)
   await page.getByLabel('Facts JSON').fill(facts)
   await page.getByLabel('Change reason', { exact: true }).fill('Browser actual publish')
+  for (const fault of [{ status: 202 }, { status: 500 }, { abort: true }]) {
+    await rejectedMutationReceipt({ p: page, path: '/publication', section: '.workspace', submit: 'Save desired configuration', labels: ['Policy YAML', 'Facts JSON', 'Change reason'], ...fault })
+    page.once('dialog', d => d.accept())
+    await page.getByRole('button', { name: 'Reload latest into editor', exact: true }).click()
+    await page.getByLabel('Policy YAML').fill(policy)
+    await page.getByLabel('Facts JSON').fill(facts)
+    await page.getByLabel('Change reason', { exact: true }).fill('Browser actual publish')
+  }
   await page.getByRole('button', { name: 'Save desired configuration', exact: true }).click()
   await page.getByText('Desired configuration saved. Node application is not confirmed.', { exact: true }).waitFor()
   const accepted = await fetch(`${origin}/api/v1/publication`, { headers: { Authorization: `Bearer ${token}` } })
@@ -271,6 +280,7 @@ spec:
   await resourceOnboarding({ operator, view, origin, token, policy, facts, evidence })
   await httpRouteManagement({ operator, view, origin, token, root, temp, authzPort, ingressToken, callersPath, evidence })
   await nodeObservations({ operator, view, temp, evidence })
+  await import('./request.mjs')
   // Removal invalidates the next real request even when the browser holds a cookie.
   await writeFile(principalPath, '{"principals":[]}', { mode: 0o600 })
   await page.getByRole('button', { name: 'Refresh status', exact: true }).click()

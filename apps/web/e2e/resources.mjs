@@ -2,6 +2,7 @@
 import assert from 'node:assert/strict'
 import { join } from 'node:path'
 import { resourceRemoval } from './resource-removal.mjs'
+import { rejectedMutationReceipt } from './mutation-receipts.mjs'
 
 export async function resourceOnboarding({ operator: p, view, origin, token, policy, facts, evidence }) {
   await p.getByRole('button', { name: 'Desired configuration', exact: true }).click()
@@ -44,6 +45,9 @@ export async function resourceOnboarding({ operator: p, view, origin, token, pol
   assert(await p.getByRole('button', { name: 'Create Resource', exact: true }).isDisabled())
   p.once('dialog', dialog => dialog.accept())
   await p.getByRole('button', { name: 'Use latest resource revision', exact: true }).click()
+  await rejectedMutationReceipt({ p, path: '/resources', section: '.resources-section', submit: 'Create Resource', labels: ['Resource name', 'Resource change reason', 'Endpoint 1 addresses'] })
+  p.once('dialog', d => d.accept())
+  await p.getByRole('button', { name: 'Use latest resource revision', exact: true }).click()
   const create = p.waitForResponse(r => r.url().endsWith('/console/api/v1/resources') && r.request().method() === 'POST')
   await p.getByRole('button', { name: 'Create Resource', exact: true }).click()
   const created = await create; assert.equal(created.status(), 201); const resource = await created.json()
@@ -59,6 +63,9 @@ export async function resourceOnboarding({ operator: p, view, origin, token, pol
   await p.getByLabel('Binding change reason', { exact: true }).fill('Browser exact context binding')
   assert(await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth))
   await p.screenshot({ path: join(evidence, 'binding-form-mobile.png'), fullPage: true })
+  await rejectedMutationReceipt({ p, path: '/bindings', section: '.resources-section', submit: 'Create Binding', labels: ['Binding name', 'Binding change reason', 'Binding resource', 'Existing execution context'] })
+  p.once('dialog', d => d.accept())
+  await p.getByRole('button', { name: 'Use latest resource revision', exact: true }).click()
   const binding = p.waitForResponse(r => r.url().endsWith('/console/api/v1/bindings') && r.request().method() === 'POST')
   await p.getByRole('button', { name: 'Create Binding', exact: true }).click()
   const bound = await binding; assert.equal(bound.status(), 201); const result = await bound.json()
@@ -77,11 +84,17 @@ export async function resourceOnboarding({ operator: p, view, origin, token, pol
   await p.getByLabel('Source IP or CIDR', { exact: true }).fill('2001:db8::42')
   await p.getByRole('checkbox', { name: 'web TCP/8443', exact: true }).check()
   await p.getByLabel('Grant issue reason', { exact: true }).fill('Grant new resource')
+  await rejectedMutationReceipt({ p, path: '/grants', section: '.grants-section', submit: 'Issue Grant', labels: ['Grant name', 'Source IP or CIDR', 'Grant issue reason'] })
+  p.once('dialog', d => d.accept())
+  await p.getByRole('button', { name: 'Use latest Grant revision', exact: true }).click()
   const grant = p.waitForResponse(r => r.url().endsWith('/console/api/v1/grants') && r.request().method() === 'POST')
   await p.getByRole('button', { name: 'Issue Grant', exact: true }).click()
   const granted = await grant; assert.equal(granted.status(), 201); const g = await granted.json()
   await p.locator(`[data-grant-id="${g.uid}"]`).getByRole('button', { name: 'Revoke Grant', exact: true }).click()
   await p.getByLabel('Revocation reason', { exact: true }).fill('Revoke onboarding grant')
+  await rejectedMutationReceipt({ p, path: `/grants/${g.uid}/revoke`, section: '.grants-section', submit: 'Confirm revocation', labels: ['Revocation reason'] })
+  p.once('dialog', d => d.accept())
+  await p.getByRole('button', { name: 'Use latest Grant revision', exact: true }).click()
   await p.getByRole('button', { name: 'Confirm revocation', exact: true }).click()
   await p.locator(`[data-grant-id="${g.uid}"]`).getByText('Revoked', { exact: true }).waitFor()
   await p.getByRole('button', { name: 'Resources', exact: true }).click()
@@ -99,6 +112,7 @@ export async function resourceOnboarding({ operator: p, view, origin, token, pol
   const removalBase = await fetch(`${origin}/api/v1/inventory`, { headers })
   const baseRevision = (await removalBase.json()).revision
   for (const receipt of [
+    { status: 202, contentType: 'application/json', headers: { ETag: `"${baseRevision + 1}"` }, body: JSON.stringify({ uid: result.uid, revision: baseRevision + 1 }) },
     { status: 204 },
     { status: 200, contentType: 'application/json', body: '{}' },
     { status: 200, contentType: 'application/json', headers: { ETag: `"${baseRevision + 1}"` }, body: JSON.stringify({ uid: 'different-binding', revision: baseRevision + 1 }) },
