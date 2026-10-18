@@ -333,3 +333,43 @@ func TestDistributionFailureStopsAfterDurableCommit(t *testing.T) {
 		t.Fatal("recovery bumped revision", got)
 	}
 }
+
+func TestInvalidCredentialsBlockChangedPublication(t *testing.T) {
+	c := fixture(t)
+	svc, e := agentsync.New(c.Agent.Authority, c.Agent.Limits)
+	if e != nil {
+		t.Fatal(e)
+	}
+	defer svc.Close()
+	store, e := publication.Open(c.Database, c.Agent.Authority)
+	if e != nil {
+		t.Fatal(e)
+	}
+	defer store.Close()
+	p := &publisher{cfg: c, service: svc, store: store, log: slog.New(slog.NewTextHandler(io.Discard, nil))}
+	if e = p.reload(); e != nil {
+		t.Fatal(e)
+	}
+	originalCredentials, _ := os.ReadFile(c.Credentials)
+	policy, _ := os.ReadFile(c.Source.Policy)
+	write(t, c.Credentials, []byte(`{"credentials":invalid}`))
+	write(t, c.Source.Policy, bytes.Replace(policy, []byte("10:00:00Z"), []byte("11:00:00Z"), 1))
+	if e = p.reload(); e != nil {
+		t.Fatal(e)
+	}
+	if p.ready.Load() {
+		t.Fatal("invalid credentials reported ready")
+	}
+	_, r := store.Current()
+	if r != 1 {
+		t.Fatal("invalid credential reload advanced durable publication", r)
+	}
+	write(t, c.Credentials, originalCredentials)
+	if e = p.reload(); e != nil {
+		t.Fatal(e)
+	}
+	_, r = store.Current()
+	if r != 2 || !p.ready.Load() {
+		t.Fatal("valid recovery did not advance exactly once", r)
+	}
+}

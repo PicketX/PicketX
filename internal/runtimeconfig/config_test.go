@@ -47,3 +47,20 @@ func TestEnabledConfig(t *testing.T) {
 		t.Fatal(c, e)
 	}
 }
+
+func TestDocumentedControllerExample(t *testing.T) {
+	root := filepath.Join("..", "..")
+	c, e := Load(filepath.Join(root, "examples", "controller", "controller.yaml"), nil, nil)
+	if e != nil {
+		t.Fatal(e)
+	}
+	if !c.Agent.Enabled || c.Agent.Authority != "static:example-v1" {
+		t.Fatal(c)
+	}
+	for _, source := range []string{c.Source.Policy, c.Source.Facts} {
+		info, e := os.Stat(filepath.Join(root, source))
+		if e != nil || !info.Mode().IsRegular() {
+			t.Fatal("documented source missing", source, e)
+		}
+	}
+}

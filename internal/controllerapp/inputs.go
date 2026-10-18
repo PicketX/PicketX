@@ -100,6 +100,14 @@ func (p *publisher) reload() error {
 	previousProblem := p.problem
 	p.problem = ""
 	credentialsOK := p.credentials()
+	if !credentialsOK {
+		p.ready.Store(false)
+		if p.problem != previousProblem {
+			p.log.Warn("runtime input rejected", "code", p.problem)
+		}
+		return nil
+	}
+
 	policy, e := readFile(p.cfg.Source.Policy, false)
 	if e != nil {
 		p.problem = "policy_read"

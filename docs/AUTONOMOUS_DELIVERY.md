@@ -17,3 +17,5 @@ Owner: interactive Controller runtime increment. Branch: `codex/controller-runti
 5. Actual browser/API/proxy/application walkthrough and Linux enforcement evidence. At completion pause the hourly task and report precise acceptance evidence.
 
 Next tests also include PR11 deferred minor: newly credentialed scope receives existing nonempty desired inventory without republishing. Every increment needs uncached relevant full tests, fresh whole-branch review, checked remote source tree/head, passing required PR CI, expected-head merge and main CI verification. No forced pushes or bypassed checks; no fixture/UI-only completion claims. The hourly task must attempt real implementation when an execution environment is available, and report an actual blocker when it is not.
+
+Deferred PR12 review minor: the existing CAS test covers initial INSERT collision; add stale UPDATE regression by seeding revision1, opening two stores at revision1, committing revision2 through one, then checking a different valid stale change fails without replacing revision2. Implementation retains the correct revision predicate.
