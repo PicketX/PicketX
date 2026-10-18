@@ -92,3 +92,51 @@ OpenAPI, actual static SQLite Controller/CLI and actual Chromium/Nginx flow.
 Review and CI evidence will be appended before integration; no completion claim
 from mocked handlers or simulated execution. Final combined Agent/browser and
 human/approval workflows remain required before pausing autonomous delivery.
+
+### Increment ledger (2026-10-18T14:06Z)
+
+Pre-flight: Task1 catalog/issue/revoke produces the JSON field/ETag contract used
+by Task2; names and single database authority match. Task1 retains existing
+repository.Replace CAS/audit/distribution, so no second persistence owner is
+introduced. Domain/API missing-symbol/404 regressions were observed RED before
+implementation. Task1 commit68df1ed passed configuration/controller tests; its
+runtime/rollback/OpenAPI supplements are in6b50aec and selector/HTTP preservation
+supplement in a0d87d2. New actual TCP→gRPC/restart test first exposed its own
+duplicate-stream replacement assumption, corrected to observe the same stream;
+the production single-active-stream contract was retained.
+
+Task2 implementation6b50aec, summary markup fix247dc56. Real Web CI39133088621
+job117692062184 was intentional missing-Grants-button RED. CI39133841930
+job117694246371 reached the actual application but its exact error-summary text
+assertion could not match the summary's combined field-list text. Separate summary
+paragraph and native focus observation fixed it (not a removed assertion).
+CI39134161791 Web117695168450 GREEN: actual structured forms→SCS/CAS/SQLite→
+local decision→Nginx1.24→real HTTP application, independent union/revoke on the
+same ingress connection, immutable expiry, concurrent-writer412/input/reason,
+read failure, viewer backend403/mobile and existing browser/HTTP cases all pass.
+Local247dc562758aa09bf0566fdef88b1d1cd2e39ed7 and fetched actual CI checkout
+460684aa290d31a13d7c6788239081ae079af715 share treeda7926c837beb7aa8dc24c9b978fed5b75126b65.
+Remote headdde54dbcd2a2cff5ae506f9265873827023ad274 has that exact tree.
+Screenshot artifact12139072700 independently downloaded; SHA256
+aedb507fdab14912cdfe6fbc0632b2d024c547fbcbfddfa07e498b6e800d124f matches API.
+Desktop and375px viewer screenshots visually inspected; no horizontal overflow.
+
+Complete local ordinary/race runs retained the mandatory Unix EPERM failure.
+Parallel pressure initially exhausted an existing200ms HTTP boundary fixture and
+the new runtime helper's1s HTTP client. Boundary fixture now leaves2s actual
+compile/fsync headroom while still asserting a pre-boundary query, real mutex/
+SQLite blocking and crossed absolute expiry/deny activation. Serial complete
+ordinary/race then fail only the known Unix permission case; new runtime and all
+four existing boundary cases pass. No race warning. Local vet/build and locked
+npm ci/typecheck/oxlint/build plus local-only OpenAPI validation pass. Native
+CI39134161791 Go117695168118 race/build/generation are green; static gates still
+running at this ledger entry. Exact final whole-branch CI remains mandatory.
+
+Task2: Ruling: task-start bookkeeping ran after its combined implementation
+commit; use actual68df1ed..247dc56 range and the observed native RED→GREEN CI,
+not the late helper's6b50aec start — provenance follows verified git/CI — cost if
+wrong is misleading task attribution, not an untested production change.
+
+One fresh whole-branch review, findings/rulings, final source/CI acceptance and
+expected-head merge/main verification remain pending. Do not infer acceptance
+from this ledger's intermediate code evidence.

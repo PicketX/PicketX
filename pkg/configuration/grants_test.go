@@ -129,3 +129,67 @@ func TestStructuredGrantRetainsDynamicScopeAndNeverRevokesDeny(t *testing.T) {
 		}
 	}
 }
+
+func TestStructuredGrantCatalogDetachedSelectorAndHTTPRoute(t *testing.T) {
+	raw, err := os.ReadFile("../../examples/http/policy.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	text := strings.ReplaceAll(string(raw), "__HOST__", "app.example")
+	text = strings.Replace(text, "endpoints: [{name: web, network:", "endpoints: [{name: web, labels: {public: 'yes'}, network:", 1)
+	text = strings.Replace(text, "endpointNames: [web]", "endpointSelector: {matchLabels: {public: 'yes'}}", 1)
+	b, err := Decode([]byte(text))
+	if err != nil {
+		t.Fatal(err)
+	}
+	resources, grants := b.GrantCatalog()
+	if len(grants) != 2 || grants[0].Scopes[0].Selection != "selector" || !strings.Contains(grants[0].Scopes[0].Selector, `"public":"yes"`) {
+		t.Fatal(grants)
+	}
+	resources[0].Endpoints[0].Name = "mutated"
+	grants[0].Scopes[0].Selector = "mutated"
+	resources, grants = b.GrantCatalog()
+	if resources[0].Endpoints[0].Name != "web" || grants[0].Scopes[0].Selector == "mutated" {
+		t.Fatal("catalog aliases private policy")
+	}
+	facts := Facts{AuthorityID: "test"}
+	before, err := Compile(b, facts)
+	if err != nil {
+		t.Fatal(err)
+	}
+	changed, err := b.AddGrant(GrantInput{Name: "other", UID: "grant-other-v1", Source: "2001:db8::42/64", ResourceName: "private-app", ResourceUID: "private-app-v1", EndpointNames: []string{"web"}, ExpiresAt: time.Now().Add(time.Hour)})
+	if err != nil {
+		t.Fatal(err)
+	}
+	next, err := Decode(changed)
+	if err != nil {
+		t.Fatal(err)
+	}
+	candidate, _, err := Replace(before, next, facts)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !candidate.HTTP().HasRoute("route-v1") || !candidate.HTTP().HasRoute("route-private-v1") {
+		t.Fatal("unrelated HTTP route lost")
+	}
+	_, out := next.GrantCatalog()
+	for _, g := range out {
+		if g.UID == "grant-other-v1" && g.Source != "2001:db8::/64" {
+			t.Fatal("explicit CIDR not masked", g)
+		}
+	}
+	for _, old := range b.objects {
+		found := false
+		for _, o := range next.objects {
+			if old.Metadata.UID == o.Metadata.UID {
+				found = true
+				if !reflect.DeepEqual(old, o) {
+					t.Fatal("changed selector/HTTP object", old.Metadata.UID)
+				}
+			}
+		}
+		if !found {
+			t.Fatal("lost object", old.Metadata.UID)
+		}
+	}
+}
