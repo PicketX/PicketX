@@ -147,6 +147,43 @@
                 },
                 "type": "object"
             },
+            "configuration.InventoryHTTPRoute": {
+                "properties": {
+                    "endpoint_name": {
+                        "type": "string"
+                    },
+                    "host": {
+                        "type": "string"
+                    },
+                    "methods": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "paths": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "resource_name": {
+                        "type": "string"
+                    },
+                    "resource_uid": {
+                        "type": "string"
+                    },
+                    "uid": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
             "configuration.InventoryResource": {
                 "properties": {
                     "endpoints": {
@@ -255,6 +292,81 @@
                     "context_id",
                     "endpoint_names",
                     "name",
+                    "reason",
+                    "resource_name",
+                    "resource_uid"
+                ],
+                "type": "object",
+                "additionalProperties": false
+            },
+            "controller.CreateHTTPRouteRequest": {
+                "properties": {
+                    "endpoint_name": {
+                        "maxLength": 1024,
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "host": {
+                        "maxLength": 253,
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "methods": {
+                        "items": {
+                            "type": "string",
+                            "enum": [
+                                "GET",
+                                "HEAD",
+                                "POST",
+                                "PUT",
+                                "PATCH",
+                                "DELETE",
+                                "OPTIONS"
+                            ]
+                        },
+                        "maxItems": 7,
+                        "minItems": 1,
+                        "type": "array",
+                        "uniqueItems": true
+                    },
+                    "name": {
+                        "maxLength": 128,
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "paths": {
+                        "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 8192
+                        },
+                        "maxItems": 128,
+                        "minItems": 1,
+                        "type": "array",
+                        "uniqueItems": true
+                    },
+                    "reason": {
+                        "maxLength": 512,
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "resource_name": {
+                        "maxLength": 1024,
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "resource_uid": {
+                        "maxLength": 128,
+                        "type": "string",
+                        "minLength": 1
+                    }
+                },
+                "required": [
+                    "endpoint_name",
+                    "host",
+                    "methods",
+                    "name",
+                    "paths",
                     "reason",
                     "resource_name",
                     "resource_uid"
@@ -628,6 +740,13 @@
                     "contexts": {
                         "items": {
                             "$ref": "#/components/schemas/configuration.InventoryContext"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "http_routes": {
+                        "items": {
+                            "$ref": "#/components/schemas/configuration.InventoryHTTPRoute"
                         },
                         "type": "array",
                         "uniqueItems": false
@@ -1583,6 +1702,154 @@
                     }
                 ],
                 "summary": "Read durable minimal HTTP decision audit in ascending keyset order",
+                "tags": [
+                    "management"
+                ]
+            }
+        },
+        "/api/v1/http-routes": {
+            "post": {
+                "operationId": "createHTTPRoute",
+                "parameters": [
+                    {
+                        "description": "Strong current revision",
+                        "in": "header",
+                        "name": "If-Match",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/controller.CreateHTTPRouteRequest",
+                                "summary": "route",
+                                "description": "Strict JSON16KiB; explicit exact host, methods and paths; server-generated UID"
+                            }
+                        }
+                    },
+                    "description": "Strict JSON16KiB; explicit exact host, methods and paths; server-generated UID",
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/management.InventoryChange"
+                                }
+                            }
+                        },
+                        "description": "Created",
+                        "headers": {
+                            "ETag": {
+                                "description": "Strong accepted revision",
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "412": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "413": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "415": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "428": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "429": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "503": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    }
+                },
+                "security": [
+                    {
+                        "ManagementBearer": []
+                    }
+                ],
+                "summary": "Create an exact HTTPRoute for a pinned TCP endpoint; does not grant access or configure ingress",
                 "tags": [
                     "management"
                 ]
@@ -3129,6 +3396,172 @@
                     }
                 ],
                 "summary": "Read bounded minimal HTTP authorization decision audit",
+                "tags": [
+                    "console"
+                ]
+            }
+        },
+        "/console/api/v1/http-routes": {
+            "post": {
+                "operationId": "browserCreateHTTPRoute",
+                "parameters": [
+                    {
+                        "description": "Strong current revision",
+                        "in": "header",
+                        "name": "If-Match",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Exact configured origin",
+                        "in": "header",
+                        "name": "Origin",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Session CSRF token",
+                        "in": "header",
+                        "name": "X-CSRF-Token",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/controller.CreateHTTPRouteRequest",
+                                "summary": "route",
+                                "description": "Pinned TCP endpoint, exact selectors and audit reason"
+                            }
+                        }
+                    },
+                    "description": "Pinned TCP endpoint, exact selectors and audit reason",
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/management.InventoryChange"
+                                }
+                            }
+                        },
+                        "description": "Created",
+                        "headers": {
+                            "ETag": {
+                                "description": "Strong accepted revision",
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "412": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "413": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "415": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "428": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "429": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "503": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    }
+                },
+                "security": [
+                    {
+                        "BrowserCookie": []
+                    }
+                ],
+                "summary": "Create an exact HTTPRoute using operator session and CSRF protection",
                 "tags": [
                     "console"
                 ]

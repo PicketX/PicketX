@@ -80,6 +80,7 @@ func registerManagement(e *echo.Echo, service *management.Service, limits Manage
 	group.GET("/inventory", h.inventory)
 	group.POST("/resources", h.createResource)
 	group.POST("/bindings", h.createBinding)
+	group.POST("/http-routes", h.createHTTPRoute)
 }
 func apiError(c *echo.Context, status int, code string) error {
 	return c.JSON(status, APIError{Code: code})

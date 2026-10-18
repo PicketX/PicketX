@@ -11,6 +11,7 @@ import { once } from 'node:events'
 import { chromium } from 'playwright'
 import { freePort, startIngress } from './ingress.mjs'
 import { resourceOnboarding } from './resources.mjs'
+import { httpRouteManagement } from './http-routes.mjs'
 
 const root = resolve(import.meta.dirname, '../../..')
 const temp = await mkdtemp(join(tmpdir(), 'picketx-browser-'))
@@ -267,6 +268,7 @@ spec:
   await writeFile(callersPath, '{"callers":null}', { mode: 0o600 }); await ingress.verifyUnavailable()
   console.log('PASS actual browser publication → source authorization → Nginx → application; revoke/deadline/audit/IPv6/scoped caller removal')
   await resourceOnboarding({ operator, view, origin, token, policy, facts, evidence })
+  await httpRouteManagement({ operator, view, origin, token, root, temp, authzPort, ingressToken, callersPath, evidence })
   // Removal invalidates the next real request even when the browser holds a cookie.
   await writeFile(principalPath, '{"principals":[]}', { mode: 0o600 })
   await page.getByRole('button', { name: 'Refresh status', exact: true }).click()

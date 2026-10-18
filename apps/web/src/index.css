@@ -157,3 +157,4 @@ select:focus-visible, fieldset:focus-visible, a:focus-visible { outline: 3px sol
 .inventory-list li { margin-block: 8px; }
 .inventory-list details code { display: block; white-space: pre-wrap; font-size: .8rem; }
 .inventory-list details h4 { margin-top: 12px; font-weight: 600; }
+.route-result { overflow-wrap: anywhere; }

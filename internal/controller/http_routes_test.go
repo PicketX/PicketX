@@ -190,3 +190,46 @@ func TestHTTPRouteBrowserCSRF(t *testing.T) {
 		}
 	}
 }
+
+func TestHTTPRouteOpenAPIContract(t *testing.T) {
+	raw, e := os.ReadFile("../../docs/api/swagger.json")
+	if e != nil {
+		t.Fatal(e)
+	}
+	var spec struct {
+		Paths      map[string]map[string]json.RawMessage
+		Components struct {
+			Schemas map[string]struct {
+				AdditionalProperties bool
+				Required             []string
+				Properties           map[string]struct {
+					MinItems, MaxItems int
+					UniqueItems        bool
+					Items              struct {
+						MinLength, MaxLength int
+						Enum                 []string
+					}
+				}
+			}
+		}
+	}
+	if e = json.Unmarshal(raw, &spec); e != nil {
+		t.Fatal(e)
+	}
+	for _, prefix := range []string{"/api/v1", "/console/api/v1"} {
+		if len(spec.Paths[prefix+"/http-routes"]["post"]) == 0 {
+			t.Fatal("undocumented route", prefix)
+		}
+	}
+	schema := spec.Components.Schemas["controller.CreateHTTPRouteRequest"]
+	if schema.AdditionalProperties || len(schema.Required) != 8 {
+		t.Fatal("non-strict required fields", schema)
+	}
+	methods, paths := schema.Properties["methods"], schema.Properties["paths"]
+	if methods.MinItems != 1 || methods.MaxItems != 7 || !methods.UniqueItems || strings.Join(methods.Items.Enum, ",") != "GET,HEAD,POST,PUT,PATCH,DELETE,OPTIONS" {
+		t.Fatal("methods contract", methods)
+	}
+	if paths.MinItems != 1 || paths.MaxItems != 128 || !paths.UniqueItems || paths.Items.MinLength != 1 || paths.Items.MaxLength != 8192 {
+		t.Fatal("paths contract", paths)
+	}
+}

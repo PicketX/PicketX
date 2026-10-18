@@ -32,3 +32,17 @@ Self-review: existing selectors and pinned TCP targets cover the scope; no new
 runtime authority or caller scope is accepted in this DTO. Routine design/plan
 approval is already explicitly waived by the user. Existing lifecycle editing,
 enrollment, identity/approval and live desired/applied status are separate work.
+
+## Console visual/interaction rules
+
+Retain repository tokens: background#f5f7fa, foreground#18283b, primary#145da0,
+muted#526174, surface#ffffff, error#a52222; system sans16px/1.5 with code only
+for opaque IDs/paths. Left-aligned section heading and revision observation,
+single create form grouped by target then selectors, followed by inspectable
+desired routes. Two-column target selectors collapse to one column at800px.
+No marketing hero, new font, animation or decorative metrics. The distinctive
+element is the exact UID/target/request contract and its explicit setup boundary.
+frontend-design brief review favors console continuity over a new visual identity.
+ui-ux-pro-max returned a marketing landing pattern twice, so no verified matching
+page pattern is adopted. Verified web error-summary guidance and React effect
+cleanup are applied; layout/style use repository rules, not unverified output.

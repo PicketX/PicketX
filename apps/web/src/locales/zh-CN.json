@@ -1,4 +1,16 @@
 {
+  "routes": {
+    "title": "HTTP 路由", "management": "HTTP 路由管理", "boundary": "这里只管理期望请求选择条件。来源 Grant 与可信入口需分别配置；创建不代表访问已生效。",
+    "refresh": "刷新路由", "rebase": "使用最新路由版本", "rebaseConfirm": "保留此路由草稿并使用最新版本？重试前请检查固定的 TCP 端点与选择条件。", "base": "路由操作基线 {{base}} · 已观察版本 {{observed}}",
+    "name": "路由名称", "resource": "路由 Resource", "endpoint": "TCP 端点", "host": "精确请求 Host", "methods": "允许的方法", "paths": "精确路径，每行一个", "reason": "路由创建原因",
+    "create": "创建 HTTP 路由", "required": "所有字段均必填。请明确勾选每个允许的方法。", "selectEndpoint": "选择已有 TCP 端点", "selectMethods": "至少选择一个方法",
+    "nameLimit": "请输入非空名称，最多 128 个 UTF-8 字节", "reasonLimit": "请输入非空原因，最多 512 个 UTF-8 字节", "hostHelp": "精确主机名或 IP；Host 含端口时需一并填写。不接受 URL 协议、通配符、斜杠或空白。带端口的 IPv6 需使用方括号。",
+    "pathHelp": "填写 1–128 个不重复且以 / 开始的精确路径。不接受空行、查询、片段、百分号编码、反斜杠或点路径段。请求查询字符串不参与匹配；路径不是前缀。", "bodyLimit": "整个请求必须小于等于 16 KiB，请缩减路径列表或文本。",
+    "created": "路由 {{uid}} 已创建。请在可信调用方范围与入口中配置此精确 UID；来源访问仍需 Grant。", "invalid": "请检查唯一的路由名称、固定 TCP 端点、精确 Host 与不重复的方法/路径。输入已保留。",
+    "conflictHelp": "写入已阻止，请明确使用最新路由版本。重试前检查路由列表：响应失败仍可能已提交。草稿已保留。",
+    "clear": "清空路由草稿", "discard": "丢弃此未保存的路由草稿？", "discardAll": "退出并丢弃所有未保存的配置、Resource、Binding、Grant 和 HTTP 路由草稿？",
+    "list": "已配置 HTTP 路由", "empty": "尚无 HTTP 路由。请选择 TCP 端点并定义精确请求条件。", "setup": "此列表为期望配置，并非实时入口状态。管理员需在可信调用方允许列表与入口中分别固定每个 UID。来源访问请通过 Grant 管理。", "uid": "路由 UID", "inspectPaths": "查看 {{n}} 个精确路径"
+  },
   "language": "语言", "loginTitle": "管理访问，明确边界。", "loginDescription": "登录以查看和发布本 Controller 管理的配置。", "desiredBoundary": "这里只展示期望状态。保存配置不表示节点已应用。", "signIn": "登录", "accessKey": "访问密钥", "keyHelp": "使用独立管理访问密钥换取服务端会话，密钥不会写入浏览器存储。", "sessionBoundary": "单 Controller 会话最长8小时，空闲30分钟失效。重启或凭据轮换后需重新登录。", "loading": "加载中…", "retry": "重试", "operatorConsole": "管理工作台", "navigation": "工作台导航", "configuration": "期望配置", "audit": "审计", "signOut": "退出登录", "refresh": "刷新状态", "status": "发布状态", "authority": "权威来源", "editorRevision": "编辑基线修订", "lastRead": "最后成功读取", "notRead": "尚未读取", "enforcement": "节点应用", "notConfirmed": "此视图无法确认", "policyAndFacts": "策略与绑定事实", "editorHelp": "编辑完整策略与事实文档。接受之前运行共享校验。", "readOnly": "只读访问，当前角色不能发布修改。", "unsaved": "未保存草稿", "inSync": "编辑内容未修改", "policyYaml": "策略 YAML", "factsJson": "事实 JSON", "changeReason": "变更原因", "reasonHelp": "说明此次修改，原因将写入追加式发布审计。", "reloadLatest": "重新载入最新配置", "save": "保存期望配置", "noConfiguration": "无法读取配置，请刷新重试。", "publicationHistory": "发布历史", "auditHelp": "配置变更与接受结果在同一事务中记录。这不是执行报告或请求决策日志。", "emptyAudit": "尚无配置变更记录。", "revisionNumber": "修订 {{revision}}", "digest": "配置摘要", "moreAudit": "加载更多审计", "discard": "放弃未保存草稿并载入最新配置？", "expired": "会话已过期或访问已撤销，请重新登录。", "conflict": "修订已改变。草稿已保留，请显式重新载入后再编辑。", "saved": "期望配置已保存，尚未确认节点应用。", "staleFailed": "上次读取失败，显示的数据可能已过时。", "staleAge": "此视图已超过一分钟，请刷新后再使用。", "requestFailed": "请求失败，请检查连接和 Controller 就绪状态后重试。",
   "resources": {
     "title": "资源", "onboarding": "资源接入", "boundary": "创建具名服务入口，再绑定到既有主机上下文。此操作配置保护范围，不授予访问，也不确认节点已应用。",

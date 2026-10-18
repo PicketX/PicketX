@@ -4,7 +4,7 @@ import assert from 'node:assert/strict'
 import http from 'node:http'
 import { createServer } from 'node:net'
 import { once } from 'node:events'
-import { writeFile, readFile } from 'node:fs/promises'
+import { writeFile, readFile, mkdir } from 'node:fs/promises'
 import { join } from 'node:path'
 import { spawn, spawnSync } from 'node:child_process'
 
@@ -12,7 +12,9 @@ export async function freePort(host = '127.0.0.1') {
   const s = createServer(); s.listen(0, host); await once(s, 'listening')
   const p = s.address().port; await new Promise(r => s.close(r)); return p
 }
-export async function startIngress({ root, temp, authzPort, token }) {
+export async function startIngress({ root, temp, authzPort, token, routeID = 'route-v1', listenPort }) {
+  assert.match(routeID, /^[A-Za-z0-9._-]{1,128}$/)
+  await mkdir(temp, { recursive: true, mode: 0o700 })
   const binary = process.env.PICKETX_NGINX ?? 'nginx'
   const version = spawnSync(binary, ['-V'], { encoding: 'utf8' })
   assert.equal(version.status, 0, `Nginx is required, never skipped: ${version.stderr}`)
@@ -21,9 +23,9 @@ export async function startIngress({ root, temp, authzPort, token }) {
   let count = 0
   const app = http.createServer((req, res) => { count++; res.end('protected real HTTP application') })
   app.listen(0, '127.0.0.1'); await once(app, 'listening')
-  const appPort = app.address().port, port = await freePort()
+  const appPort = app.address().port, port = listenPort ?? await freePort()
   const template = await readFile(join(root, 'examples/http/nginx.conf.template'), 'utf8')
-  const config = template.replaceAll('__PREFIX__', temp).replaceAll('__PORT__', String(port)).replaceAll('__APP_PORT__', String(appPort)).replaceAll('__AUTHZ_PORT__', String(authzPort)).replaceAll('__TOKEN__', token)
+  const config = template.replaceAll('__PREFIX__', temp).replaceAll('__PORT__', String(port)).replaceAll('__APP_PORT__', String(appPort)).replaceAll('__AUTHZ_PORT__', String(authzPort)).replaceAll('__TOKEN__', token).replace('set $picketx_route route-v1;', `set $picketx_route ${routeID};`)
   const file = join(temp, 'nginx.conf'); await writeFile(file, config, { mode: 0o600 })
   let logs = ''
   const nginx = spawn(binary, ['-p', `${temp}/`, '-c', file, '-g', 'daemon off;'], { stdio: ['ignore', 'pipe', 'pipe'] })
@@ -42,6 +44,13 @@ export async function startIngress({ root, temp, authzPort, token }) {
   }
   return {
     port, url: `http://127.0.0.1:${port}`, count: () => count,
+    async verifyExactRoute(allowed) {
+      const before = count; const r = await request(); assert.equal(r.status, allowed ? 200 : 403, logs)
+      assert.equal(count, before + (allowed ? 1 : 0))
+      const after = count
+      for (const input of [{ method: 'POST' }, { path: '/not-selected' }, { host: 'other.example' }, { source: '127.0.0.2', headers: { 'X-Forwarded-For': '127.0.0.1', 'X-PicketX-Route': routeID } }]) assert((await request(input)).status >= 400)
+      assert.equal(count, after, 'Route mismatch or ungranted source reached application')
+    },
     async verifyAllowedAndIsolation() {
       let r = await request(); assert.equal(r.status, 200, logs); assert.equal(r.body, 'protected real HTTP application'); connection = r.socket
       const before = count
