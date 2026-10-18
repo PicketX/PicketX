@@ -22,6 +22,12 @@ Build-only management documentation uses Swaggo v2.0.0-rc6 (MIT) and locked
 Retain their package license files if distributing build tooling. No Swagger UI assets
 are bundled by this increment. Redocly CLI was removed; it is not a runtime/build dependency.
 
+Browser sessions add github.com/alexedwards/scs/v2 v2.9.0 (MIT), source
+https://github.com/alexedwards/scs/tree/v2.9.0. Browser-only CI tooling adds
+Playwright1.64.1 (Apache-2.0), source https://github.com/microsoft/playwright.
+Retain their respective package license files in distributions. Chromium is a
+test-runner download, not a PicketX release artifact or runtime requirement.
+
 ## shadcn/ui
 
 MIT License

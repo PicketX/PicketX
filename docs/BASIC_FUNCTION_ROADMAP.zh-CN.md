@@ -16,7 +16,7 @@
 | M2B 期望状态准备 | PicketXD PR #4 已合并；持久重载/重启恢复、独立边界调度；全部 43 项必需内核场景通过，包括 7 项主机 INPUT 场景；生产执行仍待实现 |
 | Controller / Web | 健康检查与前端骨架；业务闭环、可用管理页面及生产 Agent 待实现 |
 
-上表保留原始切片证据。当前Controller已有[持久发布](CONTROLLER_RUNTIME.zh-CN.md)，[PicketXD PR16](https://github.com/PicketX/PicketXD/pull/16)增加原生远程Provider及真实Core/Agent双栈放行/撤销/撤回验证。[管理发布](MANAGEMENT_API.zh-CN.md)增加显式数据库权威、独立Token/Casbin/CAS/审计API。浏览器登录/审批、真实UI、HTTP L7及联合浏览器验收仍待完成，精确head/CI和已知限制见[交付检查点](AUTONOMOUS_DELIVERY.md)。
+上表保留原始证据。Controller[持久发布](CONTROLLER_RUNTIME.zh-CN.md)、[PicketXD PR16](https://github.com/PicketX/PicketXD/pull/16)原生远程Provider及[管理发布](MANAGEMENT_API.zh-CN.md)独立Token/Casbin/CAS/审计API已实现。[浏览器工作台](BROWSER_CONSOLE.zh-CN.md)增加SCS/CSRF会话和真实完整文档发布/审计页面，尚不是易用的结构化资源/Grant/审批流程。人员/OIDC、结构化管理、HTTP L7及浏览器/代理/应用联合验收待完成，精确head/CI与限制见[检查点](AUTONOMOUS_DELIVERY.md)。
 
 ## 交付顺序
 

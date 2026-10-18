@@ -76,7 +76,9 @@ func apiError(c *echo.Context, status int, code string) error {
 func mappedError(c *echo.Context, e error) error {
 	switch {
 	case errors.Is(e, management.ErrUnauthorized):
-		c.Response().Header().Set("WWW-Authenticate", "Bearer")
+		if strings.HasPrefix(c.Request().URL.Path, "/api/v1/") {
+			c.Response().Header().Set("WWW-Authenticate", "Bearer")
+		}
 		return apiError(c, 401, "unauthorized")
 	case errors.Is(e, management.ErrForbidden):
 		return apiError(c, 403, "forbidden")

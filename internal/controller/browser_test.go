@@ -2,12 +2,14 @@
 package controller
 
 import (
+	"context"
 	"encoding/json"
 	"io"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -173,5 +175,133 @@ func TestBrowserInFlightIdleRefreshCannotReviveLogout(t *testing.T) {
 	b.cookies[old.Name] = &old
 	if w := b.request("GET", "/console/api/v1/me", "", "", ""); w.Code != 401 {
 		t.Fatal("in-flight idle refresh resurrected logout", w.Code, w.Body.String())
+	}
+}
+
+func TestBrowserStaticAssetsConfinementAndSessionDefaults(t *testing.T) {
+	_, _, b := browserFixture(t)
+	if b.sessions.Lifetime != 8*time.Hour || b.sessions.IdleTimeout != 30*time.Minute || !b.sessions.Cookie.HttpOnly || !b.sessions.HashTokenInStore {
+		t.Fatal("unsafe session defaults")
+	}
+	dir := t.TempDir()
+	b.assets = dir
+	if e := os.WriteFile(filepath.Join(dir, "index.html"), []byte("real index"), 0600); e != nil {
+		t.Fatal(e)
+	}
+	if e := os.WriteFile(filepath.Join(dir, "app.js"), []byte("real asset"), 0600); e != nil {
+		t.Fatal(e)
+	}
+	outside := filepath.Join(t.TempDir(), "private.js")
+	if e := os.WriteFile(outside, []byte("private outside"), 0600); e != nil {
+		t.Fatal(e)
+	}
+	if e := os.Symlink(outside, filepath.Join(dir, "escape.js")); e != nil {
+		t.Fatal(e)
+	}
+	h := NewHandlerWithBrowser(nil, b.service, ManagementLimits{1000, 1000}, b)
+	for _, tc := range []struct {
+		path string
+		want int
+	}{{"/console/", 200}, {"/console/app.js", 200}, {"/console/escape.js", 404}, {"/console/../private.js", 404}, {"/console/api/missing", 404}, {"/console/missing", 404}, {"/console/unknown.json", 404}} {
+		r := httptest.NewRequest("GET", "http://127.0.0.1:8080"+tc.path, nil)
+		w := httptest.NewRecorder()
+		h.ServeHTTP(w, r)
+		if w.Code != tc.want || strings.Contains(w.Body.String(), "private outside") {
+			t.Fatal(tc, w.Code, w.Body.String())
+		}
+		if w.Header().Get("Cache-Control") != "no-store" || !strings.Contains(w.Header().Get("Content-Security-Policy"), "frame-ancestors 'none'") {
+			t.Fatal(w.Header())
+		}
+	}
+	secure, e := NewBrowser(b.service, "https://control.example", dir)
+	if e != nil || !secure.sessions.Cookie.Secure {
+		t.Fatal("HTTPS cookie", e)
+	}
+	if _, e = NewBrowser(b.service, "https://control.example", t.TempDir()); e == nil {
+		t.Fatal("missing index accepted")
+	}
+}
+
+func TestBrowserExpiryFixationAndModernCSRF(t *testing.T) {
+	h, _, b := browserFixture(t)
+	client := browserClient{h: h, cookies: map[string]*http.Cookie{}}
+	client.bootstrap(t)
+	login := `{"token":"` + managementToken + `"}`
+	first := client.request("POST", "/console/api/v1/login", login, "http://127.0.0.1:8080", client.csrf)
+	if first.Code != 200 {
+		t.Fatal(first.Code)
+	}
+	old := *client.cookies["picketx_session"]
+	if w := client.request("POST", "/console/api/v1/login", login, "http://127.0.0.1:8080", client.csrf); w.Code != 200 {
+		t.Fatal(w.Code)
+	}
+	if old.Value == client.cookies[old.Name].Value {
+		t.Fatal("login did not renew session")
+	}
+	replay := browserClient{h: h, cookies: map[string]*http.Cookie{old.Name: &old}}
+	if w := replay.request("GET", "/console/api/v1/me", "", "", ""); w.Code != 401 {
+		t.Fatal("old pre-login session accepted", w.Code)
+	}
+	ctx, e := b.sessions.Load(context.Background(), client.cookies[old.Name].Value)
+	if e != nil {
+		t.Fatal(e)
+	}
+	deadline := b.sessions.Deadline(ctx)
+	if w := client.request("GET", "/console/api/v1/me", "", "", ""); w.Code != 200 {
+		t.Fatal(w.Code)
+	}
+	ctx, e = b.sessions.Load(context.Background(), client.cookies[old.Name].Value)
+	if e != nil || !b.sessions.Deadline(ctx).Equal(deadline) {
+		t.Fatal("idle refresh extended absolute expiry", e)
+	}
+	// Native modern metadata is accepted only with our independent exact Origin.
+	for _, site := range []string{"same-origin", "cross-site"} {
+		r := httptest.NewRequest("POST", "http://127.0.0.1:8080/console/api/v1/login", strings.NewReader(login))
+		r.Header.Set("Content-Type", "application/json")
+		r.Header.Set("Origin", "http://127.0.0.1:8080")
+		r.Header.Set("Sec-Fetch-Site", site)
+		w := httptest.NewRecorder()
+		h.ServeHTTP(w, r)
+		want := 200
+		if site == "cross-site" {
+			want = 403
+		}
+		if w.Code != want {
+			t.Fatal(site, w.Code, w.Body.String())
+		}
+	}
+	for _, expiry := range []struct {
+		name           string
+		lifetime, idle time.Duration
+	}{{"absolute", 10 * time.Millisecond, time.Hour}, {"idle", time.Hour, 10 * time.Millisecond}} {
+		b.sessions.Lifetime = expiry.lifetime
+		b.sessions.IdleTimeout = expiry.idle
+		if w := client.request("POST", "/console/api/v1/login", login, "http://127.0.0.1:8080", client.csrf); w.Code != 200 {
+			t.Fatal(w.Code)
+		}
+		time.Sleep(30 * time.Millisecond)
+		if w := client.request("GET", "/console/api/v1/me", "", "", ""); w.Code != 401 {
+			t.Fatal(expiry.name, "expired session accepted", w.Code)
+		}
+	}
+}
+
+func TestBrowserRejectsAmbiguousOriginAndDoesNotAdvertiseBearer(t *testing.T) {
+	h, _, _ := browserFixture(t)
+	r := httptest.NewRequest("POST", "http://127.0.0.1:8080/console/api/v1/login", strings.NewReader(`{"token":"`+managementToken+`"}`))
+	r.Header.Set("Content-Type", "application/json")
+	r.Header.Add("Origin", "http://127.0.0.1:8080")
+	r.Header.Add("Origin", "http://evil.example")
+	r.Header.Set("Sec-Fetch-Site", "same-origin")
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, r)
+	if w.Code != 403 {
+		t.Error("ambiguous Origin accepted", w.Code)
+	}
+	r = httptest.NewRequest("GET", "http://127.0.0.1:8080/console/api/v1/me", nil)
+	w = httptest.NewRecorder()
+	h.ServeHTTP(w, r)
+	if w.Code != 401 || w.Header().Get("WWW-Authenticate") != "" {
+		t.Error("cookie API advertised unsupported Bearer", w.Code, w.Header())
 	}
 }

@@ -2,9 +2,13 @@
 
 ## Browser console handoff (current)
 
-Heartbeat 2026-10-18T11:40:00Z. Owner `codex/browser-console`; lease until2026-10-18T13:30:00Z, auto-release only after merged/green main or explicit handoff. Prior PR14 lease released. Accepted Core main0ccfa8ff8522fb95d93b7898f8b0a1ed9dfcc65a/tree3f49d6f51cc0cba29ada9f3a65a7d845a849e06d; main CI39121855312 green128/357, zero fail/skip/race; Go/Web/static SQLite-managed-runtime checks passed. Agent remains95a5f7f/CI39118687475. Neither repository has an open PR at acquisition.
+Heartbeat 2026-10-18T12:07:00Z. Owner `codex/browser-console`, [PR15](https://github.com/PicketX/PicketX/pull/15); lease until2026-10-18T13:30:00Z, auto-release only after merged/green main or explicit handoff. Prior PR14 lease released. Accepted Core main0ccfa8ff8522fb95d93b7898f8b0a1ed9dfcc65a/tree3f49d6f51cc0cba29ada9f3a65a7d845a849e06d; main CI39121855312 green128/357, zero fail/skip/race; Go/Web/static SQLite-managed-runtime checks passed. Agent remains95a5f7f/CI39118687475. Neither repository had an open PR at acquisition.
 
 Plan/spec/ledger: `docs/superpowers/plans/2026-10-18-browser-console.md`. Scope: actual SCS operator session/CSRF and live publication/audit React console. Remaining: structured management/approval, L7 and final browser→proxy→application acceptance. Do not pause this task after this increment.
+
+Browser implementation evidence (not yet merge acceptance): remote head65096587c3769b3037e1b78486370955d08304f8/treec11e009074d7856a0a37599ff74f3ef9cfc5241e matches local376742e and fetched CI checkout9754a7594697c0f5097c9b36b821614ba9fa23d8. CI39125526147 Go/Web passed. Raw Go job117669729855 confirms133 top-level/362 total tests, zero fail/skip/race, vet/build, pinned generation, local OpenAPI and static Controller/CLI gates. Raw Web job117669729678 confirms actual Chromium→React→SCS/CSRF→Go→SQLite publish/audit, external-writer conflict/draft, injected read failure, viewer backend denial/mobile and credential revocation. Screenshot artifact12135557659 downloaded, SHA256c658e43251ca395e77f20f698cf684ea71aa92cd36af40a1c4145fe5ab3002d7 verified; desktop/mobile visually inspected. Local browser CDN zip was empty; no local browser success is claimed. Initial CI39124774237 was intentional missing-login RED, not acceptance.
+
+Pre-review supplement adds asset confinement, explicit expiry/fixation/absolute deadline tests and RED→GREEN fixes for duplicate Origin and unsupported Bearer challenge on cookie routes. Complete local race136/365 passed. Final exact-head CI, fresh whole-branch review and expected-head merge/main verification remain mandatory.
 
 The historical management section below is superseded by the accepted PR14/main above.
 

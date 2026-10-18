@@ -8,7 +8,7 @@ PicketX is designed to grant time-bounded access to protected resources through 
 
 ## Project status
 
-This repository is under active development, not a complete access-management product. Shared Core/configuration, the SQLite Controller publisher and Token-authenticated gRPC are implemented. PicketXD PR16 now supplies the supported native host Controller Provider. The [managed publication API](docs/MANAGEMENT_API.md) adds independent API principals, Casbin, revision CAS and transactional change audit. Browser login, approval, usable management screens and HTTP L7 remain pending; no complete production workflow is claimed.
+This repository is under active development, not a complete access-management product. Shared Core/configuration, the SQLite Controller publisher and Token-authenticated gRPC are implemented. PicketXD PR16 supplies the supported native host Controller Provider. The [managed publication API](docs/MANAGEMENT_API.md) adds independent principals, Casbin, revision CAS and transactional audit. The [operator browser console](docs/BROWSER_CONSOLE.md) adds SCS/CSRF access-key sessions and live complete-document publication/audit pages. Human/OIDC login, structured resource/Grant/approval management and HTTP L7 remain pending; no complete production workflow is claimed.
 
 The control plane and Web live here. The official Linux Agent, `picketxd`, belongs to the separate **PicketXD** repository. This initialization does not create or modify that repository.
 
@@ -26,9 +26,9 @@ SQLite is selected as the official GORM driver (v1.6.0 baseline) with mattn/go-s
 
 Initial enforcement scope is IP/CIDR network admission, HTTP/HTTPS authorization through existing ingress, and a local decision interface over TCP or Unix socket. NFQUEUE/mirror inspection, transparent proxy/TLS termination and native database proxies are deferred; these endpoints and integrations are not implemented yet.
 
-Management API RBAC uses Casbin3.11.0 and official GORM adapter3.41.0, with trusted independent-principal roles, combined deny precedence and observable periodic reload. Browser identities and per-resource delegation remain pending. See [ADR 0001](docs/decisions/0001-rbac-authorization.md) and the [implemented boundary](docs/MANAGEMENT_API.md).
+Management API RBAC uses Casbin3.11.0 and official GORM adapter3.41.0, with trusted independent-principal roles, combined deny precedence and observable periodic reload. Browser sessions resolve these same trusted roles on every request; human identities and per-resource delegation remain pending. See [ADR 0001](docs/decisions/0001-rbac-authorization.md) and the [implemented boundary](docs/MANAGEMENT_API.md).
 
-Runtime support selections are SCS Sessions, Echo built-in CSRF and separately configured ordinary/Agent rate limits, official gRPC/protobuf with independent Agent Tokens and optional server TLS, Prometheus metrics and standard-library periodic jobs. The Controller-side stream foundation is implemented below; other runtime integration remains pending. See [ADR 0002](docs/decisions/0002-runtime-support.md).
+Runtime support uses SCS2.9.0 browser sessions, native Echo CSRF, independent ordinary/Agent limits and official gRPC with independent Agent Tokens and optional server TLS. Metrics and broader runtime integration remain pending. See [ADR 0002](docs/decisions/0002-runtime-support.md).
 
 M0 Linux data-plane validation is implemented and merged in [PicketXD](https://github.com/PicketX/PicketXD/pull/1). The [final tested source](https://github.com/PicketX/PicketXD/commit/13fdf2d9aacd79be74578ebe9c23af19a6b33d6a) passed [17 required real-kernel scenarios](https://github.com/PicketX/PicketXD/actions/runs/38547987642) on Linux 6.17.0-1022-azure / Go 1.27.0. This is reusable validation infrastructure, not a production Agent. The approved [M1.1 design](docs/superpowers/specs/2026-10-15-shared-network-core-design.md) and [implementation plan](docs/superpowers/plans/2026-10-15-shared-network-core.md) now have a standard-library-only logical engine in [`pkg/core`](pkg/core). It validates sources, selectors, entry scopes and explicit lifetime modes; unions matching Grants, prioritizes denies and explains independent contributions and future changes. Literal Gitea HTTPS/SSH tests cover overlap, revocation, immutable replacement and deadline-preserving replay. The Controller workflow remains unimplemented; a logical allow does not confirm Agent enforcement.
 
@@ -66,7 +66,7 @@ npm ci
 npm run dev
 ```
 
-Open the URL printed by Vite. The frontend and backend build independently. Vite proxies `/healthz` to the local Controller. The Controller does not serve static Web assets yet.
+Go and Web build independently. For a working console, first configure database authority, management credentials and the opt-in browser origin as described in [browser deployment](docs/BROWSER_CONSOLE.md); the health-only default cannot authenticate it. Vite proxies `/healthz` and `/console/api`; a configured Controller can serve built assets at `/console/`.
 
 ## Verification
 

@@ -92,7 +92,7 @@ func (b *Browser) wrap(next http.Handler) http.Handler {
 			http.Error(w, "untrusted host", 403)
 			return
 		}
-		if r.Method != "GET" && r.Method != "HEAD" && r.Method != "OPTIONS" && r.Header.Get("Origin") != b.origin.String() {
+		if r.Method != "GET" && r.Method != "HEAD" && r.Method != "OPTIONS" && (len(r.Header.Values("Origin")) != 1 || r.Header.Get("Origin") != b.origin.String()) {
 			http.Error(w, "untrusted origin", 403)
 			return
 		}
