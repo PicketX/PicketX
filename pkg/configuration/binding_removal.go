@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"slices"
+	"unicode/utf8"
 
 	"go.yaml.in/yaml/v3"
 )
@@ -20,6 +21,11 @@ func (b *Bundle) RemoveBinding(uid string) ([]byte, error) {
 	index := slices.IndexFunc(b.objects, func(o document) bool { return o.Kind == "EnforcementBinding" && o.Metadata.UID == uid })
 	if index < 0 {
 		return nil, ErrBindingNotFound
+	}
+	// Decode accepts YAML's UTF-16 encodings, but the source editor uses UTF-8
+	// byte coordinates. Reject unsupported presentation before indexing lines.
+	if !utf8.Valid(b.source) {
+		return nil, fmt.Errorf("structured policy edits require UTF-8")
 	}
 	expected := slices.Delete(slices.Clone(b.objects), index, index+1)
 	if len(expected) == 0 {

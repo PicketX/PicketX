@@ -122,8 +122,11 @@ export function Resources({ csrf, canWrite, onUnauthorized, onDirty, onBusy }: P
       : { name, reason, resource_name: resource!.name, resource_uid: resource!.uid, endpoint_names: selectedEndpoints, agent_name: context!.agent_name, context_id: context!.id }
     const controller = new AbortController(); controllers.add(controller); setBusy(true); setError(''); setFields({}); setNotice('')
     try {
-      await request(mode === 'remove' ? `/bindings/${encodeURIComponent(bindingUID)}/remove` : mode === 'resource' ? '/resources' : '/bindings', { signal: controller.signal, method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf, 'If-Match': base }, body: JSON.stringify(body) })
+      const result = await request<{ uid: string; revision: number }>(mode === 'remove' ? `/bindings/${encodeURIComponent(bindingUID)}/remove` : mode === 'resource' ? '/resources' : '/bindings', { signal: controller.signal, method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf, 'If-Match': base }, body: JSON.stringify(body) })
       if (controller.signal.aborted) return
+      // A successful HTTP status alone is not a valid removal receipt. Keep the
+      // draft and require reconciliation on malformed/ambiguous responses.
+      if (mode === 'remove' && (!result.data || result.data.uid !== bindingUID || !Number.isSafeInteger(result.data.revision) || !Number.isSafeInteger(Number(base.slice(1, -1))) || result.data.revision <= Number(base.slice(1, -1)) || result.etag !== `"${result.data.revision}"`)) throw new Error('Invalid removal receipt')
       clear(); setNotice(t(mode === 'remove' ? 'resources.removed' : mode === 'resource' ? 'resources.created' : 'resources.bound')); setConflict(true)
       if (mode === 'remove') setMode('resource')
       // The successful POST is not repeated if its follow-up read fails.

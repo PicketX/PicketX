@@ -83,7 +83,13 @@ the same source, projection and audit. No policy-file poller writes this databas
 authority, and file mode does not gain these management writes.
 Removal uses parser document boundaries, retains surviving source bytes, and
 strictly re-decodes/compares every resulting object against exactly one removed
-Binding. Unsupported presentation is rejected without modifying the publication.
+Binding. Structured removal requires UTF-8; unsupported encoding is rejected
+without modifying the publication. Known alpha limitation: an inter-document
+comment after the removed document's explicit `...` terminator may be removed
+with it. Semantic policy objects and facts are still preserved.
+The browser requires the matching UID, advancing revision and corresponding
+strong ETag receipt before reporting acceptance. Malformed successful responses
+retain the draft and block retry until explicit reconciliation.
 
 ## Evidence and remaining work
 
