@@ -34,6 +34,9 @@ revision and corresponding strong ETag. Receipt regression also covers empty JSO
 wrong UID, stale revision and weak ETag with unchanged real Controller state.
 CI39160571438 exposed an immediate assertion before rebase finished; the test now
 waits for actual read completion before checking acknowledgement reset.
+Final-loop CI39161154690 exposed the same test timing issue before rechecking an
+already-checked checkbox; the response-injection loop now also waits for actual
+rebase completion before each acknowledgement. Production safety behavior unchanged.
 
 Fix locale6c80cd, remote81ba6e7ff695fa5789e8dac48b4b69ccd38f2967 share
 tree5d019a33eda89c0259e0bb9dabba406e708fb29c. Focused Go/race and locked Web

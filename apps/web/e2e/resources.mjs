@@ -113,6 +113,7 @@ export async function resourceOnboarding({ operator: p, view, origin, token, pol
     await p.unroute(`**${removalPath}`)
     p.once('dialog', d => d.accept())
     await p.getByRole('button', { name: 'Use latest resource revision', exact: true }).click()
+    await p.waitForFunction(() => document.querySelector('.resources-section')?.getAttribute('aria-busy') === 'false')
     await p.getByRole('checkbox', { name: 'I understand this may leave services unprotected', exact: true }).check()
   }
   console.log('PASS malformed removal receipts retain draft and block retry until explicit rebase; actual Controller state unchanged')
