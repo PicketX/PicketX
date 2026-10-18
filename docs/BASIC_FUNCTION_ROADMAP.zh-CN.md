@@ -16,6 +16,8 @@
 | M2B 期望状态准备 | PicketXD PR #4 已合并；持久重载/重启恢复、独立边界调度；全部 43 项必需内核场景通过，包括 7 项主机 INPUT 场景；生产执行仍待实现 |
 | Controller / Web | 健康检查与前端骨架；业务闭环、可用管理页面及生产 Agent 待实现 |
 
+M2D1 新增 [Controller 侧同步流基础](AGENT_STREAM.zh-CN.md)，下一步接入生产运行时和 Agent Provider。静态主机 Agent 已推进到 [PicketXD PR #15](https://github.com/PicketX/PicketXD/pull/15)，含安装及服务启动就绪；上表 M2B 为准备阶段历史证据。
+
 ## 交付顺序
 
 下列工作包细分既定 M1“可用访问工作流”目标，不承诺稳定协议。每项在实施前形成聚焦设计和计划；后续实测可调整任务边界，无须重新讨论已确定架构。

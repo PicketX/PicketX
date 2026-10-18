@@ -28,7 +28,7 @@ SQLite 选用 GORM 官方驱动（v1.6.0 基线）和 mattn/go-sqlite3（v1.14.5
 
 授权选用 Casbin RBAC 和官方 GORM Adapter；业务层提供当前用户的可信组/角色，共享规则在进程内鉴权，按可配置周期同步，启动时按规模/成本提供建议。ABAC 按需扩展。这些能力尚未实现，见 [ADR 0001](docs/decisions/0001-rbac-authorization.zh-CN.md)。
 
-运行支持已选 SCS Session、Echo 内置 CSRF、普通/Agent 分别配置的限流、官方 gRPC/protobuf、独立 Agent Token 与可选服务端 TLS、Prometheus 指标、标准库周期任务；均待接入，见 [ADR 0002](docs/decisions/0002-runtime-support.zh-CN.md)。
+运行支持已选 SCS Session、Echo 内置 CSRF、普通/Agent 分别配置的限流、官方 gRPC/protobuf、独立 Agent Token 与可选服务端 TLS、Prometheus 指标、标准库周期任务；Controller 侧同步流基础已实现（见下文），其他运行时仍待接入，见 [ADR 0002](docs/decisions/0002-runtime-support.zh-CN.md)。
 
 M0 Linux 数据面验证已在 [PicketXD](https://github.com/PicketX/PicketXD/pull/1) 实现并合并。[最终已测源码](https://github.com/PicketX/PicketXD/commit/13fdf2d9aacd79be74578ebe9c23af19a6b33d6a)在 Linux 6.17.0-1022-azure / Go 1.27.0 上通过 [17 项必需真实内核场景](https://github.com/PicketX/PicketXD/actions/runs/38547987642)。这是可复用验证基础设施，尚不是生产 Agent。已批准的 [M1.1 设计](docs/superpowers/specs/2026-10-15-shared-network-core-design.zh-CN.md)与[实施计划](docs/superpowers/plans/2026-10-15-shared-network-core.zh-CN.md)已有仅依赖标准库的逻辑引擎 [`pkg/core`](pkg/core)：校验来源、选择器、入口范围和明确期限，合并匹配 Grant、优先处理 deny，并解释独立贡献与未来变化。Gitea HTTPS/SSH 固定断言覆盖重叠、撤销、不可变替换和重放不延期。Controller 工作流尚未实现；逻辑允许不代表 Agent 已实际放行。
 
@@ -41,6 +41,8 @@ M1.3 已在 [PicketXD PR #3](https://github.com/PicketX/PicketXD/pull/3) 完成�
 M2A 新增 [`pkg/configuration`](pkg/configuration) 和 `picketx config check`：严格版本化 YAML、固定资源 UID 引用、独立绝对期限、完整规划校验/替换及显式空撤回。参见[可运行 Gitea 示例](examples/static/README.zh-CN.md)。这是可用的配置检查入口；运行时提供器/LKG、Agent 部署与同步、七层及管理端仍未实现。
 
 M2B 已在 [PicketXD PR #4](https://github.com/PicketX/PicketXD/pull/4) 合并：`picketxd prepare` 可持久恢复静态期望、重载完整配置并调度绝对时间边界。[最终 CI](https://github.com/PicketX/PicketXD/actions/runs/38760479190) 通过全部 43 项必需内核场景，包括 7 项主机 INPUT 场景。准备命令报告 `enforcementConfirmed=false`，生产执行仍待实现。[M1.3 实施计划](docs/superpowers/plans/2026-10-15-core-m0-bridge.zh-CN.md)保留并链接实际执行的 Agent 增量，后续沿[基本功能路线图](docs/BASIC_FUNCTION_ROADMAP.zh-CN.md)推进。
+
+M2D1 已实现 [Controller Agent 同步流基础](docs/AGENT_STREAM.zh-CN.md)：公开类型化 gRPC/protobuf、节点完整投影、可撤销/轮换 Token、应用报告关联和有界生命周期；真实流测试覆盖 TCP 回环和正常 TLS 校验。生产监听、PicketXD Controller Provider、持久 revision/注册管理仍待接入，尚不能声明 Controller Mode 可部署。
 
 ## 本地开发
 

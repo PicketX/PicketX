@@ -8,7 +8,7 @@ PicketX is designed to grant time-bounded access to protected resources through 
 
 ## Project status
 
-This repository is an **initial development scaffold**. It includes shared logical authorization and physical planning libraries, an Echo v5-based Go Controller liveness endpoint and a bilingual React starting page. Authentication, approval, Grant issuance, persistence, Agent synchronization and enforcement are not implemented. Do not use this scaffold to protect resources.
+This repository is an **initial development scaffold**. It includes shared logical authorization and physical planning libraries, an Echo v5-based Go Controller liveness endpoint and a bilingual React starting page. Authentication, approval, Grant issuance, persistence, end-to-end Agent synchronization and enforcement are not implemented. Do not use this scaffold to protect resources.
 
 The control plane and Web live here. The official Linux Agent, `picketxd`, belongs to the separate **PicketXD** repository. This initialization does not create or modify that repository.
 
@@ -28,7 +28,7 @@ Initial enforcement scope is IP/CIDR network admission, HTTP/HTTPS authorization
 
 Authorization is selected as Casbin RBAC with the official GORM Adapter. The business layer supplies the current user's trusted groups/roles; shared rules use in-process enforcement and configurable periodic policy synchronization, with startup scale/cost recommendations. ABAC is deferred until needed. This is not implemented; see [ADR 0001](docs/decisions/0001-rbac-authorization.md).
 
-Runtime support selections are SCS Sessions, Echo built-in CSRF and separately configured ordinary/Agent rate limits, official gRPC/protobuf with independent Agent Tokens and optional server TLS, Prometheus metrics and standard-library periodic jobs. These remain unimplemented; see [ADR 0002](docs/decisions/0002-runtime-support.md).
+Runtime support selections are SCS Sessions, Echo built-in CSRF and separately configured ordinary/Agent rate limits, official gRPC/protobuf with independent Agent Tokens and optional server TLS, Prometheus metrics and standard-library periodic jobs. The Controller-side stream foundation is implemented below; other runtime integration remains pending. See [ADR 0002](docs/decisions/0002-runtime-support.md).
 
 M0 Linux data-plane validation is implemented and merged in [PicketXD](https://github.com/PicketX/PicketXD/pull/1). The [final tested source](https://github.com/PicketX/PicketXD/commit/13fdf2d9aacd79be74578ebe9c23af19a6b33d6a) passed [17 required real-kernel scenarios](https://github.com/PicketX/PicketXD/actions/runs/38547987642) on Linux 6.17.0-1022-azure / Go 1.27.0. This is reusable validation infrastructure, not a production Agent. The approved [M1.1 design](docs/superpowers/specs/2026-10-15-shared-network-core-design.md) and [implementation plan](docs/superpowers/plans/2026-10-15-shared-network-core.md) now have a standard-library-only logical engine in [`pkg/core`](pkg/core). It validates sources, selectors, entry scopes and explicit lifetime modes; unions matching Grants, prioritizes denies and explains independent contributions and future changes. Literal Gitea HTTPS/SSH tests cover overlap, revocation, immutable replacement and deadline-preserving replay. The Controller workflow remains unimplemented; a logical allow does not confirm Agent enforcement.
 
@@ -41,6 +41,8 @@ M1.3 has a real-kernel-verified implementation in [PicketXD PR #3](https://githu
 M2A adds [`pkg/configuration`](pkg/configuration) and `picketx config check`: strict versioned YAML, pinned Resource references, independent absolute lifetimes, complete planner validation/replacement and explicit empty withdrawal. See the [runnable Gitea example](examples/static/README.md). This is a usable configuration-check entry point; runtime providers/LKG, Agent deployment/synchronization, L7 and administration remain unimplemented.
 
 M2B is merged in [PicketXD PR #4](https://github.com/PicketX/PicketXD/pull/4): `picketxd prepare` durably recovers static desired state, reloads complete configurations and schedules absolute boundaries. Its [final CI](https://github.com/PicketX/PicketXD/actions/runs/38760479190) passes all 43 required kernel scenarios, including seven host INPUT cases. Preparation reports `enforcementConfirmed=false`; production execution remains pending. The [M1.3 implementation plan](docs/superpowers/plans/2026-10-15-core-m0-bridge.md) is retained with links to the executed Agent increments. Continue through the [basic-function roadmap](docs/BASIC_FUNCTION_ROADMAP.md).
+
+M2D1 implements the [Controller Agent stream foundation](docs/AGENT_STREAM.md): public typed gRPC/protobuf, complete node snapshots, revocable Tokens, correlated Agent assertions and bounded lifecycle, tested over TCP loopback and verified TLS. Production listeners, the PicketXD Controller provider and durable revisions/enrollment remain pending; deployable Controller Mode is not claimed.
 
 ## Development
 

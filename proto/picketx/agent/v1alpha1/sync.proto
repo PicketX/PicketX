@@ -1,0 +1,82 @@
+// SPDX-License-Identifier: Apache-2.0
+syntax = "proto3";
+package picketx.agent.v1alpha1;
+option go_package = "github.com/PicketX/PicketX/pkg/protocol/agent/v1alpha1;agentv1";
+
+service AgentSync {
+  rpc Connect(stream AgentFrame) returns (stream ControllerFrame);
+}
+message AgentFrame {
+  oneof body {
+    Hello hello = 1;
+    Report report = 2;
+  }
+}
+message Hello { uint32 protocol_version = 1; }
+message ControllerFrame { Snapshot snapshot = 1; }
+// Complete replacement, including explicitly empty targets. Not proof of apply.
+message Snapshot {
+  string authority_id = 1;
+  string agent_ref = 2;
+  uint64 revision = 3;
+  bytes sha256 = 4; // deterministic serialization of this message with sha256 unset
+  repeated Target targets = 5;
+}
+message TargetKey {
+  string agent_ref = 1;
+  string context_id = 2;
+  string resource_id = 3;
+  string endpoint_name = 4;
+}
+message Context {
+  string agent_ref = 1;
+  string profile_ref = 2;
+  string id = 3;
+  string network_space_id = 4;
+  string traffic_class = 5;
+  string observation_stage = 6;
+  repeated string destinations = 7; // canonical IP prefixes
+  string handling = 8;
+}
+message Capability {
+  repeated string classes = 1;
+  repeated string protocols = 2;
+  repeated uint32 families = 3;
+  repeated string handling = 4;
+  bool original_destination = 5;
+}
+message Match {
+  string destination = 1;
+  string protocol = 2;
+  uint32 port = 3;
+}
+message Contribution {
+  string id = 1;
+  string source = 2;
+  uint32 lifetime_mode = 3; // shared domain: 1 bounded, 2 permanent
+  string not_before = 4; // RFC3339Nano UTC; empty means no activation bound
+  string expires_at = 5; // RFC3339Nano UTC; empty only for permanent
+  bool revoked = 6;
+}
+message Target {
+  TargetKey key = 1;
+  Context context = 2;
+  repeated string binding_ids = 3;
+  repeated Match matches = 4;
+  Capability required = 5;
+  repeated Contribution grants = 6;
+  repeated Contribution denies = 7;
+}
+// Authenticated Agent assertion, not independent Controller verification.
+message Report {
+  uint64 revision = 1;
+  bytes sha256 = 2;
+  enum Phase {
+    PHASE_UNSPECIFIED = 0;
+    RECEIVED = 1;
+    APPLIED = 2;
+    FAILED = 3;
+  }
+  Phase phase = 3;
+  string observed_at = 4; // RFC3339Nano; server separately records receive time
+}
