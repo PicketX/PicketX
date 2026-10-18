@@ -1,5 +1,19 @@
 # 自动交付检查点
 
+## PR18 main CI 修复（进行中）
+
+心跳2026-10-18T15:43Z；负责人 `codex/resource-onboarding`；租约延长至16:30Z，
+或修复合并且 main 全绿/明确交接时释放。PR18 已按预期 head 合并为
+2de0d6a8c9e52ed40cd68b6486b7bd5fccd29bad，源码树9c59b871298cb5a86757357642e7bddab2def5e9；
+最终分支 CI39140789757 的 Go167/429 和真实 Web/Nginx 均通过。
+main CI39141222771 的 Web117715886102 通过，但 Go117715886276 的真实 Unix
+权限断言失败：测试收到原始 Listen 回调后，可能先于运行时 chmod0600 检查权限。
+这不是本地 EPERM，也不是验收通过。修复计划与上下文图见
+docs/superpowers/plans/2026-10-18-unix-startup-assertion.md。
+保留0600断言，改为在真实 HTTP 服务响应后检查，不改生产代码。
+仍须完整原生 CI/重复压力测试/独立修复评审与 main 验证。
+原租约继续有效，请勿竞争开发；最终 SHA/树/PR/CI 证据追加至 PR18 和修复 PR。
+
 当前心跳2026-10-18T15:28Z：资源接入增量 `codex/resource-onboarding`，租约至16:00Z或合并且main全绿/明确交接。
 Core PR17已验收：main92b2d5f5e1f00c1ae32e219fa1cf9bd45deceee5，树12e206a694ec648a91738cdbbce0cde69bb2ba72，
 mainCI39137171776通过161顶层/423总测试及真实浏览器/Nginx/Unix/静态产物；旧租约已释放。Agent95a5f7f/CI39118687475不变且通过。
