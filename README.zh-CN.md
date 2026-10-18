@@ -24,7 +24,7 @@ PicketX 通过自助申请、策略和审批，为受保护资源提供有期限
 
 SQLite 选用 GORM 官方驱动（v1.6.0 基线）和 mattn/go-sqlite3（v1.14.52 基线）。默认 Linux 发布包必须完整静态链接，无额外共享库安装要求。PostgreSQL 采用官方 gorm.io/driver/postgres v1.6.3，底层 pgx/v5 v5.10.0。Controller发布记录及静态SQLite实际运行检查已实现；PostgreSQL、业务迁移与发布打包仍待接入。
 
-首期执行范围为 IP/CIDR 网络准入、现有入口提供 HTTP/HTTPS 授权、本地 TCP 或 Unix Socket 决策接口。NFQUEUE/镜像探测、透明代理/TLS 终止及原生数据库代理均后移；这些端点与集成尚未实现。
+首期执行范围为IP/CIDR网络准入、现有入口HTTP/HTTPS授权和本地TCP/Unix决策接口。[alpha HTTP适配器](docs/HTTP_AUTHORIZATION.zh-CN.md)新增来源HTTPRoute、限权本地TCP/Unix决策、持久审计及Nginx集成，精确CI验收见检查点；不是已验证用户授权或完整产品。NFQUEUE/镜像探测、透明代理/TLS终止及原生数据库代理仍后移。
 
 管理API使用Casbin3.11.0和官方GORM adapter3.41.0，支持独立主体可信角色、多角色deny优先和可观察周期重载。浏览器会话每次请求解析同一可信角色；人员身份和按资源委派待实现，见[ADR 0001](docs/decisions/0001-rbac-authorization.zh-CN.md)及[实际边界](docs/MANAGEMENT_API.zh-CN.md)。
 

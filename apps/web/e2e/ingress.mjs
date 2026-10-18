@@ -45,11 +45,17 @@ export async function startIngress({ root, temp, authzPort, token }) {
     async verifyAllowedAndIsolation() {
       let r = await request(); assert.equal(r.status, 200, logs); assert.equal(r.body, 'protected real HTTP application'); connection = r.socket
       const before = count
-      for (const input of [{ path: '/private', headers: { 'X-PicketX-Route': 'route-v1' } }, { method: 'POST' }, { host: 'other.example' }, { path: '/%61llowed' }, { source: '127.0.0.2', headers: { 'X-Forwarded-For': '127.0.0.1', 'X-PicketX-Source': '127.0.0.1', 'X-Real-IP': '127.0.0.1' } }]) {
+      for (const input of [{ path: '/private', headers: { 'X-PicketX-Route': 'route-v1' } }, { method: 'POST' }, { host: 'other.example' }, { source: '127.0.0.2', headers: { 'X-Forwarded-For': '127.0.0.1', 'X-PicketX-Source': '127.0.0.1', 'X-Real-IP': '127.0.0.1' } }]) {
         r = await request(input); assert(r.status >= 400, JSON.stringify({ input, status: r.status })); if (!input.source) assert.equal(r.socket, connection, 'Must reevaluate a reused HTTP connection')
       }
       assert.equal(count, before, 'Denied request reached application')
       r = await request(); assert.equal(r.status, 200); assert.equal(r.socket, connection)
+      // Invalid-context callbacks may make Nginx close the TCP connection.
+      // Valid unauthorized targets above must share the authenticated transport;
+      // malformed paths must fail closed, not preserve a connection as a promise.
+      const afterAllowed = count
+      r = await request({ path: '/%61llowed' }); assert(r.status >= 400); assert.equal(count, afterAllowed)
+      r = await request(); assert.equal(r.status, 200); connection = r.socket
       console.log('PASS real Nginx keepalive target/method/path/source-header isolation; denied calls never reached application')
     },
     async verifyDenied() { const before = count; const r = await request(); assert.equal(r.status, 403, logs); assert.equal(count, before); assert.equal(r.socket, connection) },
