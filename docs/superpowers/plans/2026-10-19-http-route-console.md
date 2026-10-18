@@ -40,23 +40,23 @@ no migration, new authority, runtime config, protocol or kernel changes.
 ### Task 1: Strict route API
 **Files:** configuration/management inventory, controller routes/tests, OpenAPI.
 **Interfaces:** Inventory.http_routes; CreateHTTPRoute(p,expected,reason,input); POST http-routes bearer/cookie.
-- [ ] Observe API404 RED, implement minimal source addition through complete Replace.
-- [ ] Test invalid/null/unknown/duplicate/pinning/TCP/selectors, CAS, RBAC, CSRF, audit/reopen.
-- [ ] Generate and test OpenAPI; focused Go suite GREEN; commit.
+- [x] Observe API404 RED, implement minimal source addition through complete Replace.
+- [x] Test invalid/null/unknown/duplicate/pinning/TCP/selectors, CAS, RBAC, CSRF, audit/reopen.
+- [x] Generate and test OpenAPI; focused Go suite GREEN; commit.
 
 ### Task 2: Real route page
 **Files:** HTTPRoutes/App/locales; e2e console/http-routes/ingress.
 **Interfaces:** Task1 JSON/ETag; csrf/canWrite/onUnauthorized/onDirty/onBusy props.
-- [ ] Observe missing navigation RED in actual native browser before UI implementation.
-- [ ] Implement explicit selectors, catalog/status/draft guards and English/Chinese parity.
-- [ ] Exercise real browser creation/CAS/errors/viewer/mobile and Nginx source grant/revoke.
-- [ ] Locked npm ci/typecheck/lint/build and native e2e GREEN; commit.
+- [x] Observe missing navigation RED in actual native browser before UI implementation.
+- [x] Implement explicit selectors, catalog/status/draft guards and English/Chinese parity.
+- [x] Exercise real browser creation/CAS/errors/viewer/mobile and Nginx source grant/revoke.
+- [x] Locked npm ci/typecheck/lint/build and native e2e GREEN; commit.
 
 ### Task 3: Acceptance
 **Files:** full branch and focused bilingual checkpoint/docs.
 **Interfaces:** exact reviewed source -> expected-head merge -> verified main.
-- [ ] Full Go/race/vet/build and locked Web; local UnixEPERM recorded, native no skips.
-- [ ] One fresh independent whole-branch review; fix blockers, ledger all deferred minors.
+- [x] Full Go/race/vet/build and locked Web; local UnixEPERM recorded, native no skips.
+- [x] One fresh independent whole-branch review; fix blockers, ledger all deferred minors.
 - [ ] Exact local/remote/tested tree, required raw CI, expected-head merge and mainCI; lease release.
 
 ## Ledger
@@ -67,3 +67,30 @@ host-owned isolated worktree reused (local94d615e has identical base tree).
 Baseline full Go ran: only TestAuthorizationRuntimeTCPUnixAndShutdown/unix
 fails on sandbox socket EPERM; no required scenario skipped. Pre-flight task
 interfaces are compatible and bounded; overall product not complete.
+
+Task1 local7396903: API404 and undocumented OpenAPI observed RED→GREEN; full
+controller/configuration packages pass. Task2 local84588c8/remote f43fcdf and
+actual CI checkout23c3ab1 share tree708ae952da90843ce3980e671876ff5c96d60f3c.
+Browser RED39146482257/Web117731241046 (missing navigation) → GREEN
+39147016947/Web117732810602. Real route UID→explicit caller/Nginx→application,
+source deny/grant/revoke, exact selectors, CAS412/draft/read-error/viewer/mobile
+passed. Screenshot artifact12143592283 digest
+a9e4bdcac115e28fd914ade466a8a186ca5a9efc435cb6b9b92cfc7f6c4195c0 verified;
+desktop,375px create/error and viewer images inspected. Native Go still running
+at this entry; local full ordinary/race fail only known UnixEPERM, vet/build
+and locked Web passed. Full branch review/merge/main acceptance remain pending.
+
+Native Go117732810809 subsequently GREEN172/434, zero fail/skip/race, actual
+Unix100-run stress and static Controller/CLI gates passed. Fresh review of
+94d615e..2840135 requested; implementation unchanged during review.
+
+Final review: independent fresh read-only review94d615e..2840135 READY TO MERGE;
+no Critical/Important. Detailed findings/rulings in AUTONOMOUS_DELIVERY.md.
+Final: minor (deferred): pristine target catalog/tab activation freshness; explicit rebase works.
+Final: minor (deferred): direct browser faults for committed/lost POST response and post-success read failure.
+Final: Ruling: caller/ingress setup stays separate trusted authority — explicit operator setup required.
+Final: Ruling: edit/delete stays advanced configuration — incomplete structured lifecycle.
+Final: Ruling: verified identity/OIDC/approval remains separate — no user self-service.
+Final: Ruling: live applied/kernel/TLS/active-stream termination unchanged — no combined production acceptance.
+Only final docs changed after review. Exact final head/native/main CI evidence
+will be appended to PR20; no recursive documentation-only acceptance loop.

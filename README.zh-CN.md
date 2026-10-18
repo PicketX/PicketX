@@ -8,7 +8,7 @@ PicketX 通过自助申请、策略和审批，为受保护资源提供有期限
 
 ## 项目状态
 
-当前仓库仍在开发，不是完整访问管理产品。共享Core/配置、SQLite发布、认证gRPC及原生PicketXD PR16 Provider已实现。[管理API](docs/MANAGEMENT_API.zh-CN.md)提供独立主体/Casbin/CAS/审计，[浏览器工作台](docs/BROWSER_CONSOLE.zh-CN.md)提供SCS/CSRF及真实文档发布/审计。[alpha HTTP适配器](docs/HTTP_AUTHORIZATION.zh-CN.md)增加来源HTTPRoute、限权本地决策及Nginx集成。[结构化Grant](docs/GRANT_MANAGEMENT.zh-CN.md)支持管理员签发/撤销；[资源接入](docs/RESOURCE_MANAGEMENT.zh-CN.md)增加资源/入口创建和精确既有主机Binding表单。精确CI验收见检查点。人员/OIDC、资源/绑定编辑删除、结构化HTTPRoute、审批/新鲜应用状态和最终Linux联合工作流仍待完成，不声明完整生产产品。
+当前仓库仍在开发，不是完整访问管理产品。共享Core/配置、SQLite发布、认证gRPC及原生PicketXD PR16 Provider已实现。[管理API](docs/MANAGEMENT_API.zh-CN.md)提供独立主体/Casbin/CAS/审计，[浏览器工作台](docs/BROWSER_CONSOLE.zh-CN.md)提供SCS/CSRF及真实文档发布/审计。[alpha HTTP适配器](docs/HTTP_AUTHORIZATION.zh-CN.md)增加来源HTTPRoute、限权本地决策及Nginx集成。[结构化Grant](docs/GRANT_MANAGEMENT.zh-CN.md)支持管理员签发/撤销；[资源接入](docs/RESOURCE_MANAGEMENT.zh-CN.md)增加资源/入口创建和精确既有主机Binding表单。精确CI验收见检查点。人员/OIDC、资源/绑定编辑删除、审批/新鲜应用状态和最终Linux联合工作流仍待完成，不声明完整生产产品。 HTTPRoute已补齐结构化创建/查看与真实Nginx授权验收，精确合并/CI证据见PR20与检查点；入口/调用方配置仍需独立显式完成。
 
 控制面与 Web 位于本仓库；官方 Linux Agent `picketxd` 属于独立的 **PicketXD** 仓库。本次初始化未创建或修改该仓库。
 
