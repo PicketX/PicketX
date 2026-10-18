@@ -36,7 +36,7 @@ try:
     subprocess.run(['go','run','./scripts/verify-controller',addresses['agent_listen'],str(tokenfile)],check=True,timeout=30)
     db=sqlite3.connect(work/'state'/'controller.sqlite')
     assert db.execute('SELECT authority,revision FROM controller_publication').fetchone()==('static:example-v1',1)
-    assert db.execute('SELECT version FROM controller_schema').fetchone()==(2,)
+    assert db.execute('SELECT version FROM controller_schema').fetchone()==(3,)
     assert db.execute('SELECT mode FROM controller_source').fetchone()==('file',)
     db.close()
     p.send_signal(signal.SIGTERM);assert p.wait(timeout=7)==0

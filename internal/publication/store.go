@@ -120,7 +120,13 @@ func OpenMode(path, authority, mode string) (out *Store, err error) {
 			}
 			version.Version = 2
 		}
-		if version.Version != 2 {
+		if version.Version == 2 {
+			if e := migrateHTTP(tx); e != nil {
+				return e
+			}
+			version.Version = 3
+		}
+		if version.Version != 3 {
 			return fmt.Errorf("unsupported publication schema version")
 		}
 		var source struct{ Mode string }

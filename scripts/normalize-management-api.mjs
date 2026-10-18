@@ -10,4 +10,7 @@ for (const property of Object.values(request.properties)) property.minLength = 1
 const login = spec.components.schemas["controller.LoginRequest"];
 login.additionalProperties = false;
 login.properties.token.minLength = 32;
+const decision = spec.components.schemas["controller.HTTPDecisionRequest"];
+decision.additionalProperties = false;
+for (const property of Object.values(decision.properties)) property.minLength = 1;
 fs.writeFileSync(path, JSON.stringify(spec, null, 4) + "\n");

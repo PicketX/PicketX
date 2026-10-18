@@ -56,3 +56,16 @@ func (h *managementHTTP) browserReplace(c *echo.Context) error { return h.putPub
 // @Failure 400,401,403,429,503 {object} APIError
 // @Router /console/api/v1/audit [get]
 func (h *managementHTTP) browserAudit(c *echo.Context) error { return h.audit(c) }
+
+// browserHTTPAudit godoc
+// @Summary Read bounded minimal HTTP authorization decision audit
+// @ID browserHTTPAudit
+// @Tags console
+// @Security BrowserCookie
+// @Produce json
+// @Param after query integer false "Exclusive event ID, default0" minimum(0)
+// @Param limit query integer false "Page size, default50" minimum(1) maximum(100)
+// @Success 200 {object} HTTPAuditResponse
+// @Failure 400,401,403,429,503 {object} APIError
+// @Router /console/api/v1/http-decisions [get]
+func (h *managementHTTP) browserHTTPAudit(c *echo.Context) error { return h.httpAudit(c) }

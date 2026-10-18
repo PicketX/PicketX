@@ -81,3 +81,15 @@ func (s *Service) Audit(p Principal, after int64, limit int) ([]publication.Audi
 	}
 	return s.repository.Audit(after, limit)
 }
+func (s *Service) HTTPAudit(p Principal, after int64, limit int) ([]publication.HTTPAuditEvent, error) {
+	if e := s.Check(p, "audit:read"); e != nil {
+		return nil, e
+	}
+	repo, ok := s.repository.(interface {
+		HTTPAudit(int64, int) ([]publication.HTTPAuditEvent, error)
+	})
+	if !ok {
+		return nil, ErrUnavailable
+	}
+	return repo.HTTPAudit(after, limit)
+}

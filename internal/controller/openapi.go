@@ -11,5 +11,9 @@ package controller
 // @securityDefinitions.apikey BrowserCookie
 // @in cookie
 // @name picketx_session
+
+// @securityDefinitions.apikey IngressBearer
+// @in header
+// @name Authorization
 // @externalDocs.description Management deployment and limitations
 // @externalDocs.url https://github.com/PicketX/PicketX/blob/main/docs/MANAGEMENT_API.md

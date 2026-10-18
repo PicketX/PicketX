@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/PicketX/PicketX/internal/agentsync"
+	"github.com/PicketX/PicketX/internal/authz"
 	"github.com/PicketX/PicketX/internal/controller"
 	"github.com/PicketX/PicketX/internal/management"
 	"github.com/PicketX/PicketX/internal/managementaccess"
@@ -69,7 +70,10 @@ func Run(ctx context.Context, c runtimeconfig.Config, log *slog.Logger, d Depend
 	var p *publisher
 	var access *managementaccess.Access
 	var managementService *management.Service
-	failures := make(chan error, 3)
+	var authorization *authz.Service
+	var authorizationServer *http.Server
+	var authorizationListener net.Listener
+	failures := make(chan error, 4)
 	if c.Agent.Enabled {
 		agentListener, e = d.Listen("tcp", c.Agent.Listen)
 		if e != nil {
@@ -123,11 +127,23 @@ func Run(ctx context.Context, c runtimeconfig.Config, log *slog.Logger, d Depend
 		agentServer = grpc.NewServer(grpcOptions...)
 		agentv1.RegisterAgentSyncServer(agentServer, svc)
 	}
+	if c.Authz.Enabled {
+		authorization, e = authz.New(c.Authz.Credentials, p.store)
+		if e != nil {
+			return e
+		}
+		authorizationListener, e = listenAuthorization(c.Authz.Network, c.Authz.Address, d.Listen)
+		if e != nil {
+			return e
+		}
+		defer authorizationListener.Close()
+		authorizationServer = &http.Server{Handler: controller.NewAuthorizationHandler(authorization), ReadHeaderTimeout: 2 * time.Second, ReadTimeout: 3 * time.Second, WriteTimeout: 3 * time.Second, IdleTimeout: 30 * time.Second, MaxHeaderBytes: 32 << 10}
+	}
 	ready := func() bool {
 		if p == nil {
 			return true
 		}
-		return p.ready.Load() && (access == nil || access.Ready())
+		return p.ready.Load() && (access == nil || access.Ready()) && (authorization == nil || authorization.Ready())
 	}
 	var browser *controller.Browser
 	if c.Browser.Enabled {
@@ -172,6 +188,13 @@ func Run(ctx context.Context, c runtimeconfig.Config, log *slog.Logger, d Depend
 			failures <- e
 		}
 	}()
+	if authorizationServer != nil {
+		go func() {
+			if e := authorizationServer.Serve(authorizationListener); e != nil && !errors.Is(e, http.ErrServerClosed) {
+				failures <- e
+			}
+		}()
+	}
 	agentAddress := ""
 	if agentServer != nil {
 		agentAddress = agentListener.Addr().String()
@@ -198,7 +221,16 @@ func Run(ctx context.Context, c runtimeconfig.Config, log *slog.Logger, d Depend
 	shutdownCtx, stop := context.WithTimeout(context.Background(), c.Shutdown)
 	defer stop()
 	httpDone := make(chan error, 1)
-	go func() { httpDone <- server.Shutdown(shutdownCtx) }()
+	go func() {
+		err := server.Shutdown(shutdownCtx)
+		if authorizationServer != nil {
+			if e := authorizationServer.Shutdown(shutdownCtx); e != nil {
+				authorizationServer.Close()
+				err = errors.Join(err, e)
+			}
+		}
+		httpDone <- err
+	}()
 	if agentServer != nil {
 		done := make(chan struct{})
 		go func() { agentServer.GracefulStop(); close(done) }()

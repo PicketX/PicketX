@@ -27,6 +27,9 @@ func (p *publisher) Snapshot() (publication.Document, error) { return p.store.Sn
 func (p *publisher) Audit(after int64, limit int) ([]publication.AuditEvent, error) {
 	return p.store.Audit(after, limit)
 }
+func (p *publisher) HTTPAudit(after int64, limit int) ([]publication.HTTPAuditEvent, error) {
+	return p.store.HTTPAudit(after, limit)
+}
 
 // Replace serializes durable commit and delivery with the credentials polling owner.
 func (p *publisher) Replace(expected uint64, actor, reason, policy, facts string) (publication.Document, error) {

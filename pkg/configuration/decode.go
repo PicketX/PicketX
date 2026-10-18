@@ -94,6 +94,12 @@ func Decode(data []byte) (*Bundle, error) {
 				return nil, fmt.Errorf("%s: %w", key, err)
 			}
 			spec = s
+		case "HTTPRoute":
+			var s httpRouteSpec
+			if err = strictJSON(h.Spec, &s); err != nil {
+				return nil, fmt.Errorf("%s: %w", key, err)
+			}
+			spec = s
 		case "Configuration":
 			var s emptySpec
 			if err = strictJSON(h.Spec, &s); err != nil {

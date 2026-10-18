@@ -9,6 +9,7 @@ import { createServer } from 'node:net'
 import { spawn, spawnSync } from 'node:child_process'
 import { once } from 'node:events'
 import { chromium } from 'playwright'
+import { freePort, startIngress } from './ingress.mjs'
 
 const root = resolve(import.meta.dirname, '../../..')
 const temp = await mkdtemp(join(tmpdir(), 'picketx-browser-'))
@@ -16,12 +17,15 @@ const evidence = process.env.PICKETX_BROWSER_EVIDENCE_DIR ?? join(temp, 'screens
 await mkdir(evidence, { recursive: true })
 const token = randomBytes(32).toString('hex'), viewer = randomBytes(32).toString('hex')
 const hash = x => createHash('sha256').update(x).digest('hex')
-let child, browser, logs = ''
+let child, browser, ingress, logs = ''
 try {
   const portServer = createServer()
   portServer.listen(0, '127.0.0.1'); await once(portServer, 'listening')
   const port = portServer.address().port; await new Promise(r => portServer.close(r))
   const origin = `http://127.0.0.1:${port}`
+  const authzPort = await freePort(), ingressToken = randomBytes(32).toString('hex')
+  const callersPath = join(temp, 'callers.json')
+  await writeFile(callersPath, JSON.stringify({ callers: [{ id: 'nginx', sha256: hash(ingressToken), routes: ['route-v1', 'route-private-v1'] }] }), { mode: 0o600 })
   const principalPath = join(temp, 'principals.json')
   await writeFile(principalPath, JSON.stringify({ principals: [
     { id: 'principal:admin', sha256: hash(token), roles: ['role:admin'] },
@@ -35,6 +39,7 @@ source: {mode: database}
 management: {credentials: ${JSON.stringify(principalPath)}}
 agent: {enabled: true, listen: "127.0.0.1:0", authority: "static:example-v1"}
 browser: {enabled: true, origin: ${JSON.stringify(origin)}, assets: ${JSON.stringify(join(root, 'apps/web/dist'))}}
+authz: {enabled: true, network: tcp, address: "127.0.0.1:${authzPort}", credentials: ${JSON.stringify(callersPath)}}
 `, { mode: 0o600 })
   const built = spawnSync('go', ['build', '-o', join(temp, 'controller'), './cmd/picketx-controller'], { cwd: root, encoding: 'utf8' })
   assert.equal(built.status, 0, built.stderr)
@@ -48,6 +53,7 @@ browser: {enabled: true, origin: ${JSON.stringify(origin)}, assets: ${JSON.strin
     await new Promise(r => setTimeout(r, 100))
   }
   assert(ready, logs)
+  ingress = await startIngress({ root, temp, authzPort, token: ingressToken })
   browser = await chromium.launch({ headless: true })
   const context = await browser.newContext()
   const page = await context.newPage()
@@ -123,6 +129,39 @@ browser: {enabled: true, origin: ${JSON.stringify(origin)}, assets: ${JSON.strin
     const { csrf } = await (await fetch('/console/api/v1/session')).json()
     return (await fetch('/console/api/v1/publication', { method: 'PUT', headers: { 'X-CSRF-Token': csrf, 'Content-Type': 'application/json', 'If-Match': '"3"' }, body: '{}' })).status
   }); assert.equal(forbidden, 403)
+  // A separate real browser publishes HTTP intent, then visits the real ingress.
+  const operator = await context.newPage(); await operator.goto(`${origin}/console/`)
+  await operator.getByLabel('Policy YAML').waitFor()
+  const httpPolicy = (await readFile(join(root, 'examples/http/policy.yaml'), 'utf8')).replaceAll('__HOST__', `127.0.0.1:${ingress.port}`)
+  const httpFacts = JSON.stringify({ authorityID: 'static:example-v1', agents: [], contexts: [] })
+  const publishHTTP = async (value, reason) => {
+    await operator.getByLabel('Policy YAML').fill(value); await operator.getByLabel('Facts JSON').fill(httpFacts)
+    await operator.getByLabel('Change reason').fill(reason)
+    const response = operator.waitForResponse(r => r.url().endsWith('/console/api/v1/publication') && r.request().method() === 'PUT')
+    await operator.getByRole('button', { name: 'Save desired configuration', exact: true }).click()
+    assert.equal((await response).status(), 200)
+    await operator.getByText('Desired configuration saved. Node application is not confirmed.', { exact: true }).waitFor()
+  }
+  await publishHTTP(httpPolicy, 'Browser HTTP authorization')
+  await ingress.verifyAllowedAndIsolation()
+  const application = await context.newPage(); await application.goto(`${ingress.url}/allowed`)
+  assert.equal(await application.locator('body').textContent(), 'protected real HTTP application')
+  const ipv6 = await fetch(`http://127.0.0.1:${authzPort}/authz/v1/decisions`, { method: 'POST', headers: { Authorization: `Bearer ${ingressToken}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ route: 'route-v1', source: '::1', host: `127.0.0.1:${ingress.port}`, method: 'GET', uri: '/allowed' }) })
+  assert.equal(ipv6.status, 200); assert.equal((await ipv6.json()).allowed, true)
+  await publishHTTP(httpPolicy.replace('subject: {type: source, cidr: 127.0.0.1/32}', 'revoked: true\n  subject: {type: source, cidr: 127.0.0.1/32}'), 'Browser revoke HTTP source')
+  await ingress.verifyDenied(); const denied = await application.reload(); assert.equal(denied.status(), 403)
+  const expiry = new Date(Date.now() + 2500)
+  await publishHTTP(httpPolicy.replace('validity: {mode: permanent}', `validity: {mode: bounded, expiresAt: '${expiry.toISOString()}'}`), 'Browser absolute HTTP deadline')
+  await ingress.verifyAllowedAndIsolation()
+  while (Date.now() < expiry.getTime()) await new Promise(r => setTimeout(r, 50))
+  await ingress.verifyDenied()
+  const decisionAudit = await operator.evaluate(async () => (await fetch('/console/api/v1/http-decisions?limit=100')).json())
+  assert(decisionAudit.events.some(e => e.allowed && e.grant_ids.includes('loopback4-v1')))
+  assert(decisionAudit.events.some(e => !e.allowed && e.reason === 'no-active-grant'))
+  assert(decisionAudit.events.every(e => !('uri' in e) && !('host' in e)))
+  await writeFile(callersPath, '{"callers":[]}', { mode: 0o600 }); await ingress.verifyCallerRevoked()
+  await writeFile(callersPath, '{"callers":null}', { mode: 0o600 }); await ingress.verifyUnavailable()
+  console.log('PASS actual browser publication → source authorization → Nginx → application; revoke/deadline/audit/IPv6/scoped caller removal')
   // Removal invalidates the next real request even when the browser holds a cookie.
   await writeFile(principalPath, '{"principals":[]}', { mode: 0o600 })
   await page.getByRole('button', { name: 'Refresh status', exact: true }).click()
@@ -133,6 +172,7 @@ browser: {enabled: true, origin: ${JSON.stringify(origin)}, assets: ${JSON.strin
 } finally {
   if (browser?.contexts()[0]?.pages()[0]) await browser.contexts()[0].pages()[0].screenshot({ path: join(evidence, 'last-state.png'), fullPage: true }).catch(() => {})
   await browser?.close()
+  await ingress?.close()
   if (child && child.exitCode === null) { const exited = once(child, 'exit'); child.kill('SIGTERM'); await exited }
   if (child) assert.equal(child.exitCode, 0, logs)
   // Preserve evidence on request; otherwise securely remove generated credentials.
