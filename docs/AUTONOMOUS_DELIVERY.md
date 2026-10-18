@@ -19,3 +19,16 @@ Owner: interactive Controller runtime increment. Branch: `codex/controller-runti
 Next tests also include PR11 deferred minor: newly credentialed scope receives existing nonempty desired inventory without republishing. Every increment needs uncached relevant full tests, fresh whole-branch review, checked remote source tree/head, passing required PR CI, expected-head merge and main CI verification. No forced pushes or bypassed checks; no fixture/UI-only completion claims. The hourly task must attempt real implementation when an execution environment is available, and report an actual blocker when it is not.
 
 Deferred PR12 review minor: the existing CAS test covers initial INSERT collision; add stale UPDATE regression by seeding revision1, opening two stores at revision1, committing revision2 through one, then checking a different valid stale change fails without replacing revision2. Implementation retains the correct revision predicate.
+
+## 2026-10-18 Provider handoff
+Core PR12 is accepted: main5e2254efec90f2a5448450a2974c587c37f1dd18,
+tree d78219ef42fb515e73c0144e40e7ea85a3896cc8, main CI39113728426 success.
+The PR11 newly credentialed nonempty-target regression was completed in PR12.
+
+Active next implementation is Agent PR16 (`codex/controller-provider`), owner automated
+Provider increment, lease until 2026-10-18T12:30:00Z or merged/green main CI.
+Inspect that PR and Agent docs/AUTONOMOUS_DELIVERY.md before starting new development.
+This Core branch only supplements the deferred stale UPDATE CAS regression: seed revision1,
+open two stores at revision1, persist a valid revision2 and reject the stale distinct update.
+The new test caught deliberate removal of the revision predicate; production code is unchanged.
+Local complete race115 top-level/344 total tests, vet/build and Web lockfile checks passed.
