@@ -51,8 +51,8 @@ export async function httpRouteRemoval({ operator, view, api, route, ingressPort
       await operator.unroute(`**/console/api/v1/http-routes/${route.uid}/remove`)
       await rebase(); assert(!(await ack.isChecked())); await ack.check()
     }
-    const concurrent = await mutate('/resources', { name: 'removal-concurrent', endpoints: [{ name: 'web', protocol: 'TCP', port: 9444 }], reason: 'Stale removal base' })
-    assert.equal(concurrent.response.status, 201)
+    const concurrent = await mutate('/resources', { name: 'http-route-removal-concurrent', endpoints: [{ name: 'web', protocol: 'TCP', port: 9444 }], reason: 'Stale removal base' })
+    assert.equal(concurrent.response.status, 201, JSON.stringify(concurrent.data))
     await button('Refresh routes').click()
     let pending = operator.waitForResponse(r => r.url().endsWith(`/${route.uid}/remove`))
     await confirm.click(); assert.equal((await pending).status(), 412)
