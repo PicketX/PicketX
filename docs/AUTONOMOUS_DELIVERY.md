@@ -1,5 +1,77 @@
 # Autonomous delivery checkpoint
 
+## Binding removal (active)
+
+Owner codex/binding-removal; heartbeat2026-10-18T19:43Z; lease until20:43Z or
+merged+green main/explicit handoff. Core PR22 main d979a8492c82e2e010f50b3b04dedc68c4ac199a,
+tree38c8751f1be9da2bec49735854c54336726f1e7e/main CI39156537892 GREEN;
+PR22 lease RELEASED. Agent95a5f7f/CI39118687475 GREEN, no open PRs at acquisition.
+Existing clean isolated codex/resource-onboarding worktree retained. Plan:
+docs/superpowers/plans/2026-10-18-binding-removal.md. Explicit unprotection warning,
+UID/CAS/audit and browser acceptance; no endpoint/resource edits or kernel change.
+Overall product and combined privileged Linux/browser acceptance remain incomplete.
+
+[PR23](https://github.com/PicketX/PicketX/pull/23) implements explicit Binding
+removal through the real database-authoritative API/console. It removes only the
+UID-matched Binding, preserves Grants/facts/other Bindings and warns that last
+Binding removal may leave services unprotected. Not Grant revocation, not applied
+confirmation. Strict acknowledgement/reason, current RBAC, cookie CSRF, strong
+revision CAS, transactional audit and full compiler remain mandatory.
+
+API404 RED preceded implementation; source boundary tests cover first/middle/last,
+CR/LF/Unicode breaks, JSON, BOM/directives and bounded large annotation retention.
+Native browser RED39160203275/Web117771719739 stopped at the missing removal action
+after real Nginx/Grant scenarios passed. Its Go job117771719513 passed181 top-level/
+461 total tests, no fail/skip/race; this is intermediate evidence, not the final head.
+
+Independent whole-branch review a7a1383..0d282a5 found two Important issues. Both
+entered one fix pass: UTF-16 accepted by Decode could panic during byte-coordinate
+editing (local TestRemoveBindingRejectsUTF16WithoutPanic RED→GREEN); a successful
+HTTP status without a valid receipt could silently clear/rebase a removal draft
+(native RED39160809838/Web117773528625,204 fault injection). Removal now rejects
+unsupported encodings, and the browser requires matching UID, safe advancing
+revision and corresponding strong ETag. Receipt regression also covers empty JSON,
+wrong UID, stale revision and weak ETag with unchanged real Controller state.
+CI39160571438 exposed an immediate assertion before rebase finished; the test now
+waits for actual read completion before checking acknowledgement reset.
+Final-loop CI39161154690 exposed the same test timing issue before rechecking an
+already-checked checkbox; the response-injection loop now also waits for actual
+rebase completion before each acknowledgement. Production safety behavior unchanged.
+
+Fix locale6c80cd, remote81ba6e7ff695fa5789e8dac48b4b69ccd38f2967 share
+tree5d019a33eda89c0259e0bb9dabba406e708fb29c. Focused Go/race and locked Web
+typecheck/lint/build passed. Complete local Go ordinary/race still cannot create
+the existing authorization Unix socket (EPERM); local browser requires unavailable
+Nginx. No bypass/skip was added: exact final-head native Go/Web/Unix/static/browser
+CI, screenshot digest/inspection and merged-main CI remain required before release.
+Final immutable heads/trees/raw logs and lease release are appended to PR23 so
+this historical active heading is not mistaken for a lease after merged+green main.
+
+Native Web39161434475/job117775390236 passed the complete Chromium/Nginx suite,
+including all malformed-receipt and actual Binding-removal scenarios. Actual
+checkout163fa3229b4d0aff1a17412d589028672d00bd30 and local8e49947/remote509a3c5
+share treee48877648c255da2d1120b690b1d8264d691c874. Artifact12148544473 digest
+04909dac020d7ec71baed761ea43eb601e3218cad40b50a5b1ef1f72c61c8603 matched the
+downloaded ZIP. Inspected375px removal warning/acknowledgement and1440px Resources
+screenshots; no overflow. Visual QA caught obsolete help text claiming removal
+required the advanced editor; English/Chinese copy corrected. This final copy/docs
+head must pass exact-head CI again; immutable final and main evidence in PR23.
+
+Deferred Minor: comments between an explicit removed-document terminator and the
+next YAML document can be removed; semantic surviving objects remain guarded.
+This alpha source-format limitation is documented in RESOURCE_MANAGEMENT.
+Rulings: native CI/screenshots are root verification, not a claim by the independent
+reviewer; Agent/kernel application and broader lifecycle were unchanged/outside
+review scope. Cost if these boundaries were mistaken: an unsafe unverified merge
+or false completion claim, so native gates and honest remaining scope are retained.
+
+Next: Resource/Endpoint safe editing/deletion and Binding editing with dedicated
+immutable-target/reference design, context enrollment, human identity/request/
+approval and final combined privileged Linux/browser acceptance. HTTPRoute creation
+and desired/applied node observations already exist; do not recreate them. Product
+completion is NOT established and the autonomous task must remain enabled.
+
+
 ## Node observation lifecycle (active)
 
 Owner codex/node-lifecycle; heartbeat2026-10-18T18:40Z; lease until19:40Z or

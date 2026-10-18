@@ -12,11 +12,12 @@ const request = spec.components.schemas["controller.PublicationRequest"];
 request.additionalProperties = false;
 for (const property of Object.values(request.properties)) property.minLength = 1;
 const login = spec.components.schemas["controller.LoginRequest"];
-for (const name of ["controller.IssueGrantRequest", "controller.RevokeGrantRequest", "controller.CreateResourceRequest", "controller.ResourceEndpointRequest", "controller.CreateBindingRequest", "controller.CreateHTTPRouteRequest"]) {
+for (const name of ["controller.IssueGrantRequest", "controller.RevokeGrantRequest", "controller.CreateResourceRequest", "controller.ResourceEndpointRequest", "controller.CreateBindingRequest", "controller.CreateHTTPRouteRequest", "controller.RemoveBindingRequest"]) {
   const grant = spec.components.schemas[name];
   grant.additionalProperties = false;
   for (const field of Object.values(grant.properties)) if (field.type === "string") field.minLength = 1;
 }
+spec.components.schemas["controller.RemoveBindingRequest"].properties.acknowledge_unprotection = { type: "boolean", const: true };
 for (const name of ["controller.IssueGrantRequest", "controller.CreateBindingRequest"]) {
   const names = spec.components.schemas[name].properties.endpoint_names;
   names.uniqueItems = true;

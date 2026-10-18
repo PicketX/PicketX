@@ -5,7 +5,7 @@
 [浏览器工作台](BROWSER_CONSOLE.zh-CN.md)的资源页读取真实数据库发布，创建
 Resource/Endpoint 和明确主机 Binding。创建资源**不授予访问**；Binding 是期望
 保护部署，不证明 Agent 已应用。[Grant 签发/撤销](GRANT_MANAGEMENT.zh-CN.md)
-独立操作；[HTTPRoute](HTTP_AUTHORIZATION.zh-CN.md)仍使用高级配置编辑器。
+独立操作；[HTTPRoute](HTTP_AUTHORIZATION.zh-CN.md)已有结构化工作台页面。
 本段不引入第二权威或数据表。
 
 ## 操作流程
@@ -22,13 +22,19 @@ Resource/Endpoint 和明确主机 Binding。创建资源**不授予访问**；Bi
    物理重叠和引用。
 4. 打开授权页，显式使用最新 Grant 修订。新资源及入口可用于独立绝对期限授权，
    无须手写 YAML 即可签发和撤销，审计记录包含操作原因。
+5. 退役保护部署时，在对应条目选择**移除 Binding**，核对 UID、资源/Agent
+   选择和执行设置，填写原因并确认可能导致服务失去保护，然后提交或取消。
+   这**不是撤销 Grant**：其他 Binding 和已有 Grant 不变。最后一个 Binding
+   被移除会撤下 PicketX 保护，而不是只撤销允许规则；接受修改不证明 Agent 已应用。
 
-每次只有一份资源或 Binding 草稿。切换表单类型或清空时先确认；切换工作台页签
+每次只有一份资源、Binding 或移除草稿。切换表单类型或清空时先确认；切换工作台页签
 保留草稿。刷新仅改变观察清单，不改变草稿 CAS 基线或选择目录；显式更新基线
 保留输入并更新选项，重试前应核对。412、传输失败或5xx写入失败会阻止重提，
 直到显式更新基线；失败不证明回滚，不自动重试。离开/退出提醒未保存草稿。
 Viewer 可读、后端拒绝写入；不使用 localStorage/sessionStorage 保存数据。
 高级编辑器、授权页各自保留修订基线，跨页变更后需显式重载。
+移除草稿更新基线后保留原因，但重置风险确认并展示同 UID 的最新详情；目标已
+不存在时禁止提交。取消明确丢弃该移除草稿。成功写入后读取失败不会自动重提。
 
 清单展示完整存储的 Binding 选择条件，包括导入的动态全部/标签范围，不伪造
 解析结果。每页每类最多50个资源、Binding 和配置上下文；加载、失败、空与过时
@@ -44,18 +50,24 @@ Bearer `/api/v1` 与会话/Origin/CSRF `/console/api/v1` 共用当前
 | GET `/api/v1/inventory` | 完整有界资源/入口、Binding、上下文数组，以及权威/修订/读取时间和强 ETag；拒绝查询参数。 |
 | POST `/api/v1/resources` | name、endpoints[{name,protocol,port,addresses?}]、reason；201返回服务端生成的 uid、revision 和 ETag。 |
 | POST `/api/v1/bindings` | name、resource_name/resource_uid、endpoint_names、agent_name/context_id、reason；201返回服务端生成的 uid、revision 和 ETag。 |
+| POST `/api/v1/bindings/{uid}/remove` | reason、acknowledge_unprotection:true；200返回 uid/revision 和 ETag。不存在或非 Binding UID 返回404；先检查修订，陈旧412。 |
 
 写入必须带当前强 If-Match（缺失428、陈旧412），严格 JSON16KiB，拒绝重复、
 未知、null字段，原因非空且最多512字节，新名称最多128字节，既有引用名称最多
 1024。地址数组可省略，但不能null/空；具名入口选择非空且唯一。响应no-store。
 保留策略4MiB/4096对象边界，清单受既有输入上限约束，不静默截断。
-这是创建/读取，**并非完整 CRUD**。
+支持创建/读取和移除 Binding，**并非完整 CRUD**。
 
 保留既有策略字节和事实，追加紧凑 JSON（有效 YAML）；首个资源替换唯一的
 显式空 Configuration。根据当前事实查找精确上下文并原样复制契约，客户端不能
 提交或扩大执行设置。既有编译器要求每个 Agent 的 profile 唯一。完整 Replace
 执行不可变身份校验、修订 CAS、事务审计与分发；审计失败整体回滚，SQLite重开
 恢复相同源码、投影和审计。数据库权威不受文件轮询回写，文件模式不获得管理写入。
+移除使用解析器文档边界，保留存活文档字节；重新严格解码并核对所有对象，确保
+只移除目标 Binding。结构化移除要求 UTF-8；不支持的编码会被拒绝，不改变发布。
+已知 alpha 限制：被移除文档显式 `...` 终止符之后、下一文档之前的注释可能随之
+移除；语义策略对象和事实仍保留。浏览器仅在收到目标 UID、递增修订及匹配的强
+ETag 回执后报告接受；格式异常的成功响应保留草稿并阻止重试，直到显式核对。
 
 ## 证据与剩余项
 
@@ -64,5 +76,6 @@ CSRF、CAS、审计回滚、持久重开。浏览器验收覆盖真实资源→B
 冲突草稿、失败读取、Viewer拒绝和375px布局，并保留真实Nginx/应用授权套件。
 精确通过/失败、源码树、评审及CI见[检查点](AUTONOMOUS_DELIVERY.md)和PR18。
 
-编辑/删除、上下文注册、结构化HTTPRoute、人员身份/申请审批、真实期望/应用状态
-及最终Linux联合流程仍待完成。本段不声明新增内核执行证据或产品整体完成。
+资源/入口编辑删除、Binding编辑、上下文注册、人员身份/申请审批及最终Linux
+联合流程仍待完成。结构化HTTPRoute创建和真实期望/应用节点观察已交付。
+本段不声明新增内核执行证据或产品整体完成。
