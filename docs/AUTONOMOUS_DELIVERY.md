@@ -1,5 +1,59 @@
 # Autonomous delivery checkpoint
 
+## HTTPRoute removal (active)
+
+Owner codex/http-route-removal; heartbeat2026-10-18T22:07Z; lease until23:07Z or
+merged+green main/explicit handoff. Core5ddfd7a2c92ca30a495e9e3ec766b6beb0b65fa4,
+tree59ba4458e8e528f28a1623512b93341bce31edd6/mainCI39168327944 GREEN; PR25 released.
+Agent95a5f7f/CI39118687475 GREEN; no open PRs in either repo at acquisition.
+Existing isolated clean worktree retained with identical source tree. Plan/spec:
+superpowers/{plans,specs}/2026-10-19-http-route-removal.md. Complete L7 route lifecycle
+before wider Resource edits: exact UID, CAS/auth/audit, live UI and real Nginx denial
+after removal with an active Grant. No cascade/runtime allowlist or kernel change.
+Remaining Resource/Endpoint/Binding editing, human identity/approval and combined
+Linux/browser acceptance unchanged. Final immutable evidence/release belongs in PR.
+
+[PR26](https://github.com/PicketX/PicketX/pull/26): API404 RED then GREEN for
+UID/kind/CAS/auth/CSRF/strict acknowledgement, direct SQLite retention and audit
+rollback. Missing generated OpenAPI path/security RED then GREEN. Local complete
+normal/race suites fail only existing Unix socket EPERM; focused full packages,
+vet/build and locked Web checks pass. Native39169721758 on5fb5482c/treef88f33f1
+contains API and browser tests, intentionally before removal UI: expected missing
+Remove HTTP route control. Full native evidence/review/integration remain pending.
+
+Native39169721758 Go117800060598 passed199 top/506 total without fail/skip/race,
+actual Unix100 repeat and static Controller checks; Web117800060320 failed at the
+expected missing removal control. UI implementation9f6b588 passed locked local Web
+checks. Native39170078385 revealed a duplicate concurrency-fixture Resource name;
+isolated fixture7dd2660 fixed that without changing server validation.
+
+Native39170303474 on1953314e/treefac71111960f4801c9e210da5fb277c1da84d89f passed
+Go/Web, including real browser→API→audit→Nginx→application: cancel still permits,
+removed UID denies with active Grant/unchanged caller scope, sibling still permits.
+Malformed200/204, stale412/rebase, missing UID/same-name replacement, failed read,
+viewer and mobile pass. Artifact12152327527 SHA2564cd84880c830e7879da98d8e1e32a9a22dc8b02a158bf37e9985f150fd26d5bd
+matched downloaded ZIP;375px confirmation and1440px post-removal list inspected.
+
+Independent whole-branch review317be35..7dd2660 found one Important: request helper
+dropped HTTP status, so valid-looking202 could clear intent and claim completion.
+The actual helper+UI guard reproduced202 acceptance RED locally. Browser regression
+was committedb226f1c/published63775ed7 before the fix; request now preserves status
+and removal requires exactly200. Local actual helper/guard200-vs-other2xx regression
+is GREEN. Final native regression/full suite and exact-head merge remain required;
+immutable final evidence and explicit lease release will be recorded in PR26.
+
+Deferred Minor: wrong-kind rejection table uses absent gitea-web, not existing
+Binding UID binding-gitea-v1. Resource wrong-kind and production kind+UID predicate
+are covered/correct; explicit Binding regression remains for a related test pass.
+Rulings: prioritize route retirement (cost if wrong: Resource edits delayed one
+slice); native CI owns local Unix/Nginx/browser limits (unsafe merge if assumed);
+retain separator whitespace for source preservation (cosmetic blank-line cost);
+prepare downstream acceptance while native upstream tests run (test-rework cost).
+Root owns independent native/screenshots/exact-head/main gates not rerun by reviewer
+(unsafe merge if assumed). Editing, identity/approval, Agent/kernel, deployment TLS
+and existing streams remain outside this increment; unrelated subsystems are not
+certified (incomplete deployment assurance if overclaimed). Overall goal incomplete.
+
 ## Safe Resource removal (active)
 
 Owner codex/resource-removal; heartbeat2026-10-18T21:10Z; lease until22:10Z or

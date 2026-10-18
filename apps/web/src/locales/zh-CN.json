@@ -12,6 +12,11 @@
     "received": "Controller 接收时间", "agentTime": "Agent 观测时间（不可信）"
   },
   "routes": {
+    "remove": "移除 HTTP 路由", "confirmRemoval": "确认移除 HTTP 路由", "cancelRemoval": "取消移除路由", "removalReason": "路由移除原因",
+    "acknowledge": "我理解此路由的新请求将被拒绝",
+    "removeWarning": "仅移除此 HTTP 路由。使用此 UID 的新请求将被拒绝。网络 Grant、Binding、其他路由和可信调用方配置保持不变；已有流不会被终止。",
+    "missing": "此 HTTP 路由已不在草稿版本中。请取消并检查最新列表；同名替代路由是不同的目标。",
+    "removed": "HTTP 路由 {{uid}} 已移除。网络 Grant 和 Binding 不变；已有流不会被终止。",
     "title": "HTTP 路由", "management": "HTTP 路由管理", "boundary": "这里只管理期望请求选择条件。来源 Grant 与可信入口需分别配置；创建不代表访问已生效。",
     "refresh": "刷新路由", "rebase": "使用最新路由版本", "rebaseConfirm": "保留此路由草稿并使用最新版本？重试前请检查固定的 TCP 端点与选择条件。", "base": "路由操作基线 {{base}} · 已观察版本 {{observed}}",
     "name": "路由名称", "resource": "路由 Resource", "endpoint": "TCP 端点", "host": "精确请求 Host", "methods": "允许的方法", "paths": "精确路径，每行一个", "reason": "路由创建原因",
@@ -57,5 +62,5 @@
     "valid": "读取时有效", "future": "读取时尚未生效", "expiredState": "读取时已过期", "revokedState": "已撤销", "scopeall": "当前及未来全部 Endpoint（动态）", "scopeselector": "标签选择 Endpoint（动态）", "selector": "查看标签选择条件", "starts": "开始", "expires": "到期", "permanent": "无到期时间（导入的永久 Grant）",
     "revoke": "撤销 Grant", "confirmTitle": "撤销这个 Grant？", "revokeHelp": "仅撤销此 Grant，其他匹配 Grant 可能继续允许访问，显式 deny 保持不变。", "revokeReason": "撤销原因", "confirm": "确认撤销", "cancel": "取消撤销", "revoked": "Grant 已在期望状态中撤销，其他 Grant 与节点应用需独立核对。", "next": "下一页 Grant", "finishDraft": "撤销前请完成或清空签发草稿，切换工作台页面会保留草稿。"
   },
-  "errors": { "resource_in_use": "资源仍被引用。移除前请审查 Grant（包括已撤销或过期）、Deny、Binding 和 HTTPRoute。", "resource_not_found": "此资源已不存在。重试前请显式使用最新修订并核对 UID。", "unauthorized": "访问密钥未被接受，请核对密钥或联系管理员。", "forbidden": "当前角色不允许此操作。", "rate_limited": "请求过于频繁，请稍后重试。", "invalid_login": "请输入有效的管理访问密钥。", "csrf_rejected": "无法验证请求，请刷新页面并重新登录。", "invalid_publication": "期望修改未通过校验，请核对来源 IP/CIDR、唯一 Grant 名称、固定资源与指定 Endpoint，或两个配置文档；输入已保留。", "invalid_fields": "请核对必填项和允许的期限，输入已保留。", "grant_not_found": "此 Grant 已不存在，请刷新并核对当前发布。", "management_unavailable": "管理服务不可用，请检查就绪状态和凭据配置。失败写入响应仍可能已提交，请先核对最新修订。", "session_unavailable": "会话服务不可用，请检查 Controller 就绪状态。", "request_too_large": "请求超过大小限制，请缩减文档后重试。", "body_too_large": "请求超过大小限制，请缩减所选 Endpoint 或输入文本。", "revision_required": "没有修订基线，请显式载入最新配置。" }
+  "errors": { "http_route_not_found": "此 HTTP 路由已不存在。重试前请显式使用最新修订并核对 UID。", "resource_in_use": "资源仍被引用。移除前请审查 Grant（包括已撤销或过期）、Deny、Binding 和 HTTPRoute。", "resource_not_found": "此资源已不存在。重试前请显式使用最新修订并核对 UID。", "unauthorized": "访问密钥未被接受，请核对密钥或联系管理员。", "forbidden": "当前角色不允许此操作。", "rate_limited": "请求过于频繁，请稍后重试。", "invalid_login": "请输入有效的管理访问密钥。", "csrf_rejected": "无法验证请求，请刷新页面并重新登录。", "invalid_publication": "期望修改未通过校验，请核对来源 IP/CIDR、唯一 Grant 名称、固定资源与指定 Endpoint，或两个配置文档；输入已保留。", "invalid_fields": "请核对必填项和允许的期限，输入已保留。", "grant_not_found": "此 Grant 已不存在，请刷新并核对当前发布。", "management_unavailable": "管理服务不可用，请检查就绪状态和凭据配置。失败写入响应仍可能已提交，请先核对最新修订。", "session_unavailable": "会话服务不可用，请检查 Controller 就绪状态。", "request_too_large": "请求超过大小限制，请缩减文档后重试。", "body_too_large": "请求超过大小限制，请缩减所选 Endpoint 或输入文本。", "revision_required": "没有修订基线，请显式载入最新配置。" }
 }
