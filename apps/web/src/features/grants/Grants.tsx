@@ -115,7 +115,7 @@ export function Grants({ csrf, canWrite, onUnauthorized, onDirty, onBusy }: Prop
   return <section className="grants-section" aria-busy={busy}>
     <div className="section-heading"><div><h2>{t('grants.access')}</h2><p>{t('grants.boundary')}</p></div><div className="actions"><Button variant="outline" disabled={busy} onClick={() => void refresh()}>{t('grants.refresh')}</Button><Button variant="outline" disabled={busy} onClick={() => void refresh(true)}>{t('grants.rebase')}</Button></div></div>
     <p className="hint">{t('grants.base', { base: base.slice(1, -1) || '—', observed: page?.revision ?? '—' })} · {t('lastRead')}: {page ? date(page.observed_at) : t('notRead')}</p>
-    {error && <div className="feedback error" role="alert" tabIndex={-1} ref={errors}>{error}{Object.keys(fields).length > 0 && <ul>{Object.entries(fields).map(([id, text]) => <li key={id}><a href={`#${id}`} onClick={() => document.getElementById(id)?.focus()}>{t(`grants.${id.slice(6)}`)}: {text}</a></li>)}</ul>}</div>}
+    {error && <div className="feedback error" role="alert" tabIndex={-1} ref={errors}><p>{error}</p>{Object.keys(fields).length > 0 && <ul>{Object.entries(fields).map(([id, text]) => <li key={id}><a href={`#${id}`} onClick={() => document.getElementById(id)?.focus()}>{t(`grants.${id.slice(6)}`)}: {text}</a></li>)}</ul>}</div>}
     {notice && <p className="feedback success" role="status">{notice}</p>}
     {readFailed || conflict || (page && now - Date.parse(page.observed_at) > 60000) ? <p className="stale" role="status">{conflict ? t('grants.conflictHelp') : readFailed ? t('staleFailed') : t('staleAge')}</p> : null}
     {busy && <p role="status">{t('loading')}</p>}

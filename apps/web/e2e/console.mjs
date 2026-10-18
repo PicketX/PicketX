@@ -161,6 +161,7 @@ authz: {enabled: true, network: tcp, address: "127.0.0.1:${authzPort}", credenti
   await operator.getByLabel('Resource', { exact: true }).selectOption('private-app-v1')
   await operator.getByRole('button', { name: 'Issue Grant', exact: true }).click()
   await operator.getByText('Check the following fields, then submit again.', { exact: true }).waitFor()
+  await operator.waitForFunction(() => document.querySelector('.grants-section [role="alert"]') === document.activeElement)
   assert(await operator.locator('.grants-section [role="alert"]').evaluate(el => el === document.activeElement))
   const fillGrant = async name => {
     await operator.getByLabel('Grant name', { exact: true }).fill(name)
@@ -268,6 +269,7 @@ spec:
   console.log('PASS real Chromium → React → SCS/CSRF → management API → SQLite: publish, audit, conflict/draft, read failure, viewer, mobile, credential revocation')
   console.log(`Screenshots: ${evidence}`)
 } finally {
+  for (const [index, diagnostic] of (browser?.contexts().flatMap(c => c.pages()) ?? []).entries()) await diagnostic.screenshot({ path: join(evidence, `page-${index}-last.png`), fullPage: true }).catch(() => {})
   if (browser?.contexts()[0]?.pages()[0]) await browser.contexts()[0].pages()[0].screenshot({ path: join(evidence, 'last-state.png'), fullPage: true }).catch(() => {})
   await browser?.close()
   await ingress?.close()
