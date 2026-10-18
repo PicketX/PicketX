@@ -50,25 +50,25 @@ configuration compile tests (strict objects/lifecycle), core network tests (inde
 ### Task 1: Immutable source-backed HTTP routes
 **Files:** pkg/httpauth/*.go, pkg/configuration/{types,decode,candidate}.go and tests.
 **Interfaces:** `httpauth.Compile(core.Snapshot, []Route) (*Engine,error)`; `Engine.Decide(Query) (core.Decision,error)`; `Candidate.HTTP() *httpauth.Engine`.
-- [ ] Write failing actual Decode/Compile/Decide tests: no route/unknown, source IPv4/IPv6, overlapping independent deadlines, future/revoked, explicit deny, exact Host/method/path, malformed/encoded URI, pinned references and no route UID retarget.
-- [ ] Run focused tests; Expected: missing implementation RED.
-- [ ] Implement strict route/context and configuration integration; unchanged network projection.
-- [ ] Run focused and full `go test -count=1 ./...`; Expected: PASS; commit.
+- [x] Write failing actual Decode/Compile/Decide tests: no route/unknown, source IPv4/IPv6, overlapping independent deadlines, future/revoked, explicit deny, exact Host/method/path, malformed/encoded URI, pinned references and no route UID retarget.
+- [x] Run focused tests; Expected: missing implementation RED.
+- [x] Implement strict route/context and configuration integration; unchanged network projection.
+- [x] Run focused and full `go test -count=1 ./...`; Expected: PASS; commit.
 
 ### Task 2: Durable scoped local decisions
 **Files:** internal/{publication,authz,controller,controllerapp,runtimeconfig}, generated OpenAPI and tests.
 **Interfaces:** Store.DecideHTTP(caller string,q httpauth.Query) (HTTPDecision,error), Store.HTTPAudit(after int64,limit int); authz.Service.Decide(token string,q httpauth.Query), dedicated controller.NewAuthorizationHandler; runtime assembly typed authz config.
-- [ ] Write failures for full runtime TCP+Unix, scope/credential rotation, strict JSON/header duplicates, schema2 upgrade/reopen, audit failure with no allow, RBAC audit visibility, startup-existing Unix object and shutdown.
-- [ ] Run tests; Expected: missing routes/config/schema RED.
-- [ ] Implement official Echo/validator adapters, private credential validation, schema3/evaluate+audit, isolated listeners/readiness and bounded lifecycle; document/generate both API groups.
-- [ ] Full Go ordinary/race/vet/build, pinned generation, local OpenAPI; Expected: PASS; commit.
+- [x] Write failures for full runtime TCP+Unix, scope/credential rotation, strict JSON/header duplicates, schema2 upgrade/reopen, audit failure with no allow, RBAC audit visibility, startup-existing Unix object and shutdown.
+- [x] Run tests; Expected: missing routes/config/schema RED.
+- [x] Implement official Echo/validator adapters, private credential validation, schema3/evaluate+audit, isolated listeners/readiness and bounded lifecycle; document/generate both API groups.
+- [x] Full Go ordinary/race/vet/build, pinned generation, local OpenAPI; Expected: PASS; commit (full native suite in Linux CI; local Unix EPERM retained).
 
 ### Task 3: Real Nginx/browser/application acceptance
 **Files:** examples/http/*, apps/web/e2e/console.mjs, .github/workflows/ci.yml, bilingual docs/checkpoint.
 **Interfaces:** existing real console e2e publishes policy through SCS/CAS; Nginx internal auth_request calls dedicated local API using fixed routing target and sanitized source metadata.
-- [ ] Add actual Nginx/HTTP acceptance first; Expected: RED until setup/integration exists, never skip absent tool.
-- [ ] Provide minimal documented Nginx config/template and executable test lifecycle; real application count/content proves blocked calls never forwarded. Exercise reused connection target/method/path/source spoofing, source dual-stack decisions, expiry/revoke/deny, authz unavailable, audit records; actual browser publish→proxy→application and revoke.
-- [ ] Locked Web typecheck/lint/build and actual Chromium/Nginx CI; full Go/race/vet/build/static retained. Expected: PASS.
+- [x] Add actual Nginx/HTTP acceptance first; Expected: RED until setup/integration exists, never skip absent tool.
+- [x] Provide minimal documented Nginx config/template and executable test lifecycle; real application count/content proves blocked calls never forwarded. Exercise reused connection target/method/path/source spoofing, source dual-stack decisions, expiry/revoke/deny, authz unavailable, audit records; actual browser publish→proxy→application and revoke.
+- [x] Locked Web typecheck/lint/build and actual Chromium/Nginx CI; full Go/race/vet/build/static retained. Expected: PASS.
 - [ ] Fresh whole-branch independent review; resolve blockers with RED→GREEN and full suite; commit final evidence. Verify local/remote/CI exact tree, expected-head merge and green main, release lease; goal remains incomplete.
 
 ## Self-review / ledger
@@ -96,3 +96,6 @@ Final rulings on declined judgments:
 - HA/crash beyond SQLite/latency/capacity/contention/retention: unmeasured/no operational promise; cost storage/capacity/retention must be planned before scale.
 - Query-sensitive actions/prefix/wildcards/alternate ingress: exact-path only; cost these deployments cannot infer safe authorization from example.
 - Malicious local admin/compromised trusted ingress: trusted authority controls context/mapping/key, out of threat boundary; cost no defense against compromised trusted integrator.
+
+Task2 complete / Task3 code acceptance: fixed local8cb7ece treea2932abdfd22ac650d9a7abc562bee4706569779 equals remotefe43e0772de1ec54b40cfa10fb0e9cf0188d1d08 and fetched CI checkout55f510aad6db8f03a297aa0d1a6d1429d270fd63. CI39130425080 Go117684282808/Web117684283026 both success. Full raw150/405, zero fail/skip/race, including actual valid IPv4/IPv6 TCP and Unix decisions/cleanup and all four deadline regressions. Full static/generation/local OpenAPI gates and actual Chromium/Nginx source-Grant/explicit-deny/revoke/deadline/application/audit flow GREEN. Artifact12137651861 SHA256168e64403b3081383f3f9f94ece5dbde4ad6dfe15ae202ef38ec847650ac4abc independently verified; application/mobile screenshots inspected. No deferred minors or unresolved finding. Local all-suite Unix EPERM remains environment-specific negative evidence, not claimed passing; all required actual Linux cases passed. New real runtime fixture initially used deliberately expired static example dates; fixed only the test fixture to future independent absolute deadlines, not production validation.
+Final: fixed stale-clock Important finding — TestHTTPDecisionRefreshesTimeAcrossQueueAndAudit four cases RED→GREEN, complete Linux race150/405 GREEN. Only final metadata exact-head CI, expected-head merge and main verification remain; final results will be appended durably to PR16. Lease auto-releases only after that acceptance. Product remains incomplete, next structured management/approval/status and final combined identity/Linux workflow.
