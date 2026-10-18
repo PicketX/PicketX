@@ -1,5 +1,18 @@
 # Autonomous delivery checkpoint
 
+## Safe Resource removal (active)
+
+Owner codex/resource-removal; heartbeat2026-10-18T21:10Z; lease until22:10Z or
+merged+green main/explicit handoff. Core b091326eb7ad3694c697650b29a66beacffe6920,
+tree874d9475272e82206b820d6a021558a1ff547227/CI39165277571 GREEN, PR24 released.
+Agent95a5f7f/CI39118687475 GREEN; no open PRs at acquisition. Existing clean
+isolated worktree retained. Plan: superpowers/plans/2026-10-19-resource-removal.md.
+Only unused Resource definition removal; incoming references always block, no
+cascade/service stop. Real API/UI/CAS/audit/CSRF and native browser validation.
+Also close PR24 direct-SQLite assertion Minor. Remaining editing/reference
+lifecycle, human identity/approval and combined Linux/browser acceptance unchanged.
+Final immutable commits/CI/review and lease release belong in this increment's PR.
+
 ## Binding source retention (active)
 
 Owner codex/binding-source-retention; heartbeat2026-10-18T20:39Z; lease until21:39Z
