@@ -11,6 +11,36 @@ import (
 
 const resourceRemovalBody = `{"reason":"retire unused definition","acknowledge_removal":true}`
 
+// A valid imported UID must not collide with the synthetic empty marker.
+func TestResourceRemovalEmptyMarkerIdentity(t *testing.T) {
+	h, store, _ := managementFixture(t)
+	raw, err := os.ReadFile("../../examples/static/gitea.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	facts, err := os.ReadFile("../../examples/static/facts.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	policy := strings.ReplaceAll(strings.Split(string(raw), "---\n")[0], "resource-gitea-v1", "empty-binding-removal")
+	body, _ := json.Marshal(map[string]string{"policy": policy, "facts": string(facts), "reason": "import valid marker-like UID"})
+	if w := request(h, "PUT", "/api/v1/publication", string(body), managementToken, `"0"`); w.Code != 200 {
+		t.Fatal(w.Code, w.Body.String())
+	}
+	w := request(h, "POST", "/api/v1/resources/empty-binding-removal/remove", resourceRemovalBody, managementToken, `"1"`)
+	if w.Code != 200 || w.Header().Get("ETag") != `"2"` {
+		t.Fatal(w.Code, w.Body.String())
+	}
+	doc, err := store.Snapshot()
+	if err != nil || doc.Revision != 2 || !strings.Contains(doc.Policy, "kind: Configuration") || strings.Contains(doc.Policy, "uid: empty-binding-removal}") {
+		t.Fatal("empty marker identity", doc, err)
+	}
+	audit, err := store.Audit(0, 100)
+	if err != nil || len(audit) != 2 || audit[1].Reason != "retire unused definition" {
+		t.Fatal(audit, err)
+	}
+}
+
 // Catches silent cascade, missing audit and cached-only durability assertions.
 func TestResourceRemovalHTTP(t *testing.T) {
 	h, store, _ := managementFixture(t)

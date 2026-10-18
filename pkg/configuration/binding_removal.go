@@ -83,7 +83,13 @@ func (b *Bundle) removeDocument(index int) ([]byte, error) {
 		break
 	}
 	if len(expected) == 0 {
-		empty := []byte("apiVersion: picketx.io/v1alpha1\nkind: Configuration\nmetadata: {name: empty, uid: empty-binding-removal}\nspec: {empty: true}\n")
+		// A valid imported target may itself use our conventional marker UID.
+		// The new Configuration must not reuse it across an immutable kind boundary.
+		emptyUID := "empty-binding-removal"
+		if uid == emptyUID {
+			emptyUID = "empty-document-removal"
+		}
+		empty := []byte(fmt.Sprintf("apiVersion: picketx.io/v1alpha1\nkind: Configuration\nmetadata: {name: empty, uid: %s}\nspec: {empty: true}\n", emptyUID))
 		return append(empty, b.source[end:]...), nil
 	}
 	out := append(slices.Clone(b.source[:start]), b.source[end:]...)

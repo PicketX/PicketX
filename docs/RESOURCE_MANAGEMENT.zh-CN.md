@@ -63,6 +63,9 @@ Bearer `/api/v1` 与会话/Origin/CSRF `/console/api/v1` 共用当前
 保留策略4MiB/4096对象边界，清单受既有输入上限约束，不静默截断。
 支持创建/读取、移除 Binding 和未引用资源，**并非完整 CRUD**。
 
+已知 alpha 边界：首次发布前（修订0），移除不存在目标目前返回400
+invalid_publication而非404，不会产生修改；工作台在此状态没有可选目标。
+
 保留既有策略字节和事实，追加紧凑 JSON（有效 YAML）；首个资源替换唯一的
 显式空 Configuration。根据当前事实查找精确上下文并原样复制契约，客户端不能
 提交或扩大执行设置。既有编译器要求每个 Agent 的 profile 唯一。完整 Replace

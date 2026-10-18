@@ -78,6 +78,10 @@ its unchanged4MiB/4096-object bounds; full inventory is bounded by existing inpu
 limits, not silently truncated. Creation/read, Binding and unused Resource removal are available,
 **not full CRUD**.
 
+Known alpha edge: before the first publication (revision0), an absent removal
+target currently returns400 invalid_publication instead of404. Nothing is mutated;
+the console has no selectable target in this state.
+
 The transformation preserves existing policy bytes and facts, appending compact
 JSON (valid YAML); the sole explicit-empty Configuration marker is replaced for
 the first Resource. The exact context is looked up in current facts, and its
