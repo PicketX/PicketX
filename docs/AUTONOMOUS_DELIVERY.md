@@ -1,5 +1,13 @@
 # Autonomous delivery checkpoint
 
+## Browser console handoff (current)
+
+Heartbeat 2026-10-18T11:40:00Z. Owner `codex/browser-console`; lease until2026-10-18T13:30:00Z, auto-release only after merged/green main or explicit handoff. Prior PR14 lease released. Accepted Core main0ccfa8ff8522fb95d93b7898f8b0a1ed9dfcc65a/tree3f49d6f51cc0cba29ada9f3a65a7d845a849e06d; main CI39121855312 green128/357, zero fail/skip/race; Go/Web/static SQLite-managed-runtime checks passed. Agent remains95a5f7f/CI39118687475. Neither repository has an open PR at acquisition.
+
+Plan/spec/ledger: `docs/superpowers/plans/2026-10-18-browser-console.md`. Scope: actual SCS operator session/CSRF and live publication/audit React console. Remaining: structured management/approval, L7 and final browser→proxy→application acceptance. Do not pause this task after this increment.
+
+The historical management section below is superseded by the accepted PR14/main above.
+
 Updated: 2026-10-18T11:00:00Z. User explicitly authorized autonomous development, tests, push, PRs and merges until a usable management application and basic Layer 7 authorization exist. Routine design/plan and integration decisions do not require another approval round. Preserve existing security boundaries and required checks.
 
 ## Current lease

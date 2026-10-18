@@ -1,5 +1,7 @@
 # 自动交付检查点
 
+当前心跳2026-10-18T11:40Z：分支codex/browser-console，租约至13:30Z，合并且main CI通过或显式交接释放。旧PR14已合并且租约释放：Core main0ccfa8ff8522fb95d93b7898f8b0a1ed9dfcc65a，树3f49d6f51cc0cba29ada9f3a65a7d845a849e06d，main CI39121855312通过128/357、无失败/跳过/race。Agent仍为95a5f7f/CI39118687475。本段实现SCS会话/CSRF和真实发布/审计页面，规范与台账见2026-10-18-browser-console计划。采租时两仓库无开放PR。后续仍需结构化管理/审批、L7及浏览器→代理→应用验收，不暂停任务。以下旧管理段状态已被本段覆盖。
+
 2026-10-18：用户已授权自动开发、测试、推送、PR、修复CI及评审/验证后按准确head合并，持续到易用管理端与基础七层授权完成；不重复请求例行设计/执行/推送确认。当前租约为Core PR14管理发布增量，分支codex/management-authority，到2026-10-18T12:30Z，或PR合并且main CI通过即提前释放。先检查实际远端/心跳，不启动竞争实现。旧PR12和Agent PR16租约均已释放，不等待旧时间戳。
 
 已接受Core main0b2c5e919626f281750295cf6cb119ea7241ed99，树094555cc0a493cddbe855b4dac9fd38715da54de，CI39117067190（115/344）通过；Agent main95a5f7f62dceb1c369d08b8e23ffda2f7b978ce4，树a53a743e22254c0511b430e5b9e2ed0664180629，CI39118687475（190/482、112原生/9服务）通过。PR11非空目标后注册与PR12 stale UPDATE CAS回归均已完成，不重做。
