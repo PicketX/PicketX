@@ -690,6 +690,25 @@
                 "type": "object",
                 "additionalProperties": false
             },
+            "controller.RemoveResourceRequest": {
+                "properties": {
+                    "acknowledge_removal": {
+                        "type": "boolean",
+                        "const": true
+                    },
+                    "reason": {
+                        "maxLength": 512,
+                        "type": "string",
+                        "minLength": 1
+                    }
+                },
+                "required": [
+                    "acknowledge_removal",
+                    "reason"
+                ],
+                "type": "object",
+                "additionalProperties": false
+            },
             "controller.ResourceEndpointRequest": {
                 "properties": {
                     "addresses": {
@@ -2710,6 +2729,183 @@
                     }
                 ],
                 "summary": "Create a Resource with named network Endpoints; does not grant or confirm access",
+                "tags": [
+                    "management"
+                ]
+            }
+        },
+        "/api/v1/resources/{uid}/remove": {
+            "post": {
+                "operationId": "removeResource",
+                "parameters": [
+                    {
+                        "description": "Resource UID, not name",
+                        "in": "path",
+                        "name": "uid",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Strong current revision, checked before lookup",
+                        "in": "header",
+                        "name": "If-Match",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/controller.RemoveResourceRequest",
+                                "summary": "removal",
+                                "description": "Reason and explicit removal acknowledgement"
+                            }
+                        }
+                    },
+                    "description": "Reason and explicit removal acknowledgement",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/management.InventoryChange"
+                                }
+                            }
+                        },
+                        "description": "OK",
+                        "headers": {
+                            "ETag": {
+                                "description": "Strong accepted revision, not applied state",
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "409": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "412": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "413": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "415": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "428": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "429": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "503": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    }
+                },
+                "security": [
+                    {
+                        "ManagementBearer": []
+                    }
+                ],
+                "summary": "Remove an unreferenced Resource definition; never cascade or stop services",
                 "tags": [
                     "management"
                 ]
@@ -4947,6 +5143,201 @@
                     }
                 ],
                 "summary": "Create Resource using the operator session and CSRF protection",
+                "tags": [
+                    "console"
+                ]
+            }
+        },
+        "/console/api/v1/resources/{uid}/remove": {
+            "post": {
+                "operationId": "browserRemoveResource",
+                "parameters": [
+                    {
+                        "description": "Resource UID",
+                        "in": "path",
+                        "name": "uid",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Strong current revision",
+                        "in": "header",
+                        "name": "If-Match",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Exact configured origin",
+                        "in": "header",
+                        "name": "Origin",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Session CSRF token",
+                        "in": "header",
+                        "name": "X-CSRF-Token",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/controller.RemoveResourceRequest",
+                                "summary": "removal",
+                                "description": "Reason and explicit removal acknowledgement"
+                            }
+                        }
+                    },
+                    "description": "Reason and explicit removal acknowledgement",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/management.InventoryChange"
+                                }
+                            }
+                        },
+                        "description": "OK",
+                        "headers": {
+                            "ETag": {
+                                "description": "Strong accepted revision, not applied state",
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "409": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "412": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "413": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "415": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "428": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "429": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "503": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    }
+                },
+                "security": [
+                    {
+                        "BrowserCookie": []
+                    }
+                ],
+                "summary": "Remove an unreferenced Resource with operator session; never cascade",
                 "tags": [
                     "console"
                 ]

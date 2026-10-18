@@ -92,6 +92,13 @@ func TestBindingRemovalRetainsBoundaryCommentsHTTP(t *testing.T) {
 	if err != nil || doc.Revision != 2 || doc.Policy != suffix || doc.Facts != string(facts) {
 		t.Fatal("persisted source/facts mismatch", err, doc.Policy)
 	}
+	var persisted struct {
+		Policy, Facts []byte
+		Revision      int64
+	}
+	if err = store.GORM().Raw("SELECT policy,facts,revision FROM controller_publication WHERE id=1").Scan(&persisted).Error; err != nil || string(persisted.Policy) != suffix || string(persisted.Facts) != string(facts) || persisted.Revision != 2 {
+		t.Fatal("SQLite source/facts mismatch", err, persisted)
+	}
 	audit, err := store.Audit(0, 100)
 	if err != nil || len(audit) != 2 || audit[1].Reason != "retire protection" {
 		t.Fatal("audit", audit, err)
