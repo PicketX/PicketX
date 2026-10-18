@@ -13,6 +13,20 @@ and real Nodes page. No kernel proof or protocol heartbeat claim. Preserve PR20
 deferred minors and remaining lifecycle/identity/approval/combined Linux acceptance.
 Do not compete while this delivery is active. Overall task remains incomplete.
 
+PR21 browser RED CI39151001045 / Web117744459046 failed exactly on the missing
+Nodes navigation after all existing real browser/Nginx scenarios passed. Its Go
+job caught unformatted new Swag annotations; gofmt corrected them. Remote upload
+initially lost the generator executable bit; f6f50d85 restored it and matched
+local tree70a5f5346d221db3dbf68ed4fddb20024a64bb45. No forced ref update.
+API/service tests cover current-session freshness, unknown/stale/disconnected,
+decimal revisions, credential removal, live auth and actual gRPC→HTTP reports.
+UI uses existing visual tokens and read-only cards, no applied-access success
+claim; freshness helper missing-module RED→GREEN covers boundary/clock/suspend.
+Browser credential fixture corrected to the existing agent_ref JSON contract.
+Local complete ordinary/race tests encounter the known Unix socket EPERM;
+native CI must pass that scenario. Full review, final CI and merge remain pending.
+Usage and limits: [Node observations](NODE_OBSERVATIONS.md).
+
 ## HTTPRoute console (active)
 
 Heartbeat2026-10-18T16:42Z; owner `codex/http-route-console`, existing isolated

@@ -79,3 +79,13 @@ Ruling: keep observations in memory — no stale restart resurrection; cost no h
 Ruling: show credentialed scopes only — explicit inventory boundary; cost no enrollment inventory.
 Ruling: no heartbeat/kernel change — avoid compatibility expansion; cost no continuous proof.
 Baseline full Go: only actual Unix socket EPERM locally; required nativeCI retained.
+
+## UI design review
+Reuse background #f5f7fa, text #18283b, action #145da0, muted #526174,
+white surface and system sans16px/1.5 from the accepted console. Left-aligned
+node cards pair distributed revision with explicitly attributed Agent assertion;
+hashes are expandable, long identifiers wrap. No new theme, animation or live-success
+badge. UI skill's operations pattern fits timestamp/stale semantics; its marketing
+sections/glass theme do not fit this existing console and are not adopted.
+Use contextual status announcements without focus theft; color never carries state
+alone. Refresh button retains44px target. Review375px and desktop screenshots.

@@ -15,11 +15,17 @@ import "github.com/labstack/echo/v5"
 // @Router /api/v1/agent-observations [get]
 func (h *managementHTTP) agentObservations(c *echo.Context) error {
 	p, e := h.principal(c, "publication:read")
-	if e != nil { return mappedError(c, e) }
-	if c.Request().URL.RawQuery != "" { return apiError(c,400,"invalid_query") }
-	v,e:=h.service.AgentObservations(p)
-	if e!=nil { return mappedError(c,e) }
-	return c.JSON(200,v)
+	if e != nil {
+		return mappedError(c, e)
+	}
+	if c.Request().URL.RawQuery != "" {
+		return apiError(c, 400, "invalid_query")
+	}
+	v, e := h.service.AgentObservations(p)
+	if e != nil {
+		return mappedError(c, e)
+	}
+	return c.JSON(200, v)
 }
 
 // browserAgentObservations godoc
@@ -32,4 +38,6 @@ func (h *managementHTTP) agentObservations(c *echo.Context) error {
 // @Success 200 {object} agentsync.Observations
 // @Failure 400,401,403,429,503 {object} APIError
 // @Router /console/api/v1/agent-observations [get]
-func (h *managementHTTP) browserAgentObservations(c *echo.Context) error { return h.agentObservations(c) }
+func (h *managementHTTP) browserAgentObservations(c *echo.Context) error {
+	return h.agentObservations(c)
+}

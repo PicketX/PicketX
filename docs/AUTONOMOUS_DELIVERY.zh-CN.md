@@ -1,5 +1,18 @@
 # 自动交付检查点
 
+## 节点观测（进行中）
+
+负责人codex/node-observations，心跳2026-10-18T17:45Z，租约至19:15Z或合并且main全绿/明确交接。
+PR20/main819d343dd107bf1a32a8ba1ad769fb933964b068、树184b1176c1a2aa4abde3a0863665bcad1f21756a、
+CI39148069494已验收172/434，PR20租约已释放。Agent95a5f7f/CI39118687475不变。
+PR21原子节点投影与鉴权API已实现，浏览器RED CI39151001045/Web117744459046确认仅缺少Nodes导航，
+此前真实浏览器/Nginx场景通过。同轮Go格式检查发现Swag注释未格式化，已gofmt修正。
+上传曾丢失生成脚本执行位，远端f6f50d85修正后与本地树70a5f5346d221db3dbf68ed4fddb20024a64bb45一致。
+当前接入真实Nodes页，保留既有视觉样式，独立展示目标/连接/报告新鲜度，不宣称内核证明。
+本地完整普通/race遇到既有Unix socket EPERM，必须以原生CI覆盖；完整评审、最终CI/合并尚待完成。
+使用边界见[NODE_OBSERVATIONS.zh-CN.md](NODE_OBSERVATIONS.zh-CN.md)。后续仍需生命周期、身份/审批和组合Linux验收。
+下文旧“进行中”标题为历史记录，不应阻止本轮推进。
+
 ## HTTPRoute 工作台（进行中）
 
 心跳2026-10-18T16:57Z；负责人`codex/http-route-console`，沿用隔离分支

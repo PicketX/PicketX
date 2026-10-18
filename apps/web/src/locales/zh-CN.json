@@ -1,4 +1,16 @@
 {
+  "nodes": {
+    "title": "节点", "observations": "节点观测", "help": "当前凭据覆盖的 Agent 作用域 · Controller 只读观测", "refresh": "刷新节点",
+    "boundary": "Agent 报告仅代表某个时刻的声明，不是独立内核验证，也不保证当前可访问。连接、报告新鲜度和目标匹配分别展示。",
+    "failedRetained": "刷新失败，保留的观测仅供历史参考。", "failed": "无法读取节点观测，请重试刷新。", "historical": "浏览器中的观测已过时，保留值仅供历史参考。",
+    "lastSuccess": "最近成功读取 {{at}}", "polling": "页面可见时每 15 秒刷新", "empty": "尚无凭据覆盖的 Agent 作用域。",
+    "connection": "最近读取时的流状态", "connectionHistorical": "历史流状态", "connected": "已连接", "disconnected": "已断开",
+    "desired": "已下发目标", "report": "最近 Agent 报告", "unreported": "尚未收到报告",
+    "phase": { "RECEIVED": "Agent 报告已接收", "APPLIED": "Agent 报告已应用", "FAILED": "Agent 报告失败" },
+    "fresh": "来自同一活跃流的近期报告", "stale": "历史报告，不代表当前应用状态",
+    "matches": "最近读取时版本和哈希与目标一致", "mismatch": "最近读取时版本或哈希与目标不一致",
+    "received": "Controller 接收时间", "agentTime": "Agent 观测时间（不可信）"
+  },
   "routes": {
     "title": "HTTP 路由", "management": "HTTP 路由管理", "boundary": "这里只管理期望请求选择条件。来源 Grant 与可信入口需分别配置；创建不代表访问已生效。",
     "refresh": "刷新路由", "rebase": "使用最新路由版本", "rebaseConfirm": "保留此路由草稿并使用最新版本？重试前请检查固定的 TCP 端点与选择条件。", "base": "路由操作基线 {{base}} · 已观察版本 {{observed}}",

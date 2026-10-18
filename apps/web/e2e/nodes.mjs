@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 import assert from 'node:assert/strict'
+import './node-freshness.mjs'
 import { writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { createHash, randomBytes } from 'node:crypto'
@@ -8,7 +9,7 @@ export async function nodeObservations({ operator, view, temp, evidence }) {
   await operator.getByRole('button', { name: 'Nodes', exact: true }).click()
   await operator.getByText('No credentialed Agent scopes.', { exact: true }).waitFor()
   const token = randomBytes(32).toString('hex')
-  await writeFile(join(temp, 'agent.json'), JSON.stringify({ credentials: [{ id: 'node-observer', agentRef: 'agent-a', sha256: createHash('sha256').update(token).digest('hex') }] }), { mode: 0o600 })
+  await writeFile(join(temp, 'agent.json'), JSON.stringify({ credentials: [{ id: 'node-observer', agent_ref: 'agent-a', sha256: createHash('sha256').update(token).digest('hex') }] }), { mode: 0o600 })
   // Real credential reload, not a fabricated status response.
   await operator.getByRole('button', { name: 'Refresh nodes', exact: true }).click()
   await operator.getByRole('heading', { name: 'agent-a', exact: true }).waitFor({ timeout: 30000 })
