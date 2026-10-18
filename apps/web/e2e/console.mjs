@@ -76,6 +76,15 @@ authz: {enabled: true, network: tcp, address: "127.0.0.1:${authzPort}", credenti
   await page.getByLabel('Change reason', { exact: true }).fill('Browser actual publish')
   for (const fault of [{ status: 202 }, { status: 500 }, { abort: true }]) {
     await rejectedMutationReceipt({ p: page, path: '/publication', section: '.workspace', submit: 'Save desired configuration', labels: ['Policy YAML', 'Facts JSON', 'Change reason'], ...fault })
+    if (fault.status === 202) {
+      const viewport = page.viewportSize()
+      for (const width of [1440, 375]) {
+        await page.setViewportSize({ width, height: 1000 })
+        assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth))
+        await page.screenshot({ path: join(evidence, `publication-ambiguous-${width}.png`), fullPage: true })
+      }
+      await page.setViewportSize(viewport)
+    }
     page.once('dialog', d => d.accept())
     await page.getByRole('button', { name: 'Reload latest into editor', exact: true }).click()
     await page.getByLabel('Policy YAML').fill(policy)
