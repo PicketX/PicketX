@@ -55,3 +55,9 @@ nodeLifecycle({operator}); no new production interface.
 Pre-flight: one task, no shared interfaces. Spec coverage/self-review complete.
 Use existing verified isolated host worktree; do not switch or reset shared state.
 Deferred product lifecycle/identity/approval and combined Linux acceptance remain.
+
+Outcome: test-only RED CI39155267309 at immediate nextRead; GREEN browser
+CI39155687013 covers all five focus cases on tree5a285a28b124ec7780c73fbca859882edcecc515.
+Independent b21585a..e33bb9e whole-branch review: no findings. Final native Go/static,
+exact final head and merged-main evidence/lease release are recorded in PR22.
+No new deferred minor. See delivery checkpoint for environment and scope limits.
