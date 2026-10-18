@@ -2,6 +2,7 @@
 package controller
 
 import (
+	"context"
 	"crypto/sha256"
 	"errors"
 	"fmt"
@@ -29,9 +30,44 @@ type Browser struct {
 	sessions *scs.SessionManager
 	origin   *url.URL
 	assets   string
-	// Fixed stripes bound memory even for attacker-chosen cookie values. The
-	// lock covers Load through Commit, so logout cannot race an idle re-commit.
-	stripes [64]sync.Mutex
+	// Only existing authenticated sessions acquire an exact-token lock. Entries
+	// exist only while held/waiting; unknown cookies cannot occupy shared locks.
+	lockMu sync.Mutex
+	locks  map[[sha256.Size]byte]*browserSessionLock
+}
+
+type browserSessionLock struct {
+	gate chan struct{}
+	refs int
+}
+
+func (b *Browser) lockSession(ctx context.Context, key [sha256.Size]byte) (func(), error) {
+	b.lockMu.Lock()
+	if b.locks == nil {
+		b.locks = make(map[[sha256.Size]byte]*browserSessionLock)
+	}
+	entry := b.locks[key]
+	if entry == nil {
+		entry = &browserSessionLock{gate: make(chan struct{}, 1)}
+		b.locks[key] = entry
+	}
+	entry.refs++
+	b.lockMu.Unlock()
+	drop := func() {
+		b.lockMu.Lock()
+		entry.refs--
+		if entry.refs == 0 {
+			delete(b.locks, key)
+		}
+		b.lockMu.Unlock()
+	}
+	select {
+	case entry.gate <- struct{}{}:
+		return func() { <-entry.gate; drop() }, nil
+	case <-ctx.Done():
+		drop()
+		return nil, ctx.Err()
+	}
 }
 
 func NewBrowser(service *management.Service, origin, assets string) (*Browser, error) {
@@ -102,10 +138,21 @@ func (b *Browser) wrap(next http.Handler) http.Handler {
 		}
 		if strings.HasPrefix(r.URL.Path, "/console/api/") {
 			if cookie, err := r.Cookie(b.sessions.Cookie.Name); err == nil && cookie.Value != "" {
-				sum := sha256.Sum256([]byte(cookie.Value))
-				lock := &b.stripes[int(sum[0])%len(b.stripes)]
-				lock.Lock()
-				defer lock.Unlock()
+				// Precheck only: never attach this loaded context to the request.
+				// LoadAndSave must load again under the lock after a queued logout.
+				ctx, err := b.sessions.Load(r.Context(), cookie.Value)
+				if err != nil {
+					b.sessions.ErrorFunc(w, r, err)
+					return
+				}
+				if b.sessions.GetString(ctx, "id") != "" {
+					release, err := b.lockSession(r.Context(), sha256.Sum256([]byte(cookie.Value)))
+					if err != nil {
+						http.Error(w, "request canceled", http.StatusRequestTimeout)
+						return
+					}
+					defer release()
+				}
 			}
 			session.ServeHTTP(w, r)
 			return

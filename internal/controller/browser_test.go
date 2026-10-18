@@ -3,7 +3,10 @@ package controller
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
@@ -11,6 +14,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -303,5 +307,132 @@ func TestBrowserRejectsAmbiguousOriginAndDoesNotAdvertiseBearer(t *testing.T) {
 	h.ServeHTTP(w, r)
 	if w.Code != 401 || w.Header().Get("WWW-Authenticate") != "" {
 		t.Error("cookie API advertised unsupported Bearer", w.Code, w.Header())
+	}
+}
+
+type stalledLoginBody struct {
+	entered, release chan struct{}
+	once             sync.Once
+}
+
+func (b *stalledLoginBody) Read(_ []byte) (int, error) {
+	b.once.Do(func() { close(b.entered) })
+	<-b.release
+	return 0, io.EOF
+}
+func (*stalledLoginBody) Close() error { return nil }
+
+func TestBrowserUnknownCookieCannotBlockAuthenticatedRequest(t *testing.T) {
+	browserSessionMustNotBlockAnother(t, false)
+}
+func TestBrowserDifferentStoredSessionCannotBlockAuthenticatedRequest(t *testing.T) {
+	browserSessionMustNotBlockAnother(t, true)
+}
+func browserSessionMustNotBlockAnother(t *testing.T, known bool) {
+	t.Helper()
+	h, _, browser := browserFixture(t)
+	client := browserClient{h: h, cookies: map[string]*http.Cookie{}}
+	client.bootstrap(t)
+	if w := client.request("POST", "/console/api/v1/login", `{"token":"`+managementToken+`"}`, "http://127.0.0.1:8080", client.csrf); w.Code != 200 {
+		t.Fatal(w.Code)
+	}
+	sum := sha256.Sum256([]byte(client.cookies["picketx_session"].Value))
+	var dummy string
+	for n := 0; n < 100000; n++ {
+		candidate := fmt.Sprintf("unknown-cookie-%d", n)
+		hash := sha256.Sum256([]byte(candidate))
+		if hash[0]%64 == sum[0]%64 {
+			dummy = candidate
+			break
+		}
+	}
+	if dummy == "" {
+		t.Fatal("no test collision")
+	}
+	if known {
+		// Trusted test-store setup gives a second valid session an intentionally
+		// colliding old stripe. Authentication and request handling remain real;
+		// no external caller can populate this store or choose SCS login tokens.
+		ctx, e := browser.sessions.Load(context.Background(), client.cookies["picketx_session"].Value)
+		if e != nil {
+			t.Fatal(e)
+		}
+		data, e := browser.sessions.Codec.Encode(browser.sessions.Deadline(ctx), map[string]interface{}{"id": browser.sessions.GetString(ctx, "id"), "credential": browser.sessions.GetString(ctx, "credential")})
+		if e != nil {
+			t.Fatal(e)
+		}
+		hash := sha256.Sum256([]byte(dummy))
+		if e = browser.sessions.Store.Commit(base64.RawURLEncoding.EncodeToString(hash[:]), data, time.Now().Add(time.Hour)); e != nil {
+			t.Fatal(e)
+		}
+	}
+	body := &stalledLoginBody{entered: make(chan struct{}), release: make(chan struct{})}
+	r := httptest.NewRequest("POST", "http://127.0.0.1:8080/console/api/v1/login", body)
+	r.Header.Set("Content-Type", "application/json")
+	r.Header.Set("Origin", "http://127.0.0.1:8080")
+	r.Header.Set("Sec-Fetch-Site", "same-origin")
+	r.AddCookie(&http.Cookie{Name: "picketx_session", Value: dummy})
+	attackerDone := make(chan struct{})
+	go func() { defer close(attackerDone); h.ServeHTTP(httptest.NewRecorder(), r) }()
+	select {
+	case <-body.entered:
+	case <-time.After(time.Second):
+		close(body.release)
+		<-attackerDone
+		t.Fatal("test body not reached")
+	}
+	legitimate := make(chan *httptest.ResponseRecorder, 1)
+	go func() { legitimate <- client.request("GET", "/console/api/v1/me", "", "", "") }()
+	var result *httptest.ResponseRecorder
+	select {
+	case result = <-legitimate:
+	case <-time.After(200 * time.Millisecond):
+		t.Error("another cookie's stalled body blocked authenticated session; stored=", known)
+	}
+	close(body.release)
+	<-attackerDone
+	if result == nil {
+		result = <-legitimate
+	}
+	if result.Code != 200 {
+		t.Fatal(result.Code, result.Body.String())
+	}
+}
+
+func TestBrowserCanceledSessionWaitReleasesResources(t *testing.T) {
+	h, _, browser := browserFixture(t)
+	client := browserClient{h: h, cookies: map[string]*http.Cookie{}}
+	client.bootstrap(t)
+	if w := client.request("POST", "/console/api/v1/login", `{"token":"`+managementToken+`"}`, "http://127.0.0.1:8080", client.csrf); w.Code != 200 {
+		t.Fatal(w.Code)
+	}
+	body := &stalledLoginBody{entered: make(chan struct{}), release: make(chan struct{})}
+	r := httptest.NewRequest("POST", "http://127.0.0.1:8080/console/api/v1/login", body)
+	r.Header.Set("Content-Type", "application/json")
+	r.Header.Set("Origin", "http://127.0.0.1:8080")
+	r.Header.Set("Sec-Fetch-Site", "same-origin")
+	r.AddCookie(client.cookies["picketx_session"])
+	done := make(chan struct{})
+	go func() { defer close(done); h.ServeHTTP(httptest.NewRecorder(), r) }()
+	<-body.entered
+	ctx, cancel := context.WithCancel(context.Background())
+	r = httptest.NewRequest("GET", "http://127.0.0.1:8080/console/api/v1/me", nil).WithContext(ctx)
+	r.AddCookie(client.cookies["picketx_session"])
+	cancel()
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, r)
+	close(body.release)
+	<-done
+	if w.Code != 408 {
+		t.Fatal("canceled queued request not released", w.Code)
+	}
+	if w = client.request("GET", "/console/api/v1/me", "", "", ""); w.Code != 200 {
+		t.Fatal(w.Code)
+	}
+	browser.lockMu.Lock()
+	remaining := len(browser.locks)
+	browser.lockMu.Unlock()
+	if remaining != 0 {
+		t.Fatal("completed/canceled session locks retained", remaining)
 	}
 }
