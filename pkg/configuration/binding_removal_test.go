@@ -35,6 +35,89 @@ func TestRemoveBindingRejectsUTF16WithoutPanic(t *testing.T) {
 	}
 }
 
+func TestRemoveBindingPreservesExplicitBoundaryComments(t *testing.T) {
+	raw, err := os.ReadFile("../../examples/static/gitea.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	parts := strings.Split(string(raw), "---\n")
+	for _, br := range []string{"\n", "\r\n", "\r", "\u0085", "\u2028", "\u2029"} {
+		for _, position := range []int{0, 1, 3} {
+			t.Run(fmtPosition(position, br), func(t *testing.T) {
+				prefix := strings.Join(parts[:position], "...\n---\n")
+				if prefix != "" {
+					prefix += "...\n"
+				}
+				suffix := "\n# keep boundary documentation\n\n"
+				if position < 3 {
+					suffix += "%YAML 1.1\n---\n" + strings.Join(parts[position:3], "---\n")
+				}
+				source := prefix + "---\n" + parts[3] + "... # removed document end\n" + suffix
+				b, e := Decode([]byte(strings.ReplaceAll(source, "\n", br)))
+				if e != nil {
+					t.Fatal(e)
+				}
+				out, e := b.RemoveBinding("binding-gitea-v1")
+				if e != nil {
+					t.Fatal(e)
+				}
+				want := strings.ReplaceAll(prefix+suffix, "\n", br)
+				if string(out) != want {
+					t.Fatalf("boundary bytes lost: got %q want %q", out, want)
+				}
+			})
+		}
+	}
+}
+
+func TestRemoveBindingPreservesCommentsAfterOnlyDocument(t *testing.T) {
+	raw, err := os.ReadFile("../../examples/static/gitea.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	parts := strings.Split(string(raw), "---\n")
+	b, err := Decode([]byte(parts[3] + "...\n# retain this operational note\n"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	out, err := b.RemoveBinding("binding-gitea-v1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.HasSuffix(out, []byte("# retain this operational note\n")) {
+		t.Fatal("last-object comment lost")
+	}
+	next, err := Decode(out)
+	if err != nil || len(next.objects) != 1 || next.objects[0].Kind != "Configuration" {
+		t.Fatal("missing explicit empty", err)
+	}
+}
+
+func TestRemoveBindingDoesNotTreatScalarTextAsTerminator(t *testing.T) {
+	raw, err := os.ReadFile("../../examples/static/gitea.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	parts := strings.Split(string(raw), "---\n")
+	for _, note := range []string{"|\n      ...\n      keep reading", "\"first\n...not-a-marker\n      last\"", "'first\n      ...\n      last'"} {
+		t.Run(note, func(t *testing.T) {
+			binding := strings.Replace(parts[3], "metadata: {name: gitea-host, uid: binding-gitea-v1}", "metadata:\n  name: gitea-host\n  uid: binding-gitea-v1\n  annotations:\n    note: "+note, 1)
+			if binding == parts[3] {
+				t.Fatal("fixture metadata not replaced")
+			}
+			suffix := "# surviving comment\n---\n" + strings.Join(parts[:3], "---\n")
+			b, err := Decode([]byte(binding + "...\t# terminator\n" + suffix))
+			if err != nil {
+				t.Fatal(err)
+			}
+			out, err := b.RemoveBinding("binding-gitea-v1")
+			if err != nil || string(out) != suffix {
+				t.Fatal("scalar/terminator boundary", err, string(out))
+			}
+		})
+	}
+}
+
 func TestRemoveBindingPreservesSurvivingDocuments(t *testing.T) {
 	raw, err := os.ReadFile("../../examples/static/gitea.yaml")
 	if err != nil {

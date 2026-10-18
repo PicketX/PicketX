@@ -28,9 +28,6 @@ func (b *Bundle) RemoveBinding(uid string) ([]byte, error) {
 		return nil, fmt.Errorf("structured policy edits require UTF-8")
 	}
 	expected := slices.Delete(slices.Clone(b.objects), index, index+1)
-	if len(expected) == 0 {
-		return []byte("apiVersion: picketx.io/v1alpha1\nkind: Configuration\nmetadata: {name: empty, uid: empty-binding-removal}\nspec: {empty: true}\n"), nil
-	}
 	lines := []int{0}
 	for p := 0; p < len(b.source); {
 		if n := yamlBreak(b.source, p); n > 0 {
@@ -61,6 +58,26 @@ func (b *Bundle) RemoveBinding(uid string) ([]byte, error) {
 	}
 	if start < 0 {
 		return nil, ErrBindingNotFound
+	}
+	// Document.Line identifies the next document, not the end of this one.
+	// An explicit column-zero end marker closes the removed document sooner;
+	// comments/blank lines/directives after its line belong to the surviving stream.
+	for i, p := range lines {
+		if p < start || p+3 > end || !bytes.Equal(b.source[p:p+3], []byte("...")) {
+			continue
+		}
+		q := p + 3
+		if q < len(b.source) && b.source[q] != ' ' && b.source[q] != '\t' && yamlBreak(b.source, q) == 0 {
+			continue
+		}
+		if i+1 < len(lines) {
+			end = lines[i+1]
+		}
+		break
+	}
+	if len(expected) == 0 {
+		empty := []byte("apiVersion: picketx.io/v1alpha1\nkind: Configuration\nmetadata: {name: empty, uid: empty-binding-removal}\nspec: {empty: true}\n")
+		return append(empty, b.source[end:]...), nil
 	}
 	out := append(slices.Clone(b.source[:start]), b.source[end:]...)
 	next, err := Decode(out)
