@@ -107,6 +107,11 @@ browser: {enabled: true, origin: ${JSON.stringify(origin)}, assets: ${JSON.strin
   assert(await view.getByLabel('Policy YAML').evaluate(el => document.activeElement === el && el.selectionStart === 0 && el.selectionEnd === el.value.length))
   await view.keyboard.press('ArrowDown')
   await view.keyboard.press('ControlOrMeta+End')
+  const geometry = await view.getByLabel('Policy YAML').evaluate(el => ({ scrollHeight: el.scrollHeight, clientHeight: el.clientHeight, focused: document.activeElement === el }))
+  assert(geometry.focused && geometry.scrollHeight > geometry.clientHeight, JSON.stringify(geometry))
+  // Native keyboard scrolling completes asynchronously. Observe its result;
+  // never assign scrollTop or replace the keyboard action with JS scrolling.
+  await view.waitForFunction(() => document.querySelector('#policy')?.scrollTop > 0, null, { timeout: 3000 })
   assert(await view.getByLabel('Policy YAML').evaluate(el => el.scrollTop > 0))
   await view.keyboard.type('must-not-edit')
   assert.equal(await view.getByLabel('Policy YAML').inputValue(), longPolicy)
