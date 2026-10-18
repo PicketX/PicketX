@@ -32,9 +32,9 @@ export async function resourceOnboarding({ operator: p, view, origin, token, pol
   assert.equal(await p.getByLabel('Resource name', { exact: true }).inputValue(), 'browser-metrics')
   const headers = { Authorization: `Bearer ${token}` }
   const current = await fetch(`${origin}/api/v1/publication`, { headers })
-  const doc = await current.json()
-  const changed = await fetch(`${origin}/api/v1/publication`, { method: 'PUT', headers: { ...headers, 'Content-Type': 'application/json', 'If-Match': current.headers.get('etag') }, body: JSON.stringify({ policy: doc.policy, facts: doc.facts, reason: 'Concurrent resource revision' }) })
-  assert.equal(changed.status, 200)
+  const changed = await fetch(`${origin}/api/v1/resources`, { method: 'POST', headers: { ...headers, 'Content-Type': 'application/json', 'If-Match': current.headers.get('etag') }, body: JSON.stringify({ name: 'concurrent-resource', endpoints: [{ name: 'external', protocol: 'TCP', port: 9000 }], reason: 'Concurrent resource revision' }) })
+  assert.equal(changed.status, 201)
+  assert.notEqual(changed.headers.get('etag'), current.headers.get('etag'), 'The concurrent write must actually advance the CAS revision')
   await p.getByRole('button', { name: 'Refresh resources', exact: true }).click()
   const conflict = p.waitForResponse(r => r.url().endsWith('/console/api/v1/resources') && r.request().method() === 'POST')
   await p.getByRole('button', { name: 'Create Resource', exact: true }).click()
