@@ -1,5 +1,49 @@
 # Autonomous delivery checkpoint
 
+## Node observation lifecycle (active)
+
+Owner codex/node-lifecycle; heartbeat2026-10-18T18:40Z; lease until19:40Z or
+merged+green main/explicit handoff. Existing isolated codex/resource-onboarding.
+Core PR21 mainb85b8602667983908104feb175b1d70f6c68f30c/treebf94b545058c132fad1c1893d211381686940bbe
+and CI39152332200 GREEN; PR21 lease RELEASED. Agent95a5f7f/CI39118687475 GREEN.
+Both repositories have no open PRs at acquisition. Close PR21 deferred visibility
+queue and delayed-read/unmount tests only; preserve all product scope boundaries.
+Plan: docs/superpowers/plans/2026-10-19-node-observation-lifecycle.md.
+Overall product remains incomplete; next larger work is management lifecycle,
+identity/approval and combined privileged Linux/browser acceptance, not more status
+libraries. Final exact-head evidence and lease release will be in this increment's PR.
+
+[PR22](https://github.com/PicketX/PicketX/pull/22) regression RED:
+CI39155267309/Web117757078856, test-only remote56ceac86411e2416210524e40f8cbad8f957f05d,
+timed out at the immediate follow-up read with the periodic clock paused. All
+preceding real Controller/Nginx/application cases passed. Fixed with one effect-
+owned queued-resume flag; repeated resumes coalesce, hidden work pauses, disposal
+and401 discard queued work. No API/domain/Agent/kernel or visual-system change.
+
+Code locale33bb9e158c7cdeedec878d68a97640d589225f7, remote
+4c2d28465142167d299669d6a3a17984a556e2e8 and actual CI checkout
+93794b5d0d86ea2816370757b0dcb5ee8570948a share
+tree5a285a28b124ec7780c73fbca859882edcecc515. CI39155687013/
+Web117758317307 passed all existing real browser/Nginx cases and the delayed-read,
+coalesced resume, hidden pause, transport-failure recovery, unmount abort/re-entry
+and actual Controller401 checks. Fault injection uses an isolated cookie jar,
+so the subsequent real credential-revocation acceptance remains independent.
+Artifact12147062277 SHA256d087c0ec6b2abbb17d4ad004ef26ac22677d8d955c76d6b783261329bf7cbc57
+downloaded and matched; desktop1440px and mobile375px historical-error screenshots
+inspected. UI skills retained existing layout and explicit loading/history states.
+
+Independent whole-branch review b21585a..e33bb9e found no Critical/Important/Minor;
+reviewer independently passed syntax/freshness/diff checks and inspected App/request
+integration. Rulings: visibility/clock injection is not real OS background/suspend
+acceptance; Agent/kernel combined acceptance remains separate; root owns exact-head
+CI and screenshot checks not duplicated by the review seat. These limits preclude
+any overall product-completion claim. Local locked npm checks and Go vet/build
+passed; complete local Go ordinary/race failed only the existing Unix socket EPERM;
+local browser lacked Nginx. No skip or bypass was added. Native full Go/static and
+final documentation-head/main CI raw evidence must be recorded in PR22 before
+release. Only merged+green main releases this lease; subsequent runs read PR22's
+final status before treating this historical active heading as a lock.
+
 ## Node observations (active)
 
 Owner codex/node-observations; heartbeat2026-10-18T17:58Z; lease until19:15Z or

@@ -21,8 +21,9 @@ reachability, verified revocation or continuous health. There is no heartbeat ye
 
 The UI requests on entry and every 15 seconds without overlap, pauses in hidden
 tabs, requests a refresh on visibility resume and cancels on exit. If a request
-is still in flight on resume, it finishes first; the next periodic poll refreshes
-again (an immediate queued follow-up remains a documented minor item). Manual refresh is
+is still in flight on resume, it finishes first, then one coalesced follow-up runs
+if the page is still visible and mounted. Hiding pauses that follow-up; leaving
+the page or an unauthorized response discards it. Manual refresh is
 available. Read failures retain clearly historical data; browser/report age does
 not reset merely by refreshing the page. Hashes are expandable; mobile cards wrap.
 

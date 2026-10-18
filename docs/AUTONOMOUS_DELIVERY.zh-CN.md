@@ -1,5 +1,33 @@
 # 自动交付检查点
 
+## 节点观测生命周期（进行中）
+
+负责人codex/node-lifecycle，心跳2026-10-18T18:40Z，租约至19:40Z或合并且main全绿/明确交接。
+Core PR21已验收mainb85b8602667983908104feb175b1d70f6c68f30c、树bf94b545058c132fad1c1893d211381686940bbe、
+CI39152332200通过；PR21租约已释放。Agent95a5f7f/CI39118687475通过，接手时两仓库无开放PR。
+PR22仅补PR21两项延后内容：恢复可见时合并补读、延迟响应/卸载竞态回归。沿用隔离分支，
+不改API、领域、协议或内核。计划见docs/superpowers/plans/2026-10-19-node-observation-lifecycle.md。
+本地浏览器因缺少Nginx受阻，不跳过；原生CI必须完整执行真实Controller/Nginx测试。
+最终精确head/CI及租约释放记录于PR22。产品尚未整体完成，后续推进管理生命周期、身份/审批
+和组合特权Linux/浏览器验收，不继续堆状态库。
+
+[PR22](https://github.com/PicketX/PicketX/pull/22)测试版远端56ceac86411e2416210524e40f8cbad8f957f05d，
+CI39155267309/Web117757078856在暂停轮询后等待立即补读处预期RED，之前真实Controller/Nginx场景通过。
+修复采用effect内单次待刷新标记；重复恢复事件合并、隐藏暂停、卸载和401丢弃待补读。
+本地e33bb9e158c7cdeedec878d68a97640d589225f7、远端4c2d28465142167d299669d6a3a17984a556e2e8、
+CI实际检出93794b5d0d86ea2816370757b0dcb5ee8570948a源码树同为5a285a28b124ec7780c73fbca859882edcecc515。
+CI39155687013/Web117758317307通过已有真实浏览器/Nginx及新延迟读取、恢复合并、隐藏暂停、
+传输失败恢复、卸载取消/重新进入、真实Controller401场景。401采用独立Cookie容器，
+不干扰后续真实凭据撤销验收。产物12147062277摘要d087c0ec6b2abbb17d4ad004ef26ac22677d8d955c76d6b783261329bf7cbc57
+已下载核对，1440px桌面/375px手机历史错误态已检查。UI技能保留既有布局及明确加载/历史状态。
+
+独立全分支评审b21585a..e33bb9e无Critical/Important/Minor，独立语法/新鲜度/diff检查通过。
+范围裁决：可见性/时钟注入不证明真实OS后台/休眠；Agent内核联合验收保持独立；评审未重复的
+精确head CI和截图由主执行核验，因此不能宣称整体产品完成。本地锁文件Web及Go vet/build通过；
+完整本地普通/race仅既有Unix EPERM失败，浏览器缺Nginx，未添加skip或绕过。
+完整原生Go/静态产物、最终文档head/main原始CI证据必须完成后追加至PR22；仅合并且main全绿
+释放租约，后续先读PR22最终状态，不将本历史“进行中”标题当永久锁。
+
 ## 节点观测（进行中）
 
 负责人codex/node-observations，心跳2026-10-18T17:58Z，租约至19:15Z或合并且main全绿/明确交接。
