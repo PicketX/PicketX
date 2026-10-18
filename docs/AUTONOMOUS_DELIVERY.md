@@ -2,7 +2,7 @@
 
 ## HTTPRoute removal (active)
 
-Owner codex/http-route-removal; heartbeat2026-10-18T21:49Z; lease until22:49Z or
+Owner codex/http-route-removal; heartbeat2026-10-18T21:53Z; lease until22:53Z or
 merged+green main/explicit handoff. Core5ddfd7a2c92ca30a495e9e3ec766b6beb0b65fa4,
 tree59ba4458e8e528f28a1623512b93341bce31edd6/mainCI39168327944 GREEN; PR25 released.
 Agent95a5f7f/CI39118687475 GREEN; no open PRs in either repo at acquisition.
@@ -12,6 +12,14 @@ before wider Resource edits: exact UID, CAS/auth/audit, live UI and real Nginx d
 after removal with an active Grant. No cascade/runtime allowlist or kernel change.
 Remaining Resource/Endpoint/Binding editing, human identity/approval and combined
 Linux/browser acceptance unchanged. Final immutable evidence/release belongs in PR.
+
+[PR26](https://github.com/PicketX/PicketX/pull/26): API404 RED then GREEN for
+UID/kind/CAS/auth/CSRF/strict acknowledgement, direct SQLite retention and audit
+rollback. Missing generated OpenAPI path/security RED then GREEN. Local complete
+normal/race suites fail only existing Unix socket EPERM; focused full packages,
+vet/build and locked Web checks pass. Native39169721758 on5fb5482c/treef88f33f1
+contains API and browser tests, intentionally before removal UI: expected missing
+Remove HTTP route control. Full native evidence/review/integration remain pending.
 
 ## Safe Resource removal (active)
 

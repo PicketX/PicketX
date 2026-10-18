@@ -15,6 +15,9 @@ export function HTTPRoutes({ csrf, canWrite, onUnauthorized, onDirty, onBusy }: 
   const { t, i18n } = useTranslation()
   const [inventory, setInventory] = useState<Inventory | null>(null)
   const [catalog, setCatalog] = useState<Resource[]>([])
+  const [routeCatalog, setRouteCatalog] = useState<Route[]>([])
+  const [removalUID, setRemovalUID] = useState('')
+  const [acknowledged, setAcknowledged] = useState(false)
   const [base, setBase] = useState('')
   const [name, setName] = useState('')
   const [resourceUID, setResourceUID] = useState('')
@@ -33,11 +36,14 @@ export function HTTPRoutes({ csrf, canWrite, onUnauthorized, onDirty, onBusy }: 
   const [page, setPage] = useState(0)
   const [controllers] = useState(() => new Set<AbortController>())
   const errors = useRef<HTMLDivElement>(null)
-  const dirty = !!(name || resourceUID || endpoint || host || selectedMethods.length || paths || reason)
+  const removalHeading = useRef<HTMLHeadingElement>(null)
+  const dirty = !!(removalUID || name || resourceUID || endpoint || host || selectedMethods.length || paths || reason)
+  const removalTarget = routeCatalog.find(r => r.uid === removalUID)
   const resource = catalog.find(r => r.uid === resourceUID)
   useEffect(() => { onDirty(dirty) }, [dirty, onDirty])
   useEffect(() => { onBusy(busy) }, [busy, onBusy])
   useEffect(() => { if (error) errors.current?.focus() }, [error, fields])
+  useEffect(() => { if (removalUID) removalHeading.current?.focus() }, [removalUID])
 
   function fail(e: unknown, reading = false) {
     if (e instanceof DOMException && e.name === 'AbortError') return
@@ -53,7 +59,7 @@ export function HTTPRoutes({ csrf, canWrite, onUnauthorized, onDirty, onBusy }: 
     if (!/^"\d+"$/.test(result.etag)) throw new Error('Missing strong revision')
     setInventory(result.data); setReadFailed(false); setPage(0)
     // Observation and mutation base remain independent while a draft is retained.
-    if (rebase || !base) { setBase(result.etag); setCatalog(result.data.resources); setConflict(false) }
+    if (rebase || !base) { setBase(result.etag); setCatalog(result.data.resources); setRouteCatalog(result.data.http_routes); setAcknowledged(false); setConflict(false) }
   }
   const initial = useEffectEvent(async (controller: AbortController) => {
     try { await read(controller.signal, true) } catch (e) { if (!controller.signal.aborted) fail(e, true) }
@@ -72,7 +78,28 @@ export function HTTPRoutes({ csrf, canWrite, onUnauthorized, onDirty, onBusy }: 
     try { await read(controller.signal, rebase) } catch (e) { if (!controller.signal.aborted) fail(e, true) }
     finally { controllers.delete(controller); if (!controller.signal.aborted) setBusy(false) }
   }
-  function clear() { setName(''); setResourceUID(''); setEndpoint(''); setHost(''); setSelectedMethods([]); setPaths(''); setReason(''); setFields({}) }
+  function clear() { setRemovalUID(''); setAcknowledged(false); setName(''); setResourceUID(''); setEndpoint(''); setHost(''); setSelectedMethods([]); setPaths(''); setReason(''); setFields({}) }
+  function beginRemoval(uid: string) {
+    if (busy || dirty || conflict || !canWrite || !base || !routeCatalog.some(r => r.uid === uid)) return
+    setRemovalUID(uid); setAcknowledged(false); setError(''); setFields({}); setNotice('')
+  }
+  async function remove(e: React.FormEvent) {
+    e.preventDefault()
+    if (busy || !canWrite || !base || conflict || !removalTarget || !acknowledged) return
+    if (!reason.trim() || bytes(reason) > 512) { setFields({ removalReason: t('routes.reasonLimit') }); setError(t('grants.fixFields')); return }
+    const controller = new AbortController(); controllers.add(controller); setBusy(true); setError(''); setFields({}); setNotice('')
+    try {
+      const result = await request<{ uid: string; revision: number }>(`/http-routes/${encodeURIComponent(removalUID)}/remove`, { method: 'POST', signal: controller.signal, headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf, 'If-Match': base }, body: JSON.stringify({ reason, acknowledge_removal: true }) })
+      if (controller.signal.aborted) return
+      // An ambiguous 2xx is not proof of the requested operation. Retain intent,
+      // block retries, and require an explicit same-UID rebase before another write.
+      if (!result.data || result.data.uid !== removalUID || !Number.isSafeInteger(result.data.revision) || result.data.revision <= Number(base.slice(1, -1)) || result.etag !== `"${result.data.revision}"`) throw new Error('Invalid removal receipt')
+      clear(); setNotice(t('routes.removed', { uid: removalUID })); setConflict(true)
+      try { await read(controller.signal, true) } catch (e) { if (!controller.signal.aborted) fail(e, true) }
+    } catch (e) {
+      if (!controller.signal.aborted) { if (!(e instanceof APIError) || e.status >= 500 || e.status === 404) setConflict(true); fail(e) }
+    } finally { controllers.delete(controller); if (!controller.signal.aborted) setBusy(false) }
+  }
   async function submit(e: React.FormEvent) {
     e.preventDefault(); if (busy || !canWrite || !base || conflict) return
     const invalid: Record<string, string> = {}
@@ -108,7 +135,14 @@ export function HTTPRoutes({ csrf, canWrite, onUnauthorized, onDirty, onBusy }: 
     {notice && <p className="feedback success route-result" role="status">{notice}</p>}
     {conflict || readFailed || (inventory && now - Date.parse(inventory.observed_at) > 60000) ? <p className="stale" role="status">{conflict ? t('routes.conflictHelp') : readFailed ? t('staleFailed') : t('staleAge')}</p> : null}
     {busy && <p role="status">{t('loading')}</p>}
-    {!canWrite ? <p className="boundary">{t('readOnly')}</p> : <form className="grant-form resource-form" onSubmit={e => void submit(e)} noValidate><fieldset className="grant-fields-owner" disabled={busy}>
+    {!canWrite ? <p className="boundary">{t('readOnly')}</p> : removalUID ? <form className="grant-form resource-form" onSubmit={e => void remove(e)} noValidate><fieldset className="grant-fields-owner" disabled={busy}>
+      <h3 tabIndex={-1} ref={removalHeading}>{t('routes.confirmRemoval')}</h3><p className="boundary">{t('routes.removeWarning')}</p>
+      <p><strong>{t('routes.uid')}</strong> <code>{removalUID}</code></p>
+      {!removalTarget ? <p className="feedback error" role="status">{t('routes.missing')}</p> : <div><h4>{removalTarget.name}</h4><p>{removalTarget.resource_name} · {removalTarget.resource_uid} · {removalTarget.endpoint_name}</p><p><strong>{removalTarget.host}</strong> · {removalTarget.methods.join(', ')}</p><details><summary>{t('routes.inspectPaths', { n: removalTarget.paths.length })}</summary><ul>{removalTarget.paths.map(p => <li key={p}><code>{p}</code></li>)}</ul></details></div>}
+      <div><label htmlFor="route-removalReason">{t('routes.removalReason')}</label><input {...fieldProps('removalReason')} value={reason} onChange={e => setReason(e.target.value)} maxLength={512} required />{fieldError('removalReason')}</div>
+      <label className="endpoint-options"><input type="checkbox" checked={acknowledged} disabled={!removalTarget} onChange={e => setAcknowledged(e.target.checked)} />{t('routes.acknowledge')}</label>
+      <div className="actions"><Button type="submit" disabled={busy || conflict || !base || !removalTarget || !acknowledged || !reason.trim()}>{t('routes.confirmRemoval')}</Button><Button type="button" variant="outline" onClick={() => { clear(); setError('') }}>{t('routes.cancelRemoval')}</Button></div>
+    </fieldset></form> : <form className="grant-form resource-form" onSubmit={e => void submit(e)} noValidate><fieldset className="grant-fields-owner" disabled={busy}>
       <h3>{t('routes.create')}</h3><p className="hint">{t('routes.required')}</p>
       <div><label htmlFor="route-name">{t('routes.name')}</label><input {...fieldProps('name')} value={name} onChange={e => setName(e.target.value)} maxLength={128} required />{fieldError('name')}</div>
       <div className="grant-fields">
@@ -123,7 +157,7 @@ export function HTTPRoutes({ csrf, canWrite, onUnauthorized, onDirty, onBusy }: 
     </fieldset></form>}
     <div className="inventory-list"><h2>{t('routes.list')}</h2><p className="hint">{t('routes.setup')}</p>
       {inventory?.http_routes.length === 0 && !busy && <p className="empty">{t('routes.empty')}</p>}
-      {inventory?.http_routes.slice(page * 50, (page + 1) * 50).map(r => <article key={r.uid} data-route-id={r.uid}><h3>{r.name}</h3><p><strong>{t('routes.uid')}</strong> <code>{r.uid}</code></p><p>{r.resource_name} · {r.resource_uid} · {r.endpoint_name}</p><p><strong>{r.host}</strong> · {r.methods.join(', ')}</p><details><summary>{t('routes.inspectPaths', { n: r.paths.length })}</summary><ul>{r.paths.map(p => <li key={p}><code>{p}</code></li>)}</ul></details></article>)}
+      {inventory?.http_routes.slice(page * 50, (page + 1) * 50).map(r => <article key={r.uid} data-route-id={r.uid}><h3>{r.name}</h3><p><strong>{t('routes.uid')}</strong> <code>{r.uid}</code></p><p>{r.resource_name} · {r.resource_uid} · {r.endpoint_name}</p><p><strong>{r.host}</strong> · {r.methods.join(', ')}</p><details><summary>{t('routes.inspectPaths', { n: r.paths.length })}</summary><ul>{r.paths.map(p => <li key={p}><code>{p}</code></li>)}</ul></details>{canWrite && <Button variant="outline" disabled={busy || dirty || conflict || !base || !routeCatalog.some(target => target.uid === r.uid)} onClick={() => beginRemoval(r.uid)}>{t('routes.remove')}</Button>}</article>)}
     </div>
     {pages > 1 && <div className="actions"><Button variant="outline" disabled={page === 0 || busy} onClick={() => setPage(n => n - 1)}>{t('resources.previous')}</Button><span>{t('resources.page', { n: page + 1, pages })}</span><Button variant="outline" disabled={page >= pages - 1 || busy} onClick={() => setPage(n => n + 1)}>{t('resources.next')}</Button></div>}
   </section>
