@@ -65,3 +65,11 @@ jobs:
       - run: npm run typecheck
       - run: npm run lint
       - run: npm run build
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: false
+      - name: Real Chromium console against Controller and SQLite
+        run: |
+          npx playwright install --with-deps chromium
+          npm run test:e2e

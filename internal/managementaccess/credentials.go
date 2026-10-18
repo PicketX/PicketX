@@ -100,6 +100,26 @@ func (a *Access) Authenticate(raw string) (Principal, error) {
 	return Principal{ID: found.ID, Roles: append([]string(nil), found.Roles...)}, nil
 }
 
+// ResolveSession refreshes trusted membership and binds the session to the
+// exact credential used at login, not merely to a reusable principal ID.
+func (a *Access) ResolveSession(id, fingerprint string) (Principal, error) {
+	key, e := hex.DecodeString(fingerprint)
+	if e != nil || len(key) != sha256.Size {
+		return Principal{}, ErrUnauthorized
+	}
+	entries, e := loadPrincipals(a.settings.Credentials)
+	if e != nil {
+		return Principal{}, e
+	}
+	for _, entry := range entries {
+		digest, _ := hex.DecodeString(entry.SHA256)
+		if subtle.ConstantTimeCompare(key, digest) == 1 && entry.ID == id {
+			return Principal{ID: entry.ID, Roles: append([]string(nil), entry.Roles...)}, nil
+		}
+	}
+	return Principal{}, ErrUnauthorized
+}
+
 // ValidateCredentials checks configuration without disclosing input or Token hashes.
 func ValidateCredentials(path string) error {
 	if _, e := loadPrincipals(path); e != nil {

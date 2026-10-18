@@ -28,3 +28,5 @@ Review focus: reused credential ID, rotation/stale roles, fixation/login CSRF, H
 Pre-flight: task1 resolver feeds task2 authentication; task2 DTO/ETag feeds task3. No conflicting interfaces. Existing bearer boundary remains intact.
 Ruling: cloud skill helper resources unavailable (writing-good-tests read failed); use this committed inline ledger. Cost: manual consistency checked at final review.
 Baseline ordinary full Go suite passed (`/tmp/picketx-console-baseline.log`).
+Task1 complete: missing ResolveSession RED; credential rotation/current-role/ID-reuse GREEN and full ordinary Go suite passed. Task2 cookie/CSRF/Host/API-isolation/logout/revocation and strict config tests RED on missing constructors/settings, then GREEN/full suite. No frontend production code changed yet.
+Browser execution checkpoint: pinned Playwright1.64.1 installed, but local CDN browser zip download is empty/truncated; no browser binary. Actual browser test currently fails on missing executable, NOT evidence of feature RED. Add the same real flow to Linux CI and require missing-login RED there before implementation. Native Go server startup/SQLite succeeded in this attempt.
