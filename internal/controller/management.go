@@ -80,6 +80,7 @@ func registerManagement(e *echo.Echo, service *management.Service, limits Manage
 	group.GET("/inventory", h.inventory)
 	group.GET("/agent-observations", h.agentObservations)
 	group.POST("/resources", h.createResource)
+	group.PUT("/resources/:uid/network", h.updateResourceNetwork)
 	group.POST("/resources/:uid/remove", h.removeResource)
 	group.POST("/bindings", h.createBinding)
 	group.POST("/bindings/:uid/remove", h.removeBinding)
