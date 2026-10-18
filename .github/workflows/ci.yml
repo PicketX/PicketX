@@ -32,7 +32,7 @@ jobs:
       - run: go vet ./...
       - uses: actions/setup-node@v4
         with:
-          node-version-file: apps/web/.node-version
+          node-version-file: .node-version
       - name: Reproduce and validate management OpenAPI 3.1 contract
         run: |
           export GOBIN="$RUNNER_TEMP/management-tools"

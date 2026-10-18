@@ -3,7 +3,10 @@ package controller
 
 import (
 	"encoding/json"
+	"go.yaml.in/yaml/v3"
 	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -68,6 +71,38 @@ func TestGeneratedManagementContract(t *testing.T) {
 		field := request.Properties[key]
 		if field.Type != "string" || field.MaxLength != max || field.MinLength != 1 {
 			t.Fatal(key, field)
+		}
+	}
+}
+
+func TestDocumentationCINodeVersionFilesExist(t *testing.T) {
+	raw, e := os.ReadFile("../../.github/workflows/ci.yml")
+	if e != nil {
+		t.Fatal(e)
+	}
+	var workflow struct {
+		Jobs map[string]struct {
+			Steps []struct {
+				Uses string            `yaml:"uses"`
+				With map[string]string `yaml:"with"`
+			} `yaml:"steps"`
+		} `yaml:"jobs"`
+	}
+	if e = yaml.Unmarshal(raw, &workflow); e != nil {
+		t.Fatal(e)
+	}
+	for job, definition := range workflow.Jobs {
+		for _, step := range definition.Steps {
+			if strings.HasPrefix(step.Uses, "actions/setup-node@") {
+				path := step.With["node-version-file"]
+				if path == "" || filepath.IsAbs(path) {
+					t.Fatal("missing repository Node version file", job, path)
+				}
+				info, e := os.Stat(filepath.Join("../..", path))
+				if e != nil || !info.Mode().IsRegular() {
+					t.Fatal("Node version path does not exist", job, path, e)
+				}
+			}
 		}
 	}
 }

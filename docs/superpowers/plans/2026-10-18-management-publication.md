@@ -51,24 +51,24 @@
 
 **Interfaces:** `managementaccess.New(db,settings,logger) (*Access,error)`; `Authenticate(rawToken string) (Principal,error)`; `Allowed(Principal,operation string) (bool,error)`; `Run(ctx)`; typed interface consumed by management HTTP, no role from client input.
 
-- [ ] Write private-file/strict document/token/revocation, combined deny and periodic reload failure/recovery tests.
-- [ ] Run focused tests and observe missing behavior, then implement official adapter/enforcer and credential resolution.
-- [ ] Run `go test -count=1 ./...`; expected all pass; commit.
+- [x] Write private-file/strict document/token/revocation, combined deny and periodic reload failure/recovery tests.
+- [x] Run focused tests and observe missing behavior, then implement official adapter/enforcer and credential resolution.
+- [x] Run `go test -count=1 ./...`; expected all pass; local commitf840610.
 
 ### Task 3: Running API and end-to-end publication
 
 **Interfaces:** inject `management.Service` (publication read/write/audit/access) into the Echo adapter; runtime owns serialization and fatal durability/distribution notification.
 
-- [ ] Add runtime mode validation and HTTP tests for 401/403, malformed DTO, limits, 428/412, keyset audit and disabled file-mode routes.
-- [ ] Run tests RED; implement typed runtime configuration and thin HTTP/application adapters.
-- [ ] Add real TCP test: empty managed boot, API publish, authenticated gRPC nonempty snapshot, concurrent stale writer, credential revocation, no file overwrite, restart exact revision, and post-commit failure recovery.
-- [ ] Run real integration test RED then implement lifecycle changes and verify GREEN.
-- [ ] Add pinned OpenAPI generation and contract checks, operator examples and synchronized Chinese design summary.
-- [ ] Run complete uncached Go/race/vet/build/static and Web lockfile checks; commit.
+- [x] Add runtime mode validation and HTTP tests for 401/403, malformed DTO, limits, 428/412, keyset audit and disabled file-mode routes.
+- [x] Run tests RED; implement typed runtime configuration and thin HTTP/application adapters.
+- [x] Add real TCP test: empty managed boot, API publish, authenticated gRPC nonempty snapshot, concurrent stale writer, credential revocation, no file overwrite, restart exact revision, and post-commit failure recovery.
+- [x] Run real integration test RED then implement lifecycle changes and verify GREEN.
+- [x] Add pinned OpenAPI generation and contract checks, operator examples and synchronized Chinese design summary.
+- [x] Run complete uncached Go/race/vet/build/static and Web lockfile checks; local commit2557b39, remote525497c has identical tree2576f0fd53aff92f59babf16c6a81296f4473b04.
 
 ### Task 4: Independent review and integration
 
-- [ ] Request one independent whole-branch review from base0b2c5e9 to final head, including the spec and Review Focus above.
-- [ ] Reproduce blocking findings RED→GREEN, record rulings/deferred minors, run complete suite.
+- [x] Request one independent whole-branch review from base0b2c5e9 to final head, including the spec and Review Focus above.
+- [x] Independent review: no Critical/Important/Minor findings or declined judgments; complete ordinary and focused race suites independently passed. No fix pass required.
 - [ ] Verify local/remote tree equality, push using expected remote SHA, create PR and inspect required raw CI evidence.
 - [ ] Merge only expected reviewed head after checks; verify main CI, persist exact evidence and release lease.
