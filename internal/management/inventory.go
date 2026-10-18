@@ -4,6 +4,7 @@ package management
 import (
 	"crypto/rand"
 	"encoding/hex"
+	"errors"
 	"time"
 
 	"github.com/PicketX/PicketX/pkg/configuration"
@@ -21,6 +22,27 @@ type InventoryPage struct {
 type InventoryChange struct {
 	UID      string `json:"uid"`
 	Revision uint64 `json:"revision"`
+}
+
+var ErrBindingNotFound = errors.New("Binding not found")
+
+func (s *Service) RemoveBinding(p Principal, expected uint64, reason, uid string) (InventoryChange, error) {
+	doc, b, err := s.grantBase(p, expected, reason)
+	if err != nil {
+		return InventoryChange{}, err
+	}
+	policy, err := b.RemoveBinding(uid)
+	if errors.Is(err, configuration.ErrBindingNotFound) {
+		return InventoryChange{}, ErrBindingNotFound
+	}
+	if err != nil {
+		return InventoryChange{}, ErrInvalid
+	}
+	changed, err := s.Replace(p, expected, reason, string(policy), doc.Facts)
+	if err != nil {
+		return InventoryChange{}, err
+	}
+	return InventoryChange{uid, changed.Revision}, nil
 }
 
 func (s *Service) Inventory(p Principal) (InventoryPage, error) {

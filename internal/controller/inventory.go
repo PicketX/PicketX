@@ -30,6 +30,71 @@ type CreateBindingRequest struct {
 	Reason        string   `json:"reason" validate:"required,max=512"`
 }
 
+type RemoveBindingRequest struct {
+	Reason                  string `json:"reason" validate:"required,max=512"`
+	AcknowledgeUnprotection bool   `json:"acknowledge_unprotection" validate:"required"`
+}
+
+// removeBinding godoc
+// @Summary Remove only this Binding; may leave services unprotected, does not revoke Grants
+// @ID removeBinding
+// @Tags management
+// @Security ManagementBearer
+// @Accept json
+// @Produce json
+// @Param uid path string true "Binding UID, not name"
+// @Param If-Match header string true "Strong current revision, checked before lookup"
+// @Param removal body RemoveBindingRequest true "Reason and explicit unprotection acknowledgement"
+// @Success 200 {object} management.InventoryChange
+// @Header 200 {string} ETag "Strong accepted revision, not applied state"
+// @Failure 400,401,403,404,412,413,415,428,429,503 {object} APIError
+// @Router /api/v1/bindings/{uid}/remove [post]
+func (h *managementHTTP) removeBinding(c *echo.Context) error {
+	p, err := h.principal(c, "publication:write")
+	if err != nil {
+		return mappedError(c, err)
+	}
+	revision, status := requiredRevision(c.Request())
+	if status != 0 {
+		return revisionError(c, status)
+	}
+	uid := c.Param("uid")
+	if !grantUID.MatchString(uid) {
+		return apiError(c, 400, "invalid_fields")
+	}
+	var dto RemoveBindingRequest
+	if status, code := decodeGrantJSON(c, &dto); status != 0 {
+		return apiError(c, status, code)
+	}
+	if err = h.validate.Struct(dto); err != nil {
+		return apiError(c, 400, "invalid_fields")
+	}
+	result, err := h.service.RemoveBinding(p, revision, dto.Reason, uid)
+	if err != nil {
+		return mappedError(c, err)
+	}
+	c.Response().Header().Set("ETag", fmt.Sprintf(`"%d"`, result.Revision))
+	return c.JSON(200, result)
+}
+
+// browserRemoveBinding godoc
+// @Summary Remove Binding protection with operator session and explicit acknowledgement; not Grant revocation
+// @ID browserRemoveBinding
+// @Tags console
+// @Security BrowserCookie
+// @Accept json
+// @Produce json
+// @Param uid path string true "Binding UID"
+// @Param If-Match header string true "Strong current revision"
+// @Param Origin header string true "Exact configured origin"
+// @Param X-CSRF-Token header string true "Session CSRF token"
+// @Param removal body RemoveBindingRequest true "Reason and explicit unprotection acknowledgement"
+// @Success 200 {object} management.InventoryChange
+// @Header 200 {string} ETag "Strong accepted revision, not applied state"
+// @Failure 400,401,403,404,412,413,415,428,429,503 {object} APIError
+// @Router /console/api/v1/bindings/{uid}/remove [post]
+func (h *managementHTTP) browserRemoveBinding(c *echo.Context) error { return h.removeBinding(c) }
+
 // inventory godoc
 // @Summary Read complete bounded desired Resource/Binding/context inventory (not live status)
 // @ID readInventory
