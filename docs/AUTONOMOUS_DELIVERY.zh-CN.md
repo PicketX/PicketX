@@ -10,6 +10,11 @@
 引用编辑、绑定编辑、身份/审批及 Linux/浏览器联合验收仍待完成。
 本地基线仅 Unix socket EPERM 失败；完整原生 CI 不得跳过。最终证据/释放记录于 PR。
 
+PR28：API01c9c3b 和浏览器测试1f2e0bc 已发布为1caf7d4b/树e5aef399；HTTP404、
+缺失 OpenAPI 已 RED→GREEN，配置/Controller 测试通过。完整 normal/race 仅 Unix
+EPERM 失败，vet/build 通过。原生39177786803 先验证缺失 UI 入口；最终完整 CI、
+独立评审及合并仍未完成。
+
 ## 节点观测生命周期（进行中）
 
 负责人codex/node-lifecycle，心跳2026-10-18T18:40Z，租约至19:40Z或合并且main全绿/明确交接。

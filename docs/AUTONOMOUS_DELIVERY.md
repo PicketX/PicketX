@@ -12,6 +12,13 @@ edits/Binding changes/identity/approval/combined Linux acceptance remain.
 Full local baseline fails only known Unix socket EPERM; native full gates required.
 Final immutable evidence and release will be recorded in the PR and checkpoint.
 
+[PR28](https://github.com/PicketX/PicketX/pull/28): local API01c9c3b and browser tests
+1f2e0bc published1caf7d4b/treee5aef399. HTTP404 and absent OpenAPI contract RED→GREEN;
+all local configuration/controller packages pass. Full normal/race tests retain only
+Unix socket EPERM; vet/build pass. Native39177786803 intentionally tests absent UI
+entry before implementation. Required final full native CI and independent review
+are pending. No merge or completed-product claim yet.
+
 ## Management mutation completion (active)
 
 Owner codex/mutation-completion; heartbeat2026-10-18T22:40Z; lease until23:40Z

@@ -102,6 +102,12 @@ func TestResourceNetworkEditReferences(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			h, s, _ := managementFixture(t)
 			policy, _ := editSeed(t, h, "---\n"+ref)
+			if name == "binding" {
+				wrong := request(h, "PUT", "/api/v1/resources/binding-gitea-v1/network", resourceNetworkBody, managementToken, `"1"`)
+				if wrong.Code != 404 {
+					t.Fatal("wrong kind", wrong.Code, wrong.Body.String())
+				}
+			}
 			w := request(h, "PUT", resourceNetworkPath, resourceNetworkBody, managementToken, `"1"`)
 			if w.Code != 409 || !strings.Contains(w.Body.String(), "resource_in_use") {
 				t.Fatal(w.Code, w.Body.String())

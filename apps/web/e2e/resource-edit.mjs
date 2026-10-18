@@ -35,6 +35,8 @@ export async function resourceNetworkEditing({ operator: p, view, origin, token,
   await p.getByRole('button', { name: 'Cancel network edit', exact: true }).click()
   assert.equal((await inventory()).resources.find(r => r.uid === target.uid).endpoints[0].port, 9401)
   await open(target.uid)
+  await p.getByLabel('Resource change reason', { exact: true }).fill('Unchanged network')
+  await ack().check(); assert(await save().isDisabled()); await ack().uncheck()
   await p.getByLabel('Endpoint 1 port', { exact: true }).fill('9443')
   await p.getByLabel('Resource change reason', { exact: true }).fill('Browser network correction')
   assert(await save().isDisabled()); await ack().check()
@@ -68,6 +70,7 @@ export async function resourceNetworkEditing({ operator: p, view, origin, token,
   await p.screenshot({ path: join(evidence, 'resource-network-edit-desktop.png'), fullPage: true })
   // Referenced targets remain immutable even when visible/editable in stale inventory.
   await open('resource-gitea-v1')
+  await p.getByLabel('Endpoint 1 port', { exact: true }).fill('9444')
   await p.getByLabel('Resource change reason', { exact: true }).fill('Do not retarget existing authorization')
   await ack().check()
   const denied = p.waitForResponse(r => r.url().endsWith('/resources/resource-gitea-v1/network'))

@@ -105,6 +105,25 @@ retain the draft and block retry until explicit reconciliation.
 
 ## Evidence and remaining work
 
+### Editing network parameters before use
+
+Select **Edit network parameters** on an unreferenced Resource. Its UID/name and
+Endpoint names/type/labels remain unchanged; edit only protocol, port and optional
+IPv4/IPv6 destination restrictions. This does not move/configure the application.
+Review the latest target preview, enter a reason and acknowledge the changes before
+**Save network parameters**. Cancel makes no write. The selected document is
+normalized (its comments/formatting may be lost); other objects/source and facts stay.
+
+PUT `/api/v1/resources/{uid}/network` (also session/CSRF `/console/api/v1`) accepts
+`{endpoints:[{name,protocol,port,addresses?}],reason}`. Supply every existing Endpoint
+exactly once; no add/remove/rename.200 returns uid/revision/ETag; no-op retains revision.
+Any Grant, including revoked/expired or zero-match selector, Deny, Binding or HTTPRoute
+reference returns409. Stale412 precedes lookup; missing/wrong-kind404. Existing strict
+JSON, body bounds, auth, CAS, whole-candidate compilation and transaction audit apply.
+Rebase retains inputs, shows latest target values and resets acknowledgement. Missing
+UID remains missing even if the name was recreated. Unexpected statuses/malformed
+receipts retain the draft and block blind retry. Accepted edits are not Agent evidence.
+
 API tests cover dual-stack placement/no automatic grant, unchanged source/facts,
 strict validation, context collisions, RBAC/CSRF, CAS, audit rollback and durable
 reopen. Browser acceptance covers actual resource→binding→Grant/revoke,
@@ -112,7 +131,7 @@ conflict/draft, failed reads, viewer denial and375px layout, alongside the exist
 real Nginx/application authorization suite. Exact pass/fail, tested trees, review
 and CI are recorded in [the checkpoint](AUTONOMOUS_DELIVERY.md) and PR18.
 
-Resource/Endpoint editing, Endpoint deletion, Binding editing, context enrollment, human
+Referenced Resource/Endpoint editing, Endpoint membership changes, Binding editing, context enrollment, human
 identity/requests/approval and final combined Linux workflow remain. HTTPRoute
 creation and desired/applied node observations are already delivered. No new
 kernel execution evidence or completed product is
