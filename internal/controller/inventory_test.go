@@ -6,10 +6,12 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"slices"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/PicketX/PicketX/internal/publication"
 	"github.com/PicketX/PicketX/pkg/configuration"
 )
 
@@ -127,6 +129,40 @@ func TestInventoryResourceAndBindingHTTP(t *testing.T) {
 	if e != nil || len(events) != 3 || events[2].Reason != "place metrics" || events[2].Actor != "principal:operator" {
 		t.Fatal(events, e)
 	}
+	var files []struct{ Name, File string }
+	if e = store.GORM().Raw("PRAGMA database_list").Scan(&files).Error; e != nil {
+		t.Fatal(e)
+	}
+	path := ""
+	for _, file := range files {
+		if file.Name == "main" {
+			path = file.File
+		}
+	}
+	if path == "" {
+		t.Fatal("missing durable database")
+	}
+	if e = store.Close(); e != nil {
+		t.Fatal(e)
+	}
+	reopened, e := publication.OpenMode(path, "static:example-v1", "database")
+	if e != nil {
+		t.Fatal(e)
+	}
+	defer reopened.Close()
+	restored, e := reopened.Snapshot()
+	if e != nil || restored.Revision != doc.Revision || restored.Policy != doc.Policy || restored.Facts != facts {
+		t.Fatal("onboarding not durable", e)
+	}
+	candidate, _ := reopened.Current()
+	restoredProjection, e := candidate.Plan().Projection("agent-a", time.Now())
+	if e != nil || len(restoredProjection.Protected) != len(projection.Protected) {
+		t.Fatal("restored projection", e)
+	}
+	events, e = reopened.Audit(0, 100)
+	if e != nil || len(events) != 3 || events[2].Reason != "place metrics" {
+		t.Fatal("restored audit", events, e)
+	}
 }
 
 func TestInventoryRejectsUnsafeCreates(t *testing.T) {
@@ -216,11 +252,15 @@ func TestInventoryBrowserCSRFAndGrantSchema(t *testing.T) {
 		t.Fatal(e)
 	}
 	var spec struct {
+		Paths      map[string]map[string]json.RawMessage `json:"paths"`
 		Components struct {
 			Schemas map[string]struct {
-				Properties map[string]struct {
-					UniqueItems bool                               `json:"uniqueItems"`
-					Items       struct{ MinLength, MaxLength int } `json:"items"`
+				Required             []string `json:"required"`
+				AdditionalProperties bool     `json:"additionalProperties"`
+				Properties           map[string]struct {
+					UniqueItems                          bool `json:"uniqueItems"`
+					MinItems, MaxItems, Minimum, Maximum int
+					Items                                struct{ MinLength, MaxLength int } `json:"items"`
 				} `json:"properties"`
 			} `json:"schemas"`
 		} `json:"components"`
@@ -231,5 +271,36 @@ func TestInventoryBrowserCSRFAndGrantSchema(t *testing.T) {
 	names := spec.Components.Schemas["controller.IssueGrantRequest"].Properties["endpoint_names"]
 	if !names.UniqueItems || names.Items.MinLength != 1 || names.Items.MaxLength != 1024 {
 		t.Fatal("Grant schema weaker than runtime", names)
+	}
+	for _, prefix := range []string{"/api/v1", "/console/api/v1"} {
+		for path, method := range map[string]string{"/inventory": "get", "/resources": "post", "/bindings": "post"} {
+			if len(spec.Paths[prefix+path][method]) == 0 {
+				t.Fatal("undocumented route", prefix+path)
+			}
+		}
+	}
+	for _, name := range []string{"controller.CreateResourceRequest", "controller.ResourceEndpointRequest", "controller.CreateBindingRequest"} {
+		if spec.Components.Schemas[name].AdditionalProperties {
+			t.Fatal("non-strict schema", name)
+		}
+	}
+	endpoints := spec.Components.Schemas["controller.CreateResourceRequest"].Properties["endpoints"]
+	if endpoints.MinItems != 1 || endpoints.MaxItems != 64 {
+		t.Fatal("endpoint bounds", endpoints)
+	}
+	port := spec.Components.Schemas["controller.ResourceEndpointRequest"].Properties["port"]
+	if port.Minimum != 1 || port.Maximum != 65535 {
+		t.Fatal("port bounds", port)
+	}
+	addresses := spec.Components.Schemas["controller.ResourceEndpointRequest"].Properties["addresses"]
+	if slices.Contains(spec.Components.Schemas["controller.ResourceEndpointRequest"].Required, "addresses") {
+		t.Fatal("omitted addresses must be documented as optional, not empty")
+	}
+	if addresses.MinItems != 1 || addresses.MaxItems != 64 || addresses.Items.MaxLength != 128 {
+		t.Fatal("address bounds", addresses)
+	}
+	selection := spec.Components.Schemas["controller.CreateBindingRequest"].Properties["endpoint_names"]
+	if selection.MinItems != 1 || selection.MaxItems != 64 || !selection.UniqueItems || selection.Items.MaxLength != 1024 {
+		t.Fatal("binding selection", selection)
 	}
 }

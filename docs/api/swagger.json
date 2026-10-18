@@ -504,7 +504,6 @@
                     }
                 },
                 "required": [
-                    "addresses",
                     "name",
                     "port",
                     "protocol"

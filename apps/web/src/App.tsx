@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0
 import { useEffect, useEffectEvent, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { FileText, History, KeyRound, ShieldCheck, RefreshCw, LogOut } from 'lucide-react'
+import { FileText, History, KeyRound, Boxes, ShieldCheck, RefreshCw, LogOut } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { APIError, request } from '@/lib/console'
 import type { AuditEvent, AuditPage, Identity, Publication, Session } from '@/lib/console'
 import { Grants } from '@/features/grants/Grants'
+import { Resources } from '@/features/resources/Resources'
 
 type Draft = Publication & { etag: string }
 export default function App() {
@@ -16,9 +17,11 @@ export default function App() {
   const [draft, setDraft] = useState<Draft | null>(null)
   const [reason, setReason] = useState('')
   const [key, setKey] = useState('')
-  const [tab, setTab] = useState<'publication' | 'audit' | 'grants'>('publication')
+  const [tab, setTab] = useState<'publication' | 'audit' | 'grants' | 'resources'>('publication')
   const [grantDirty, setGrantDirty] = useState(false)
   const [grantBusy, setGrantBusy] = useState(false)
+  const [resourceDirty, setResourceDirty] = useState(false)
+  const [resourceBusy, setResourceBusy] = useState(false)
   const [audit, setAudit] = useState<AuditEvent[]>([])
   const [cursor, setCursor] = useState(0)
   const [hasMore, setHasMore] = useState(false)
@@ -37,7 +40,7 @@ export default function App() {
 
   function clear() {
     epoch.current++
-    setIdentity(null); setAccepted(null); setDraft(null); setReason(''); setKey(''); setAudit([]); setCursor(0); setHasMore(false); setLastRead(0); setConflict(false); setGrantDirty(false); setGrantBusy(false)
+    setIdentity(null); setAccepted(null); setDraft(null); setReason(''); setKey(''); setAudit([]); setCursor(0); setHasMore(false); setLastRead(0); setConflict(false); setGrantDirty(false); setGrantBusy(false); setResourceDirty(false); setResourceBusy(false)
   }
   function fail(e: unknown, reading = false) {
     if (e instanceof DOMException && e.name === 'AbortError') return
@@ -81,11 +84,11 @@ export default function App() {
   }, [controllers])
   useEffect(() => { if (error) errorBox.current?.focus() }, [error])
   useEffect(() => {
-    if (!dirty && !grantDirty) return
+    if (!dirty && !grantDirty && !resourceDirty) return
     const prevent = (e: BeforeUnloadEvent) => e.preventDefault()
     window.addEventListener('beforeunload', prevent)
     return () => window.removeEventListener('beforeunload', prevent)
-  }, [dirty, grantDirty])
+  }, [dirty, grantDirty, resourceDirty])
 
   async function refresh(replaceDraft = false) {
     if (busy) return
@@ -108,7 +111,7 @@ export default function App() {
     } catch (e) { setKey(''); if (e instanceof APIError && e.status === 401) setError(t('errors.unauthorized')); else fail(e) } finally { setBusy(false) }
   }
   async function logout() {
-    if (busy || grantBusy || ((dirty || grantDirty) && !window.confirm(t('grants.discardAll')))) return
+    if (busy || grantBusy || resourceBusy || ((dirty || grantDirty || resourceDirty) && !window.confirm(t('resources.discardAll')))) return
     setBusy(true); setError('')
     try { await request('/logout', { method: 'POST', headers: { 'X-CSRF-Token': session?.csrf ?? '' } }); clear(); setSession(s => s ? { ...s, authenticated: false } : null) }
     catch (e) { fail(e) } finally { setBusy(false) }
@@ -141,16 +144,17 @@ export default function App() {
   </div>
   return <div className="console-shell">
     <aside className="sidebar"><span className="brand"><ShieldCheck aria-hidden="true" />PicketX</span><p className="sidebar-subtitle">{t('operatorConsole')}</p>
-      <nav aria-label={t('navigation')}><Button variant={tab === 'publication' ? 'secondary' : 'ghost'} aria-current={tab === 'publication' ? 'page' : undefined} onClick={() => setTab('publication')}><FileText aria-hidden="true" />{t('configuration')}</Button><Button variant={tab === 'grants' ? 'secondary' : 'ghost'} aria-current={tab === 'grants' ? 'page' : undefined} onClick={() => setTab('grants')}><KeyRound aria-hidden="true" />{t('grants.title')}</Button><Button variant={tab === 'audit' ? 'secondary' : 'ghost'} aria-current={tab === 'audit' ? 'page' : undefined} onClick={() => { setTab('audit'); void refresh() }}><History aria-hidden="true" />{t('audit')}</Button></nav>
-      <div className="identity"><span>{identity?.id ?? t('loading')}</span><small>{identity?.roles.join(', ')}</small>{language}<Button variant="outline" disabled={busy || grantBusy} onClick={() => void logout()}><LogOut aria-hidden="true" />{t('signOut')}</Button></div>
+      <nav aria-label={t('navigation')}><Button variant={tab === 'publication' ? 'secondary' : 'ghost'} aria-current={tab === 'publication' ? 'page' : undefined} onClick={() => setTab('publication')}><FileText aria-hidden="true" />{t('configuration')}</Button><Button variant={tab === 'resources' ? 'secondary' : 'ghost'} aria-current={tab === 'resources' ? 'page' : undefined} onClick={() => setTab('resources')}><Boxes aria-hidden="true" />{t('resources.title')}</Button><Button variant={tab === 'grants' ? 'secondary' : 'ghost'} aria-current={tab === 'grants' ? 'page' : undefined} onClick={() => setTab('grants')}><KeyRound aria-hidden="true" />{t('grants.title')}</Button><Button variant={tab === 'audit' ? 'secondary' : 'ghost'} aria-current={tab === 'audit' ? 'page' : undefined} onClick={() => { setTab('audit'); void refresh() }}><History aria-hidden="true" />{t('audit')}</Button></nav>
+      <div className="identity"><span>{identity?.id ?? t('loading')}</span><small>{identity?.roles.join(', ')}</small>{language}<Button variant="outline" disabled={busy || grantBusy || resourceBusy} onClick={() => void logout()}><LogOut aria-hidden="true" />{t('signOut')}</Button></div>
     </aside>
     <main className="workspace" aria-busy={busy}>
-      <header className="workspace-header"><div><h1>{tab === 'publication' ? t('configuration') : tab === 'grants' ? t('grants.title') : t('audit')}</h1><p>{t('desiredBoundary')}</p></div>{tab !== 'grants' && <Button variant="outline" disabled={busy} onClick={() => void refresh()}><RefreshCw aria-hidden="true" />{t('refresh')}</Button>}</header>
+      <header className="workspace-header"><div><h1>{tab === 'publication' ? t('configuration') : tab === 'grants' ? t('grants.title') : tab === 'resources' ? t('resources.title') : t('audit')}</h1><p>{t('desiredBoundary')}</p></div>{tab !== 'grants' && tab !== 'resources' && <Button variant="outline" disabled={busy} onClick={() => void refresh()}><RefreshCw aria-hidden="true" />{t('refresh')}</Button>}</header>
       <section className="revision-strip" aria-label={t('status')}><div><span>{t('authority')}</span><strong>{accepted?.authority ?? '—'}</strong></div><div><span>{t('editorRevision')}</span><strong>{draft?.etag.slice(1, -1) ?? '—'}</strong></div><div><span>{t('lastRead')}</span><strong>{lastRead ? new Date(lastRead).toLocaleTimeString(i18n.language) : t('notRead')}</strong></div><div><span>{t('enforcement')}</span><strong>{t('notConfirmed')}</strong></div></section>
       {errorPanel}{notice && <div className="feedback success" role="status">{notice}</div>}
       {readFailed ? <p className="stale" role="status">{t('staleFailed')}</p> : lastRead > 0 && now - lastRead > 60000 ? <p className="stale" role="status">{t('staleAge')}</p> : null}
       {busy && <p role="status">{t('loading')}</p>}
       <div hidden={tab !== 'grants'}><Grants csrf={session.csrf} canWrite={canWrite} onUnauthorized={() => fail(new APIError(401, 'unauthorized'))} onDirty={setGrantDirty} onBusy={setGrantBusy} /></div>
+      <div hidden={tab !== 'resources'}><Resources csrf={session.csrf} canWrite={canWrite} onUnauthorized={() => fail(new APIError(401, 'unauthorized'))} onDirty={setResourceDirty} onBusy={setResourceBusy} /></div>
       {tab === 'publication' ? <section className="editor-section"><div className="section-heading"><div><h2>{t('policyAndFacts')}</h2><p>{canWrite ? t('editorHelp') : t('readOnly')}</p></div><span className="draft-state">{dirty ? t('unsaved') : t('inSync')}</span></div>
         {draft ? <form onSubmit={e => void save(e)}><div className="editors"><div><label htmlFor="policy">{t('policyYaml')}</label><textarea id="policy" spellCheck={false} value={draft.policy} onChange={e => setDraft({ ...draft, policy: e.target.value })} readOnly={!canWrite} disabled={busy} required /></div><div><label htmlFor="facts">{t('factsJson')}</label><textarea id="facts" spellCheck={false} value={draft.facts} onChange={e => setDraft({ ...draft, facts: e.target.value })} readOnly={!canWrite} disabled={busy} required /></div></div>
           <div className="save-area"><div><label htmlFor="reason">{t('changeReason')}</label><input id="reason" value={reason} onChange={e => setReason(e.target.value)} maxLength={512} disabled={!canWrite || busy} required /><p className="hint">{t('reasonHelp')}</p></div><div className="actions"><Button type="button" variant="outline" disabled={busy} onClick={() => void refresh(true)}>{t('reloadLatest')}</Button><Button type="submit" disabled={busy || !canWrite || !reason.trim() || conflict}>{t('save')}</Button></div></div>
