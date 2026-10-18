@@ -115,3 +115,11 @@ vet/build、固定生成/OpenAPI及全静态SQLite/管理Controller/CLI通过。
 最终仅验收元数据/文档头仍须完整CI，然后按expected head合并并复核main；精确最终/main CI在核对后追加到PR14，合并且main全绿才释放租约。无未解决评审发现或延后小项。
 
 下一段：SCS浏览器登录/CSRF与可信成员新鲜度、对象/Grant/审批API和真实React页面、基础HTTP可信入口及受控TCP/Unix决策接口，最后浏览器→API→授权→代理→应用与Linux联合验收。保持选定栈、IPv6、单来源、绝对期限和审批/下发/应用分离，不强制mTLS。管理页使用frontend-design/ui-ux-pro-max，体现加载/失败/空/过时状态。不长期只堆库或样例UI，目标完成前不暂停。
+
+# 节点观测接续（进行中）
+
+负责人 codex/node-observations；心跳2026-10-18T17:45Z，租约至19:15Z或合并且main CI通过/明确交接。
+Core PR20/main819d343、树184b1176、CI39148069494已验收172/434及真实浏览器/Unix/静态检查，旧租约释放。
+Agent95a5f7f/CI39118687475未变，两仓库起始无开放PR。
+计划 docs/superpowers/plans/2026-10-19-node-observations.md：当前凭据作用域的原子报告/连接/新鲜度、鉴权API及真实节点页面。
+不声明内核独立证明或协议心跳；保留PR20小项及生命周期/身份审批/联合Linux验收缺口。请勿竞争实现，整体未完成。

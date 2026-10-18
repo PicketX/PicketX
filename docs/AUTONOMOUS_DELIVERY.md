@@ -1,5 +1,18 @@
 # Autonomous delivery checkpoint
 
+## Node observations (active)
+
+Owner codex/node-observations; heartbeat2026-10-18T17:45Z; lease until19:15Z or
+merged+green main/explicit handoff. Existing isolated branch codex/resource-onboarding.
+Core PR20/main819d343dd107bf1a32a8ba1ad769fb933964b068 accepted, tree184b1176c1a2aa4abde3a0863665bcad1f21756a,
+CI39148069494 GREEN172/434 and real browser/Unix/static gates. PR20 lease released.
+Agent95a5f7f/CI39118687475 unchanged; neither repo has an open PR at acquisition.
+Plan: docs/superpowers/plans/2026-10-19-node-observations.md. Implement atomic
+credential-scope report/current-session/freshness projection, authenticated API
+and real Nodes page. No kernel proof or protocol heartbeat claim. Preserve PR20
+deferred minors and remaining lifecycle/identity/approval/combined Linux acceptance.
+Do not compete while this delivery is active. Overall task remains incomplete.
+
 ## HTTPRoute console (active)
 
 Heartbeat2026-10-18T16:42Z; owner `codex/http-route-console`, existing isolated
