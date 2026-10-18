@@ -47,6 +47,16 @@ CI, screenshot digest/inspection and merged-main CI remain required before relea
 Final immutable heads/trees/raw logs and lease release are appended to PR23 so
 this historical active heading is not mistaken for a lease after merged+green main.
 
+Native Web39161434475/job117775390236 passed the complete Chromium/Nginx suite,
+including all malformed-receipt and actual Binding-removal scenarios. Actual
+checkout163fa3229b4d0aff1a17412d589028672d00bd30 and local8e49947/remote509a3c5
+share treee48877648c255da2d1120b690b1d8264d691c874. Artifact12148544473 digest
+04909dac020d7ec71baed761ea43eb601e3218cad40b50a5b1ef1f72c61c8603 matched the
+downloaded ZIP. Inspected375px removal warning/acknowledgement and1440px Resources
+screenshots; no overflow. Visual QA caught obsolete help text claiming removal
+required the advanced editor; English/Chinese copy corrected. This final copy/docs
+head must pass exact-head CI again; immutable final and main evidence in PR23.
+
 Deferred Minor: comments between an explicit removed-document terminator and the
 next YAML document can be removed; semantic surviving objects remain guarded.
 This alpha source-format limitation is documented in RESOURCE_MANAGEMENT.
