@@ -45,12 +45,23 @@ details and two labeled forms. Resource form supports add/remove endpoint rows;
 destination field explicitly distinguishes omitted (binding scope, both families)
 from nonempty restrictions. Binding selects existing resource, named endpoints and
 context; show exact agent, profile, destinations and handling before confirmation.
+The two forms share a single active draft mode; switching form type requires an
+explicit discard confirmation when dirty. This prevents one accepted operation
+from advancing a different preserved draft's revision base.
 Existing selectors are displayed as dynamic, never converted to named selection.
 Reuse current component/theme/a11y/i18n rules; no sample data. Loading/error/empty/
 last-read/stale states; read refresh never advances a preserved mutation CAS base.
 Explicit rebase preserves drafts, 412/ambiguous errors block retry until rebase;
 logout/unload warns, switching tabs preserves drafts, cancellation ignores stale
 responses. Viewer can read but backend denies writes. No automatic mutation retry.
+
+Visual rules: retain the current operational workbench, system sans16px and
+monospace addresses, background#f5f7fa/foreground#18283b/action#145da0. Use existing
+24px form gaps,6–8px input/panel radii,44px controls, responsive single-column
+forms and no new fonts/dependencies. A focusable error summary links inline
+aria-describedby errors; empty/stale/failed states carry text, not color alone.
+UI/UX search did not yield a verified resource-console pattern, so existing
+project components govern layout; verified error-summary guidance was applied.
 
 ## Acceptance
 Real API/SQLite create, context mapping, facts preservation, compile rejection,

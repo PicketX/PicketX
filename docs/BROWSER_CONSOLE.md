@@ -1,6 +1,6 @@
 # Operator browser console
 
-This first console manages complete desired policy/facts publications and their transactional audit. It is not the final easy structured resource/Grant/approval application, an identity provider, an Agent-status dashboard or HTTP request authorization. Saving is **not node application**.
+This document covers complete desired policy/facts publications, transactional audit and console deployment. Later [Grant](GRANT_MANAGEMENT.md) and [Resource](RESOURCE_MANAGEMENT.md) pages provide structured admin flows; [HTTP authorization](HTTP_AUTHORIZATION.md) is a separate scoped ingress integration. Human identity, approval and fresh applied-node status remain incomplete. Saving is **not node application**.
 
 ## Run
 
