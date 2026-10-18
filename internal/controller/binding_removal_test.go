@@ -4,11 +4,66 @@ package controller
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"os"
 	"strings"
 	"testing"
 	"time"
 )
+
+func TestBindingRemovalBrowserAndContract(t *testing.T) {
+	h, _, _ := browserFixture(t)
+	client := browserClient{h: h, cookies: map[string]*http.Cookie{}}
+	client.bootstrap(t)
+	if w := client.request("POST", "/console/api/v1/login", `{"token":"`+managementToken+`"}`, "http://127.0.0.1:8080", client.csrf); w.Code != 200 {
+		t.Fatal(w.Code)
+	}
+	path := "/console/api/v1/bindings/binding-gitea-v1/remove"
+	if w := client.request("POST", path, removalBody, "http://127.0.0.1:8080", ""); w.Code != 403 {
+		t.Fatal("CSRF", w.Code)
+	}
+	if w := client.request("POST", path, removalBody, "http://127.0.0.1:8080", client.csrf); w.Code != 428 {
+		t.Fatal("CAS", w.Code)
+	}
+	raw, e := os.ReadFile("../../docs/api/swagger.json")
+	if e != nil {
+		t.Fatal(e)
+	}
+	var spec struct {
+		Paths map[string]map[string]struct {
+			Security  []map[string][]string `json:"security"`
+			Responses map[string]any        `json:"responses"`
+		} `json:"paths"`
+		Components struct {
+			Schemas map[string]struct {
+				AdditionalProperties *bool    `json:"additionalProperties"`
+				Required             []string `json:"required"`
+				Properties           map[string]struct {
+					Const     *bool `json:"const"`
+					MaxLength int   `json:"maxLength"`
+				} `json:"properties"`
+			} `json:"schemas"`
+		} `json:"components"`
+	}
+	if e = json.Unmarshal(raw, &spec); e != nil {
+		t.Fatal(e)
+	}
+	for prefix, security := range map[string]string{"/api/v1": "ManagementBearer", "/console/api/v1": "BrowserCookie"} {
+		op := spec.Paths[prefix+"/bindings/{uid}/remove"]["post"]
+		if len(op.Security) != 1 || op.Security[0][security] == nil {
+			t.Fatal("missing security", prefix)
+		}
+		for _, code := range []string{"200", "400", "401", "403", "404", "412", "413", "415", "428", "429", "503"} {
+			if _, ok := op.Responses[code]; !ok {
+				t.Fatal(prefix, code)
+			}
+		}
+	}
+	schema := spec.Components.Schemas["controller.RemoveBindingRequest"]
+	if schema.AdditionalProperties == nil || *schema.AdditionalProperties || len(schema.Required) != 2 || schema.Properties["reason"].MaxLength != 512 || schema.Properties["acknowledge_unprotection"].Const == nil || !*schema.Properties["acknowledge_unprotection"].Const {
+		t.Fatal("unsafe acknowledgement schema", schema)
+	}
+}
 
 const removalBody = `{"reason":"retire protection","acknowledge_unprotection":true}`
 

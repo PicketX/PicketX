@@ -25,6 +25,11 @@
   },
   "language": "语言", "loginTitle": "管理访问，明确边界。", "loginDescription": "登录以查看和发布本 Controller 管理的配置。", "desiredBoundary": "这里只展示期望状态。保存配置不表示节点已应用。", "signIn": "登录", "accessKey": "访问密钥", "keyHelp": "使用独立管理访问密钥换取服务端会话，密钥不会写入浏览器存储。", "sessionBoundary": "单 Controller 会话最长8小时，空闲30分钟失效。重启或凭据轮换后需重新登录。", "loading": "加载中…", "retry": "重试", "operatorConsole": "管理工作台", "navigation": "工作台导航", "configuration": "期望配置", "audit": "审计", "signOut": "退出登录", "refresh": "刷新状态", "status": "发布状态", "authority": "权威来源", "editorRevision": "编辑基线修订", "lastRead": "最后成功读取", "notRead": "尚未读取", "enforcement": "节点应用", "notConfirmed": "此视图无法确认", "policyAndFacts": "策略与绑定事实", "editorHelp": "编辑完整策略与事实文档。接受之前运行共享校验。", "readOnly": "只读访问，当前角色不能发布修改。", "unsaved": "未保存草稿", "inSync": "编辑内容未修改", "policyYaml": "策略 YAML", "factsJson": "事实 JSON", "changeReason": "变更原因", "reasonHelp": "说明此次修改，原因将写入追加式发布审计。", "reloadLatest": "重新载入最新配置", "save": "保存期望配置", "noConfiguration": "无法读取配置，请刷新重试。", "publicationHistory": "发布历史", "auditHelp": "配置变更与接受结果在同一事务中记录。这不是执行报告或请求决策日志。", "emptyAudit": "尚无配置变更记录。", "revisionNumber": "修订 {{revision}}", "digest": "配置摘要", "moreAudit": "加载更多审计", "discard": "放弃未保存草稿并载入最新配置？", "expired": "会话已过期或访问已撤销，请重新登录。", "conflict": "修订已改变。草稿已保留，请显式重新载入后再编辑。", "saved": "期望配置已保存，尚未确认节点应用。", "staleFailed": "上次读取失败，显示的数据可能已过时。", "staleAge": "此视图已超过一分钟，请刷新后再使用。", "requestFailed": "请求失败，请检查连接和 Controller 就绪状态后重试。",
   "resources": {
+    "remove": "移除 Binding", "removeReason": "移除原因", "confirmRemoval": "确认移除 Binding", "cancelRemoval": "取消移除",
+    "removeWarning": "移除此 Binding 会撤下保护，而不是撤销访问。服务可能失去保护。已有 Grant 和其他 Binding 保持不变。",
+    "acknowledge": "我理解这可能导致服务失去保护",
+    "missingBinding": "草稿修订中已不存在此 Binding。请取消并检查最新清单；同名重建对象不是原目标。",
+    "removed": "Binding 移除已作为期望状态接受。其他 Binding 和 Grant 不变；尚未确认 Agent 应用。",
     "title": "资源", "onboarding": "资源接入", "boundary": "创建具名服务入口，再绑定到既有主机上下文。此操作配置保护范围，不授予访问，也不确认节点已应用。",
     "refresh": "刷新资源", "rebase": "使用最新资源修订", "base": "资源操作基线 {{base}} · 已观察修订 {{observed}}", "rebaseConfirm": "保留输入并使用最新资源修订？重试前请核对资源身份、Endpoint 和精确上下文。", "conflictHelp": "写入已阻止，直到显式使用最新修订。输入已保留；失败响应仍可能已提交，请先核对最新清单。",
     "newResource": "新建资源", "newBinding": "新建 Binding", "create": "创建资源", "bind": "创建 Binding", "resourceName": "资源名称", "bindingName": "Binding 名称", "resourceReason": "资源变更原因", "bindingReason": "Binding 变更原因", "bindingResource": "Binding 资源",

@@ -3,7 +3,9 @@ package configuration
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"strings"
 	"testing"
@@ -65,6 +67,50 @@ func TestRemoveBindingPreservesSurvivingDocuments(t *testing.T) {
 	}
 }
 
-func fmtPosition(n int, br string) string {
-	return strings.Repeat("x", n+1) + strings.ReplaceAll(br, "\n", "LF")
+func fmtPosition(n int, br string) string { return fmt.Sprintf("position%d-break%q", n, br) }
+
+func TestRemoveBindingJSONCommentsAndEmpty(t *testing.T) {
+	raw, e := os.ReadFile("../../examples/static/gitea.yaml")
+	if e != nil {
+		t.Fatal(e)
+	}
+	b, e := Decode(raw)
+	if e != nil {
+		t.Fatal(e)
+	}
+	var documents []string
+	for _, o := range b.objects {
+		data, err := json.Marshal(o)
+		if err != nil {
+			t.Fatal(err)
+		}
+		documents = append(documents, string(data))
+	}
+	for _, source := range []string{strings.Join(documents, "\n---\n"), "%YAML 1.1\n---\n" + string(raw), "\ufeff# header\n" + strings.ReplaceAll(string(raw), "---\n", "...\n# document boundary\n---\n")} {
+		b, err := Decode([]byte(source))
+		if err != nil {
+			t.Fatal(err)
+		}
+		out, err := b.RemoveBinding("binding-gitea-v1")
+		if err != nil {
+			t.Fatal(err)
+		}
+		next, err := Decode(out)
+		if err != nil || len(next.objects) != 3 {
+			t.Fatal("presentation removal", err)
+		}
+	}
+	parts := strings.Split(string(raw), "---\n")
+	one, e := Decode([]byte(parts[3]))
+	if e != nil {
+		t.Fatal(e)
+	}
+	empty, e := one.RemoveBinding("binding-gitea-v1")
+	if e != nil {
+		t.Fatal(e)
+	}
+	decoded, e := Decode(empty)
+	if e != nil || len(decoded.objects) != 1 || decoded.objects[0].Kind != "Configuration" {
+		t.Fatal("not explicit empty", e)
+	}
 }
