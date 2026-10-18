@@ -93,7 +93,7 @@ export function HTTPRoutes({ csrf, canWrite, onUnauthorized, onDirty, onBusy }: 
       if (controller.signal.aborted) return
       // An ambiguous 2xx is not proof of the requested operation. Retain intent,
       // block retries, and require an explicit same-UID rebase before another write.
-      if (!result.data || result.data.uid !== removalUID || !Number.isSafeInteger(result.data.revision) || result.data.revision <= Number(base.slice(1, -1)) || result.etag !== `"${result.data.revision}"`) throw new Error('Invalid removal receipt')
+      if (result.status !== 200 || !result.data || result.data.uid !== removalUID || !Number.isSafeInteger(result.data.revision) || result.data.revision <= Number(base.slice(1, -1)) || result.etag !== `"${result.data.revision}"`) throw new Error('Invalid removal receipt')
       clear(); setNotice(t('routes.removed', { uid: removalUID })); setConflict(true)
       try { await read(controller.signal, true) } catch (e) { if (!controller.signal.aborted) fail(e, true) }
     } catch (e) {
