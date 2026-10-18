@@ -1,5 +1,17 @@
 # Autonomous delivery checkpoint
 
+## Resource network editing (active)
+
+Owner codex/resource-network-edit; heartbeat2026-10-18T23:38Z; lease until00:38Z
+or merged+green main/explicit release. Core aa19b91e004750f8b577a4e6f4f8da655d2f9063,
+tree565966dcd69f7a65816dc6bb424c3e38c9de0302/mainCI39174548179 GREEN; PR27 released.
+Agent95a5f7f/mainCI39118687475 GREEN; no open PRs at acquisition. Existing isolated
+clean worktree retained. Plan/spec: superpowers/{plans,specs}/2026-10-19-resource-edit.md.
+Deliver unreferenced Resource network edits preserving identities/labels; referenced
+edits/Binding changes/identity/approval/combined Linux acceptance remain.
+Full local baseline fails only known Unix socket EPERM; native full gates required.
+Final immutable evidence and release will be recorded in the PR and checkpoint.
+
 ## Management mutation completion (active)
 
 Owner codex/mutation-completion; heartbeat2026-10-18T22:40Z; lease until23:40Z

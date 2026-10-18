@@ -1,5 +1,15 @@
 # 自动交付检查点
 
+## Resource 网络参数编辑（进行中）
+
+负责人 codex/resource-network-edit；心跳2026-10-18T23:38Z；租约至00:38Z，或
+合并且 main CI 成功/明确释放。Core main aa19b91e、树565966dc、CI39174548179
+成功；PR27 已释放。Agent95a5f7f、CI39118687475 成功；接手时两仓库均无开放 PR。
+沿用干净隔离工作区；设计/计划为 superpowers/{specs,plans}/2026-10-19-resource-edit.md。
+本轮交付无引用 Resource 的既有 Endpoint 网络参数编辑，保持身份/标签。
+引用编辑、绑定编辑、身份/审批及 Linux/浏览器联合验收仍待完成。
+本地基线仅 Unix socket EPERM 失败；完整原生 CI 不得跳过。最终证据/释放记录于 PR。
+
 ## 节点观测生命周期（进行中）
 
 负责人codex/node-lifecycle，心跳2026-10-18T18:40Z，租约至19:40Z或合并且main全绿/明确交接。
