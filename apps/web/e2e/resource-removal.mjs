@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import assert from 'node:assert/strict'
 import { join } from 'node:path'
+import { rejectedMutationReceipt } from './mutation-receipts.mjs'
 
 export async function resourceRemoval({ p, origin, headers, referencedUID, evidence }) {
   const settled = () => p.waitForFunction(() => document.querySelector('.resources-section')?.getAttribute('aria-busy') === 'false')
@@ -36,6 +37,8 @@ export async function resourceRemoval({ p, origin, headers, referencedUID, evide
   await p.getByLabel('Removal reason', { exact: true }).fill('Retire unused browser definition')
   await ack().check()
   const path = `/console/api/v1/resources/${target.uid}/remove`
+  await rejectedMutationReceipt({ p, path: `/resources/${target.uid}/remove`, section: '.resources-section', submit: 'Confirm Resource removal', labels: ['Removal reason'] })
+  await rebase(); assert.equal(await ack().isChecked(), false); await ack().check()
   await p.route(`**${path}`, route => route.fulfill({ status: 200, contentType: 'application/json', body: '{}' }))
   await confirm().click(); await p.locator('.resources-section [role="alert"]').waitFor(); await settled()
   assert(await confirm().isDisabled())

@@ -5,6 +5,7 @@ import { join } from 'node:path'
 import { createHash } from 'node:crypto'
 import { freePort, startIngress } from './ingress.mjs'
 import { httpRouteRemoval } from './http-route-removal.mjs'
+import { rejectedMutationReceipt } from './mutation-receipts.mjs'
 
 export async function httpRouteManagement({ operator, view, origin, token, root, temp, authzPort, ingressToken, callersPath, evidence }) {
   const ingressPort = await freePort()
@@ -32,6 +33,9 @@ export async function httpRouteManagement({ operator, view, origin, token, root,
   await operator.getByRole('button', { name: 'Create HTTP route', exact: true }).click(); assert.equal((await pending).status(), 412)
   assert.equal(await operator.getByLabel('Route name', { exact: true }).inputValue(), 'browser-route')
   assert(await operator.getByRole('button', { name: 'Create HTTP route', exact: true }).isDisabled())
+  operator.once('dialog', d => d.accept())
+  await operator.getByRole('button', { name: 'Use latest route revision', exact: true }).click()
+  await rejectedMutationReceipt({ p: operator, path: '/http-routes', section: '.http-routes-section', submit: 'Create HTTP route', labels: ['Route name', 'Exact request Host', 'Exact paths, one per line', 'Route creation reason'] })
   operator.once('dialog', d => d.accept())
   await operator.getByRole('button', { name: 'Use latest route revision', exact: true }).click()
   pending = operator.waitForResponse(r => r.url().endsWith('/http-routes') && r.request().method() === 'POST')

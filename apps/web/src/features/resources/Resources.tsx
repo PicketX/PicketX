@@ -125,7 +125,7 @@ export function Resources({ csrf, canWrite, onUnauthorized, onDirty, onBusy }: P
       : { name, reason, resource_name: resource!.name, resource_uid: resource!.uid, endpoint_names: selectedEndpoints, agent_name: context!.agent_name, context_id: context!.id }
     const controller = new AbortController(); controllers.add(controller); setBusy(true); setError(''); setFields({}); setNotice('')
     try {
-      const result = await request<{ uid: string; revision: number }>(mode === 'remove' ? `/${removalKind === 'resource' ? 'resources' : 'bindings'}/${encodeURIComponent(removalUID)}/remove` : mode === 'resource' ? '/resources' : '/bindings', { signal: controller.signal, method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf, 'If-Match': base }, body: JSON.stringify(body) })
+      const result = await request<{ uid: string; revision: number }>(mode === 'remove' ? `/${removalKind === 'resource' ? 'resources' : 'bindings'}/${encodeURIComponent(removalUID)}/remove` : mode === 'resource' ? '/resources' : '/bindings', { signal: controller.signal, method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf, 'If-Match': base }, body: JSON.stringify(body) }, mode === 'remove' ? 200 : 201)
       if (controller.signal.aborted) return
       // A successful HTTP status alone is not a valid removal receipt. Keep the
       // draft and require reconciliation on malformed/ambiguous responses.

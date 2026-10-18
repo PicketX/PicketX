@@ -1,4 +1,5 @@
 {
+  "publicationConflictHelp": "写入已阻止，草稿已保留，但变更可能已经提交。请先检查最新状态和审计，再显式将最新配置载入编辑器后重试。",
   "nodes": {
     "title": "节点", "observations": "节点观测", "help": "当前凭据覆盖的 Agent 作用域 · Controller 只读观测", "refresh": "刷新节点",
     "boundary": "Agent 报告仅代表某个时刻的声明，不是独立内核验证，也不保证当前可访问。连接、报告新鲜度和目标匹配分别展示。",

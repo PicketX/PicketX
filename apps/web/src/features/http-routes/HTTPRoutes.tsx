@@ -89,7 +89,7 @@ export function HTTPRoutes({ csrf, canWrite, onUnauthorized, onDirty, onBusy }: 
     if (!reason.trim() || bytes(reason) > 512) { setFields({ removalReason: t('routes.reasonLimit') }); setError(t('grants.fixFields')); return }
     const controller = new AbortController(); controllers.add(controller); setBusy(true); setError(''); setFields({}); setNotice('')
     try {
-      const result = await request<{ uid: string; revision: number }>(`/http-routes/${encodeURIComponent(removalUID)}/remove`, { method: 'POST', signal: controller.signal, headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf, 'If-Match': base }, body: JSON.stringify({ reason, acknowledge_removal: true }) })
+      const result = await request<{ uid: string; revision: number }>(`/http-routes/${encodeURIComponent(removalUID)}/remove`, { method: 'POST', signal: controller.signal, headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf, 'If-Match': base }, body: JSON.stringify({ reason, acknowledge_removal: true }) }, 200)
       if (controller.signal.aborted) return
       // An ambiguous 2xx is not proof of the requested operation. Retain intent,
       // block retries, and require an explicit same-UID rebase before another write.
@@ -116,7 +116,7 @@ export function HTTPRoutes({ csrf, canWrite, onUnauthorized, onDirty, onBusy }: 
     if (bytes(body) > 16384) { setFields({ paths: t('routes.bodyLimit') }); setError(t('grants.fixFields')); return }
     const controller = new AbortController(); controllers.add(controller); setBusy(true); setError(''); setFields({}); setNotice('')
     try {
-      const result = await request<{ uid: string }>('/http-routes', { method: 'POST', signal: controller.signal, headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf, 'If-Match': base }, body })
+      const result = await request<{ uid: string }>('/http-routes', { method: 'POST', signal: controller.signal, headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf, 'If-Match': base }, body }, 201)
       if (controller.signal.aborted) return
       clear(); setNotice(t('routes.created', { uid: result.data.uid })); setConflict(true)
       // Never repeat a successful mutation merely because its follow-up read fails.
