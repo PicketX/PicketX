@@ -1,5 +1,19 @@
 # Autonomous delivery checkpoint
 
+## Structured Grant increment (active)
+
+Heartbeat2026-10-18T13:42Z; owner `codex/grant-console`, lease until15:00Z or
+merged+green main/explicit handoff. Core PR16 is accepted: main113461ba99bf070139ba7b8858d7eba996c5ce7f,
+tree0a864577ad7819c00125a75ca021c4eeabd8699b, main CI39131202785 Go/Web green.
+Its old lease is released. Agent main95a5f7f/CI39118687475 unchanged. No open PR
+in either repository at acquisition. Plan/context map/design:
+docs/superpowers/plans/2026-10-18-grant-console.md. Implement structured source
+Grant issue/revoke and real React management/ingress acceptance through existing
+database authority/CAS/RBAC/transaction audit. No competing implementation while
+this lease is live. Remaining: resource/binding/approval/status workflows,
+verified human identity and final combined Linux/browser acceptance. Do not pause
+the automation at this partial milestone. No new implementation is accepted yet.
+
 ## Trusted HTTP increment (active)
 
 Heartbeat2026-10-18T13:15Z; owner `codex/http-authorization`, [Core PR16](https://github.com/PicketX/PicketX/pull/16), lease until14:15Z or merged+green main/explicit handoff. Core PR15 baseline74575a4/CI39127783270 and Agent main95a5f7f/CI39118687475 remain accepted. Plan/spec/context map: docs/superpowers/plans/2026-10-18-http-authorization.md. Source-backed HTTPRoute, scoped local TCP/Unix decisions, durable minimal audit and actual Nginx/browser/application now implemented, code acceptance below. Final metadata head still needs complete CI/expected-head merge/main verification. Do not compete with this live lease. Overall goal remains incomplete.
