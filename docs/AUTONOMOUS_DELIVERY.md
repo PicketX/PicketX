@@ -1,5 +1,17 @@
 # Autonomous delivery checkpoint
 
+## Binding source retention (active)
+
+Owner codex/binding-source-retention; heartbeat2026-10-18T20:40Z; lease until21:40Z
+or merged+green main/explicit handoff. Core main1c3777812b77b009ad1f925ada24508e5cee20e8,
+tree54ff3fe404a0899ef941ef397bdb7fdee6416497/CI39162242128 GREEN. PR23 lease released.
+Agent95a5f7f/CI39118687475 GREEN. Neither repository has an open PR at acquisition.
+Close the documented explicit-YAML-terminator comment loss before reusing removal
+for broader lifecycle operations. Plan: superpowers/plans/2026-10-19-binding-source-retention.md.
+No UI/API/Agent/kernel semantic change. Next remains management lifecycle, identity/
+approval and combined Linux/browser acceptance; product completion is not established.
+Final exact commits/trees/CI and lease release will be recorded in this increment's PR.
+
 ## Binding removal (active)
 
 Owner codex/binding-removal; heartbeat2026-10-18T19:43Z; lease until20:43Z or
