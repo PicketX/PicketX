@@ -1,5 +1,20 @@
 # Autonomous delivery checkpoint
 
+## PR18 main CI repair (active)
+
+Heartbeat2026-10-18T15:43Z; owner `codex/resource-onboarding`; lease extended
+until16:30Z or repair merged+green main/explicit handoff. PR18 merged as
+2de0d6a8c9e52ed40cd68b6486b7bd5fccd29bad, tree9c59b871298cb5a86757357642e7bddab2def5e9,
+after exact-head CI39140789757 passed Go167/429 and real Web/Nginx checks.
+MainCI39141222771 Web117715886102 passed, but Go117715886276 failed the real
+Unix permission assertion: the test observes the raw Listen callback before
+runtime chmod0600 finishes. This is not local EPERM and not green acceptance.
+Repair plan/context map: docs/superpowers/plans/2026-10-18-unix-startup-assertion.md.
+Keep the assertion, synchronize on actual HTTP serving, no production changes.
+Full native CI/stress/independent repair review and main verification required.
+Original lease stays active; do not start competing feature work. Final repair
+SHA/tree/PR/CI evidence will be appended to PR18 and the repair PR.
+
 ## Resource onboarding (active)
 
 Heartbeat2026-10-18T15:28Z; owner `codex/resource-onboarding`, lease until16:00Z

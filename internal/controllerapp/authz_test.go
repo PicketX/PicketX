@@ -87,10 +87,6 @@ spec: {resourceRef: {name: gitea, uid: resource-gitea-v1}, endpointName: https, 
 				tr.DialContext = func(ctx context.Context, _, _ string) (net.Conn, error) {
 					return (&net.Dialer{}).DialContext(ctx, "unix", addr)
 				}
-				info, e := os.Stat(addr)
-				if e != nil || info.Mode().Perm() != 0600 {
-					t.Fatal(info, e)
-				}
 			}
 			client := &http.Client{Transport: tr, Timeout: time.Second}
 			defer tr.CloseIdleConnections()
@@ -101,6 +97,14 @@ spec: {resourceRef: {name: gitea, uid: resource-gitea-v1}, endpointName: https, 
 			r.Body.Close()
 			if r.StatusCode != 401 {
 				t.Fatal(r.StatusCode)
+			}
+			if network == "unix" {
+				// Address discovery happens inside Listen, before runtime chmod.
+				// A real response proves Serve has started after socket setup.
+				info, e := os.Stat(addr)
+				if e != nil || info.Mode().Perm() != 0600 {
+					t.Fatal(info, e)
+				}
 			}
 			source := "198.51.100.9"
 			if network == "tcp6" {

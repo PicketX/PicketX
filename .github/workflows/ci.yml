@@ -43,6 +43,8 @@ jobs:
           npm ci --ignore-scripts --prefix tools/openapi
           npm run validate --prefix tools/openapi
       - run: go test -count=1 -race -v ./...
+      - name: Repeat actual Unix authorization startup under race detector
+        run: go test -race -count=100 -run '^TestAuthorizationRuntimeTCPUnixAndShutdown$/unix$' ./internal/controllerapp
       - run: go build ./...
       - name: Static SQLite Controller artifact
         run: scripts/check-static-controller.sh
