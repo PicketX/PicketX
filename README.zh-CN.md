@@ -8,7 +8,7 @@ PicketX 通过自助申请、策略和审批，为受保护资源提供有期限
 
 ## 项目状态
 
-当前仓库仍在开发，不是完整访问管理产品。共享Core/配置、SQLite发布、认证gRPC及原生PicketXD PR16 Provider已实现。[管理API](docs/MANAGEMENT_API.zh-CN.md)提供独立主体/Casbin/CAS/审计，[浏览器工作台](docs/BROWSER_CONSOLE.zh-CN.md)提供SCS/CSRF及真实文档发布/审计。[alpha HTTP适配器](docs/HTTP_AUTHORIZATION.zh-CN.md)增加来源HTTPRoute、限权本地决策及Nginx集成，精确CI验收见检查点。人员/OIDC、结构化资源/Grant/审批/状态管理和最终Linux联合工作流仍待完成，不声明完整生产产品。
+当前仓库仍在开发，不是完整访问管理产品。共享Core/配置、SQLite发布、认证gRPC及原生PicketXD PR16 Provider已实现。[管理API](docs/MANAGEMENT_API.zh-CN.md)提供独立主体/Casbin/CAS/审计，[浏览器工作台](docs/BROWSER_CONSOLE.zh-CN.md)提供SCS/CSRF及真实文档发布/审计。[alpha HTTP适配器](docs/HTTP_AUTHORIZATION.zh-CN.md)增加来源HTTPRoute、限权本地决策及Nginx集成。[结构化Grant管理](docs/GRANT_MANAGEMENT.zh-CN.md)增加管理员签发/撤销和期望有效期页面，精确CI验收见检查点。人员/OIDC、资源/绑定CRUD、审批/新鲜应用状态和最终Linux联合工作流仍待完成，不声明完整生产产品。
 
 控制面与 Web 位于本仓库；官方 Linux Agent `picketxd` 属于独立的 **PicketXD** 仓库。本次初始化未创建或修改该仓库。
 

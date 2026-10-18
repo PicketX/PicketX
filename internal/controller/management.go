@@ -74,6 +74,9 @@ func registerManagement(e *echo.Echo, service *management.Service, limits Manage
 	group.GET("/audit", h.audit)
 	group.GET("/http-decisions", h.httpAudit)
 	group.GET("/me", h.me)
+	group.GET("/grants", h.grants)
+	group.POST("/grants", h.issueGrant)
+	group.POST("/grants/:uid/revoke", h.revokeGrant)
 }
 func apiError(c *echo.Context, status int, code string) error {
 	return c.JSON(status, APIError{Code: code})
@@ -91,6 +94,8 @@ func mappedError(c *echo.Context, e error) error {
 		return apiError(c, 412, "revision_mismatch")
 	case errors.Is(e, management.ErrInvalid):
 		return apiError(c, 400, "invalid_publication")
+	case errors.Is(e, management.ErrGrantNotFound):
+		return apiError(c, 404, "grant_not_found")
 	default:
 		return apiError(c, 503, "management_unavailable")
 	}
