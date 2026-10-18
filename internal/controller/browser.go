@@ -195,6 +195,7 @@ func (b *Browser) register(e *echo.Echo, limits ManagementLimits) {
 	g.POST("/bindings", h.browserCreateBinding)
 	g.POST("/bindings/:uid/remove", h.browserRemoveBinding)
 	g.POST("/http-routes", h.browserCreateHTTPRoute)
+	g.POST("/http-routes/:uid/remove", h.browserRemoveHTTPRoute)
 	g.GET("/agent-observations", h.browserAgentObservations)
 	g.POST("/grants", h.browserIssueGrant)
 	g.POST("/grants/:uid/revoke", h.browserRevokeGrant)

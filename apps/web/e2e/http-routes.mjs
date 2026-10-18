@@ -4,6 +4,7 @@ import { writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { createHash } from 'node:crypto'
 import { freePort, startIngress } from './ingress.mjs'
+import { httpRouteRemoval } from './http-route-removal.mjs'
 
 export async function httpRouteManagement({ operator, view, origin, token, root, temp, authzPort, ingressToken, callersPath, evidence }) {
   const ingressPort = await freePort()
@@ -73,5 +74,6 @@ export async function httpRouteManagement({ operator, view, origin, token, root,
   assert.equal(await view.getByRole('button', { name: 'Create HTTP route', exact: true }).count(), 0)
   assert(await view.evaluate(() => document.documentElement.scrollWidth <= innerWidth))
   await view.screenshot({ path: join(evidence, 'http-routes-viewer-mobile.png'), fullPage: true })
+  await httpRouteRemoval({ operator, view, api, route, ingressPort, root, temp, authzPort, ingressToken, callersPath, evidence })
   console.log('PASS real HTTPRoute browser creation → CAS/audit → explicit caller/Nginx → application; source deny/grant/revoke, exact selectors, preserved draft, failed read, viewer and mobile')
 }

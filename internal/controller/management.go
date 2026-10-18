@@ -84,6 +84,7 @@ func registerManagement(e *echo.Echo, service *management.Service, limits Manage
 	group.POST("/bindings", h.createBinding)
 	group.POST("/bindings/:uid/remove", h.removeBinding)
 	group.POST("/http-routes", h.createHTTPRoute)
+	group.POST("/http-routes/:uid/remove", h.removeHTTPRoute)
 }
 func apiError(c *echo.Context, status int, code string) error {
 	return c.JSON(status, APIError{Code: code})
@@ -107,6 +108,8 @@ func mappedError(c *echo.Context, e error) error {
 		return apiError(c, 404, "binding_not_found")
 	case errors.Is(e, management.ErrResourceNotFound):
 		return apiError(c, 404, "resource_not_found")
+	case errors.Is(e, management.ErrHTTPRouteNotFound):
+		return apiError(c, 404, "http_route_not_found")
 	case errors.Is(e, management.ErrResourceInUse):
 		return apiError(c, 409, "resource_in_use")
 	default:
