@@ -1,5 +1,17 @@
 # Autonomous delivery checkpoint
 
+## Binding removal (active)
+
+Owner codex/binding-removal; heartbeat2026-10-18T19:43Z; lease until20:43Z or
+merged+green main/explicit handoff. Core PR22 main d979a8492c82e2e010f50b3b04dedc68c4ac199a,
+tree38c8751f1be9da2bec49735854c54336726f1e7e/main CI39156537892 GREEN;
+PR22 lease RELEASED. Agent95a5f7f/CI39118687475 GREEN, no open PRs at acquisition.
+Existing clean isolated codex/resource-onboarding worktree retained. Plan:
+docs/superpowers/plans/2026-10-18-binding-removal.md. Explicit unprotection warning,
+UID/CAS/audit and browser acceptance; no endpoint/resource edits or kernel change.
+Overall product and combined privileged Linux/browser acceptance remain incomplete.
+
+
 ## Node observation lifecycle (active)
 
 Owner codex/node-lifecycle; heartbeat2026-10-18T18:40Z; lease until19:40Z or
