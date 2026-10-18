@@ -57,7 +57,7 @@ button:disabled { cursor: not-allowed; }
 label { display: block; font-weight: 600; margin-bottom: 8px; }
 input, textarea { width: 100%; border: 1px solid #77889c; border-radius: 6px; padding: 10px 12px; background: #fff; color: var(--foreground); }
 input:focus-visible, textarea:focus-visible, button:focus-visible, summary:focus-visible { outline: 3px solid #145da0; outline-offset: 3px; }
-input:disabled, textarea:disabled { background: #edf1f5; color: #526174; }
+input:disabled, textarea:disabled, textarea[readonly] { background: #edf1f5; color: #526174; }
 textarea { min-height: 400px; resize: vertical; font: 14px/1.65 ui-monospace, SFMono-Regular, Consolas, monospace; tab-size: 2; }
 h1 { font-size: clamp(1.75rem, 3vw, 2.5rem); font-weight: 650; letter-spacing: -.035em; line-height: 1.15; }
 h2 { font-size: 1.2rem; font-weight: 650; }
