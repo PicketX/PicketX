@@ -1,9 +1,13 @@
 # Autonomous delivery checkpoint
 
-Updated: 2026-10-18T08:36:00Z. User explicitly authorized autonomous development, tests, push, PRs and merges until a usable management application and basic Layer 7 authorization exist. Routine design/plan and integration decisions do not require another approval round. Preserve existing security boundaries and required checks.
+Updated: 2026-10-18T10:31:00Z. User explicitly authorized autonomous development, tests, push, PRs and merges until a usable management application and basic Layer 7 authorization exist. Routine design/plan and integration decisions do not require another approval round. Preserve existing security boundaries and required checks.
 
 ## Current lease
-Owner: interactive Controller runtime increment. Branch: `codex/controller-runtime`. Lease expires: 2026-10-18T10:00:00Z (Asia/Shanghai 18:00). Do not start competing work while this lease is active; inspect PR12/CI instead. This lease automatically releases when PR12 is merged and its main CI succeeds, even before the timestamp. Renew with each durable checkpoint; stale work may be resumed from actual branch/PR state.
+Owner: managed-publication increment. Branch: `codex/management-authority`. Lease expires: 2026-10-18T12:30:00Z; automatically releases after its PR merges and main CI passes. Check the latest PR/head/heartbeat before competing work. Provider PR16 is merged with green main CI and its prior lease is released.
+
+Current accepted Core main0b2c5e919626f281750295cf6cb119ea7241ed99/tree094555cc0a493cddbe855b4dac9fd38715da54de, CI39117067190 green (115/344). Agent main95a5f7f62dceb1c369d08b8e23ffda2f7b978ce4/treea53a743e22254c0511b430e5b9e2ed0664180629, CI39118687475 green (190/482,112 native/9 service cases). PR11 nonempty-target and PR12 stale UPDATE regressions are complete; do not repeat. Both repositories had no open PR at lease acquisition.
+
+Plan: docs/superpowers/plans/2026-10-18-management-publication.md. Scope is an actual independent-Token/Casbin management API, explicit database authority, CAS and transactional audit. Human login, L7 and live pages remain next. Baseline `go test ./...` passed. Native inline execution; one fresh whole-branch reviewer at integration.
 
 ## Accepted baseline
 - Core PR11/main793ac15faadd6565c64c713959c59990c2bf3a1b, tree f6f98df86d7e0e69c0ba7ac41cf563c4d865572a. Main CI39109301425 passed94 top-level/311 total cases, real gRPC/TCP/TLS. Embeddable stream service only.
