@@ -25,6 +25,7 @@ export function Accounts({ active, csrf, canWrite, onUnauthorized, onDirty, onBu
   const [readFailed, setReadFailed] = useState(false)
   const [now, setNow] = useState(() => Date.now())
   const errors = useRef<HTMLDivElement>(null)
+  const readEpoch = useRef(0)
   const [controllers] = useState(() => new Set<AbortController>())
   const [writers] = useState(() => new Set<AbortController>())
   const dirty = form.id !== '' || form.username !== '' || form.password !== '' || form.reason !== '' || form.roles.join(',') !== empty.roles.join(',') || form.disabled
@@ -41,8 +42,11 @@ export function Accounts({ active, csrf, canWrite, onUnauthorized, onDirty, onBu
     if (!writing) setReadFailed(true)
   }
   async function read(signal: AbortSignal, rebase = false) {
+    const generation = ++readEpoch.current
     const result = await request<Page>('/accounts', { signal })
-    if (signal.aborted) return
+    // A pre-write read may be held across navigation while the writer owns a
+    // newer reconciliation read. It must not roll the visible directory back.
+    if (signal.aborted || generation !== readEpoch.current) return
     if (result.data.mode !== 'database' || !Number.isSafeInteger(result.data.revision) || result.data.revision < 0 || result.etag !== `"${result.data.revision}"`) throw new Error('Invalid directory revision')
     setPage(result.data); setReadFailed(false)
     // A refresh updates observations, not the CAS ownership of a retained draft.
