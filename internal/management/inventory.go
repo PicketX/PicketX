@@ -25,8 +25,31 @@ type InventoryChange struct {
 }
 
 var ErrBindingNotFound = errors.New("Binding not found")
+var ErrBindingNotEditable = errors.New("Binding requires advanced editing")
 var ErrResourceNotFound = errors.New("Resource not found")
 var ErrResourceInUse = errors.New("Resource is referenced")
+
+func (s *Service) UpdateBindingEndpoints(p Principal, expected uint64, reason, uid string, names []string) (InventoryChange, error) {
+	doc, b, err := s.grantBase(p, expected, reason)
+	if err != nil {
+		return InventoryChange{}, err
+	}
+	policy, err := b.UpdateBindingEndpoints(uid, names)
+	if errors.Is(err, configuration.ErrBindingNotFound) {
+		return InventoryChange{}, ErrBindingNotFound
+	}
+	if errors.Is(err, configuration.ErrBindingNotEditable) {
+		return InventoryChange{}, ErrBindingNotEditable
+	}
+	if err != nil {
+		return InventoryChange{}, ErrInvalid
+	}
+	changed, err := s.Replace(p, expected, reason, string(policy), doc.Facts)
+	if err != nil {
+		return InventoryChange{}, err
+	}
+	return InventoryChange{uid, changed.Revision}, nil
+}
 
 func (s *Service) UpdateResourceNetwork(p Principal, expected uint64, reason, uid string, entries []configuration.InventoryEndpoint) (InventoryChange, error) {
 	doc, b, err := s.grantBase(p, expected, reason)

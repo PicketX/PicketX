@@ -83,6 +83,7 @@ func registerManagement(e *echo.Echo, service *management.Service, limits Manage
 	group.PUT("/resources/:uid/network", h.updateResourceNetwork)
 	group.POST("/resources/:uid/remove", h.removeResource)
 	group.POST("/bindings", h.createBinding)
+	group.PUT("/bindings/:uid/endpoints", h.updateBindingEndpoints)
 	group.POST("/bindings/:uid/remove", h.removeBinding)
 	group.POST("/http-routes", h.createHTTPRoute)
 	group.POST("/http-routes/:uid/remove", h.removeHTTPRoute)
@@ -107,6 +108,8 @@ func mappedError(c *echo.Context, e error) error {
 		return apiError(c, 404, "grant_not_found")
 	case errors.Is(e, management.ErrBindingNotFound):
 		return apiError(c, 404, "binding_not_found")
+	case errors.Is(e, management.ErrBindingNotEditable):
+		return apiError(c, 409, "binding_not_editable")
 	case errors.Is(e, management.ErrResourceNotFound):
 		return apiError(c, 404, "resource_not_found")
 	case errors.Is(e, management.ErrHTTPRouteNotFound):
