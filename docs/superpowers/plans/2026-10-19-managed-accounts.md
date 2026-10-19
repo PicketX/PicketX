@@ -47,27 +47,32 @@ Roles,Disabled,Reason}, Page{Mode,Revision,Accounts,Events,ObservedAt}. Access e
 Accounts() (account.Page,error), SaveAccount(expected uint64, actor,id string,
 change account.Change) (account.Account,uint64,error), using id="" for create.
 Service exposes Accounts(p), SaveAccount(p,expected,id,change); no ORM/HTTP types.
-- [ ] Write real SQLite tests for create/CAS/audit/reopen/rollback, DB/file isolation,
+- [x] Write real SQLite tests for create/CAS/audit/reopen/rollback, DB/file isolation,
   same-hash generation revocation and deny. Run focused tests; expect RED missing methods.
-- [ ] Implement versioned persistence, settings/credential/session integration and
+- [x] Implement versioned persistence, settings/credential/session integration and
   service. Run focused packages; expect GREEN (known full baseline Unix EPERM separate).
-- [ ] Add strict HTTP/Origin/CSRF/Bearer/secret-free/ETag regressions; observe RED
+- [x] Add strict HTTP/Origin/CSRF/Bearer/secret-free/ETag regressions; observe RED
   missing routes then implement and reproduce OpenAPI; expect GREEN.
-- [ ] Commit and task-done with go test ./internal/managementaccess ./internal/management ./internal/controller ./internal/runtimeconfig.
+- [x] Commit and task-done with go test ./internal/managementaccess ./internal/management ./internal/controller ./internal/runtimeconfig.
 
 ### Task 2: Real bilingual console and native lifecycle acceptance
 **Interfaces:** consumes Task1 routes/page/ETag and me.operations account:read/write.
 Produces real Accounts tab, browser fixture and immutable native acceptance.
-- [ ] Add actual browser lifecycle to console suite; run native tests-only first,
+- [x] Add actual browser lifecycle to console suite; run native tests-only first,
   expect RED missing Accounts control or unfinished behavior, not simulated success.
-- [ ] Read UI/UX skills and implement established composition with loading/error/
+- [x] Read UI/UX skills and implement established composition with loading/error/
   empty/stale, read vs write ownership, guarded revision and ephemeral secrets.
-- [ ] Run npm ci/typecheck/lint/build and full Go test/race/vet/build; report any
+- [x] Run npm ci/typecheck/lint/build and full Go test/race/vet/build; report any
   baseline Unix EPERM/coalesce failure by name; do not skip native coverage.
-- [ ] Full CI and real375/1440 evidence; one independent whole-branch review, one
+- [x] Full CI and real375/1440 evidence; one independent whole-branch review, one
   TDD Important blocker fix pass; exact local/remote/checkout trees and raw logs.
-- [ ] Commit, task-done; expected-head merge and main CI; persist all evidence and
-  release short lease. Remaining OIDC/Gitea/deployment are not claimed complete.
+- [x] Commit, task-done and record integration gate in PR33 metadata. Expected-head
+  merge, final native CI/main verification and lease release remain mandatory before
+  handoff, recorded in final PR metadata to avoid a self-referential checkpoint loop.
+  Remaining DB-human Linux conjunction/Gitea/deployment are not claimed complete.
 
 Completion: native exact-head Go/Web gates with actual browser proof and independent
 review; final main verification remains required before handoff.
+
+Code acceptance/review: docs/validation/MANAGED_ACCOUNTS_REVIEW.md. Local final
+normal/race host Unix EPERM is not a pass; exact unrestricted CI is the full gate.

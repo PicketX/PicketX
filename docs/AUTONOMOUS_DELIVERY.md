@@ -2,7 +2,7 @@
 
 ## Managed human accounts acquisition — 2026-10-19T08:05Z
 
-Owner codex/managed-accounts; heartbeat08:22Z; short lease until09:20Z or explicit
+Owner codex/managed-accounts; heartbeat08:41Z; short lease until09:20Z or explicit
 release/merged+green main. Core mainb79e242/tree99c2068/mainCI39211404452 green;
 Agent main1084a336/tree3d9e0bf/mainCI39214825482 green; no open PRs at acquisition.
 PR32/Core and PR19/Agent leases explicitly released in final metadata. Agent19
@@ -13,9 +13,22 @@ superpowers/{specs,plans}/2026-10-19-managed-accounts.md. Deliver opt-in sticky
 database-user authority, version-bound sessions, CAS/audit API and real EN/ZH
 Accounts console. No implicit file import/overwrite, no OIDC/Agent/kernel change
 or full-goal claim. Final exact PR/CI/tree/artifact/main evidence and lease release
-belong in this PR's final metadata. Next after acceptance: OIDC/protocol identity
-where required, actual GiteaHTTPS/SSH and deployment/release hardening.
+belong in this PR's final metadata. Next after acceptance: extend existing Linux
+human-approval conjunction to DB-account provisioning; actual GiteaHTTPS/SSH and
+deployment/release acceptance, OIDC/protocol identity only where required.
 中文：推进数据库权威的真实账户管理及可靠会话失效，不重做已合并的申请审批链路。
+
+Code accepted at local6c3b149/remoteab36da1/actualcheckout5f604cff, shared
+tree3a14b5182881bab96be5b3ce5ed4f0bc478a6e67. CI39223445538 Go117963923063 /
+Web117963923350 SUCCESS; raw241 top-level/591 total no fail/skip/race, full native
+Unix100/static/OpenAPI and locked Web plus real Chromium suites. Artifact12173041437
+actualZIPsha256ecd8a6f577a3961d12b1b4a825786aa59b7d3f334b880fdc0b18553c9fba350a
+matches metadata; English/Chinese375/1440 inspected. One fresh independent full
+branch review: no Critical/Important, one explicit deferred Minor (superseded GET
+failure can show conservative stale warning; data/CAS remain correct). Full verdict,
+rulings/costs and RED/GREEN proof: validation/MANAGED_ACCOUNTS_REVIEW.md. No further
+implementation changes after review. Final documentation-only head requires native
+CI and expected-head merge/main verification; final exact evidence/release in PR33.
 
 Active [PR33](https://github.com/PicketX/PicketX/pull/33): backend local3739ba6,
 remote cdd2f01/treeafe7a7c. CI39221523972 Go117957691271 SUCCESS; Web117957690865
