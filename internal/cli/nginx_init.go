@@ -97,7 +97,7 @@ func initializeNginx(o nginxInitOptions) error {
 	// 128-bit route namespace keeps the method variable within stock Nginx's
 	// 64-byte hash bucket; a collision rejects duplicate locations, never grants.
 	id := hex.EncodeToString(sum[:16])
-	method := "$picketx_method_" + id
+	method := "$picketx_m_" + id
 	callback := "/_picketx_auth_" + id
 	location := fmt.Sprintf("# Private PicketX protected-location include. No Grant is created.\nsatisfy all;\nset %s $request_method;\nauth_request %s;\n", method, callback)
 	server := fmt.Sprintf(`# Private PicketX server-context include. Contains a secret; never log nginx -T.

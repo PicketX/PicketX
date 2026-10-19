@@ -17,9 +17,15 @@ merge only with expected head. Source review is not real Linux acceptance.
 2. Native CI Important:39337074356/install118349132184 at22:47:01Z rejected real
    generated includes with `could not build variables_hash` (default64byte bucket).
    Complete SHA256 variable suffix caused the failure, not missing capabilities.
-   Shorten namespace to128bits (first16digest bytes), keeping stock Nginx settings;
-   collision causes duplicate internal-location rejection/failclosed. Real failing
-   installed suite retained unchanged. Native GREEN and final exact evidence pending.
+   First128bit suffix correction still failed39337597482/install118350878893 at
+   22:51:48Z: complete variable remained47bytes. Root built exact upstream Nginx
+   release-1.24.0 (84cd7217778b8b3a2e395194b641ea14050344f1), reproduced locally,
+   temporarily instrumented its hash failure, observed keylen47/bucket64/pointer8/
+   element64 plus terminating pointer8. Diagnostic instrumentation removed and
+   upstream git diff clean. Keep128bit namespace, shorten method prefix to
+   picketx_m_ (42byte variable); no increased hash settings or test weakening.
+   A namespace collision rejects duplicate internal locations/failclosed. Real
+   failing installed suite retained unchanged. Native GREEN/final proof pending.
 
 No skipped assertions, inflated Nginx hash setting, permissions/rate/auth weakening
 or fake decision server. Earlier failed CI is NOT acceptance; skipped subsequent
