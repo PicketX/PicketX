@@ -1,5 +1,15 @@
 # 自动交付检查点
 
+## 访问申请/独立审批 — 进行中 2026-10-19T05:38Z
+
+负责人codex/access-requests；心跳05:38Z，短租约至07:08Z或明确释放/合并且main成功。
+Core main3f06ad3/tree9e7697f/mainCI39199382201成功；Agent maine013926/treeb58e0e7/
+mainCI39191015351成功；两仓库无开放PR，PR30/31租约已释放。保留宿主管理的隔离工作区，
+干净基线local00c9729与main同树。设计/计划：superpowers/{specs,plans}/2026-10-19-access-requests.md。
+实现真实持久申请、独立缩限审批/拒绝、中英文页面及审批/Grant/审计/发布事务；
+不混淆申请人和网络来源。本地完整Go基线仍仅既有Unix socket EPERM，完整原生门禁必需。
+无Agent/内核变更，不宣称OIDC或整体完成。最终准确证据、剩余项与租约释放记录于对应PR。
+
 ## 本地人员登录已交付 — 2026-10-19T04:14Z
 
 [PR30](https://github.com/PicketX/PicketX/pull/30)按准确head

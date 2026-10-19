@@ -1,5 +1,19 @@
 # Autonomous delivery checkpoint
 
+## Access requests / independent approval — active 2026-10-19T05:38Z
+
+Owner codex/access-requests; heartbeat05:38Z, short lease until07:08Z or explicit
+release/merged+green main. Core main3f06ad3/tree9e7697f/mainCI39199382201 green;
+Agent maine013926/treeb58e0e7/mainCI39191015351 green; neither has open PRs.
+Prior PR30/31 leases released. Host-owned isolated worktree retained, clean base
+local00c9729 matches main tree. Spec/plan superpowers/{specs,plans}/2026-10-19-access-requests.md.
+Deliver real durable requests, independent narrowing approval/rejection and live
+EN/ZH console; transactional publication/audit and no requester/source confusion.
+Baseline full Go has only known Unix socket EPERM; full native gates mandatory.
+No Agent/kernel change, no OIDC/full-goal completion claim. Final immutable evidence,
+remaining items and automatic lease release belong in this PR's final metadata.
+中文：推进持久申请与独立审批，真实API/数据库/页面及完整验证后安全合并。
+
 ## Local human login delivered — 2026-10-19T04:14Z
 
 [PR30](https://github.com/PicketX/PicketX/pull/30) merged by expected head
