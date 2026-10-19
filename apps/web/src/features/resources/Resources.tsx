@@ -44,8 +44,9 @@ export function Resources({ csrf, canWrite, onUnauthorized, onDirty, onBusy }: P
   const removalHeading = useRef<HTMLHeadingElement>(null)
   const dirty = !!(editUID || removalUID || name || reason || resourceUID || contextID || selectedEndpoints.length || endpoints.length !== 1 || endpoints.some(e => e.name || e.port || e.addresses || e.protocol !== 'TCP'))
   const editTarget = catalog?.resources.find(r => r.uid === editUID)
-  const networkChanged = !!editTarget && endpoints.some((e, index) => {
-    const old = editTarget.endpoints[index]
+  const editCompatible = !!editTarget && endpoints.length === editTarget.endpoints.length && new Set(endpoints.map(e => e.name)).size === endpoints.length && endpoints.every(e => editTarget.endpoints.some(old => old.name === e.name))
+  const networkChanged = editCompatible && endpoints.some(e => {
+    const old = editTarget.endpoints.find(old => old.name === e.name)
     return !old || e.protocol !== old.protocol || Number(e.port) !== old.port || JSON.stringify(addressList(e.addresses)) !== JSON.stringify(old.addresses)
   })
   const binding = catalog?.bindings.find(b => b.uid === removalUID)
@@ -188,6 +189,7 @@ export function Resources({ csrf, canWrite, onUnauthorized, onDirty, onBusy }: P
           <div className="actions"><Button variant="destructive" type="submit" disabled={busy || conflict || !base || !removalTarget || !acknowledged}>{t(removalKind === 'resource' ? 'resources.confirmResourceRemoval' : 'resources.confirmRemoval')}</Button><Button variant="outline" type="button" onClick={() => { clear(); setMode('resource'); setError(''); setNotice('') }}>{t('resources.cancelRemoval')}</Button></div>
         </> : <>
         <h3 ref={editUID ? removalHeading : undefined} tabIndex={editUID ? -1 : undefined}>{t(editUID ? 'resources.editNetwork' : mode === 'resource' ? 'resources.create' : 'resources.bind')}</h3>
+        {editUID && editTarget && !editCompatible && <p className="stale" role="status">{t('resources.editMembershipChanged')}</p>}
         {editUID && <><p className="boundary">{t('resources.editWarning')}</p><p className="hint">{editUID}</p>{editTarget ? <div className="context-preview network-edit-current"><h4>{t('resources.latestNetwork')}</h4><p>{editTarget.name}</p><ul>{editTarget.endpoints.map(e => <li key={e.name}>{e.name} · {e.protocol}/{e.port} · <code>{e.addresses?.join(', ') ?? t('resources.bindingScope')}</code></li>)}</ul></div> : <p className="stale">{t('resources.missingResource')}</p>}</>}
         <div><label htmlFor={`${mode}-name`}>{t(`resources.${mode}Name`)}</label><input id={`${mode}-name`} {...fieldProps(`${mode}-name`)} value={name} readOnly={!!editUID} onChange={e => setName(e.target.value)} maxLength={128} required />{fieldError(`${mode}-name`)}</div>
         {mode === 'resource' ? <>

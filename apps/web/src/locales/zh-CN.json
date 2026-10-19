@@ -33,6 +33,7 @@
   "resources": {
     "editNetwork": "编辑网络参数", "saveNetwork": "保存网络参数", "cancelEdit": "取消网络编辑",
     "latestNetwork": "草稿修订中的最新目标", "acknowledgeEdit": "我已核对最新目标及网络变更",
+    "editMembershipChanged": "最新修订中的 Endpoint 成员已变更。请取消此草稿并重新打开 Resource 后再编辑。",
     "editWarning": "仅能编辑未被引用的资源。UID、名称和标签不变；此操作不配置或迁移应用。保存会规范化本资源文档，其注释和格式可能丢失，其他文档保持不变。",
     "editInUse": "资源仍被引用，包含撤销或过期 Grant 时也不能编辑网络。请核对 Grant、Deny、Binding 和 HTTPRoute；未执行任何级联变更。",
     "networkSaved": "资源网络参数已作为期望状态保存，未确认应用配置或 Agent 已应用。",

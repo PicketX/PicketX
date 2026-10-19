@@ -32,8 +32,24 @@ Screenshot artifact12155177633 digest
 bffb94e5f4608e7144159b51fe32560e36a26b17fa761ac7829db2bc20197f6c matches download;
 375px and1440px inspected. UX/UI skills retained the existing design system and
 required announced errors, explicit latest-value preview and acknowledgement.
-Independent full-branch review b987c79..03cbd1c pending. This evidence-only follow-up
-needs exact-head CI; final PR28 head/main CI and lease release belong in PR28.
+Independent full-branch review b987c79..03cbd1c found one Important: positional
+Endpoint comparison misclassified retained drafts after concurrent reordering.
+The actual predicate reproduced RED; name-keyed comparison passes locally and
+blocks incompatible membership with actionable bilingual guidance. New real
+two-Endpoint browser coverage uses a full-publication competing writer, verifies
+unchanged vs changed drafts and actual saved named networks, then tests added
+membership. Tests-only f8c053c/remote8e7b1303/tree0cbfafe3 runs in39178995737 to prove
+native RED. The fix must pass full exact-head CI before merge; final raw evidence,
+PR28 head/main CI and lease release belong in PR28. No deferred review minors.
+
+Review boundary rulings: (1) imported values beyond creation limits still require
+advanced editing (cost: convenience editor cannot handle all imported Resources);
+(2) rebase retains full intent, not automatic three-way merge (cost: acknowledged
+save may replace concurrent fields); (3) full-publication permissions stay unchanged
+(cost: advanced editing still needs whole-candidate discipline); (4) general GET
+schema hardening remains separate (cost: malformed reads may confuse/break existing
+UI); (5) no Agent/kernel application claim (cost if overstated: desired state can
+be mistaken for protection). Combined privileged acceptance remains mandatory.
 Next: referenced Resource/Binding lifecycle, human identity/approval and combined
 Agent/Linux/browser acceptance. Overall goal remains incomplete.
 

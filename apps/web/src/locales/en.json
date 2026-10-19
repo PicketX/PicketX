@@ -33,6 +33,7 @@
   "resources": {
     "editNetwork": "Edit network parameters", "saveNetwork": "Save network parameters", "cancelEdit": "Cancel network edit",
     "latestNetwork": "Latest target at the draft revision", "acknowledgeEdit": "I reviewed the latest target and network changes",
+    "editMembershipChanged": "Endpoint membership changed in the latest revision. Cancel this draft and reopen the Resource before editing.",
     "editWarning": "Only unreferenced Resources can be edited here. UID, names and labels stay unchanged. This does not configure or move the application. Saving normalizes this Resource document; its comments and formatting may be lost. Other documents remain unchanged.",
     "editInUse": "Resource is referenced. Network edits are blocked even for revoked or expired Grants. Review Grants, Denies, Bindings and HTTPRoutes; nothing was cascaded.",
     "networkSaved": "Resource network parameters saved as desired state. Application settings and Agent application are not confirmed.",
