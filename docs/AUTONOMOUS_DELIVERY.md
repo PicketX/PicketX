@@ -24,6 +24,13 @@ OpenAPI coverage. Required final exact-head native CI and independent review rem
 No merge or complete-product claim. Final immutable evidence/lease release go here
 and in PR30; next self-service request/approval and account lifecycle improvements.
 
+Native39196659364 Web117880796684 passed actual password login and reached write
+readback, then found a harness assumption: a YAML comment does not change canonical
+policy hash/revision (51 vs52). Production correctly treats that as a no-op. The
+fixture now adds a real unreferenced Resource, preserving existing execution scopes,
+and requires exact persisted policy, revision advance and human audit actor. No
+production safety/authority semantics changed. Complete final gates remain pending.
+
 ## Named Binding Endpoint editing (active)
 
 Owner codex/binding-endpoint-edit; heartbeat2026-10-19T00:37Z; lease until01:37Z

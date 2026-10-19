@@ -39,7 +39,17 @@ export async function humanLogin({ browser, origin, principalPath, root, evidenc
   assert(!cookies.some(c => c.value.includes(password) || c.value.includes(passwordHash)))
   assert.equal(await page.evaluate(() => localStorage.length + sessionStorage.length), 0)
   const prior = await page.evaluate(async () => (await fetch('/console/api/v1/publication')).json())
-  await page.getByLabel('Policy YAML', { exact: true }).fill(`${prior.policy}\n# human identity publication\n`)
+  // Comments are canonicalized away and intentionally do not advance revision.
+  // Add a real unbound Resource without changing any existing execution scope.
+  const humanPolicy = `${prior.policy}\n---\napiVersion: picketx.io/v1alpha1
+kind: Resource
+metadata: {name: human-login-proof, uid: human-login-proof-v1}
+spec:
+  endpoints:
+  - name: web
+    network: {protocol: TCP, port: 9443}
+`
+  await page.getByLabel('Policy YAML', { exact: true }).fill(humanPolicy)
   await page.getByLabel('Change reason', { exact: true }).fill('Human login actual publication')
   await page.getByRole('button', { name: 'Save desired configuration', exact: true }).click()
   await page.getByText('Desired configuration saved. Node application is not confirmed.', { exact: true }).waitFor()
@@ -53,6 +63,7 @@ export async function humanLogin({ browser, origin, principalPath, root, evidenc
     return { publication, audit: { events } }
   })
   assert.equal(recorded.publication.revision, prior.revision + 1)
+  assert.equal(recorded.publication.policy, humanPolicy)
   assert(recorded.audit.events.some(e => e.actor === 'principal:alice' && e.reason === 'Human login actual publication'))
   await provision(['role:viewer'])
   await page.getByRole('button', { name: 'Refresh status', exact: true }).click()
