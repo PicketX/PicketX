@@ -19,6 +19,10 @@ export default function App() {
   const [draft, setDraft] = useState<Draft | null>(null)
   const [reason, setReason] = useState('')
   const [key, setKey] = useState('')
+  const [signInMethod, setSignInMethod] = useState<'key' | 'password'>('key')
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [tab, setTab] = useState<'publication' | 'audit' | 'grants' | 'resources' | 'routes' | 'nodes'>('publication')
   const [routeDirty, setRouteDirty] = useState(false)
   const [routeBusy, setRouteBusy] = useState(false)
@@ -41,8 +45,10 @@ export default function App() {
   const [controllers] = useState(() => new Set<AbortController>())
   const dirty = !!draft && !!accepted && (draft.policy !== accepted.policy || draft.facts !== accepted.facts)
   const canWrite = identity?.operations.includes('publication:write') ?? false
+  const passwordMode = session?.password_login && signInMethod === 'password'
 
   function clear() {
+    setSignInMethod('key'); setUsername(''); setPassword(''); setShowPassword(false)
     setRouteDirty(false); setRouteBusy(false)
     epoch.current++
     setIdentity(null); setAccepted(null); setDraft(null); setReason(''); setKey(''); setAudit([]); setCursor(0); setHasMore(false); setLastRead(0); setConflict(false); setGrantDirty(false); setGrantBusy(false); setResourceDirty(false); setResourceBusy(false)
@@ -108,12 +114,14 @@ export default function App() {
   }
   async function login(e: React.FormEvent) {
     e.preventDefault(); if (busy) return
+    if (passwordMode && (new TextEncoder().encode(password).length < 12 || new TextEncoder().encode(password).length > 72)) { setError(t('humanLogin.passwordLimit')); return }
     setBusy(true); setError(''); setNotice('')
     try {
       const { data } = await request<Session>('/session'); setSession(data)
-      await request('/login', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': data.csrf }, body: JSON.stringify({ token: key }) })
-      setKey(''); setSession({ ...data, authenticated: true }); await load(undefined, true)
-    } catch (e) { setKey(''); if (e instanceof APIError && e.status === 401) setError(t('errors.unauthorized')); else fail(e) } finally { setBusy(false) }
+      if (signInMethod === 'password' && !data.password_login) { setSignInMethod('key'); setError(t('humanLogin.unavailable')); return }
+      await request(signInMethod === 'password' ? '/login/password' : '/login', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': data.csrf }, body: JSON.stringify(signInMethod === 'password' ? { username, password } : { token: key }) }, 200)
+      setKey(''); setPassword(''); setUsername(''); setShowPassword(false); setSession({ ...data, authenticated: true }); await load(undefined, true)
+    } catch (e) { if (e instanceof APIError && e.status === 401) setError(t(passwordMode ? 'humanLogin.rejected' : 'errors.unauthorized')); else fail(e) } finally { setKey(''); setPassword(''); setShowPassword(false); setBusy(false) }
   }
   async function logout() {
     if (busy || grantBusy || resourceBusy || routeBusy || ((dirty || grantDirty || resourceDirty || routeDirty) && !window.confirm(t('routes.discardAll')))) return
@@ -141,13 +149,19 @@ export default function App() {
     try { const { data } = await request<AuditPage>(`/audit?after=${cursor}&limit=50`); setAudit(old => [...old, ...(data.events ?? [])]); setCursor(data.next_after); setHasMore((data.events?.length ?? 0) === 50) } catch (e) { fail(e, true) } finally { setBusy(false) }
   }
   const language = <Button variant="ghost" onClick={() => void i18n.changeLanguage(i18n.language === 'en' ? 'zh-CN' : 'en')} aria-label={t('language')}>{i18n.language === 'en' ? '简体中文' : 'English'}</Button>
-  const errorPanel = error && <div className="feedback error" role="alert" tabIndex={-1} ref={errorBox}>{error}</div>
+  const errorPanel = error && <div id="console-error" className="feedback error" role="alert" tabIndex={-1} ref={errorBox}>{error}</div>
   if (!session?.authenticated) return <div className="login-shell">
     <header className="login-header"><span className="brand"><ShieldCheck aria-hidden="true" />PicketX</span>{language}</header>
     <main className="login-main"><section className="login-intro"><h1>{t('loginTitle')}</h1><p>{t('loginDescription')}</p><p className="boundary">{t('desiredBoundary')}</p></section>
       <form className="login-panel" onSubmit={e => void login(e)} aria-busy={busy}><h2>{t('signIn')}</h2>{errorPanel}
-        <label htmlFor="access-key">{t('accessKey')}</label><input id="access-key" type="password" autoComplete="current-password" value={key} onChange={e => setKey(e.target.value)} minLength={32} maxLength={256} required disabled={busy} aria-describedby="key-help" />
-        <p id="key-help" className="hint">{t('keyHelp')}</p><Button type="submit" disabled={busy}>{busy ? t('loading') : t('signIn')}</Button>
+        {session?.password_login && <><label htmlFor="sign-in-method">{t('humanLogin.method')}</label><select id="sign-in-method" value={signInMethod} disabled={busy} onChange={e => { setSignInMethod(e.target.value as 'key' | 'password'); setKey(''); setPassword(''); setUsername(''); setShowPassword(false); setError('') }}><option value="key">{t('accessKey')}</option><option value="password">{t('humanLogin.methodPassword')}</option></select></>}
+        {passwordMode ? <>
+          <label htmlFor="username">{t('humanLogin.username')}</label><input id="username" name="username" autoComplete="username" autoCapitalize="none" spellCheck={false} value={username} onChange={e => setUsername(e.target.value)} minLength={3} maxLength={64} required disabled={busy} aria-describedby="password-help" />
+          <label htmlFor="human-password">{t('humanLogin.password')}</label><input id="human-password" name="password" type={showPassword ? 'text' : 'password'} autoComplete="current-password" value={password} onChange={e => setPassword(e.target.value)} maxLength={72} required disabled={busy} aria-describedby={error ? 'password-help console-error' : 'password-help'} />
+          <Button type="button" variant="ghost" disabled={busy} aria-pressed={showPassword} onClick={() => setShowPassword(v => !v)}>{t(showPassword ? 'humanLogin.hide' : 'humanLogin.show')}</Button>
+          <p id="password-help" className="hint">{t('humanLogin.help')}</p>
+        </> : <><label htmlFor="access-key">{t('accessKey')}</label><input id="access-key" type="password" autoComplete="current-password" value={key} onChange={e => setKey(e.target.value)} minLength={32} maxLength={256} required disabled={busy} aria-describedby="key-help" /><p id="key-help" className="hint">{t('keyHelp')}</p></>}
+        <Button type="submit" disabled={busy}>{busy ? t('loading') : t('signIn')}</Button>
         {!session && !busy && <Button type="button" variant="outline" onClick={() => window.location.reload()}>{t('retry')}</Button>}
       </form>
     </main><footer>{t('sessionBoundary')}</footer>

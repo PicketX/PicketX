@@ -666,6 +666,28 @@
                 "type": "object",
                 "additionalProperties": false
             },
+            "controller.PasswordLoginRequest": {
+                "properties": {
+                    "password": {
+                        "type": "string",
+                        "writeOnly": true,
+                        "minLength": 1,
+                        "maxLength": 72,
+                        "description": "12–72 UTF-8 bytes; no trimming"
+                    },
+                    "username": {
+                        "maxLength": 64,
+                        "minLength": 3,
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "password",
+                    "username"
+                ],
+                "type": "object",
+                "additionalProperties": false
+            },
             "controller.PublicationRequest": {
                 "properties": {
                     "facts": {
@@ -828,6 +850,9 @@
                     },
                     "identity": {
                         "$ref": "#/components/schemas/controller.SessionIdentityResponse"
+                    },
+                    "password_login": {
+                        "type": "boolean"
                     }
                 },
                 "type": "object"
@@ -5577,6 +5602,130 @@
                     }
                 },
                 "summary": "Exchange independent management access key for a renewed SCS session",
+                "tags": [
+                    "console"
+                ]
+            }
+        },
+        "/console/api/v1/login/password": {
+            "post": {
+                "description": "Exact Host/Origin and Echo CSRF required; strict4096byte JSON. Password12–72 UTF-8 bytes, no trimming. Direct-peer local limiter6/minute burst5, four concurrent bcrypt checks per process. Generic401 for unknown/disabled/wrong credentials. Password/username rotation, disable/removal invalidate sessions on next request. No raw password/hash stored in session; Bearer API remains key-only. See HUMAN_LOGIN.md for provisioning/deployment limits.",
+                "operationId": "browserPasswordLogin",
+                "parameters": [
+                    {
+                        "description": "Exact configured public origin",
+                        "in": "header",
+                        "name": "Origin",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Bootstrap token for legacy clients",
+                        "in": "header",
+                        "name": "X-CSRF-Token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/controller.PasswordLoginRequest",
+                                "summary": "login",
+                                "description": "Local human credentials"
+                            }
+                        }
+                    },
+                    "description": "Local human credentials",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.SessionIdentityResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "413": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "415": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "429": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "503": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    }
+                },
+                "summary": "Exchange local human credentials for a renewed SCS session",
                 "tags": [
                     "console"
                 ]

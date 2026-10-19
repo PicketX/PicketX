@@ -1,5 +1,36 @@
 # Autonomous delivery checkpoint
 
+## Local human login — active 2026-10-19T03:39Z
+
+Owner codex/local-human-login; heartbeat03:39Z; short lease until05:00Z or explicit
+release/merged+green main. Core maina99d9fc/tree52746b5/mainCI39183852826 green;
+Agent maine013926/treeb58e0e7/mainCI39191015351 green; no open PRs at acquisition.
+PR29/Core and PR17/18/Agent leases released in their final PR metadata. Existing
+host-owned clean isolated worktree retained. Spec/plan: superpowers/{specs,plans}/
+2026-10-19-human-login.md. Deliver private-file local human password login using
+existing SCS/Casbin, CLI provisioning and real React/API/browser validation.
+Full local baseline has only existing Unix socket EPERM; native full gates remain
+mandatory. OIDC/account CRUD and self-service request/approval remain incomplete.
+中文：推进真实人员登录，不重复已完成的联合内核验收，不宣称整个目标完成。
+
+[PR30](https://github.com/PicketX/PicketX/pull/30) first remote2a08627/local0d1af4c,
+treef48c373a22a447f0a9c5f3b2516d32e768e98f23 ran39196241105. Raw Web117879517643
+passed all existing key/management/Nginx/application suites, then RED at the
+expected missing Sign-in method control. Backend capability/CLI/HTTP tests were
+RED→GREEN locally. UI now consumes actual password login/session discovery;
+locked npm ci/typecheck/lint/build pass. Local full normal/race retain only baseline
+Unix EPERM; vet/build pass. Added bounded real concurrent bcrypt and strict secret
+OpenAPI coverage. Required final exact-head native CI and independent review remain.
+No merge or complete-product claim. Final immutable evidence/lease release go here
+and in PR30; next self-service request/approval and account lifecycle improvements.
+
+Native39196659364 Web117880796684 passed actual password login and reached write
+readback, then found a harness assumption: a YAML comment does not change canonical
+policy hash/revision (51 vs52). Production correctly treats that as a no-op. The
+fixture now adds a real unreferenced Resource, preserving existing execution scopes,
+and requires exact persisted policy, revision advance and human audit actor. No
+production safety/authority semantics changed. Complete final gates remain pending.
+
 ## Named Binding Endpoint editing (active)
 
 Owner codex/binding-endpoint-edit; heartbeat2026-10-19T00:37Z; lease until01:37Z

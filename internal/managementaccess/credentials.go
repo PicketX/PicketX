@@ -10,6 +10,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/PicketX/PicketX/internal/password"
 	"github.com/PicketX/PicketX/internal/strictjson"
 )
 
@@ -19,48 +20,90 @@ type principalRecord struct {
 	Roles  []string `json:"roles"`
 }
 
+type userRecord struct {
+	ID           string   `json:"id"`
+	Username     string   `json:"username"`
+	PasswordHash string   `json:"password_hash"`
+	Roles        []string `json:"roles"`
+	Disabled     bool     `json:"disabled"`
+}
+type credentialDocument struct {
+	Principals *[]principalRecord `json:"principals"`
+	Users      []userRecord       `json:"users"`
+}
+
 func loadPrincipals(path string) ([]principalRecord, error) {
+	doc, e := loadCredentials(path)
+	if e != nil {
+		return nil, e
+	}
+	return *doc.Principals, nil
+}
+func loadCredentials(path string) (credentialDocument, error) {
+	var document credentialDocument
 	info, e := os.Stat(path)
 	if e != nil || !info.Mode().IsRegular() || info.Mode().Perm()&0077 != 0 {
-		return nil, ErrUnavailable
+		return document, ErrUnavailable
 	}
 	f, e := os.Open(path)
 	if e != nil {
-		return nil, ErrUnavailable
+		return document, ErrUnavailable
 	}
 	defer f.Close()
 	info, e = f.Stat()
 	if e != nil || !info.Mode().IsRegular() || info.Mode().Perm()&0077 != 0 {
-		return nil, ErrUnavailable
+		return document, ErrUnavailable
 	}
 	data, e := io.ReadAll(io.LimitReader(f, (1<<20)+1))
 	if e != nil || len(data) > 1<<20 {
-		return nil, ErrUnavailable
+		return document, ErrUnavailable
 	}
-	var document struct {
-		Principals *[]principalRecord `json:"principals"`
-	}
-	if e = strictjson.Decode(data, &document); e != nil || document.Principals == nil || len(*document.Principals) > 128 {
-		return nil, ErrUnavailable
+	if e = strictjson.Decode(data, &document); e != nil || document.Principals == nil || len(*document.Principals)+len(document.Users) > 128 {
+		return credentialDocument{}, ErrUnavailable
 	}
 	ids, keys := map[string]bool{}, map[string]bool{}
 	for _, p := range *document.Principals {
 		key, e := hex.DecodeString(p.SHA256)
 		canonical := hex.EncodeToString(key)
-		if e != nil || len(key) != 32 || !identifier(p.ID, "principal:") || ids[p.ID] || keys[canonical] || len(p.Roles) < 1 || len(p.Roles) > 16 {
-			return nil, ErrUnavailable
+		if e != nil || len(key) != 32 || !identifier(p.ID, "principal:") || ids[p.ID] || keys[canonical] || !validRoles(p.Roles) {
+			return credentialDocument{}, ErrUnavailable
 		}
 		ids[p.ID] = true
 		keys[canonical] = true
-		roles := map[string]bool{}
-		for _, role := range p.Roles {
-			if (!identifier(role, "role:") && !identifier(role, "group:")) || roles[role] {
-				return nil, ErrUnavailable
-			}
-			roles[role] = true
+	}
+	users := map[string]bool{}
+	for _, u := range document.Users {
+		if !identifier(u.ID, "principal:") || ids[u.ID] || !validUsername(u.Username) || users[u.Username] || !password.ValidHash(u.PasswordHash) || !validRoles(u.Roles) {
+			return credentialDocument{}, ErrUnavailable
+		}
+		ids[u.ID] = true
+		users[u.Username] = true
+	}
+	return document, nil
+}
+func validRoles(roles []string) bool {
+	if len(roles) < 1 || len(roles) > 16 {
+		return false
+	}
+	seen := map[string]bool{}
+	for _, role := range roles {
+		if (!identifier(role, "role:") && !identifier(role, "group:")) || seen[role] {
+			return false
+		}
+		seen[role] = true
+	}
+	return true
+}
+func validUsername(name string) bool {
+	if len(name) < 3 || len(name) > 64 {
+		return false
+	}
+	for i, c := range name {
+		if !(c >= 'a' && c <= 'z' || c >= '0' && c <= '9' || i > 0 && (c == '.' || c == '_' || c == '-')) {
+			return false
 		}
 	}
-	return *document.Principals, nil
+	return true
 }
 func identifier(value, prefix string) bool {
 	if !strings.HasPrefix(value, prefix) || len(value) <= len(prefix) || len(value) > 128 {
@@ -107,14 +150,20 @@ func (a *Access) ResolveSession(id, fingerprint string) (Principal, error) {
 	if e != nil || len(key) != sha256.Size {
 		return Principal{}, ErrUnauthorized
 	}
-	entries, e := loadPrincipals(a.settings.Credentials)
+	document, e := loadCredentials(a.settings.Credentials)
 	if e != nil {
 		return Principal{}, e
 	}
-	for _, entry := range entries {
+	for _, entry := range *document.Principals {
 		digest, _ := hex.DecodeString(entry.SHA256)
 		if subtle.ConstantTimeCompare(key, digest) == 1 && entry.ID == id {
 			return Principal{ID: entry.ID, Roles: append([]string(nil), entry.Roles...)}, nil
+		}
+	}
+	for _, u := range document.Users {
+		digest, _ := hex.DecodeString(userFingerprint(u))
+		if !u.Disabled && u.ID == id && subtle.ConstantTimeCompare(key, digest) == 1 {
+			return Principal{ID: u.ID, Roles: append([]string(nil), u.Roles...)}, nil
 		}
 	}
 	return Principal{}, ErrUnauthorized

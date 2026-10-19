@@ -1,4 +1,5 @@
 {
+  "humanLogin": { "method": "登录方式", "methodPassword": "用户名与密码", "username": "用户名", "password": "密码", "show": "显示密码", "hide": "隐藏密码", "help": "使用管理员配置的本地账户。用户名为小写，密码不自动去除空格；支持密码管理器与粘贴。", "passwordLimit": "请输入 12–72 UTF-8 字节的密码（纯汉字最多 24 个）。", "rejected": "登录信息未被接受，请检查或联系管理员。", "unavailable": "本地密码登录已不可用，请使用访问密钥或联系管理员。" },
   "publicationConflictHelp": "写入已阻止，草稿已保留，但变更可能已经提交。请先检查最新状态和审计，再显式将最新配置载入编辑器后重试。",
   "nodes": {
     "title": "节点", "observations": "节点观测", "help": "当前凭据覆盖的 Agent 作用域 · Controller 只读观测", "refresh": "刷新节点",

@@ -12,6 +12,11 @@ const request = spec.components.schemas["controller.PublicationRequest"];
 request.additionalProperties = false;
 for (const property of Object.values(request.properties)) property.minLength = 1;
 const login = spec.components.schemas["controller.LoginRequest"];
+const humanLogin = spec.components.schemas["controller.PasswordLoginRequest"];
+humanLogin.additionalProperties = false;
+// JSON Schema counts Unicode characters; the handler additionally checks the
+// stricter UTF-8 byte bounds. Do not misdocument a 12-byte minimum as12characters.
+Object.assign(humanLogin.properties.password, { writeOnly: true, minLength: 1, maxLength: 72, description: "12–72 UTF-8 bytes; no trimming" });
 const bindingEdit = spec.components.schemas["controller.UpdateBindingEndpointsRequest"];
 bindingEdit.additionalProperties = false;
 bindingEdit.properties.reason.minLength = 1;

@@ -182,6 +182,15 @@ func (b *Browser) register(e *echo.Echo, limits ManagementLimits) {
 	g.Use(middleware.CSRFWithConfig(middleware.CSRFConfig{CookieName: "picketx_csrf", CookiePath: "/console/", CookieSecure: b.origin.Scheme == "https", CookieHTTPOnly: true, CookieSameSite: http.SameSiteStrictMode, ErrorHandler: func(c *echo.Context, _ error) error { return apiError(c, 403, "csrf_rejected") }}))
 	g.GET("/session", b.session)
 	g.POST("/login", func(c *echo.Context) error { return b.login(c, h.validate) })
+	g.POST("/login/password", func(c *echo.Context) error { return b.loginPassword(c, h.validate) }, middleware.RateLimiterWithConfig(middleware.RateLimiterConfig{
+		Store: middleware.NewRateLimiterMemoryStoreWithConfig(middleware.RateLimiterMemoryStoreConfig{Rate: 0.1, Burst: 5}),
+		IdentifierExtractor: func(c *echo.Context) (string, error) {
+			host, _, e := net.SplitHostPort(c.Request().RemoteAddr)
+			return host, e
+		},
+		ErrorHandler: func(c *echo.Context, _ error) error { return apiError(c, 400, "invalid_peer") },
+		DenyHandler:  func(c *echo.Context, _ string, _ error) error { return apiError(c, 429, "rate_limited") },
+	}))
 	g.POST("/logout", b.logout)
 	g.GET("/me", h.browserMe)
 	g.GET("/publication", h.browserPublication)
