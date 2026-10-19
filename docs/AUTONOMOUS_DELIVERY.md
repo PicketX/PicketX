@@ -2,7 +2,7 @@
 
 ## Managed human accounts acquisition — 2026-10-19T08:05Z
 
-Owner codex/managed-accounts; heartbeat08:05Z; short lease until09:20Z or explicit
+Owner codex/managed-accounts; heartbeat08:22Z; short lease until09:20Z or explicit
 release/merged+green main. Core mainb79e242/tree99c2068/mainCI39211404452 green;
 Agent main1084a336/tree3d9e0bf/mainCI39214825482 green; no open PRs at acquisition.
 PR32/Core and PR19/Agent leases explicitly released in final metadata. Agent19
@@ -16,6 +16,15 @@ or full-goal claim. Final exact PR/CI/tree/artifact/main evidence and lease rele
 belong in this PR's final metadata. Next after acceptance: OIDC/protocol identity
 where required, actual GiteaHTTPS/SSH and deployment/release hardening.
 中文：推进数据库权威的真实账户管理及可靠会话失效，不重做已合并的申请审批链路。
+
+Active [PR33](https://github.com/PicketX/PicketX/pull/33): backend local3739ba6,
+remote cdd2f01/treeafe7a7c. CI39221523972 Go117957691271 SUCCESS; Web117957690865
+intentional tests-first RED: actual key login then missing Accounts button at
+accounts.mjs43, 08:17:45Z. Local focused normal/race, vet/build, pinned reproducible
+OpenAPI and locked Web checks pass; full normal/race retain only known host Unix
+socket EPERM, so native full gates remain mandatory. Accounts UI and expanded
+real browser password/reset/revocation/audit/conflict/unknown/read-failure/capability
+coverage now implemented; green native evidence + independent review still pending.
 
 ## Access requests — code accepted; final integration gated 2026-10-19T06:33Z
 

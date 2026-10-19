@@ -4,6 +4,7 @@ package managementaccess
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"log/slog"
 	"os"
@@ -61,6 +62,52 @@ func TestDatabaseAccountsConcurrentUpdateHasOneWinner(t *testing.T) {
 	p, err := a.Accounts()
 	if err != nil || winners != 1 || stale != 1 || p.Revision != 2 || len(p.Events) != 2 || p.Accounts[0].Version != 2 {
 		t.Fatal(winners, stale, p, err)
+	}
+}
+
+func TestDatabaseAccountCapacityAndSharedPasswordBudget(t *testing.T) {
+	a, store, _ := databaseAccess(t)
+	for range cap(a.passwordSlots) {
+		a.passwordSlots <- struct{}{}
+	}
+	input := account.Change{Username: "alice", Password: "a real human password!", Roles: []string{"role:requester"}, Reason: "bounded work"}
+	if _, _, err := a.SaveAccount(0, "principal:operator", "", input); !errors.Is(err, ErrUnavailable) {
+		t.Fatal("unbounded password work", err)
+	}
+	for range cap(a.passwordSlots) {
+		<-a.passwordSlots
+	}
+	// Seed valid storage rows without spending128 bcrypt hashes on the capacity check.
+	rows := make([]storedAccount, 128)
+	for i := range rows {
+		rows[i] = storedAccount{ID: fmt.Sprintf("principal:account-%032x", i+1), Username: fmt.Sprintf("user%03d", i), Roles: `["role:requester"]`, PasswordHash: dummyPasswordHash, Version: 1}
+	}
+	if err := store.GORM().Table("management_accounts").Create(&rows).Error; err != nil {
+		t.Fatal(err)
+	}
+	if err := store.GORM().Exec("UPDATE management_identity_authority SET revision=128").Error; err != nil {
+		t.Fatal(err)
+	}
+	if _, _, err := a.SaveAccount(128, "principal:operator", "", input); !errors.Is(err, account.ErrInvalid) {
+		t.Fatal("capacity bypass", err)
+	}
+	p, err := a.Accounts()
+	if err != nil || p.Revision != 128 || len(p.Accounts) != 128 || len(p.Events) != 0 {
+		t.Fatal("capacity failure changed state", p, err)
+	}
+}
+
+func TestDatabaseAccountStartupRejectsFutureGeneration(t *testing.T) {
+	a, store, _ := databaseAccess(t)
+	_, _, err := a.SaveAccount(0, "principal:operator", "", account.Change{Username: "alice", Password: "a real human password!", Roles: []string{"role:requester"}, Reason: "seed"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = store.GORM().Exec("UPDATE management_accounts SET version=2").Error; err != nil {
+		t.Fatal(err)
+	}
+	if _, err = New(store.GORM(), a.settings, a.log); err == nil {
+		t.Fatal("future account generation accepted at startup")
 	}
 }
 

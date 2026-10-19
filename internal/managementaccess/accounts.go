@@ -123,8 +123,14 @@ func (a *Access) initializeAccounts() error {
 			if err = tx.Exec("INSERT INTO management_identity_authority(id,version,mode,revision) VALUES(1,1,'database',0)").Error; err != nil {
 				return ErrUnavailable
 			}
+			authority = &identityAuthority{ID: 1, Version: 1, Mode: "database"}
 		}
-		_, err = readAccountRows(tx)
+		users, err := readAccountRows(tx)
+		for _, u := range users {
+			if u.Version > uint64(authority.Revision) {
+				return ErrUnavailable
+			}
+		}
 		return err
 	})
 }

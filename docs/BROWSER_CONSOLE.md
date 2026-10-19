@@ -1,6 +1,6 @@
 # Operator browser console
 
-This document covers complete desired policy/facts publications, transactional audit and console deployment. Later [Grant](GRANT_MANAGEMENT.md) and [Resource](RESOURCE_MANAGEMENT.md) pages provide structured admin flows; [HTTP authorization](HTTP_AUTHORIZATION.md) is a separate scoped ingress integration. [Local human login](HUMAN_LOGIN.md) supports operator-provisioned password accounts; OIDC/account management and request/approval remain incomplete. Saving is **not node application**. Node observations are point-in-time reports, not independent kernel confirmation.
+This document covers complete desired policy/facts publications, transactional audit and console deployment. [Grant](GRANT_MANAGEMENT.md) and [Resource](RESOURCE_MANAGEMENT.md) pages provide structured admin flows; [HTTP authorization](HTTP_AUTHORIZATION.md) is a separate scoped ingress integration. [Local human login](HUMAN_LOGIN.md) retains file provisioning; [managed accounts](MANAGED_ACCOUNTS.md) adds explicit database-authoritative human lifecycle with permanent old-session invalidation. OIDC remains deferred. Request/independent approval is delivered separately. Saving is **not node application**. Node observations are point-in-time reports, not independent kernel confirmation.
 
 ## Run
 

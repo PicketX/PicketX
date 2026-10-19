@@ -126,6 +126,10 @@ select:focus-visible, fieldset:focus-visible, a:focus-visible { outline: 3px sol
 .grant-form { padding: 24px; background: white; border: 1px solid #c3cedb; border-radius: 8px; margin-block: 24px; }
 .requests-section .endpoint-option { display: flex; gap: 12px; align-items: center; min-height: 44px; overflow-wrap: anywhere; }
 .requests-section .endpoint-option input { width: 20px; height: 20px; flex: 0 0 20px; }
+.accounts-section .endpoint-option { display: flex; gap: 12px; align-items: center; min-height: 44px; overflow-wrap: anywhere; }
+.accounts-section .endpoint-option input { width: 20px; height: 20px; flex: 0 0 20px; }
+.accounts-section .grant-form h3 { margin-bottom: 20px; }
+.accounts-section .account-row button { margin-top: 16px; }
 .requests-section .grant-form > fieldset { border: 0; padding: 0; }
 .requests-section .grant-fields { margin-block: 20px; }
 .requests-section .grant-form > label { margin-top: 16px; }
