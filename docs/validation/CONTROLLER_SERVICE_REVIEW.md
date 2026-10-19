@@ -22,14 +22,20 @@ executor must establish full actual CI/raw/download/source/main gates separately
    freshness checks. Mode/revision/full accounts/events/event timestamps remain
    exact; mutation assertions prove durable differences are not normalized away.
 
-Three new regressions RED→GREEN, complete applicable Node15/15 no fail/skip.
+Three new regressions RED→GREEN, then complete applicable Node15/15 no fail/skip.
 Actual final native verification still required; no second reviewer/re-review.
 
-## Deferred Minor
-Type=simple can become active before its process completes exec, so immediate
-/proc identity inspection can fail transiently on a loaded runner. Existing actual
-UID/capability/executable checks fail closed and HTTP readiness remains separate.
-Defer bounded inspection polling; no claim that active alone establishes readiness.
+## CI-confirmed blocker regrade in the same open fix pass
+The sole review's potential Type=simple /proc race was initially a deferred Minor.
+Corrected native39298124906/install118215880462 then actually failed17:56:55Z on
+manual restart: observed UID0 vs expected999 before systemd dropped identity/exec.
+This run is NOT acceptance. Regrade to Important by actual effect; the first fix
+pass was not complete because native remained red. Two real controlled child-process
+tests RED with immediate inspection: delayed exec rejected and persistent mismatch
+did not receive bounded retries. GREEN after bounded actual identity observation;
+all UID/capability/executable/manager-PID checks remain mandatory, and actual HTTP
+readiness must confirm the SAME inspected current PID. Full applicable Node17/17.
+No second review; no deferred Minor remains in this increment.
 
 ## Rulings I made (ordered, costs)
 1. Autonomous mandate waives routine artifact/execution/push/merge pauses; retain
@@ -76,6 +82,7 @@ static ELF/content/source checks, screenshots, expected-head merge/parents and f
 main acceptance + immediate lease release belong in PR36 metadata. All gates remain
 mandatory after fixes; this record does not itself assert native success.
 
-中文：一次独立全分支评审，2项阻塞已真实回归RED→GREEN修复，15项适用Node通过；
-1项Type=simple进程检查潜在时序抖动延后。全部取舍/代价如上；不冒称整机重启、在线
+中文：一次独立全分支评审，2项阻塞及随后CI证实并升级的时序阻塞均在同一未完成
+修复阶段用真实回归RED→GREEN解决，17项适用Node通过；无新遗留Minor。取舍/代价
+如上；不冒称整机重启、在线
 备份、Agent执行或生产自动安装。最终准确CI/下载产物/main及立即释放以PR36为准。

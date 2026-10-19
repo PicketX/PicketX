@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
+import { mkdtemp, readFile, readlink, realpath, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { spawnSync } from 'node:child_process'
-import { renderControllerUnit } from './controller-service-fixture.mjs'
+import { spawn, spawnSync } from 'node:child_process'
+import { once } from 'node:events'
+import { renderControllerUnit, waitForControllerIdentity } from './controller-service-fixture.mjs'
 import { durableServiceView } from './controller-service-evidence.mjs'
 
 test('shipped unit with space-containing relocated paths passes actual systemd parser', async t => {
@@ -29,4 +30,33 @@ test('accounts restore ignores only changing read-time observation, not durable 
 })
 test('accounts restore rejects absent or invalid observation metadata', () => {
   for (const at of [undefined, '', 'not-a-time']) assert.throws(() => durableServiceView('accounts', accounts(at)))
+})
+async function transitionProcess(t) {
+  // Shell builtins open their own procfs status, so this works when the procfs
+  // mount exposes an outer PID namespace and /proc/<tid>/children is unavailable.
+  const child = spawn('/bin/sh', ['-c', 'while read -r key value; do case "$key" in Tgid:) printf "%s\\n" "$value"; break;; esac; done < /proc/self/status; read -r value; exec /bin/sleep 30'], { stdio: ['pipe', 'pipe', 'ignore'] })
+  await once(child, 'spawn')
+  t.after(async () => { const exit = once(child, 'exit'); child.kill('SIGKILL'); await exit })
+  const [bytes] = await once(child.stdout, 'data'), pid = bytes.toString().trim()
+  assert.match(pid, /^[1-9]\d*$/)
+  return { child, proc: `/proc/${pid}` }
+}
+test('identity barrier waits for actual process exec rather than active parent identity', async t => {
+  const { child, proc } = await transitionProcess(t), expected = await realpath('/bin/sleep')
+  let attempts = 0
+  const pid = await waitForControllerIdentity(async () => {
+    const executable = await readlink(proc + '/exe')
+    if (++attempts === 1) child.stdin.end('continue\n')
+    assert.equal(executable, expected, 'real child has not completed exec')
+    return child.pid
+  })
+  assert.equal(pid, child.pid); assert(attempts >= 2)
+})
+test('identity barrier fails closed within bounded time for a persistently wrong real process', async t => {
+  const { proc } = await transitionProcess(t), expected = await realpath('/bin/sleep')
+  let attempts = 0
+  await assert.rejects(waitForControllerIdentity(async () => {
+    attempts++; assert.equal(await readlink(proc + '/exe'), expected)
+  }, 200))
+  assert(attempts >= 2)
 })

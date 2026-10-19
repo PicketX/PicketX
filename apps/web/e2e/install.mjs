@@ -50,7 +50,9 @@ try {
   async function ready() {
     for (let n = 0; n < 150; n++) {
       if (child) assert.equal(child.exitCode, null, 'packaged Controller exited before ready')
-      try { if ((await fetch(origin + '/readyz')).ok) return } catch { /* real process startup */ }
+      let ready = false
+      try { ready = (await fetch(origin + '/readyz')).ok } catch { /* real process startup */ }
+      if (ready) { if (service) await service.confirmCurrent(); return }
       await new Promise(r => setTimeout(r, 100))
     }
     throw new Error('packaged Controller readiness deadline')

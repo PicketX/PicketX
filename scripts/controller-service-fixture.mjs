@@ -7,6 +7,15 @@ import { randomBytes, createHash } from 'node:crypto'
 import { spawnSync } from 'node:child_process'
 
 const pause = () => new Promise(r => setTimeout(r, 100))
+export async function waitForControllerIdentity(check, timeoutMs = 20000) {
+  const deadline = Date.now() + timeoutMs
+  let error
+  while (Date.now() < deadline) {
+    try { return await check() } catch (cause) { error = cause }
+    await pause()
+  }
+  throw error ?? new Error('actual Controller process identity deadline')
+}
 function command(binary, args, check = true) {
   const result = spawnSync(binary, args, { encoding: 'utf8', timeout: 30000, maxBuffer: 4 << 20 })
   if (check) assert.equal(result.status, 0, `${binary} failed: ${result.stderr}`)
@@ -46,8 +55,8 @@ export async function createControllerService({ temp, bundle, stateParent }) {
   const proof = { status: 'pending', manager: command('systemd-analyze', ['--version']).stdout.split('\n')[0], processes: [], crashRestarted: false }
   const expectedBinary = join(bundle, 'bin/picketx-controller')
   const binarySHA256 = createHash('sha256').update(await readFile(expectedBinary)).digest('hex')
-  let uid, gid
-  async function inspect() {
+  let uid, gid, lastPID
+  async function inspect(record = true) {
     const pid = Number(value('MainPID')); assert(pid > 0)
     const proc = await readFile(`/proc/${pid}/status`, 'utf8')
     const actualUID = proc.match(/^Uid:\s+(\d+)/m)?.[1]
@@ -60,8 +69,9 @@ export async function createControllerService({ temp, bundle, stateParent }) {
     assert.equal(value('ProtectSystem'), 'strict')
     assert.equal(value('NoNewPrivileges'), 'yes')
     assert.equal(value('Restart'), 'on-failure')
+    assert.equal(Number(value('MainPID')), pid, 'process changed during identity observation')
     const result = { pid, uid, capabilities, noNewPrivileges, binarySHA256 }
-    proof.processes.push(result)
+    if (record) { proof.processes.push(result); lastPID = pid }
     return pid
   }
   async function stop() {
@@ -104,8 +114,9 @@ export async function createControllerService({ temp, bundle, stateParent }) {
         command('systemd-analyze', ['verify', '--man=no', '--generators=no', unitPath])
         ctl('daemon-reload'); ctl('start', unit)
         assert.equal(value('ActiveState'), 'active'); assert.equal(value('Type'), 'simple')
-        await inspect()
+        await waitForControllerIdentity(() => inspect())
       },
+      async confirmCurrent() { assert.equal(await inspect(false), lastPID, 'HTTP readiness changed inspected PID') },
       stop,
       async crashRestart() {
         const old = Number(value('MainPID')); assert(old > 0)
@@ -113,7 +124,7 @@ export async function createControllerService({ temp, bundle, stateParent }) {
         for (let n = 0; n < 200; n++) {
           const pid = Number(value('MainPID'))
           if (pid > 0 && pid !== old && value('ActiveState') === 'active') {
-            assert(Number(value('NRestarts')) >= 1); await inspect()
+            assert(Number(value('NRestarts')) >= 1); await waitForControllerIdentity(() => inspect())
             proof.crashRestarted = true; return
           }
           await pause()
