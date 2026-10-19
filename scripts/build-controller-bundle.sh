@@ -14,7 +14,7 @@ if [[ -n $(git status --porcelain --untracked-files=all) ]]; then
 fi
 mkdir -m 755 "$output"
 mkdir "$output/bin" "$output/deploy"
-CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -trimpath -tags 'netgo osusergo sqlite_omit_load_extension' -ldflags '-linkmode external -extldflags -static' -o "$output/bin/picketx-controller" ./cmd/picketx-controller
+CC=musl-gcc CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -trimpath -tags 'netgo osusergo sqlite_omit_load_extension' -ldflags '-linkmode external -extldflags -static' -o "$output/bin/picketx-controller" ./cmd/picketx-controller
 CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -o "$output/bin/picketx" ./cmd/picketx
 for binary in "$output/bin/picketx-controller" "$output/bin/picketx"; do
   file "$binary"
@@ -34,12 +34,13 @@ if [[ -n $(find apps/web/dist -type l -print -quit) ]]; then
 fi
 cp -R apps/web/dist "$output/web"
 cp LICENSE "$output/LICENSE"
+node scripts/collect-bundle-licenses.mjs "$output"
 cp deploy/controller/README.md deploy/controller/README.zh-CN.md deploy/controller/picketx-controller.service "$output/deploy/"
 printf '{"commit":"%s","tree":"%s","platform":"linux-amd64"}\n' "$(git rev-parse HEAD)" "$(git rev-parse 'HEAD^{tree}')" > "$output/SOURCE.json"
 (
   cd "$output"
-  find bin web deploy -type f -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS
-  sha256sum LICENSE SOURCE.json >> SHA256SUMS
+  find bin web deploy licenses -type f -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS
+  sha256sum LICENSE THIRD_PARTY_NOTICES.md SOURCE.json >> SHA256SUMS
   sha256sum --check SHA256SUMS
 )
 echo "Built standalone Controller bundle: $output"

@@ -20,7 +20,6 @@ test('bundle rejects existing directory and symlink without modifying them', asy
     }
   } finally { await rm(parent, { recursive: true, force: true }) }
 })
-
 test('untracked source cannot be attributed to the committed tree', async () => {
   const parent = await mkdtemp(join(tmpdir(), 'picketx-bundle-source-'))
   try {

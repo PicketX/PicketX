@@ -10,7 +10,7 @@ React `web/`。Go/npm/Python、额外共享库只用于构建，运行不需要�
 ## 构建与检查
 
 在干净、已提交的源码目录，准备 go.mod 指定的 Go、.node-version 指定的 Node、
-npm、静态 C 工具链、file/readelf/coreutils：
+npm、Ubuntu/Debian 的 musl-tools、file/readelf/coreutils：
 
 ```sh
 bash scripts/build-controller-bundle.sh /absolute/new/controller-bundle
@@ -21,6 +21,9 @@ sha256sum --check SHA256SUMS
 输出目录必须不存在；SOURCE.json 记录源码提交/树。SHA256 证明内容一致，不证明
 发布者身份：通过可信渠道获取文件并核对 CI 源码证据，不以 root 运行任意 PR 包。
 不会自动发布 Release。先移动到最终部署路径，再初始化。
+Controller 显式使用 musl-gcc；CLI 使用 CGO_ENABLED=0。保留仓库第三方声明及
+实际 Go/npm/musl/编译器许可原文，放在 licenses/，索引版本并纳入 SHA256SUMS；
+许可收集不是完整法律审查，也不替代任何上游许可。
 
 ## 手工安装非特权服务
 
@@ -38,6 +41,8 @@ sudo -u picketx /opt/picketx/bin/picketx controller-init \
 权威 ID，不监听、不授予访问。I/O 失败保留私有半成品供检查，不重试覆盖，也不删除
 活跃状态。配置为合法 YAML 的 JSON 语法，均用绝对路径；移动须停服后显式改配置，
 不能重跑初始化。
+origin 必须符合浏览器规范写法：小写 ASCII/punycode 主机、规范 IP/压缩 IPv6，
+端口无前导零且省略默认80/443；否则初始化在写文件前拒绝，避免浏览器规范化后无法登录。
 
 检查 controller.yaml：策略来源与人员账户均为 database 权威，无文件策略/facts
 轮询；私有 SQLite 在 controller/state/controller.sqlite。默认仅回环 HTTP8080、

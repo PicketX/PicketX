@@ -174,3 +174,30 @@ func TestControllerInitRejectsBeforeWriting(t *testing.T) {
 		}
 	}
 }
+
+// Browser clients normalize these before sending Host/Origin; retaining the raw
+// value would create an instance whose console always responds 403.
+func TestControllerInitRejectsNoncanonicalBrowserOrigins(t *testing.T) {
+	assets := initAssets(t)
+	for _, origin := range []string{"https://PicketX.example", "https://picketx.example:443", "http://localhost:80", "http://127.0.0.1:08080", "http://[0:0:0:0:0:0:0:1]:8080", "https://127.1", "https://123", "https://:8443"} {
+		t.Run(origin, func(t *testing.T) {
+			dir := filepath.Join(t.TempDir(), "no-output")
+			if _, err := initCommand(t, dir, assets, "--origin", origin); err == nil {
+				t.Fatal("accepted browser-noncanonical origin")
+			}
+			if _, err := os.Stat(dir); !os.IsNotExist(err) {
+				t.Fatal("created unusable instance")
+			}
+		})
+	}
+	for _, origin := range []string{"https://picketx.example", "https://picketx.example:8443", "http://[::1]:8080"} {
+		dir := filepath.Join(t.TempDir(), "valid")
+		if _, err := initCommand(t, dir, assets, "--origin", origin); err != nil {
+			t.Fatal("canonical origin rejected", origin, err)
+		}
+		c, err := runtimeconfig.Load(filepath.Join(dir, "controller.yaml"), nil, nil)
+		if err != nil || c.Browser.Origin != origin {
+			t.Fatal("canonical origin not preserved", err)
+		}
+	}
+}

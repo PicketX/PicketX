@@ -12,7 +12,7 @@ The systemd file is a template: native process/browser acceptance is not a boot 
 ## Build and inspect
 
 In a clean committed checkout with Go (version in go.mod), Node (in .node-version),
-npm, a static C toolchain, file/readelf/coreutils:
+npm, Ubuntu/Debian musl-tools, file/readelf/coreutils:
 
 ```sh
 bash scripts/build-controller-bundle.sh /absolute/new/controller-bundle
@@ -21,6 +21,10 @@ sha256sum --check SHA256SUMS
 ```
 
 The output must not already exist. SOURCE.json records the exact commit/tree.
+Controller builds explicitly with musl-gcc; CLI uses CGO_ENABLED=0. The bundle keeps
+THIRD_PARTY_NOTICES.md and verbatim installed Go/npm/musl/compiler notices under
+licenses/, indexed with dependency versions and covered by SHA256SUMS. Notice
+collection is not comprehensive legal clearance; no upstream license is replaced.
 SHA256 detects corruption, not publisher identity: obtain the archive/checksum
 through a trusted channel and compare the expected source to CI evidence. Do not
 run arbitrary PR artifacts with host privileges. No release is automatically
@@ -45,6 +49,9 @@ existing target, generates a unique authority, opens no listener and installs no
 Grant. On I/O failure the partial private directory remains for inspection; do not
 retry into it or delete live state. The config is JSON syntax, valid YAML. It uses
 absolute paths; relocate by an explicit stopped-service config edit, not by rerun.
+Origins must use browser-canonical spelling: lowercase ASCII/punycode host, canonical
+IP/compressed IPv6, no padded port or explicit default80/443. Noncanonical origins
+are rejected before writes, since browser normalization would otherwise prevent login.
 
 Inspect `controller.yaml`. Source and human-account authority are **database**, not
 file polling; policy/facts are deliberately absent. SQLite is private

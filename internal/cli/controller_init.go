@@ -9,9 +9,11 @@ import (
 	"fmt"
 	"net"
 	"net/netip"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 
 	"github.com/PicketX/PicketX/internal/management"
 	"github.com/PicketX/PicketX/pkg/httpauth"
@@ -64,7 +66,7 @@ func (o controllerInitOptions) validate() error {
 	if err != nil || !info.Mode().IsRegular() {
 		return fmt.Errorf("assets require a regular index.html")
 	}
-	if err := management.ValidateBrowserOrigin(o.origin); err != nil {
+	if err := validateInstallOrigin(o.origin); err != nil {
 		return err
 	}
 	if !httpauth.ValidID(o.agentRef) || !httpauth.ValidID(o.routeID) {
@@ -86,6 +88,55 @@ func (o controllerInitOptions) validate() error {
 			return fmt.Errorf("listeners must be distinct")
 		}
 		seen[key] = true
+	}
+	return nil
+}
+
+// The browser adapter intentionally compares the configured origin literally.
+// Refuse spellings browsers normalize instead of creating an inaccessible console.
+// This is installation validation only; existing runtime contracts are unchanged.
+func validateInstallOrigin(origin string) error {
+	if err := management.ValidateBrowserOrigin(origin); err != nil {
+		return err
+	}
+	u, _ := url.Parse(origin)
+	host := strings.ToLower(u.Hostname())
+	if host == "" {
+		return fmt.Errorf("browser origin requires hostname")
+	}
+	for _, c := range host {
+		if c > 127 {
+			return fmt.Errorf("use canonical ASCII/punycode browser origin")
+		}
+	}
+	if ip, err := netip.ParseAddr(host); err == nil {
+		if ip.Is4In6() || ip.Zone() != "" {
+			return fmt.Errorf("use unmapped unzoned browser origin")
+		}
+		host = ip.String()
+		if ip.Is6() {
+			host = "[" + host + "]"
+		}
+	} else {
+		// WHATWG URL parsing treats numeric final labels as legacy IPv4 forms.
+		labels := strings.Split(strings.TrimSuffix(host, "."), ".")
+		last := labels[len(labels)-1]
+		digits := last != ""
+		for _, c := range last {
+			digits = digits && c >= '0' && c <= '9'
+		}
+		if _, err := strconv.ParseUint(last, 0, 32); err == nil || digits {
+			return fmt.Errorf("use canonical IP address in browser origin")
+		}
+	}
+	if port := u.Port(); port != "" {
+		n, _ := strconv.Atoi(port)
+		if !(u.Scheme == "http" && n == 80 || u.Scheme == "https" && n == 443) {
+			host += ":" + strconv.Itoa(n)
+		}
+	}
+	if u.Scheme+"://"+host != origin {
+		return fmt.Errorf("use canonical browser origin (lowercase host, compressed IPv6, no default or padded port)")
 	}
 	return nil
 }

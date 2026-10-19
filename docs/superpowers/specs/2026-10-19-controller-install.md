@@ -16,7 +16,8 @@ Defaults: HTTP127.0.0.1:8080, Agent127.0.0.1:9090, local decision127.0.0.1:9081;
 operator may explicitly override each with a loopback IP and nonzero port.
 Agent ref defaults node-a and ingress route UID route-web; both configurable and
 validated against the existing contracts. Authority is newly randomized per init.
-Origin uses the existing exact HTTPS/loopback-HTTP validation.
+Origin uses existing exact HTTPS/loopback-HTTP validation plus install-only rejection
+of browser-noncanonical host/IP/default/padded port spellings before writing.
 
 Generate three independent cryptographically random256-bit keys, raw files
 bootstrap-key/agent-token/ingress-token0600; respective SHA256-only registries
@@ -33,9 +34,11 @@ Trusted parent and exclusive service user remain deployment requirements.
 
 Build script produces a new output directory only; rejects existing output, copies
 regular Web files (no symlinks), includes licenses and bilingual runbooks. Build
-requires Go/CGO/static C toolchain, Node/npm and readelf; runtime does not. It runs
+requires Go/CGO/Ubuntu-Debian musl-tools, Node/npm and readelf; runtime does not. It runs
 locked npm ci/typecheck/lint/build, verifies no ELF INTERP/NEEDED for both binaries,
-records source commit/tree and SHA256 manifest. No automatic GitHub Release upload.
+records source commit/tree and SHA256 manifest. Retains project third-party notices
+and verbatim Go/npm/musl/compiler license files with an index and checksums; this
+does not certify comprehensive legal clearance. No automatic GitHub Release upload.
 Bundle remains relocatable until init; config uses absolute deployment paths.
 Sample systemd unit is manually installed with explicit unprivileged user, unit
 and /opt paths; no root auto-installer, no claim of boot compatibility from lint.

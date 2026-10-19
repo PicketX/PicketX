@@ -105,7 +105,15 @@ jobs:
       - name: Reject existing bundle targets before building
         run: node --test scripts/controller-bundle.test.mjs
       - name: Build and inspect standalone Linux-amd64 Controller bundle
-        run: bash scripts/build-controller-bundle.sh "$RUNNER_TEMP/controller-bundle"
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y musl-tools
+          musl-gcc --version
+          bash scripts/build-controller-bundle.sh "$RUNNER_TEMP/controller-bundle"
+      - name: Retained distribution notices and dependency licenses
+        env:
+          PICKETX_TEST_BUNDLE: ${{ runner.temp }}/controller-bundle
+        run: node --test scripts/controller-bundle-notices.test.mjs
       - name: Archive and re-extract executable installation payload
         run: |
           tar -C "$RUNNER_TEMP/controller-bundle" -czf "$RUNNER_TEMP/controller-linux-amd64.tar.gz" .
