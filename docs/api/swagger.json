@@ -669,7 +669,11 @@
             "controller.PasswordLoginRequest": {
                 "properties": {
                     "password": {
-                        "type": "string"
+                        "type": "string",
+                        "writeOnly": true,
+                        "minLength": 1,
+                        "maxLength": 72,
+                        "description": "12–72 UTF-8 bytes; no trimming"
                     },
                     "username": {
                         "maxLength": 64,
@@ -681,7 +685,8 @@
                     "password",
                     "username"
                 ],
-                "type": "object"
+                "type": "object",
+                "additionalProperties": false
             },
             "controller.PublicationRequest": {
                 "properties": {

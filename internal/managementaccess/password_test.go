@@ -5,9 +5,11 @@ import (
 	"encoding/json"
 	"errors"
 	"os"
+	"runtime"
 	"strings"
 	"sync"
 	"testing"
+	"time"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -137,6 +139,7 @@ func TestHumanCredentialDocumentFailsClosed(t *testing.T) {
 		"hash alphabet":      strings.Replace(string(valid), hash, strings.Repeat("!", 60), 1),
 		"role":               strings.Replace(string(valid), `"roles":["role:admin"]`, `"roles":["admin"]`, 1),
 		"unknown":            strings.Replace(string(valid), `"disabled":false`, `"disabled":false,"password":"secret"`, 1),
+		"null users":         strings.Replace(string(valid), `"users":[{`, `"users":null,"extra":[{`, 1),
 	} {
 		t.Run(name, func(t *testing.T) {
 			if e := os.WriteFile(path, []byte(doc), 0600); e != nil {
@@ -157,5 +160,36 @@ func TestHumanCredentialDocumentFailsClosed(t *testing.T) {
 		if _, _, e := h.AuthenticatePassword(pair[0], pair[1]); !errors.Is(e, ErrUnauthorized) {
 			t.Fatal(pair[0], e)
 		}
+	}
+}
+
+func TestHumanPasswordVerificationHasBoundedConcurrency(t *testing.T) {
+	a, _, path := fixture(t)
+	h := humanAPI(t, a)
+	userDocument(t, path, []string{"role:admin"}, false, testHumanHash(t))
+	results := make(chan error, 4)
+	for range 4 {
+		go func() { _, _, e := h.AuthenticatePassword("unknown", humanPassword); results <- e }()
+	}
+	deadline := time.Now().Add(10 * time.Second)
+	for len(a.passwordSlots) != 4 && time.Now().Before(deadline) {
+		runtime.Gosched()
+	}
+	if len(a.passwordSlots) != 4 {
+		t.Fatal("actual bcrypt checks never occupied all slots")
+	}
+	if _, _, e := h.AuthenticatePassword("alice", humanPassword); !errors.Is(e, ErrUnavailable) {
+		t.Fatal("unbounded password work", e)
+	}
+	if _, e := a.Authenticate(token); e != nil {
+		t.Fatal("password CPU gate blocked API key", e)
+	}
+	for range 4 {
+		if e := <-results; !errors.Is(e, ErrUnauthorized) {
+			t.Fatal("unknown user authenticated", e)
+		}
+	}
+	if _, _, e := h.AuthenticatePassword("alice", humanPassword); e != nil {
+		t.Fatal("verification slots not released", e)
 	}
 }

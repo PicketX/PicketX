@@ -130,3 +130,33 @@ func TestBrowserPasswordStrictInputAndPeerLimit(t *testing.T) {
 		t.Fatal("password limit blocked key recovery", w.Code)
 	}
 }
+
+func TestBrowserPasswordRejectionsDoNotEnumerateAccounts(t *testing.T) {
+	h, path, _ := browserFixture(t)
+	writeBrowserUser(t, path, []string{"role:admin"}, false)
+	b := browserClient{h: h, cookies: map[string]*http.Cookie{}}
+	b.bootstrap(t)
+	var rejected string
+	for _, body := range []string{`{"username":"alice","password":"wrong human password"}`, `{"username":"nobody","password":"a human browser password!"}`} {
+		w := b.request("POST", "/console/api/v1/login/password", body, "http://127.0.0.1:8080", b.csrf)
+		if w.Code != 401 {
+			t.Fatal(w.Code, w.Body.String())
+		}
+		if rejected == "" {
+			rejected = w.Body.String()
+		} else if w.Body.String() != rejected {
+			t.Fatal("account existence disclosed")
+		}
+	}
+	writeBrowserUser(t, path, []string{"role:admin"}, true)
+	w := b.request("POST", "/console/api/v1/login/password", `{"username":"alice","password":"a human browser password!"}`, "http://127.0.0.1:8080", b.csrf)
+	if w.Code != 401 || w.Body.String() != rejected {
+		t.Fatal("disabled status disclosed", w.Code, w.Body.String())
+	}
+	if e := os.WriteFile(path, []byte(`{"principals":[],"users":null}`), 0600); e != nil {
+		t.Fatal(e)
+	}
+	if w = b.request("GET", "/console/api/v1/session", "", "", ""); w.Code != 503 {
+		t.Fatal("broken authority silently disabled password login", w.Code)
+	}
+}

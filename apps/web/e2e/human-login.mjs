@@ -45,8 +45,12 @@ export async function humanLogin({ browser, origin, principalPath, root, evidenc
   await page.getByText('Desired configuration saved. Node application is not confirmed.', { exact: true }).waitFor()
   const recorded = await page.evaluate(async () => {
     const publication = await (await fetch('/console/api/v1/publication')).json()
-    const audit = await (await fetch('/console/api/v1/audit?limit=100')).json()
-    return { publication, audit }
+    const events = []; let after = 0, part
+    do {
+      part = await (await fetch(`/console/api/v1/audit?limit=100&after=${after}`)).json()
+      events.push(...part.events); after = part.next_after
+    } while (part.events.length === 100)
+    return { publication, audit: { events } }
   })
   assert.equal(recorded.publication.revision, prior.revision + 1)
   assert(recorded.audit.events.some(e => e.actor === 'principal:alice' && e.reason === 'Human login actual publication'))

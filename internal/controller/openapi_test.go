@@ -128,7 +128,7 @@ func TestBrowserOpenAPIContract(t *testing.T) {
 	for _, route := range []struct {
 		path, method string
 		private      bool
-	}{{"session", "get", false}, {"login", "post", false}, {"logout", "post", false}, {"me", "get", true}, {"publication", "get", true}, {"publication", "put", true}, {"audit", "get", true}, {"http-decisions", "get", true}} {
+	}{{"session", "get", false}, {"login", "post", false}, {"login/password", "post", false}, {"logout", "post", false}, {"me", "get", true}, {"publication", "get", true}, {"publication", "put", true}, {"audit", "get", true}, {"http-decisions", "get", true}} {
 		op := spec.Paths["/console/api/v1/"+route.path][route.method]
 		if op.OperationID == "" {
 			t.Fatal("missing browser route", route)
@@ -142,6 +142,36 @@ func TestBrowserOpenAPIContract(t *testing.T) {
 	s := spec.Components.SecuritySchemes["BrowserCookie"]
 	if s.In != "cookie" || s.Name != "picketx_session" {
 		t.Fatal(s)
+	}
+}
+
+func TestHumanPasswordOpenAPIIsStrictAndSecret(t *testing.T) {
+	raw, e := os.ReadFile("../../docs/api/swagger.json")
+	if e != nil {
+		t.Fatal(e)
+	}
+	var spec struct {
+		Components struct {
+			Schemas map[string]struct {
+				AdditionalProperties *bool    `json:"additionalProperties"`
+				Required             []string `json:"required"`
+				Properties           map[string]struct {
+					WriteOnly bool   `json:"writeOnly"`
+					MaxLength int    `json:"maxLength"`
+					Type      string `json:"type"`
+				} `json:"properties"`
+			} `json:"schemas"`
+		} `json:"components"`
+	}
+	if e = json.Unmarshal(raw, &spec); e != nil {
+		t.Fatal(e)
+	}
+	login := spec.Components.Schemas["controller.PasswordLoginRequest"]
+	if login.AdditionalProperties == nil || *login.AdditionalProperties || len(login.Required) != 2 || !login.Properties["password"].WriteOnly || login.Properties["password"].MaxLength != 72 {
+		t.Fatal("password contract not strict/secret/bounded", login)
+	}
+	if spec.Components.Schemas["controller.SessionResponse"].Properties["password_login"].Type != "boolean" {
+		t.Fatal("missing method discovery")
 	}
 }
 func TestAuthorizationContractHasSeparateCallerSecurity(t *testing.T) {

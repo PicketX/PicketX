@@ -13,6 +13,17 @@ Full local baseline has only existing Unix socket EPERM; native full gates remai
 mandatory. OIDC/account CRUD and self-service request/approval remain incomplete.
 中文：推进真实人员登录，不重复已完成的联合内核验收，不宣称整个目标完成。
 
+[PR30](https://github.com/PicketX/PicketX/pull/30) first remote2a08627/local0d1af4c,
+treef48c373a22a447f0a9c5f3b2516d32e768e98f23 ran39196241105. Raw Web117879517643
+passed all existing key/management/Nginx/application suites, then RED at the
+expected missing Sign-in method control. Backend capability/CLI/HTTP tests were
+RED→GREEN locally. UI now consumes actual password login/session discovery;
+locked npm ci/typecheck/lint/build pass. Local full normal/race retain only baseline
+Unix EPERM; vet/build pass. Added bounded real concurrent bcrypt and strict secret
+OpenAPI coverage. Required final exact-head native CI and independent review remain.
+No merge or complete-product claim. Final immutable evidence/lease release go here
+and in PR30; next self-service request/approval and account lifecycle improvements.
+
 ## Named Binding Endpoint editing (active)
 
 Owner codex/binding-endpoint-edit; heartbeat2026-10-19T00:37Z; lease until01:37Z
