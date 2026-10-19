@@ -1,6 +1,53 @@
 # Autonomous delivery checkpoint
 
-## Local human login — active 2026-10-19T03:39Z
+## Local human login delivered — 2026-10-19T04:14Z
+
+[PR30](https://github.com/PicketX/PicketX/pull/30) merged by expected head
+fb6ab9a04e2859e6a804cdd297d4e422b028dfb3 to main
+5c8f4c91ef84a81afba45a645eb21ecb74be4dde. Local6c37ac5, remote head, actual
+Go/Web CI checkout7cc4f127138a36d798c33f4f2fa65978f0006859 and merged main share
+tree8f53344a1db26b36bc7b2878f4f189b980ea25f4. CI39197895181 Go117884507768/
+Web117884507579 SUCCESS. Raw220 top-level/555 total tests, no fail/skip/race;
+actual Unix100repeat, pinned protobuf/OpenAPI, vet/build, fully-static Controller/
+CLI, SQLite/gRPC/persistence/restart/SIGTERM all pass. MainCI39198514343 is being
+verified; final immutable result and automatic lease release are recorded in PR30.
+
+Delivered: private-file local human users, bcrypt12 stdin provisioning, existing
+SCS/Casbin with per-request trusted roles and credential binding, rotation/disable/
+removal, strict Origin/CSRF and local peer/CPU bounds. Real EN/ZH React login uses
+actual APIs. Native Chromium confirms human publication/revision/exact persisted
+policy/audit actor, viewer backend denial, logout replay, rotated-password sign-in,
+disabled-user401 and fresh method discovery; all existing key/Nginx/application/
+IPv6/grant/route/management suites pass. Native UI bytes were visually inspected at
+375/1440; artifact12162945624 SHA256
+93673fb0ac164644648aeb0ac2eb4bc96b814c48a71df8f95ab59429f181fa71 independently
+matches the downloaded ZIP. UI/UX skills retained the established design system.
+
+Independent fresh-context whole-branch review9122dee..03f7fab found no unresolved
+production blockers or deferred minors. A comment-only no-op publication fixture,
+hidden-view locator ambiguity and refresh/automatic401 test race were corrected in
+the same verification/fix pass; complete final native gates pass. No production
+authority/CAS/revocation guard was weakened. Full rulings/costs and exact review
+scope: [HUMAN_LOGIN_REVIEW.md](validation/HUMAN_LOGIN_REVIEW.md). Local full normal/
+race still has baseline Unix socket EPERM; native passed it; no skip was added.
+
+Agent remains e013926/treeb58e0e7/mainCI39191015351 green. Its PR17/18 already
+delivered the actual combined browser/Controller/gRPC/Agent/nftables/Nginx/app
+acceptance; do not redo that as unimplemented work. No new Agent/kernel claim is
+inferred from human login. Basic completion still requires the roadmap's persistent
+human request/approval workflow, request-bound verified identities where required,
+remaining account/OIDC/deployment/release work. Next: requests and basic approval
+using human audit IDs plus scoped Grant publication; requester identity is not a
+network source and approval/publication is not confirmation of application.
+
+Delivery-record reconciliation owner codex/local-human-login; heartbeat04:18Z,
+short lease until05:00Z or merged+green main/explicit release. This follow-up only
+synchronizes English/Chinese checkpoint facts, no product code. Its PR metadata
+records exact final head/CI/main and releases this lease. Below is historical
+acquisition evidence: old active titles are not new work or permanent locks.
+中文：人员本地密码登录已合并并通过完整原生验证；最后主线证据与租约释放以PR最终记录为准。
+
+## Local human login acquisition — historical 2026-10-19T03:39Z
 
 Owner codex/local-human-login; heartbeat03:39Z; short lease until05:00Z or explicit
 release/merged+green main. Core maina99d9fc/tree52746b5/mainCI39183852826 green;
