@@ -6,15 +6,21 @@
 
 ## 策略与信任
 
-`HTTPRoute`与Resource、来源Grant、NetworkDeny属于同一严格`picketx.io/v1alpha1`完整发布，沿用文件或数据库单一权威。它通过`resourceRef:{name,uid}`和`endpointName`固定引用已有TCP入口；必须明确非空`host`、`methods`、`paths`。Host为规范小写DNS/IP authority，可含明确数字端口，应与客户端实际发送值一致。方法仅GET/HEAD/POST/PUT/PATCH/DELETE/OPTIONS，不默认HEAD、不支持通配。路径仅精确匹配；拒绝非ASCII、百分号转义、反斜杠、重复斜杠、点段。查询参数不参与授权，也不审计；不能用它保护仅靠查询参数区分的应用操作。保留同一route UID时不能更换Resource/Endpoint/Host；更换目标应新建UID并显式更新入口映射。
+`HTTPRoute`与Resource、来源Grant、NetworkDeny属于同一严格`picketx.io/v1alpha1`完整发布，沿用文件或数据库单一权威。它通过`resourceRef:{name,uid}`和`endpointName`固定引用已有TCP入口；必须明确非空`host`、`methods`以及至少一个精确路径或路径段前缀。Host为规范小写DNS/IP authority，可含明确数字端口，应与客户端实际发送值一致。方法仅GET/HEAD/POST/PUT/PATCH/DELETE/OPTIONS，不默认HEAD、不支持通配。`paths`仅精确匹配；所有路径均拒绝非ASCII、百分号转义、反斜杠、重复斜杠、点段。查询参数不参与授权，也不审计；不能用它保护仅靠查询参数区分的应用操作。保留同一route UID时不能更换Resource/Endpoint/Host；更换目标应新建UID并显式更新入口映射。
 
 路由匹配仍须来源有有效Grant且没有有效NetworkDeny；Grant并集、独立绝对期限、未来生效、撤销与deny优先不变。时间由服务端提供。申请人、Cookie、X-Forwarded-For、声明用户名都不是已验证请求身份。本alpha不支持要求验证用户身份的策略，也不降级为IP允许。HTTP允许不代表内核应用或绕过已有网络门禁；未配置网络Binding的资源可明确仅用HTTP集成。本段未提供Agent HTTP执行或Controller断连HTTPProvider。
 
 ## 结构化管理
 
-数据库权威模式下，工作台“HTTP 路由”页可创建与查看精确路由。选择固定的
+路径选择新增显式 `pathPrefixes`（管理API为 `path_prefixes`）：`/repo` 匹配自身、
+`/repo/` 和 `/repo/child`，不匹配 `/repository`。显式根路径 `/` 覆盖所有有效规范
+路径；其他以斜杠结尾的前缀无效。精确路径与前缀取并集，合计最多128项；至少
+填写一项。未使用的列表必须省略，显式空列表或null均拒绝，即使另一列表非空。
+既有精确路径语义不变，不新增隐式通配、glob或正则；原有规范路径校验始终保留。
+
+数据库权威模式下，工作台“HTTP 路由”页可创建与查看路由。选择固定的
 Resource 和 TCP 端点，填写实际请求 Host（含端口）、明确勾选方法并逐行填写
-精确路径。必须填写原因并使用当前版本；Viewer 不可写。失败或冲突保留草稿，
+精确路径和/或路径段前缀，二者分开填写。必须填写原因并使用当前版本；Viewer 不可写。失败或冲突保留草稿，
 对结果不确定的请求应先检查路由列表，再明确使用最新版本重试。
 
 Bearer API 为 `POST /api/v1/http-routes`，要求强 `If-Match` 与最大16KiB严格JSON：

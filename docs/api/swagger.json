@@ -441,6 +441,13 @@
                     "name": {
                         "type": "string"
                     },
+                    "path_prefixes": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
                     "paths": {
                         "items": {
                             "type": "string"
@@ -699,6 +706,17 @@
                         "type": "string",
                         "minLength": 1
                     },
+                    "path_prefixes": {
+                        "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 8192
+                        },
+                        "maxItems": 128,
+                        "minItems": 1,
+                        "type": "array",
+                        "uniqueItems": true
+                    },
                     "paths": {
                         "items": {
                             "type": "string",
@@ -731,13 +749,25 @@
                     "host",
                     "methods",
                     "name",
-                    "paths",
                     "reason",
                     "resource_name",
                     "resource_uid"
                 ],
                 "type": "object",
-                "additionalProperties": false
+                "additionalProperties": false,
+                "anyOf": [
+                    {
+                        "required": [
+                            "paths"
+                        ]
+                    },
+                    {
+                        "required": [
+                            "path_prefixes"
+                        ]
+                    }
+                ],
+                "description": "At least one exact path or segment prefix, maximum128 selectors combined. Omitted lists contribute nothing; explicit empty/null lists invalid. Prefix /repo matches itself and /repo/ descendants, not /repository. Explicit / covers every canonical path."
             },
             "controller.CreateResourceRequest": {
                 "properties": {
@@ -3638,11 +3668,11 @@
                             "schema": {
                                 "$ref": "#/components/schemas/controller.CreateHTTPRouteRequest",
                                 "summary": "route",
-                                "description": "Strict JSON16KiB; explicit exact host, methods and paths; server-generated UID"
+                                "description": "Strict JSON16KiB; exact host/methods; paths and/or path_prefixes, at most128 combined; omitted lists contribute nothing, empty/null invalid; server-generated UID"
                             }
                         }
                     },
-                    "description": "Strict JSON16KiB; explicit exact host, methods and paths; server-generated UID",
+                    "description": "Strict JSON16KiB; exact host/methods; paths and/or path_prefixes, at most128 combined; omitted lists contribute nothing, empty/null invalid; server-generated UID",
                     "required": true
                 },
                 "responses": {
@@ -3760,7 +3790,7 @@
                         "ManagementBearer": []
                     }
                 ],
-                "summary": "Create an exact HTTPRoute for a pinned TCP endpoint; does not grant access or configure ingress",
+                "summary": "Create an HTTPRoute for a pinned TCP endpoint; does not grant access or configure ingress",
                 "tags": [
                     "management"
                 ]
@@ -7216,11 +7246,11 @@
                             "schema": {
                                 "$ref": "#/components/schemas/controller.CreateHTTPRouteRequest",
                                 "summary": "route",
-                                "description": "Pinned TCP endpoint, exact selectors and audit reason"
+                                "description": "Pinned TCP endpoint, exact Host/methods, explicit exact paths and/or segment prefixes, audit reason"
                             }
                         }
                     },
-                    "description": "Pinned TCP endpoint, exact selectors and audit reason",
+                    "description": "Pinned TCP endpoint, exact Host/methods, explicit exact paths and/or segment prefixes, audit reason",
                     "required": true
                 },
                 "responses": {
@@ -7338,7 +7368,7 @@
                         "BrowserCookie": []
                     }
                 ],
-                "summary": "Create an exact HTTPRoute using operator session and CSRF protection",
+                "summary": "Create an HTTPRoute using operator session and CSRF protection",
                 "tags": [
                     "console"
                 ]

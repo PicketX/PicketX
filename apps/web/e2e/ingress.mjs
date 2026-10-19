@@ -44,6 +44,25 @@ export async function startIngress({ root, temp, authzPort, token, routeID = 'ro
   }
   return {
     port, url: `http://127.0.0.1:${port}`, count: () => count,
+    async verifyPrefixRoute(allowed) {
+      const before = count
+      let socket
+      for (const path of ['/repo', '/repo/', '/repo/owner/project', '/repo/assets/app.js?cache=1']) {
+        const r = await request({ path }); assert.equal(r.status, allowed ? 200 : 403, `${path}: ${logs}`)
+        if (!socket && connection) assert.equal(r.socket, connection, 'Grant changes must reevaluate the same live connection')
+        if (socket) assert.equal(r.socket, socket, 'Nested requests must reuse a connection')
+        socket = r.socket
+      }
+      assert.equal(count, before + (allowed ? 4 : 0))
+      const after = count
+      for (const input of [{ path: '/repository' }, { path: '/repo-other/child' }, { path: '/repo/child', method: 'POST' }, { path: '/repo/child', host: 'other.example' }, { path: '/repo/child', source: '127.0.0.2', headers: { 'X-Forwarded-For': '127.0.0.1' } }]) {
+        const r = await request(input); assert(r.status >= 400, JSON.stringify(input)); if (!input.source) assert.equal(r.socket, socket)
+      }
+      for (const path of ['/repo/%2e%2e/allowed', '/repo/../allowed', '/repo//child']) assert((await request({ path })).status >= 400)
+      assert.equal(count, after, 'Boundary/canonical/Host/method/source denial must not reach application')
+      const r = await request({ path: '/repo/child' }); assert.equal(r.status, allowed ? 200 : 403)
+      connection = r.socket
+    },
     async verifyExactRoute(allowed) {
       const before = count; const r = await request(); assert.equal(r.status, allowed ? 200 : 403, logs)
       assert.equal(count, before + (allowed ? 1 : 0))

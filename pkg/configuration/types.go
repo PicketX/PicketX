@@ -111,7 +111,8 @@ type httpRouteSpec struct {
 	EndpointName string      `json:"endpointName"`
 	Host         string      `json:"host"`
 	Methods      []string    `json:"methods"`
-	Paths        []string    `json:"paths"`
+	Paths        []string    `json:"paths,omitempty"`
+	PathPrefixes []string    `json:"pathPrefixes,omitempty"`
 }
 
 // Bundle owns decoded policy and cannot be changed through exported fields.

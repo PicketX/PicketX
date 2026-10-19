@@ -1,5 +1,56 @@
 # Autonomous delivery checkpoint
 
+## Explicit HTTP path prefixes — acquisition 2026-10-19T10:18Z
+
+Owner codex/http-path-prefixes; heartbeat10:46Z; short lease until11:25Z or explicit
+release/merged+green main. Core main31c7ac7/treef53e60e/mainCI39225809309 and Agent
+main937b34c/treec5a3d5e/mainCI39234459599 accepted; no open PRs at acquisition.
+PR33/Core and PR20/Agent final metadata explicitly release previous leases.
+Preserve host-owned isolated worktree codex/resource-onboarding. Focused spec/plan:
+superpowers/{specs,plans}/2026-10-19-http-path-prefixes.md. Exact-only L7 cannot
+express real Gitea repository/static subtrees; add explicit segment-prefix
+selectors and actual API/React/Nginx acceptance, preserving exact semantics,
+source authorization and independent lifetimes. No Agent/kernel changes. Gitea
+HTTPS/SSH and deployment/release acceptance remain pending; whole goal incomplete.
+Final immutable commit/PR/CI/tree/archive proof and lease release belong in final
+PR metadata. 中文：补齐真实目录级七层授权，不用入口绕过代替授权。
+
+Active PR34: initial remote790b728/tree89923e8, CI39237338173 Web118009489186
+tests-first RED at10:28:15Z: real Chromium cannot find prefix field in old UI
+(http-prefixes.mjs24), after existing exact-route/removal suites pass. Config/API,
+explicit-empty serialization and non-null inventory tests each observed RED→GREEN.
+Corrected full local normal/race retain only known Unix socket EPERM; vet/build,
+pinned OpenAPI and locked Web typecheck/lint/build pass. Real prefix UI is now
+implemented; final native green evidence, independent review and merge are pending.
+
+Code accepted local975a313/remote26282e1/actualcheckout40ec08a share tree
+b8ae773f9f56972926fb940aecfd7c2d9e230217. Native39237922431 Go118011427841 /
+Web118011427553 SUCCESS; raw244 top/596 total zero fail/skip/race, full Unix100,
+static Controller/SQLite/gRPC/DB/SIGTERM and CLI checks, locked Web plus actual
+Chromium/Nginx prefix-only creation/nested/boundary/canonical/Host/method/source/
+reused-connection revoke all pass. ZIP12179963297 actualSHA256
+438814e154716c6ccd3d40952048a3a4f0d22f3f62466b4d0fa3acb72d0dfe75 matches
+metadata; EN/ZH375/1440 inspected. One independent whole-branch review no Critical/
+Important; English selector-limit wording and pre-existing retained feedback
+language are deferred Minors. Complete rulings/costs and evidence:
+validation/HTTP_PATH_PREFIXES_REVIEW.md. Final documentation-only head still needs
+full native CI and expected-head merge/main recheck; immutable final proof and
+immediate lease release in PR34 metadata. Next: actual Gitea HTTPS/SSH conjunction
+using this additive Core contract; explicit root/segment route scope and native
+Gitea accounts/tokens/SSH keys remain distinct from portal/source authorization.
+
+Final39238841570/Web118014445576 passed but Go118014445917 failed existing
+new-credential test at runtime_test.go241 Send EOF before its intended retry.
+This run is NOT acceptance; later mandatory Go steps skipped, no merge performed.
+One CI-found Important test-only fix pass retrieves real rejection status after
+Send EOF, retries only Unauthenticated with bounded fresh connections, verifies
+pre-registration rejection, and retains exact agent-b/revision1/two-target receipt.
+Native RED→local race100 GREEN; pre-fix local100 happened to pass, not a claimed
+reproduction. Production authentication unchanged. Added mandatory native100
+repeat gate; new exact-head full CI and main recheck still required. Full details
+in validation/HTTP_PATH_PREFIXES_REVIEW.md. Prior prefix code acceptance remains
+valid evidence of its source tree, not a substitute for this final fixed head.
+
 ## Managed human accounts acquisition — 2026-10-19T08:05Z
 
 Owner codex/managed-accounts; heartbeat08:41Z; short lease until09:20Z or explicit

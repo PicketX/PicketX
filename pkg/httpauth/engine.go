@@ -4,6 +4,7 @@ package httpauth
 import (
 	"fmt"
 	"slices"
+	"strings"
 
 	"github.com/PicketX/PicketX/pkg/core"
 )
@@ -12,6 +13,7 @@ type Route struct {
 	ID                       string
 	Resource, Endpoint, Host string
 	Methods, Paths           []string
+	PathPrefixes             []string
 }
 type Engine struct {
 	network *core.Engine
@@ -25,7 +27,7 @@ func Compile(snapshot core.Snapshot, routes []Route) (*Engine, error) {
 	}
 	out := &Engine{network: n, routes: map[string]Route{}}
 	for _, r := range routes {
-		if !ValidID(r.ID) || !validHost(r.Host) || len(r.Methods) == 0 || len(r.Methods) > 7 || len(r.Paths) == 0 || len(r.Paths) > 128 {
+		if !ValidID(r.ID) || !validHost(r.Host) || len(r.Methods) == 0 || len(r.Methods) > 7 || len(r.Paths)+len(r.PathPrefixes) == 0 || len(r.Paths)+len(r.PathPrefixes) > 128 || (r.Paths != nil && len(r.Paths) == 0) || (r.PathPrefixes != nil && len(r.PathPrefixes) == 0) {
 			return nil, fmt.Errorf("invalid HTTP route")
 		}
 		if _, ok := out.routes[r.ID]; ok {
@@ -58,8 +60,17 @@ func Compile(snapshot core.Snapshot, routes []Route) (*Engine, error) {
 			}
 			paths[p] = true
 		}
+		prefixes := map[string]bool{}
+		for _, p := range r.PathPrefixes {
+			v, err := requestPath(p)
+			if err != nil || p != v || (p != "/" && strings.HasSuffix(p, "/")) || prefixes[p] {
+				return nil, fmt.Errorf("invalid/duplicate route path prefix")
+			}
+			prefixes[p] = true
+		}
 		r.Methods = slices.Clone(r.Methods)
 		r.Paths = slices.Clone(r.Paths)
+		r.PathPrefixes = slices.Clone(r.PathPrefixes)
 		out.routes[r.ID] = r
 	}
 	return out, nil
@@ -83,7 +94,14 @@ func (e *Engine) Decide(q Query) (core.Decision, error) {
 		return core.Decision{Reason: "unknown-route"}, nil
 	}
 	p, _ := requestPath(q.URI)
-	if q.Host != r.Host || !slices.Contains(r.Methods, q.Method) || !slices.Contains(r.Paths, p) {
+	match := slices.Contains(r.Paths, p)
+	for _, prefix := range r.PathPrefixes {
+		if prefix == "/" || p == prefix || strings.HasPrefix(p, prefix+"/") {
+			match = true
+			break
+		}
+	}
+	if q.Host != r.Host || !slices.Contains(r.Methods, q.Method) || !match {
 		return core.Decision{Reason: "route-mismatch"}, nil
 	}
 	return e.network.Decide(core.Query{Source: q.Source, ResourceName: r.Resource, EndpointName: r.Endpoint, Action: "connect", At: q.At})

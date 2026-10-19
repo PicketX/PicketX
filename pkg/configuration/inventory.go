@@ -53,7 +53,7 @@ func (b *Bundle) Inventory(f Facts) Inventory {
 	for _, o := range b.objects {
 		switch s := o.Spec.(type) {
 		case httpRouteSpec:
-			out.HTTPRoutes = append(out.HTTPRoutes, InventoryHTTPRoute{o.Metadata.Name, o.Metadata.UID, s.ResourceRef.Name, s.ResourceRef.UID, s.EndpointName, s.Host, slices.Clone(s.Methods), slices.Clone(s.Paths)})
+			out.HTTPRoutes = append(out.HTTPRoutes, InventoryHTTPRoute{o.Metadata.Name, o.Metadata.UID, s.ResourceRef.Name, s.ResourceRef.UID, s.EndpointName, s.Host, slices.Clone(s.Methods), append([]string{}, s.Paths...), slices.Clone(s.PathPrefixes)})
 		case resourceSpec:
 			r := InventoryResource{Name: o.Metadata.Name, UID: o.Metadata.UID, Endpoints: []InventoryEndpoint{}}
 			for _, e := range s.Endpoints {
@@ -86,17 +86,18 @@ type InventoryHTTPRoute struct {
 	Host         string   `json:"host"`
 	Methods      []string `json:"methods"`
 	Paths        []string `json:"paths"`
+	PathPrefixes []string `json:"path_prefixes,omitempty"`
 }
 
 // AddHTTPRoute preserves existing source. The complete candidate compiler must
 // validate the pinned TCP target and selectors before the result is published.
 func (b *Bundle) AddHTTPRoute(in InventoryHTTPRoute) ([]byte, error) {
-	if strings.TrimSpace(in.Name) == "" || len(in.Name) > 128 || !uidPattern.MatchString(in.UID) {
+	if strings.TrimSpace(in.Name) == "" || len(in.Name) > 128 || !uidPattern.MatchString(in.UID) || (in.Paths != nil && len(in.Paths) == 0) || (in.PathPrefixes != nil && len(in.PathPrefixes) == 0) || len(in.Paths)+len(in.PathPrefixes) == 0 || len(in.Paths)+len(in.PathPrefixes) > 128 {
 		return nil, fmt.Errorf("invalid HTTPRoute")
 	}
 	return b.appendObject(document{APIVersion, "HTTPRoute", metadata{Name: in.Name, UID: in.UID}, httpRouteSpec{
 		ResourceRef: resourceRef{Name: in.ResourceName, UID: in.ResourceUID}, EndpointName: in.EndpointName,
-		Host: in.Host, Methods: slices.Clone(in.Methods), Paths: slices.Clone(in.Paths),
+		Host: in.Host, Methods: slices.Clone(in.Methods), Paths: slices.Clone(in.Paths), PathPrefixes: slices.Clone(in.PathPrefixes),
 	}})
 }
 

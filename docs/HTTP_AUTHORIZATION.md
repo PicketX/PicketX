@@ -13,9 +13,14 @@ their authentication. Agent source/wire and its native evidence are unchanged.
 `HTTPRoute` is part of the same strict `picketx.io/v1alpha1` publication as Resources,
 source Grants and NetworkDenies, in either file or database authority mode. It pins
 `resourceRef:{name,uid}` and `endpointName` to an existing TCP Endpoint. It requires
-exact canonical `host`, explicit nonempty `methods` and `paths` arrays. Methods are
+exact canonical `host`, explicit nonempty `methods` and at least one path selector. Methods are
 GET/HEAD/POST/PUT/PATCH/DELETE/OPTIONS, with no implicit HEAD or wildcard. Paths are
-exact, not prefixes; non-ASCII, escapes (`%`), backslashes, duplicate slashes and dot
+exact. Optional `pathPrefixes` adds path-segment prefixes: `/repo` matches itself,
+`/repo/` and `/repo/child`, not `/repository`. Explicit `/` covers all canonical
+paths; other trailing-slash prefixes are invalid. Exact and prefix selectors form
+a union, at most128 combined. Omitted lists contribute nothing; explicit empty or
+null lists are invalid, even with another nonempty list. No implicit wildcard,
+glob or regex is added. Non-ASCII, escapes (`%`), backslashes, duplicate slashes and dot
 segments are rejected. Query strings do not affect authorization and are never audited.
 Do not use this adapter for application actions distinguished only by query parameters.
 Host is a lowercase DNS/IP authority, optionally with explicit numeric port; include
@@ -34,9 +39,11 @@ or Controller-disconnected HTTP provider is supplied here.
 ## Structured management
 
 In database-authority mode, use **HTTP routes** in the operator console to create
-and inspect exact routes. Select a pinned Resource and TCP Endpoint, enter the
+and inspect routes. Select a pinned Resource and TCP Endpoint, enter the
 actual request Host (including port), explicitly select methods and list exact
-paths. A reason and current revision are required. Viewer roles cannot write.
+paths and/or segment prefixes in separate fields. The API uses `path_prefixes`,
+the manifest uses `pathPrefixes`; unused lists must be omitted, not empty/null.
+A reason and current revision are required. Viewer roles cannot write.
 Failed/conflicting operations retain drafts; inspect the catalog and explicitly
 use the latest route revision before retrying an ambiguous result.
 

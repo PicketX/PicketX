@@ -1,6 +1,6 @@
 # PicketX 配置与领域模型设计
 
-后续[HTTP alpha契约](HTTP_AUTHORIZATION.zh-CN.md)向同一权威增加固定TCP资源入口的精确`HTTPRoute`约束，复用来源Grant/NetworkDeny，不推断已验证身份或增加网络权限，Agent协议不变。
+后续[HTTP alpha契约](HTTP_AUTHORIZATION.zh-CN.md)向同一权威增加固定TCP资源入口的精确路径与显式路径段前缀`HTTPRoute`约束，复用来源Grant/NetworkDeny，不推断已验证身份或增加网络权限，Agent协议不变。
 
 > [English (Default)](CONFIGURATION_MODEL.md) | 简体中文
 

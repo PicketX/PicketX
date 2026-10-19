@@ -6,6 +6,7 @@ import { createHash } from 'node:crypto'
 import { freePort, startIngress } from './ingress.mjs'
 import { httpRouteRemoval } from './http-route-removal.mjs'
 import { rejectedMutationReceipt } from './mutation-receipts.mjs'
+import { httpPrefixManagement } from './http-prefixes.mjs'
 
 export async function httpRouteManagement({ operator, view, origin, token, root, temp, authzPort, ingressToken, callersPath, evidence }) {
   const ingressPort = await freePort()
@@ -79,5 +80,6 @@ export async function httpRouteManagement({ operator, view, origin, token, root,
   assert(await view.evaluate(() => document.documentElement.scrollWidth <= innerWidth))
   await view.screenshot({ path: join(evidence, 'http-routes-viewer-mobile.png'), fullPage: true })
   await httpRouteRemoval({ operator, view, api, route, ingressPort, root, temp, authzPort, ingressToken, callersPath, evidence })
+  await httpPrefixManagement({ operator, api, root, temp, authzPort, ingressToken, callersPath, evidence })
   console.log('PASS real HTTPRoute browser creation → CAS/audit → explicit caller/Nginx → application; source deny/grant/revoke, exact selectors, preserved draft, failed read, viewer and mobile')
 }
