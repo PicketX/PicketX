@@ -2,7 +2,7 @@
 
 ## Access requests / independent approval — active 2026-10-19T05:38Z
 
-Owner codex/access-requests; heartbeat05:38Z, short lease until07:08Z or explicit
+Owner codex/access-requests; heartbeat06:16Z, short lease until07:08Z or explicit
 release/merged+green main. Core main3f06ad3/tree9e7697f/mainCI39199382201 green;
 Agent maine013926/treeb58e0e7/mainCI39191015351 green; neither has open PRs.
 Prior PR30/31 leases released. Host-owned isolated worktree retained, clean base
@@ -13,6 +13,24 @@ Baseline full Go has only known Unix socket EPERM; full native gates mandatory.
 No Agent/kernel change, no OIDC/full-goal completion claim. Final immutable evidence,
 remaining items and automatic lease release belong in this PR's final metadata.
 中文：推进持久申请与独立审批，真实API/数据库/页面及完整验证后安全合并。
+
+PR32 is draft, remote7e8a30b/tree54365d5. Native39208177332 complete Go gates pass;
+Web held-GET/navigation regression RED leaves logout disabled. One independent
+whole-branch review00c9729..91682bc found4 Important and1 Minor; same fix pass covers
+UI read/write ownership, custom capability composition, sameUID Grant provenance
+and postcommit readback. Actual SQLite/HTTP/service/restart regressions now pass;
+final native Web/full exact-head gates pending. Minor Chinese reason byte feedback
+deferred; full decisions/costs in validation/ACCESS_REQUESTS_REVIEW.md. Earlier
+native fixture/schema/label failures were not accepted, no production guard weakened.
+Local full normal retains Unix EPERM; serial race also reproduced existing coalesce
+deadline under concurrent load; native exact-source proof required, no test skipped.
+Next after acceptance: final new workflow→privileged Agent/Nginx/application
+conjunction, account lifecycle/OIDC as roadmap requires, and release hardening.
+Fix-pass code local3d2ccc8 / remoteb7e2237192f5fecd1fc6342f67862cfb74b35dc5
+shares tree93b9da0d88372ca3fc0cbdb04206dc15b1cc8e6d. CI39208921145 is running.
+Final metadata/documentation head, exact CI checkout/tree/main result and lease
+auto-release must be verified in PR32 after this pending handoff; do not infer
+acceptance from an earlier code head or claim UI/kernel application from approval.
 
 ## Local human login delivered — 2026-10-19T04:14Z
 

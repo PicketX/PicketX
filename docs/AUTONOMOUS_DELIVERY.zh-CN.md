@@ -2,13 +2,25 @@
 
 ## 访问申请/独立审批 — 进行中 2026-10-19T05:38Z
 
-负责人codex/access-requests；心跳05:38Z，短租约至07:08Z或明确释放/合并且main成功。
+负责人codex/access-requests；心跳06:16Z，短租约至07:08Z或明确释放/合并且main成功。
 Core main3f06ad3/tree9e7697f/mainCI39199382201成功；Agent maine013926/treeb58e0e7/
 mainCI39191015351成功；两仓库无开放PR，PR30/31租约已释放。保留宿主管理的隔离工作区，
 干净基线local00c9729与main同树。设计/计划：superpowers/{specs,plans}/2026-10-19-access-requests.md。
 实现真实持久申请、独立缩限审批/拒绝、中英文页面及审批/Grant/审计/发布事务；
 不混淆申请人和网络来源。本地完整Go基线仍仅既有Unix socket EPERM，完整原生门禁必需。
 无Agent/内核变更，不宣称OIDC或整体完成。最终准确证据、剩余项与租约释放记录于对应PR。
+
+PR32仍为草稿；本地3d2ccc8与远端b7e2237192f5fecd1fc6342f67862cfb74b35dc5
+同树93b9da0d88372ca3fc0cbdb04206dc15b1cc8e6d，CI39208921145正在验证。
+之前CI39208177332的Go门禁全部通过；Web真实挂起GET/导航回归复现退出被锁住。
+一次独立全分支评审00c9729..91682bc发现四项Important和一项Minor；同一修复轮覆盖
+页面读写操作归属、自定义能力组合、同UID的Grant当前范围观测和提交后额外查询。
+真实SQLite/HTTP/Agent服务修订/重启回归已通过，最终准确head的完整原生门禁尚待核实。
+中文原因UTF8字节反馈Minor延后；取舍与风险详见validation/ACCESS_REQUESTS_REVIEW.md。
+之前凭据fixture/静态schema/隐藏标签失败均未当作验收，也未放宽生产守卫。本地完整普通
+测试仅Unix EPERM；串行race并发负载时仍复现既有coalesce期限错误，保留失败，不跳测试。
+验收后下一段推进新审批流程与特权Agent/Nginx/应用联合场景，再按路线图完善账户/OIDC
+及发布加固；未证明整体目标完成，不暂停开发。
 
 ## 本地人员登录已交付 — 2026-10-19T04:14Z
 
