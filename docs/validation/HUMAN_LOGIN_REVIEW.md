@@ -56,5 +56,12 @@ and checks the actual textarea.readOnly property, matching existing viewer gates
 This is a test-only correction in the same verification/fix pass, not an additional
 production feature or a new review verdict; complete native gates remain mandatory.
 
+Native39197422809 passed publication/audit, viewer denial, logout and rotated login,
+then showed a test race: retained feature reads can observe disablement and remove
+the shell before the test clicks Refresh. The helper now explicitly observes real
+cookie-authenticated /me200 before rotation/disable, real401 afterward, then reloads
+to obtain fresh session/method discovery. Automatic revocation is not weakened or
+treated as failure; timing-dependent clicks are removed, not security assertions.
+
 中文：独立全分支评审无遗留阻塞或延后小项；已复现并修正语义无效的浏览器夹具。
 原生完整 CI 仍为合并前硬门槛；上述部署/账户平台/第三方兼容及内核声明边界保留。
