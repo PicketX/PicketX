@@ -85,6 +85,47 @@ export async function resourceNetworkEditing({ operator: p, view, origin, token,
   await rebase(); await ack().check(); assert(await save().isDisabled())
   await p.getByText('This Resource is absent from the draft revision. Cancel and inspect the latest inventory; a same-name replacement is a different target.', { exact: true }).waitFor()
   await p.getByRole('button', { name: 'Cancel network edit', exact: true }).click()
+  // A full-publication writer may reorder or change membership. Identity is
+  // the Endpoint name, never its array position in a retained edit draft.
+  const pair = [{ name: 'a', protocol: 'TCP', port: 80 }, { name: 'b', protocol: 'TCP', port: 443 }]
+  const paired = await write('/resources', { name: 'network-edit-pair', endpoints: pair, reason: 'Prepare named comparison' }, 'POST')
+  assert.equal(paired.status, 201); const pairTarget = await paired.json()
+  await p.getByRole('button', { name: 'Use latest resource revision', exact: true }).click(); await settled()
+  await open(pairTarget.uid)
+  await p.getByLabel('Resource change reason', { exact: true }).fill('Compare immutable Endpoint names')
+  const replacePair = async change => {
+    const current = await (await fetch(`${origin}/api/v1/publication`, { headers })).json()
+    let count = 0
+    const policy = current.policy.split('\n').map(line => {
+      if (!line.startsWith('{')) return line
+      const doc = JSON.parse(line)
+      if (doc.kind !== 'Resource' || doc.metadata.uid !== pairTarget.uid) return line
+      count++; change(doc.spec.endpoints); return JSON.stringify(doc)
+    }).join('\n')
+    assert.equal(count, 1)
+    const result = await write('/publication', { policy, facts: current.facts, reason: 'Concurrent Endpoint layout change' })
+    assert.equal(result.status, 200)
+  }
+  await replacePair(entries => entries.reverse())
+  await rebase(); await ack().check()
+  assert(await save().isDisabled(), 'Reordering must not turn an unchanged named draft into a change')
+  await p.getByLabel('Endpoint 1 port', { exact: true }).fill('443')
+  await p.getByLabel('Endpoint 2 port', { exact: true }).fill('80')
+  await ack().check()
+  assert(await save().isEnabled(), 'Named network changes must remain saveable after a concurrent reorder')
+  const pairSaved = p.waitForResponse(r => r.url().endsWith(`/resources/${pairTarget.uid}/network`))
+  await save().click(); assert.equal((await pairSaved).status(), 200); await settled()
+  assert.deepEqual((await inventory()).resources.find(r => r.uid === pairTarget.uid).endpoints,
+    [{ ...pair[1], port: 80 }, { ...pair[0], port: 443 }])
+  await open(pairTarget.uid)
+  await p.getByLabel('Endpoint 1 port', { exact: true }).fill('81')
+  await p.getByLabel('Resource change reason', { exact: true }).fill('Do not overwrite changed membership')
+  await replacePair(entries => entries.push({ name: 'c', network: { protocol: 'TCP', port: 8443 } }))
+  await rebase(); await ack().check()
+  assert(await save().isDisabled(), 'Incompatible Endpoint membership requires cancelling the old draft')
+  await p.getByText('Endpoint membership changed in the latest revision. Cancel this draft and reopen the Resource before editing.', { exact: true }).waitFor()
+  assert.equal(await p.getByLabel('Endpoint 1 port', { exact: true }).inputValue(), '81')
+  await p.getByRole('button', { name: 'Cancel network edit', exact: true }).click()
   await view.getByRole('button', { name: 'Resources', exact: true }).click()
   assert.equal(await view.getByRole('button', { name: 'Edit network parameters', exact: true }).count(), 0)
   const forbidden = await view.evaluate(async () => {
