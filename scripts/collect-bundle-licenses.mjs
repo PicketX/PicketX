@@ -8,7 +8,7 @@ import { join, resolve } from 'node:path'
 
 const output = resolve(process.argv[2]), index = []
 await mkdir(join(output, 'licenses')) // Exclusive, never overwrite an older collection.
-const notice = /^(license|licence|copying|copyright|notice|patents)(?:[._-].*)?$/i
+const notice = /^(license|licence|copying|copyright|notice|patents)(?:[._-].*)?$|^third[-_ ]party.*(?:licen[sc]e|notice)/i
 async function collect(root, directory, includeAll = false) {
   const result = []
   for (const entry of await readdir(join(root, directory), { withFileTypes: true })) {
@@ -19,7 +19,7 @@ async function collect(root, directory, includeAll = false) {
   }
   return result.sort()
 }
-async function retain(dependency, version, root, prefix) {
+async function retain(dependency, version, root, prefix, noticeSource) {
   assert(root, 'missing installed module directory: ' + dependency)
   const files = await collect(root, '')
   assert(files.length, 'no upstream notice files: ' + dependency)
@@ -30,7 +30,7 @@ async function retain(dependency, version, root, prefix) {
     await cp(join(root, file), join(output, target), { errorOnExist: true, force: false })
     paths.push(target)
   }
-  index.push({ dependency, version, files: paths })
+  index.push({ dependency, version, files: paths, ...(noticeSource ? { noticeSource } : {}) })
 }
 const run = (program, args) => execFileSync(program, args, { encoding: 'utf8', maxBuffer: 8 << 20, stdio: ['ignore', 'pipe', 'pipe'] }).trim()
 const modules = new Set(run('go', ['list', '-deps', '-f', '{{if .Module}}{{if not .Module.Main}}{{.Module.Path}}|{{.Module.Version}}|{{.Module.Dir}}{{end}}{{end}}', './cmd/picketx', './cmd/picketx-controller']).split('\n').filter(Boolean))
@@ -39,9 +39,19 @@ for (const entry of [...modules].sort()) {
   await retain(dependency, version, directory, join('go', dependency + '@' + version))
 }
 const npmRoots = run('npm', ['ls', '--omit=dev', '--all', '--parseable', '--prefix', 'apps/web']).split('\n').slice(1)
+const packages = []
 for (const directory of [...new Set(npmRoots)].sort()) {
   const meta = JSON.parse(await readFile(join(directory, 'package.json'), 'utf8'))
-  await retain(meta.name, meta.version, directory, join('npm', meta.name + '@' + meta.version))
+  packages.push({ directory, meta, notices: await collect(directory, '') })
+}
+const repository = m => String(m.repository?.url ?? m.repository ?? '').replace(/^git\+/, '').replace(/\.git\/?$/, '').replace(/\/$/, '')
+for (const p of packages) {
+  // Platform binding packages sometimes ship only the native binary. Their
+  // same-version/same-repository/same-SPDX parent ships the verbatim project and
+  // third-party texts. Record that provenance; never synthesize a license from SPDX.
+  const source = p.notices.length ? p : packages.find(q => q.notices.length && repository(p.meta) && repository(q.meta) === repository(p.meta) && q.meta.version === p.meta.version && typeof p.meta.license === 'string' && q.meta.license === p.meta.license)
+  assert(source, 'no verifiable upstream notice source: ' + p.meta.name)
+  await retain(p.meta.name, p.meta.version, source.directory, join('npm', p.meta.name + '@' + p.meta.version), source === p ? undefined : `${source.meta.name}@${source.meta.version}`)
 }
 const goroot = run('go', ['env', 'GOROOT'])
 await mkdir(join(output, 'licenses/go-toolchain'))
