@@ -139,7 +139,41 @@ func (s *Service) AccessRequests(p Principal, after int64, limit int) (accessreq
 		return accessrequest.Page{}, ErrUnavailable
 	}
 	page, err := repo.ListRequests(owner, after, limit)
-	return page, requestError(err)
+	if err != nil {
+		return page, requestError(err)
+	}
+	doc, err := s.repository.Snapshot()
+	if err != nil {
+		return page, ErrUnavailable
+	}
+	b, err := configuration.Decode([]byte(doc.Policy))
+	if err != nil {
+		return page, ErrUnavailable
+	}
+	_, grants := b.GrantCatalog()
+	for i := range page.Requests {
+		r := &page.Requests[i]
+		if r.State != "approved" {
+			continue
+		}
+		r.GrantState = "withdrawn"
+		for _, g := range grants {
+			if g.UID != r.GrantUID {
+				continue
+			}
+			r.GrantState = "valid-desired"
+			if g.Revoked {
+				r.GrantState = "revoked"
+			} else if expiry, e := time.Parse(time.RFC3339Nano, g.ExpiresAt); e != nil {
+				r.GrantState = "unknown"
+			} else if !expiry.After(time.Now()) {
+				r.GrantState = "expired"
+			}
+			break
+		}
+	}
+	page.ObservedAt = time.Now().UTC()
+	return page, nil
 }
 func (s *Service) DecideAccessRequest(p Principal, uid string, expected uint64, in accessrequest.Decision) (accessrequest.Record, error) {
 	if err := s.Check(p, "request:review"); err != nil {

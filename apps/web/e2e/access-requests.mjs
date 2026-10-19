@@ -9,8 +9,8 @@ export async function accessRequests({ browser, origin, principalPath, root, evi
  const result = spawnSync('go', ['run', './cmd/picketx', 'password-hash'], { cwd: root, input: password, encoding: 'utf8' })
  assert.equal(result.status, 0, result.stderr)
  await writeFile(principalPath, JSON.stringify({ principals: [], users: [
-  { id: 'person:requester', username: 'requester', password_hash: result.stdout.trim(), roles: ['role:requester'] },
-  { id: 'person:approver', username: 'approver', password_hash: result.stdout.trim(), roles: ['role:admin'] },
+  { id: 'principal:requester', username: 'requester', password_hash: result.stdout.trim(), roles: ['role:requester'] },
+  { id: 'principal:approver', username: 'approver', password_hash: result.stdout.trim(), roles: ['role:admin'] },
  ] }), { mode: 0o600 })
  const contexts = await Promise.all([browser.newContext(), browser.newContext()])
  const [requester, admin] = await Promise.all(contexts.map(c => c.newPage()))
@@ -32,6 +32,18 @@ export async function accessRequests({ browser, origin, principalPath, root, evi
  await admin.getByLabel('Change reason', { exact: true }).fill('request workflow inventory')
  await admin.getByRole('button', { name: 'Save desired configuration', exact: true }).click()
  await admin.getByText('Desired configuration saved. Node application is not confirmed.', { exact: true }).waitFor()
+ // Hold the real initial read at its transport boundary. Leaving this page must
+ // cancel that read and release UI busy state, not disable logout indefinitely.
+ let releaseRead, readStarted
+ const held = new Promise(resolve => { readStarted = resolve })
+ await admin.route('**/console/api/v1/access-requests?limit=50', async route => {
+  readStarted(); await new Promise(resolve => { releaseRead = resolve }); await route.continue().catch(() => {})
+ })
+ await admin.getByRole('button', { name: 'Access requests', exact: true }).click()
+ await held
+ await admin.getByRole('button', { name: 'Desired configuration', exact: true }).click()
+ try { await admin.getByRole('button', { name: 'Sign out', exact: true }).waitFor(); assert.equal(await admin.getByRole('button', { name: 'Sign out', exact: true }).isDisabled(), false, 'leaving cancelled request read releases busy state') }
+ finally { releaseRead(); await admin.unroute('**/console/api/v1/access-requests?limit=50') }
  await login(requester, 'requester')
  await requester.getByRole('heading', { name: 'Access requests', exact: true }).waitFor({ timeout: 5000 })
  assert.equal(await requester.getByLabel('Policy YAML').count(), 0)
@@ -46,7 +58,7 @@ export async function accessRequests({ browser, origin, principalPath, root, evi
  const requestRow = requester.locator('.request-row').filter({ hasText: 'Browser independent request' })
  await requestRow.getByText('Pending', { exact: true }).waitFor()
  const original = await requester.evaluate(async () => (await (await fetch('/console/api/v1/access-requests')).json()).requests.find(r => r.reason === 'Browser independent request'))
- assert.equal(original.requester, 'person:requester'); assert.equal(original.source, '2001:db8::42/128')
+ assert.equal(original.requester, 'principal:requester'); assert.equal(original.source, '2001:db8::42/128')
  await admin.getByRole('button', { name: 'Access requests', exact: true }).click()
  const review = admin.locator('.request-row').filter({ hasText: 'Browser independent request' })
  await review.getByRole('button', { name: 'Review request', exact: true }).click()
@@ -59,13 +71,13 @@ export async function accessRequests({ browser, origin, principalPath, root, evi
  await requestRow.getByText('Approved', { exact: true }).waitFor()
  const approved = await requester.evaluate(async () => (await (await fetch('/console/api/v1/access-requests')).json()).requests.find(r => r.reason === 'Browser independent request'))
  assert.deepEqual(approved.endpoint_names, ['https', 'ssh']); assert.deepEqual(approved.approved_endpoints, ['https'])
- assert.equal(approved.approver, 'person:approver'); assert.equal(approved.expires_at, original.expires_at)
+ assert.equal(approved.approver, 'principal:approver'); assert.equal(approved.expires_at, original.expires_at)
  assert(new Date(approved.approved_expires_at) <= new Date(original.expires_at)); assert(approved.grant_uid && approved.revision)
  const proof = await admin.evaluate(async () => ({ grants: await (await fetch('/console/api/v1/grants?limit=100')).json(), audit: await (await fetch('/console/api/v1/audit?limit=100')).json() }))
  const grant = proof.grants.grants.find(g => g.uid === approved.grant_uid)
  assert.equal(grant.source, '2001:db8::42/128'); assert.deepEqual(grant.scopes[0].endpoint_names, ['https'])
  assert.equal(grant.expires_at, approved.approved_expires_at)
- assert(proof.audit.events.some(e => e.actor === 'person:approver' && e.reason.includes(approved.uid)))
+ assert(proof.audit.events.some(e => e.actor === 'principal:approver' && e.reason.includes(approved.uid)))
  for (const width of [375, 1440]) { await requester.setViewportSize({ width, height: 1000 }); assert(await requester.evaluate(() => document.documentElement.scrollWidth <= innerWidth)); await requester.screenshot({ path: join(evidence, `access-requests-${width}.png`), fullPage: true }) }
  // A separate real request is rejected; no publication revision is consumed.
  await requester.getByLabel('Source IP or CIDR', { exact: true }).fill('192.0.2.42')
@@ -86,7 +98,10 @@ export async function accessRequests({ browser, origin, principalPath, root, evi
   const session = await (await fetch('/console/api/v1/session')).json()
   return (await fetch(`/console/api/v1/grants/${r.grant_uid}/revoke`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': session.csrf, 'If-Match': `"${r.revision}"` }, body: JSON.stringify({ reason: 'Revoke approved request contribution' }) })).status
  }, approved)
- assert.equal(revoke, 200); assert.deepEqual(errors, [])
+ assert.equal(revoke, 200)
+ await requester.getByRole('button', { name: 'Refresh requests', exact: true }).click()
+ await requestRow.getByText('Desired Grant: revoked', { exact: true }).waitFor()
+ assert.deepEqual(errors, [])
  for (const c of contexts) await c.close()
  console.log('PASS real human requester → independent approval/rejection → atomic Grant/SQLite/audit; IPv6 named narrowing, absolute deadline, requester isolation and revoke')
 }

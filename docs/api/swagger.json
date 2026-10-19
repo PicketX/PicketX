@@ -56,6 +56,10 @@
                     "expires_at": {
                         "type": "string"
                     },
+                    "grant_state": {
+                        "description": "Response-only observation of current desired Grant, not approval history.",
+                        "type": "string"
+                    },
                     "grant_uid": {
                         "type": "string"
                     },

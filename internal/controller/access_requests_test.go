@@ -106,4 +106,21 @@ func TestAccessRequestIndependentApprovalAndOwnership(t *testing.T) {
 	if doc, _ := store.Snapshot(); doc.Revision != 2 {
 		t.Fatal("rejection changed publication", doc.Revision)
 	}
+	var grantList struct {
+		Grants []struct{ UID, Source string }
+	}
+	_ = json.Unmarshal(grants.Body.Bytes(), &grantList)
+	for _, g := range grantList.Grants {
+		if g.Source != "2001:db8::42/128" {
+			continue
+		}
+		w = request(h, "POST", "/api/v1/grants/"+g.UID+"/revoke", `{"reason":"approved contribution revoked"}`, managementToken, `"2"`)
+		if w.Code != 200 {
+			t.Fatal(w.Code, w.Body.String())
+		}
+	}
+	mine = request(h, "GET", "/api/v1/access-requests", "", requesterToken, "")
+	if !strings.Contains(mine.Body.String(), `"grant_state":"revoked"`) || !strings.Contains(mine.Body.String(), `"state":"approved"`) {
+		t.Fatal("approval is not current permission", mine.Body.String())
+	}
 }

@@ -124,6 +124,12 @@ summary { cursor: pointer; min-height: 44px; padding-block: 10px; font-size: .87
 select { width: 100%; min-height: 46px; border: 1px solid #77889c; border-radius: 6px; padding: 10px 12px; background: white; color: var(--foreground); }
 select:focus-visible, fieldset:focus-visible, a:focus-visible { outline: 3px solid var(--primary); outline-offset: 3px; }
 .grant-form { padding: 24px; background: white; border: 1px solid #c3cedb; border-radius: 8px; margin-block: 24px; }
+.requests-section .endpoint-option { display: flex; gap: 12px; align-items: center; min-height: 44px; overflow-wrap: anywhere; }
+.requests-section .endpoint-option input { width: 20px; height: 20px; flex: 0 0 20px; }
+.requests-section .grant-form > fieldset { border: 0; padding: 0; }
+.requests-section .grant-fields { margin-block: 20px; }
+.requests-section .grant-form > label { margin-top: 16px; }
+.request-row, .requests-section h3 { overflow-wrap: anywhere; }
 .grant-fields-owner { border: 0; padding: 0; min-width: 0; display: grid; gap: 24px; }
 .grant-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
 .grant-fields > div { min-width: 0; }

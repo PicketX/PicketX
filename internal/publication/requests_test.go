@@ -7,6 +7,7 @@ import (
 	"github.com/PicketX/PicketX/internal/accessrequest"
 	"github.com/PicketX/PicketX/pkg/configuration"
 	"path/filepath"
+	"sync"
 	"testing"
 	"time"
 )
@@ -78,6 +79,102 @@ func TestAccessRequestApprovalAtomicRollbackAndRestart(t *testing.T) {
 	doc, _ := s.Snapshot()
 	if err != nil || got.Requester != "person:a" || got.Approver != "person:b" || got.GrantUID != "grant-request-one" || got.Revision != 2 || !got.ExpiresAt.Equal(expiry) || doc.Revision != 2 || !bytes.Contains([]byte(doc.Policy), []byte("grant-request-one")) {
 		t.Fatal(got, err, doc)
+	}
+}
+
+func TestAccessRequestConcurrentDecisionsCommitOneContribution(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "state", "db.sqlite")
+	a := managed(t, path)
+	p, f := inputs(t)
+	if _, err := a.AcceptManaged(0, "seed", "seed", p, f, nil); err != nil {
+		t.Fatal(err)
+	}
+	expiry := time.Now().Add(time.Hour).UTC()
+	r, err := a.CreateRequest(1, accessrequest.Record{UID: "request-race", Requester: "principal:a", State: "pending", Version: 1, ExpiresAt: expiry})
+	if err != nil {
+		t.Fatal(err)
+	}
+	b := managed(t, path)
+	bundle, _ := configuration.Decode(p)
+	policy, err := bundle.AddGrant(configuration.GrantInput{Name: r.UID, UID: "grant-race", Source: "192.0.2.42", ResourceName: "gitea", ResourceUID: "resource-gitea-v1", EndpointNames: []string{"https"}, ExpiresAt: expiry})
+	if err != nil {
+		t.Fatal(err)
+	}
+	now := time.Now().UTC()
+	r.State = "approved"
+	r.Version = 2
+	r.Approver = "principal:b"
+	r.ApprovedExpiresAt = &expiry
+	r.DecidedAt = &now
+	r.GrantUID = "grant-race"
+	r.Revision = 2
+	var wg sync.WaitGroup
+	results := make(chan error, 2)
+	for _, s := range []*Store{a, b} {
+		wg.Add(1)
+		go func(s *Store) {
+			defer wg.Done()
+			_, e := s.DecideRequest(1, r, string(policy), string(f), nil)
+			results <- e
+		}(s)
+	}
+	wg.Wait()
+	close(results)
+	success := 0
+	for err := range results {
+		if err == nil {
+			success++
+		}
+	}
+	if success != 1 {
+		t.Fatal("decision winners", success)
+	}
+	var count int64
+	_ = a.db.Raw("SELECT count(*) FROM controller_request_event").Scan(&count).Error
+	if count != 2 {
+		t.Fatal("extra/missing workflow event", count)
+	}
+	_ = a.Close()
+	_ = b.Close()
+	recovered := managed(t, path)
+	doc, _ := recovered.Snapshot()
+	if doc.Revision != 2 || bytes.Count([]byte(doc.Policy), []byte(`"uid":"grant-race"`)) != 1 {
+		t.Fatal(doc)
+	}
+}
+
+func TestAccessRequestDeadlineRecheckedAfterPreflight(t *testing.T) {
+	s := managed(t, filepath.Join(t.TempDir(), "state", "db.sqlite"))
+	p, f := inputs(t)
+	if _, err := s.AcceptManaged(0, "seed", "seed", p, f, nil); err != nil {
+		t.Fatal(err)
+	}
+	r, err := s.CreateRequest(1, accessrequest.Record{UID: "request-deadline", Requester: "principal:a", State: "pending", Version: 1, ExpiresAt: time.Now().Add(time.Hour)})
+	if err != nil {
+		t.Fatal(err)
+	}
+	b, _ := configuration.Decode(p)
+	expiry := time.Now().Add(20 * time.Millisecond).UTC()
+	policy, err := b.AddGrant(configuration.GrantInput{Name: r.UID, UID: "grant-deadline", Source: "192.0.2.42", ResourceName: "gitea", ResourceUID: "resource-gitea-v1", EndpointNames: []string{"https"}, ExpiresAt: expiry})
+	if err != nil {
+		t.Fatal(err)
+	}
+	r.State = "approved"
+	r.Version = 2
+	r.Approver = "principal:b"
+	r.ApprovedExpiresAt = &expiry
+	r.Revision = 2
+	_, err = s.DecideRequest(1, r, string(policy), string(f), func(*configuration.Candidate, uint64) error {
+		time.Sleep(time.Until(expiry.Add(10 * time.Millisecond)))
+		return nil
+	})
+	if !errors.Is(err, accessrequest.ErrConflict) {
+		t.Fatal("queued expired approval committed", err)
+	}
+	got, _ := s.GetRequest(r.UID)
+	doc, _ := s.Snapshot()
+	if got.State != "pending" || doc.Revision != 1 {
+		t.Fatal(got, doc)
 	}
 }
 

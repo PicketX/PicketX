@@ -30,6 +30,8 @@ type Record struct {
 	ApprovedExpiresAt *time.Time                      `json:"approved_expires_at,omitempty"`
 	GrantUID          string                          `json:"grant_uid,omitempty"`
 	Revision          uint64                          `json:"revision,omitempty"`
+	// Response-only observation of current desired Grant, not approval history.
+	GrantState string `json:"grant_state,omitempty"`
 }
 type Input struct {
 	Source, ResourceName, ResourceUID, Reason string
