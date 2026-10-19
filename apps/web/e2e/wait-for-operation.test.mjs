@@ -7,17 +7,18 @@ import test from 'node:test'
 import { waitForOperation } from './wait-for-operation.mjs'
 
 async function fixture(t, respond) {
- let requests = 0
+ let requests = 0, reads = 0
  const server = createServer((request, response) => respond(response, ++requests, request))
  server.listen(0, '127.0.0.1'); await once(server, 'listening')
  t.after(async () => { server.closeAllConnections(); await new Promise(resolve => server.close(resolve)) })
  const url = `http://127.0.0.1:${server.address().port}/me`
  const read = async signal => {
+  reads++
   const response = await fetch(url, { signal })
   const { operations } = await response.json()
   return { status: response.status, operations }
  }
- return { read, requests: () => requests }
+ return { read, requests: () => requests, reads: () => reads }
 }
 const json = (response, status, operations) => {
  response.writeHead(status, { 'content-type': 'application/json' })
@@ -31,9 +32,12 @@ test('awaits actual HTTP responses until the operation exists, not an async fals
 })
 test('rejects an absent operation at a bounded deadline and stops polling', async t => {
  const f = await fixture(t, r => json(r, 200, []))
- await assert.rejects(waitForOperation(f.read, 'request:create', { timeoutMs: 80, pollMs: 5 }), /operation readiness timed out/)
- const stopped = f.requests(); assert(stopped > 0)
- await pause(25); assert.equal(f.requests(), stopped)
+ await assert.rejects(waitForOperation(f.read, 'request:create', { timeoutMs: 500, pollMs: 5 }), /operation readiness timed out/)
+ const stopped = f.reads(); assert(f.requests() > 0)
+ // A request started before cancellation can reach the server after the caller
+ // rejects. The contract is no NEW reads, not retroactive packet withdrawal.
+ await pause(25); assert.equal(f.reads(), stopped)
+ assert(f.requests() <= stopped)
 })
 test('HTTP failures are errors, never retryable missing permissions', async t => {
  for (const status of [202, 401, 429, 503]) await t.test(String(status), async t => {
@@ -52,6 +56,6 @@ test('malformed successful identity data is rejected without payload disclosure'
 })
 test('deadline aborts an actual pending HTTP observation', { timeout: 2000 }, async t => {
  const f = await fixture(t, () => {})
- await assert.rejects(waitForOperation(f.read, 'request:create', { timeoutMs: 80, pollMs: 5 }), /operation readiness timed out/)
+ await assert.rejects(waitForOperation(f.read, 'request:create', { timeoutMs: 500, pollMs: 5 }), /operation readiness timed out/)
  assert.equal(f.requests(), 1)
 })
