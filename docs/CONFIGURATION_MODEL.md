@@ -19,7 +19,7 @@ This does not implement a complete directory provider, watcher, LKG, Controller 
 
 ## 1. Three model boundaries
 
-The later [HTTP alpha contract](HTTP_AUTHORIZATION.md) adds exact `HTTPRoute` restrictions
+The later [HTTP alpha contract](HTTP_AUTHORIZATION.md) adds exact and explicit path-segment-prefix `HTTPRoute` restrictions
 to the same authority, pinned to a TCP Resource Endpoint. It reuses source Grants/NetworkDenies;
 no verified identity or new network permission is inferred, and the Agent wire stays unchanged.
 

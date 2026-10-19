@@ -2,7 +2,7 @@
 
 ## Explicit HTTP path prefixes — acquisition 2026-10-19T10:18Z
 
-Owner codex/http-path-prefixes; heartbeat10:30Z; short lease until11:10Z or explicit
+Owner codex/http-path-prefixes; heartbeat10:37Z; short lease until11:10Z or explicit
 release/merged+green main. Core main31c7ac7/treef53e60e/mainCI39225809309 and Agent
 main937b34c/treec5a3d5e/mainCI39234459599 accepted; no open PRs at acquisition.
 PR33/Core and PR20/Agent final metadata explicitly release previous leases.
@@ -22,6 +22,22 @@ explicit-empty serialization and non-null inventory tests each observed RED→GR
 Corrected full local normal/race retain only known Unix socket EPERM; vet/build,
 pinned OpenAPI and locked Web typecheck/lint/build pass. Real prefix UI is now
 implemented; final native green evidence, independent review and merge are pending.
+
+Code accepted local975a313/remote26282e1/actualcheckout40ec08a share tree
+b8ae773f9f56972926fb940aecfd7c2d9e230217. Native39237922431 Go118011427841 /
+Web118011427553 SUCCESS; raw244 top/596 total zero fail/skip/race, full Unix100,
+static Controller/SQLite/gRPC/DB/SIGTERM and CLI checks, locked Web plus actual
+Chromium/Nginx prefix-only creation/nested/boundary/canonical/Host/method/source/
+reused-connection revoke all pass. ZIP12179963297 actualSHA256
+438814e154716c6ccd3d40952048a3a4f0d22f3f62466b4d0fa3acb72d0dfe75 matches
+metadata; EN/ZH375/1440 inspected. One independent whole-branch review no Critical/
+Important; English selector-limit wording and pre-existing retained feedback
+language are deferred Minors. Complete rulings/costs and evidence:
+validation/HTTP_PATH_PREFIXES_REVIEW.md. Final documentation-only head still needs
+full native CI and expected-head merge/main recheck; immutable final proof and
+immediate lease release in PR34 metadata. Next: actual Gitea HTTPS/SSH conjunction
+using this additive Core contract; explicit root/segment route scope and native
+Gitea accounts/tokens/SSH keys remain distinct from portal/source authorization.
 
 ## Managed human accounts acquisition — 2026-10-19T08:05Z
 

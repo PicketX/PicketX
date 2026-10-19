@@ -53,14 +53,14 @@ Map self-reviewed against actual imports/consumers before implementation.
 CreateHTTPRouteRequest.PathPrefixes ([]string); consumes existing Compile/Decide,
 CreateHTTPRoute, Inventory and publication persistence.
 
-- [ ] Add failing TestHTTPPathPrefixes boundary/root/legacy/deny/expiry/clone and
+- [x] Add failing TestHTTPPathPrefixes boundary/root/legacy/deny/expiry/clone and
   invalid selectors tests; API prefix-only create/read/restart and invalid inputs.
-- [ ] Run focused Go tests; observe rejection of new field before implementation.
-- [ ] Implement additive lists, presence checks, clone and segment matching;
+- [x] Run focused Go tests; observe rejection of new field before implementation.
+- [x] Implement additive lists, presence checks, clone and segment matching;
   keep existing target/caller authorization and limits. Document EN/ZH contract.
-- [ ] Run focused normal/race, complete Go normal/race/vet/build; report host
+- [x] Run focused normal/race, complete Go normal/race/vet/build; report host
   Unix EPERM honestly and require complete native CI coverage.
-- [ ] Commit conventional backend feature with its tests.
+- [x] Commit conventional backend feature with its tests.
 
 ### Task 2: Real console and ingress acceptance
 
@@ -68,22 +68,22 @@ CreateHTTPRoute, Inventory and publication persistence.
 **Interfaces:** Consumes Task1 snake_case optional selectors; produces real
 prefix-only browser creation and nested Nginx allow/deny/revocation receipts.
 
-- [ ] Add real e2e form prefix-only creation, inventory and Nginx boundary,
+- [x] Add real e2e form prefix-only creation, inventory and Nginx boundary,
   malformed path, method/Host/source and reused-connection revoke assertions.
-- [ ] Observe native tests-first RED on missing prefix field before UI code.
-- [ ] Add separate optional textareas, combined validation and explicit root
+- [x] Observe native tests-first RED on missing prefix field before UI code.
+- [x] Add separate optional textareas, combined validation and explicit root
   warning; prefix count/details in inventory and removal. Preserve freshness/CAS.
-- [ ] Regenerate pinned OpenAPI; locked npm ci/typecheck/lint/build, complete Go
+- [x] Regenerate pinned OpenAPI; locked npm ci/typecheck/lint/build, complete Go
   gates, native real browser/Nginx suites, inspect EN/ZH375/1440 artifacts.
-- [ ] Commit console feature/tests and record exact native evidence.
+- [x] Commit console feature/tests and record exact native evidence.
 
 ### Task 3: Independent review and safe integration
 
 **Files:** docs/AUTONOMOUS_DELIVERY.md and docs/validation/HTTP_PATH_PREFIXES_REVIEW.md.
 **Interfaces:** Consumes full base→HEAD diff and exact native source/logs/artifacts.
 
-- [ ] Fresh whole-branch review using requesting-code-review; regrade by effect.
-- [ ] Fix Critical/Important once with observed RED→GREEN; ledger deferred Minors.
+- [x] Fresh whole-branch review using requesting-code-review; regrade by effect.
+- [x] Fix Critical/Important once with observed RED→GREEN; ledger deferred Minors.
 - [ ] Verify final local/remote/actual CI trees, all raw mandatory gates and
   independently downloaded archive hashes; exact expected-head merge only.
 - [ ] Recheck main source/CI/artifacts; final PR metadata releases short lease
