@@ -1,5 +1,15 @@
 # 自动交付检查点
 
+## Controller 服务验收接续 — 2026-10-19T17:45Z
+所有者 codex/controller-service；短租约18:35Z或明确释放/合并且main完整验收后立即释放。
+Core93024b2与Agent5373595主线所有必需任务/步骤通过，无开放PR；PR35/23已明确释放。
+旧临时目录被维护清理，已从准确远端main重建隔离工作树，不覆盖用户文件。设计/计划：
+superpowers/{specs,plans}/2026-10-20-controller-service.md。接续安装版非特权systemd
+生命周期、停服完整私有状态备份恢复；不冒称整机重启、Agent服务或新API/UI/内核能力。
+本地没有PID1 systemd，必需真实Linux CI。保留TDD/一次独立全分支评审；最终准确源码、
+PR/CI/下载归档、main验收与立即释放以本段PR元数据为准。
+
+
 ## Controller 安装包代码已验收 — 2026-10-19T13:46Z
 
 PR35仍在本轮处理；负责人codex/controller-install，心跳13:46Z，短租约至14:15Z，

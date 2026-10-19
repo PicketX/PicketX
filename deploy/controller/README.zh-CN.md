@@ -5,7 +5,8 @@
 本 Linux-amd64 包包含全静态 `bin/picketx-controller`、`bin/picketx` 和构建后的
 React `web/`。Go/npm/Python、额外共享库只用于构建，运行不需要。现有可信入口
 继续负责公开 TLS 与业务转发。这是单进程 SQLite Controller，不是高可用、PG 或
-自动安装器。systemd 文件是需人工核对的模板，进程/浏览器验收不等于主机启动验收。
+自动安装器。systemd 文件仍需人工核对；CI另行验证真实非特权服务生命周期和停服恢复，
+不等于整机重启验收。
 
 ## 构建与检查
 
@@ -53,7 +54,12 @@ Agent9090、决策9081。可用 --listen/--agent-listen/--authz-listen 指定互
 核对程序、用户、配置路径后，再人工复制 deploy/picketx-controller.service 到
 系统 unit 目录并启动/启用。服务无 capabilities，除私有状态目录外文件系统只读；
 Type=simple 仅表进程启动，须另查 healthz/readyz。SIGTERM 停服。Controller 不需要
-nftables/内核权限；真实主机开机、systemd、Agent 联合验收另行完成。
+nftables/内核权限；整机开机与 Agent 服务联合验收另行完成。
+
+服务验收在一次性 Linux 主机上沿用发行模板的隔离与重启设置，仅替换独立测试用户和
+路径。核对真实可执行文件、非 root UID、零 capabilities、NoNewPrivileges、IPv4 HTTP
+与 IPv6 Agent 监听，实测 SIGKILL 自动重启及 SIGTERM 正常停服；不会替你启用/重启
+整机，不冒充生产反向代理或 Agent 服务部署验收。
 
 ## 首次登录与凭据
 
@@ -87,6 +93,15 @@ facts 必须匹配真实执行点。Grant 并集、deny 优先、独立绝对期
 将配置、注册文件、密钥、数据库及权威一起保存；WAL 活跃时不能只拷主数据库文件。
 恢复所有权与0700/0600，保留原 authority，不对恢复状态运行 init。保留旧包和升级前
 停服备份；不承诺迁移回滚，不能直接用旧程序打开已升级库。本段不新增数据库迁移。
+
+停服迁移时，将**整个**私有实例复制到新的0700备份并逐文件校验；不得覆盖原目录/
+备份或只恢复 SQLite 文件。恢复到可信私有父目录下的新0700实例，保留各0600文件，
+人工核对复制的 JSON 语法 controller.yaml 中四处绝对私有路径：database、credentials、
+management.credentials、authz.credentials。原 authority、浏览器 origin、assets 不变。
+恢复服务用户所有权，再更新 unit 的 WorkingDirectory/config/ReadWritePaths，执行
+daemon-reload/start；检查 readyz、新登录、发布/账户/审计精确一致及旧会话失效。
+验收通过前保留停服原目录和备份并保护凭据，不对恢复状态运行 controller-init。
+CI 辅助程序不是生产备份命令，也不是在线/多写者备份过程。
 
 原生 CI 在源码目录外复制安装包，运行时 PATH 为空，用真实 Chromium 完成开户、
 人员登录、发布、重启后数据库/审计读取，拒绝错误用途 key 与旧会话，并检查归档。

@@ -1,5 +1,17 @@
 # Autonomous delivery checkpoint
 
+## Controller service acquisition — 2026-10-19T17:45Z
+Owner codex/controller-service; lease18:35Z or explicit release/merged+verified-green
+main. Core93024b2/tree64ed0dc/main39265034648 and Agent5373595/tree7e23d65/main39291377336
+all jobs/mandatory steps green; no open PR, prior PR35/23 leases explicitly released.
+Old scratch maintained away; fresh exact-main clones and isolated linked worktree,
+no overwritten user state. Spec/plan superpowers/{specs,plans}/2026-10-20-controller-service.md.
+Actual packaged unprivileged systemd lifecycle and stopped complete private restore;
+no host reboot/Agent service/API/UI/kernel change. Local no PID1 systemd, native CI
+mandatory. Routine pauses waived, inline TDD/one fresh review retained. Final exact
+commit/PR/CI/archive/main evidence and immediate release belong in this PR metadata.
+
+
 ## Controller install code accepted — 2026-10-19T13:46Z
 
 PR35 active, owner codex/controller-install, heartbeat13:46Z, lease until14:15Z or

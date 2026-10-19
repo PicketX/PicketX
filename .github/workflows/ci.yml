@@ -93,6 +93,8 @@ jobs:
   install:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/node_modules/.cache/installed-playwright
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -103,7 +105,7 @@ jobs:
         with:
           node-version-file: .node-version
       - name: Reject existing bundle targets before building
-        run: node --test scripts/controller-bundle.test.mjs
+        run: node --test scripts/controller-bundle.test.mjs scripts/controller-state-copy.test.mjs scripts/controller-service.test.mjs
       - name: Build and inspect standalone Linux-amd64 Controller bundle
         run: |
           sudo apt-get update
@@ -129,6 +131,12 @@ jobs:
           npx playwright install --with-deps chromium
           cd ../..
           node apps/web/e2e/install.mjs "$RUNNER_TEMP/extracted-controller-bundle"
+      - name: Actual unprivileged systemd and stopped complete-state restore
+        run: |
+          sudo --non-interactive env PICKETX_SERVICE_TESTS=1 \
+            PLAYWRIGHT_BROWSERS_PATH="$PLAYWRIGHT_BROWSERS_PATH" \
+            PICKETX_INSTALL_EVIDENCE_DIR="$RUNNER_TEMP/service-evidence" \
+            "$(command -v node)" apps/web/e2e/install.mjs "$RUNNER_TEMP/extracted-controller-bundle" --systemd
       - uses: actions/upload-artifact@v4
         with:
           name: controller-linux-amd64
@@ -140,4 +148,9 @@ jobs:
         with:
           name: controller-install-evidence
           path: ${{ runner.temp }}/install-evidence/
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: controller-service-evidence
+          path: ${{ runner.temp }}/service-evidence/
           if-no-files-found: error
