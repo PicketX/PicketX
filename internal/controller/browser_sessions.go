@@ -15,6 +15,7 @@ import (
 )
 
 type SessionResponse struct {
+	PasswordLogin bool                     `json:"password_login"`
 	Authenticated bool                     `json:"authenticated"`
 	CSRF          string                   `json:"csrf"`
 	Identity      *SessionIdentityResponse `json:"identity,omitempty"`
@@ -41,7 +42,11 @@ func (b *Browser) session(c *echo.Context) error {
 	if err != nil && !errors.Is(err, management.ErrUnauthorized) {
 		return mappedError(c, err)
 	}
-	response := SessionResponse{Authenticated: err == nil, CSRF: c.Get("csrf").(string)}
+	enabled, e := b.service.PasswordLoginEnabled()
+	if e != nil {
+		return mappedError(c, e)
+	}
+	response := SessionResponse{Authenticated: err == nil, CSRF: c.Get("csrf").(string), PasswordLogin: enabled}
 	if err == nil {
 		response.Identity = &SessionIdentityResponse{ID: p.ID, Roles: p.Roles}
 	}
@@ -78,16 +83,19 @@ func (b *Browser) login(c *echo.Context, validation *validator.Validate) error {
 	if err != nil {
 		return mappedError(c, err)
 	}
-	ctx := c.Request().Context()
-	if err = b.sessions.Destroy(ctx); err != nil {
-		return mappedError(c, err)
-	}
-	if err = b.sessions.RenewToken(ctx); err != nil {
-		return mappedError(c, err)
-	}
 	sum := sha256.Sum256([]byte(input.Token))
+	return b.establishSession(c, p, hex.EncodeToString(sum[:]))
+}
+func (b *Browser) establishSession(c *echo.Context, p management.Principal, fingerprint string) error {
+	ctx := c.Request().Context()
+	if err := b.sessions.Destroy(ctx); err != nil {
+		return mappedError(c, err)
+	}
+	if err := b.sessions.RenewToken(ctx); err != nil {
+		return mappedError(c, err)
+	}
 	b.sessions.Put(ctx, "id", p.ID)
-	b.sessions.Put(ctx, "credential", hex.EncodeToString(sum[:]))
+	b.sessions.Put(ctx, "credential", fingerprint)
 	return c.JSON(200, SessionIdentityResponse{ID: p.ID, Roles: p.Roles})
 }
 

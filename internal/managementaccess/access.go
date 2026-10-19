@@ -26,12 +26,13 @@ type Settings struct {
 }
 type Principal = management.Principal
 type Access struct {
-	settings  Settings
-	enforcer  *casbin.SyncedEnforcer
-	log       *slog.Logger
-	mu        sync.RWMutex
-	available bool
-	loadedAt  time.Time
+	passwordSlots chan struct{}
+	settings      Settings
+	enforcer      *casbin.SyncedEnforcer
+	log           *slog.Logger
+	mu            sync.RWMutex
+	available     bool
+	loadedAt      time.Time
 }
 
 const policyModel = `[request_definition]
@@ -86,7 +87,7 @@ func New(db *gorm.DB, settings Settings, log *slog.Logger) (*Access, error) {
 		}
 		return false, nil
 	})
-	a := &Access{settings: settings, enforcer: enforcer, log: log.With("component", "management_rbac")}
+	a := &Access{settings: settings, enforcer: enforcer, log: log.With("component", "management_rbac"), passwordSlots: make(chan struct{}, 4)}
 	if e = a.reload(true); e != nil {
 		return nil, e
 	}

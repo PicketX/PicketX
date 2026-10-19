@@ -1,5 +1,18 @@
 # Autonomous delivery checkpoint
 
+## Local human login — active 2026-10-19T03:39Z
+
+Owner codex/local-human-login; heartbeat03:39Z; short lease until05:00Z or explicit
+release/merged+green main. Core maina99d9fc/tree52746b5/mainCI39183852826 green;
+Agent maine013926/treeb58e0e7/mainCI39191015351 green; no open PRs at acquisition.
+PR29/Core and PR17/18/Agent leases released in their final PR metadata. Existing
+host-owned clean isolated worktree retained. Spec/plan: superpowers/{specs,plans}/
+2026-10-19-human-login.md. Deliver private-file local human password login using
+existing SCS/Casbin, CLI provisioning and real React/API/browser validation.
+Full local baseline has only existing Unix socket EPERM; native full gates remain
+mandatory. OIDC/account CRUD and self-service request/approval remain incomplete.
+中文：推进真实人员登录，不重复已完成的联合内核验收，不宣称整个目标完成。
+
 ## Named Binding Endpoint editing (active)
 
 Owner codex/binding-endpoint-edit; heartbeat2026-10-19T00:37Z; lease until01:37Z

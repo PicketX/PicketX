@@ -38,6 +38,23 @@ func New(access Access, repository Repository) *Service {
 }
 func (s *Service) Authenticate(token string) (Principal, error) { return s.access.Authenticate(token) }
 
+func (s *Service) AuthenticatePassword(username, password string) (Principal, string, error) {
+	a, ok := s.access.(interface {
+		AuthenticatePassword(string, string) (Principal, string, error)
+	})
+	if !ok {
+		return Principal{}, "", ErrUnauthorized
+	}
+	return a.AuthenticatePassword(username, password)
+}
+func (s *Service) PasswordLoginEnabled() (bool, error) {
+	a, ok := s.access.(interface{ PasswordLoginEnabled() (bool, error) })
+	if !ok {
+		return false, nil
+	}
+	return a.PasswordLoginEnabled()
+}
+
 func (s *Service) AgentObservations(p Principal) (agentsync.Observations, error) {
 	if e := s.Check(p, "publication:read"); e != nil {
 		return agentsync.Observations{}, e

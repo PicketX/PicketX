@@ -16,6 +16,7 @@ import { bindingEndpointEditing } from './binding-edit.mjs'
 import { httpRouteManagement } from './http-routes.mjs'
 import { nodeObservations } from './nodes.mjs'
 import { rejectedMutationReceipt } from './mutation-receipts.mjs'
+import { humanLogin } from './human-login.mjs'
 
 const root = resolve(import.meta.dirname, '../../..')
 const temp = await mkdtemp(join(tmpdir(), 'picketx-browser-'))
@@ -300,6 +301,7 @@ spec:
   await page.getByLabel('Access key', { exact: true }).waitFor()
   assert.deepEqual(errors, [])
   console.log('PASS real Chromium → React → SCS/CSRF → management API → SQLite: publish, audit, conflict/draft, read failure, viewer, mobile, credential revocation')
+  await humanLogin({ browser, origin, principalPath, root, evidence })
   console.log(`Screenshots: ${evidence}`)
 } finally {
   for (const [index, diagnostic] of (browser?.contexts().flatMap(c => c.pages()) ?? []).entries()) await diagnostic.screenshot({ path: join(evidence, `page-${index}-last.png`), fullPage: true }).catch(() => {})

@@ -88,5 +88,6 @@ func New(out, errOut io.Writer) *cobra.Command {
 	_ = check.MarkFlagRequired("facts")
 	config.AddCommand(check)
 	root.AddCommand(config)
+	root.AddCommand(passwordCommand())
 	return root
 }
