@@ -1,5 +1,26 @@
 # 自动交付检查点
 
+## Controller 安装包代码已验收 — 2026-10-19T13:46Z
+
+PR35仍在本轮处理；负责人codex/controller-install，心跳13:46Z，短租约至14:15Z，
+或明确释放/合并且main完整成功后立即结束。本地8a2b3ee、远端92554c2、真实CI检出
+a01407f同树72c34fe872d51836a9e81f8cdb8bb97b3e3a4d95。
+CI39261533014的Go118090142639、Web118090142370、install118090142737全部必需步骤
+成功；Go247顶层/607含子测试，无失败/跳过/race，保留普通/race/vet/build、Unix100、
+新凭据100、静态SQLite与锁文件Web门禁。实际musl全静态tar解包后，在源码目录外用
+空PATH运行初始化/Controller；真实浏览器建号、人员登录、发布revision2、SIGTERM、
+重启后旧会话拒绝及账户/发布/审计恢复均通过。三个ZIP独立下载哈希匹配，内层tar的
+240项清单、实际源码树/检出、静态ELF与公开报告已核实，1440/375截图已目视检查。
+
+一次独立全分支评审的两个Important均真实RED→GREEN修复：拒绝会导致浏览器登录
+失败的非规范origin，保留依赖和静态工具链的许可证原文/出处/哈希。两项Minor明确
+延后：本安装测试未新测Agent gRPC凭据用途；重启后日志断言未覆盖首个进程。
+完整裁决与代价见validation/CONTROLLER_INSTALL_REVIEW.md。不宣称法律审查或主机
+开机/systemd联合验收；本轮未修改Agent/内核。最终文档准确head仍需三组完整原生CI、
+按expected head合并及main/产物复核，最终不可变证据与立即释放租约以PR35元数据为准。
+下一步是打包Controller→Agent→可信入口→真实应用的安装/重启/宿主服务联合验收，
+不得把已有Gitea源码运行证据改称打包部署证据。整体目标尚未完成，保留现有自动任务。
+
 ## 访问申请 — 代码已验收，最终集成待核实 2026-10-19T06:33Z
 
 [PR32](https://github.com/PicketX/PicketX/pull/32)代码验收：本地

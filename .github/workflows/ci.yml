@@ -42,6 +42,7 @@ jobs:
           git diff --exit-code -- docs/api
           npm ci --ignore-scripts --prefix tools/openapi
           npm run validate --prefix tools/openapi
+      - run: go test -count=1 ./...
       - run: go test -count=1 -race -v ./...
       - name: Repeat actual Unix authorization startup under race detector
         run: go test -race -count=100 -run '^TestAuthorizationRuntimeTCPUnixAndShutdown$/unix$' ./internal/controllerapp
@@ -88,3 +89,55 @@ jobs:
           name: console-browser-screenshots
           path: ${{ runner.temp }}/console-evidence/*.png
           if-no-files-found: ignore
+
+  install:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+      - name: Reject existing bundle targets before building
+        run: node --test scripts/controller-bundle.test.mjs
+      - name: Build and inspect standalone Linux-amd64 Controller bundle
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y musl-tools
+          musl-gcc --version
+          bash scripts/build-controller-bundle.sh "$RUNNER_TEMP/controller-bundle"
+      - name: Retained distribution notices and dependency licenses
+        env:
+          PICKETX_TEST_BUNDLE: ${{ runner.temp }}/controller-bundle
+        run: node --test scripts/controller-bundle-notices.test.mjs
+      - name: Archive and re-extract executable installation payload
+        run: |
+          tar -C "$RUNNER_TEMP/controller-bundle" -czf "$RUNNER_TEMP/controller-linux-amd64.tar.gz" .
+          cd "$RUNNER_TEMP"
+          sha256sum controller-linux-amd64.tar.gz > controller-linux-amd64.tar.gz.sha256
+          mkdir extracted-controller-bundle
+          tar -C extracted-controller-bundle -xzf controller-linux-amd64.tar.gz
+      - name: Actual detached install and browser restart acceptance
+        env:
+          PICKETX_INSTALL_EVIDENCE_DIR: ${{ runner.temp }}/install-evidence
+        run: |
+          cd apps/web
+          npx playwright install --with-deps chromium
+          cd ../..
+          node apps/web/e2e/install.mjs "$RUNNER_TEMP/extracted-controller-bundle"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: controller-linux-amd64
+          path: |
+            ${{ runner.temp }}/controller-linux-amd64.tar.gz
+            ${{ runner.temp }}/controller-linux-amd64.tar.gz.sha256
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: controller-install-evidence
+          path: ${{ runner.temp }}/install-evidence/
+          if-no-files-found: error

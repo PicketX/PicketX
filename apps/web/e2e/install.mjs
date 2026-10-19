@@ -1,0 +1,124 @@
+// SPDX-License-Identifier: Apache-2.0
+// Real packaged binaries + copied built assets, never build from this runner.
+import assert from 'node:assert/strict'
+import { cp, mkdir, mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises'
+import { join, resolve } from 'node:path'
+import { tmpdir } from 'node:os'
+import { randomBytes } from 'node:crypto'
+import { spawn, spawnSync } from 'node:child_process'
+import { once } from 'node:events'
+import { chromium } from 'playwright'
+import { freePort } from './ingress.mjs'
+
+const input = resolve(process.argv[2] ?? '/missing-controller-bundle')
+assert((await stat(join(input, 'bin/picketx')).catch(() => null))?.isFile(), 'standalone CLI bundle required')
+const temp = await mkdtemp(join(tmpdir(), 'picketx-install-'))
+const bundle = join(temp, 'relocated bundle'), instance = join(temp, 'private instance')
+const evidence = process.env.PICKETX_INSTALL_EVIDENCE_DIR ?? join(temp, 'evidence')
+await mkdir(evidence, { recursive: true })
+const env = Object.fromEntries(Object.entries(process.env).filter(([k]) => !k.startsWith('PICKETX_')))
+env.PATH = '' // Neither executable may invoke Go/npm/Python/shell helpers at runtime.
+let child, browser, logs = '', keys = [], completed = false
+const publicError = value => keys.reduce((s, key) => s.replaceAll(key, '[REDACTED]'), String(value))
+try {
+  await cp(input, bundle, { recursive: true, errorOnExist: true, force: false })
+  assert.equal(spawnSync('sha256sum', ['--check', 'SHA256SUMS'], { cwd: bundle }).status, 0, 'bundle content integrity')
+  const cli = join(bundle, 'bin/picketx'), binary = join(bundle, 'bin/picketx-controller')
+  const source = JSON.parse(await readFile(join(bundle, 'SOURCE.json'), 'utf8'))
+  assert.match(source.commit, /^[a-f0-9]{40}$/); assert.match(source.tree, /^[a-f0-9]{40}$/)
+  const http = await freePort(), agent = await freePort(), authz = await freePort(), origin = `http://127.0.0.1:${http}`
+  const args = ['controller-init', '--directory', instance, '--assets', join(bundle, 'web'), '--origin', origin, '--listen', `127.0.0.1:${http}`, '--agent-listen', `127.0.0.1:${agent}`, '--authz-listen', `127.0.0.1:${authz}`]
+  const init = spawnSync(cli, args, { cwd: temp, env, encoding: 'utf8', timeout: 10000 })
+  assert.equal(init.status, 0, 'PATH-empty init failed')
+  keys = await Promise.all(['bootstrap-key', 'agent-token', 'ingress-token'].map(async name => (await readFile(join(instance, name), 'utf8')).trim()))
+  assert.equal(new Set(keys).size, 3)
+  for (const key of keys) assert(!(init.stdout + init.stderr).includes(key), 'init output leaked a credential')
+  const repeat = spawnSync(cli, args, { cwd: temp, env, encoding: 'utf8', timeout: 10000 })
+  assert.notEqual(repeat.status, 0, 'existing instance overwritten')
+  assert.equal((await readFile(join(instance, 'bootstrap-key'), 'utf8')).trim(), keys[0], 'recovery key rotated on rerun')
+  const api = (path, key) => fetch(origin + '/api/v1/' + path, { headers: key ? { Authorization: `Bearer ${key}` } : {} })
+  async function start() {
+    logs = ''
+    child = spawn(binary, ['-config', join(instance, 'controller.yaml')], { cwd: temp, env, stdio: ['ignore', 'pipe', 'pipe'] })
+    child.stdout.on('data', b => { logs += b }); child.stderr.on('data', b => { logs += b })
+    child.on('error', () => {})
+    for (let n = 0; n < 150; n++) {
+      assert.equal(child.exitCode, null, 'packaged Controller exited before ready')
+      try { if ((await fetch(origin + '/readyz')).ok) return } catch { /* real process startup */ }
+      await new Promise(r => setTimeout(r, 100))
+    }
+    throw new Error('packaged Controller readiness deadline')
+  }
+  async function stop() {
+    const exit = once(child, 'exit'); child.kill('SIGTERM')
+    const timer = setTimeout(() => child.kill('SIGKILL'), 10000)
+    try { assert.deepEqual(await exit, [0, null], 'packaged Controller did not shut down cleanly') } finally { clearTimeout(timer) }
+    child = null
+  }
+  await start()
+  assert.equal((await fetch(origin + '/healthz')).status, 200)
+  assert.equal((await api('publication')).status, 401)
+  for (const key of keys.slice(1)) assert.equal((await api('publication', key)).status, 401, 'wrong audience accepted by management')
+  const before = await (await api('publication', keys[0])).json()
+  assert.equal(before.revision, 1); assert(before.policy.includes('empty: true'))
+  for (const key of keys.slice(0, 2)) assert.equal((await fetch(`http://127.0.0.1:${authz}/authz/v1/nginx`, { headers: { Authorization: `Bearer ${key}`, 'X-PicketX-Route': 'route-web', 'X-PicketX-Source': '127.0.0.1', 'X-PicketX-Host': 'app.example.test', 'X-PicketX-Method': 'GET', 'X-PicketX-URI': '/' } })).status, 401, 'wrong audience accepted by decision listener')
+  browser = await chromium.launch({ headless: true })
+  const admin = await browser.newContext(), human = await browser.newContext()
+  const page = await admin.newPage(), person = await human.newPage()
+  await page.goto(origin + '/console/')
+  await page.getByLabel('Access key', { exact: true }).fill(keys[0])
+  await page.getByRole('button', { name: 'Sign in', exact: true }).click()
+  await page.getByRole('button', { name: 'Accounts', exact: true }).click()
+  await page.getByText('No human accounts yet.', { exact: true }).waitFor()
+  const password = randomBytes(24).toString('hex'); keys.push(password)
+  await page.getByLabel('Account username', { exact: true }).fill('operator')
+  await page.getByLabel('Account password', { exact: true }).fill(password)
+  await page.getByLabel('Admin', { exact: true }).check()
+  await page.getByLabel('Account change reason', { exact: true }).fill('First installed operator')
+  await page.getByRole('button', { name: 'Create account', exact: true }).click()
+  await page.getByText('Account saved. Previous sessions are invalid.', { exact: true }).waitFor()
+  async function humanLogin() {
+    await person.goto(origin + '/console/')
+    await person.getByLabel('Sign-in method', { exact: true }).selectOption('password')
+    await person.getByLabel('Username', { exact: true }).fill('operator')
+    await person.getByLabel('Password', { exact: true }).fill(password)
+    await person.getByRole('button', { name: 'Sign in', exact: true }).click()
+    await person.getByLabel('Policy YAML').waitFor()
+  }
+  await humanLogin()
+  await person.getByLabel('Policy YAML').fill(before.policy.replace('name: empty', 'name: installed'))
+  await person.getByLabel('Change reason', { exact: true }).fill('Installed operator publication')
+  await person.getByRole('button', { name: 'Save desired configuration', exact: true }).click()
+  await person.getByText('Desired configuration saved. Node application is not confirmed.', { exact: true }).waitFor()
+  assert.equal((await (await api('publication', keys[0])).json()).revision, 2)
+  const cookie = await human.cookies()
+  await stop(); await start()
+  const old = await fetch(origin + '/console/api/v1/publication', { headers: { Cookie: cookie.map(c => `${c.name}=${c.value}`).join('; ') } })
+  assert.equal(old.status, 401, 'in-memory session survived process restart')
+  await human.clearCookies(); await humanLogin()
+  const publication = await (await api('publication', keys[0])).json()
+  assert.equal(publication.revision, 2); assert(publication.policy.includes('name: installed'))
+  const accounts = await (await api('accounts', keys[0])).json()
+  assert.equal(accounts.accounts.length, 1); assert.equal(accounts.accounts[0].username, 'operator')
+  const audit = await person.evaluate(async () => (await fetch('/console/api/v1/audit')).json())
+  assert(JSON.stringify(audit).includes('Installed operator publication'), 'durable publication audit missing')
+  for (const width of [1440, 375]) {
+    await person.setViewportSize({ width, height: 1000 })
+    assert(await person.evaluate(() => document.documentElement.scrollWidth <= innerWidth))
+    await person.screenshot({ path: join(evidence, `installed-controller-${width}.png`), fullPage: true })
+  }
+  await stop()
+  for (const key of keys) assert(!logs.includes(key), 'runtime logged a credential')
+  const report = { result: 'pass', source, runtimePATH: 'empty', relocated: true, initialRevision: 1, recoveredRevision: 2, accounts: 1, oldSessionRejected: true, independentAudiences: true, cleanSIGTERM: true }
+  await writeFile(join(evidence, 'install-report.json'), JSON.stringify(report, null, 2) + '\n')
+  console.log('PASS detached static Controller: private init, real browser bootstrap/human publication, restart/audit, no runtime tools')
+  completed = true
+} catch (err) {
+  // Never propagate child process argument/env/cause or unredacted private logs.
+  console.error(publicError(err?.stack ?? err)); console.error(publicError(logs)); process.exitCode = 1
+} finally {
+  if (browser) await browser.close()
+  if (child?.exitCode === null) { const exit = once(child, 'exit'); child.kill('SIGKILL'); await exit }
+  await rm(temp, { recursive: true, force: true })
+}
+assert(completed || process.exitCode === 1)

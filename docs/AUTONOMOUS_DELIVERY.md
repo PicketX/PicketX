@@ -1,5 +1,42 @@
 # Autonomous delivery checkpoint
 
+## Controller install code accepted — 2026-10-19T13:46Z
+
+PR35 active, owner codex/controller-install, heartbeat13:46Z, lease until14:15Z or
+explicit release/merged+verified-green-main. Corrected code local8a2b3ee,
+remote92554c2/actualcheckouta01407f share tree72c34fe872d51836a9e81f8cdb8bb97b3e3a4d95.
+Native39261533014 Go118090142639/Web118090142370/install118090142737 all required
+steps pass; 247 top-level/607 total Go tests, no fail/skip/race; locked Web and
+detached musl-static tar installation, empty-PATH browser/human publication,
+SIGTERM/restart/audit pass. Three downloaded ZIP hashes, inner tar240-file manifest,
+actual checkout/tree/static ELF and public report verified;1440/375 screenshots
+inspected. One independent whole-branch review, two Important RED→GREEN fixes,
+two explicit deferred Minors and full rulings/costs: validation/CONTROLLER_INSTALL_REVIEW.md.
+Final documentation-only head still requires full3-job native CI, exact expected
+head merge and full main/source/archive verification. Immutable receipts and
+immediate lease release belong in PR35 final metadata. No Agent/kernel changes.
+Next: packaged Controller→Agent→trusted ingress→actual application installation/
+restart/host-service acceptance; prior Gitea proof is not packaged deployment proof.
+Whole goal remains incomplete; keep existing automation enabled.
+
+## Controller install acquisition — 2026-10-19T13:05Z
+
+Owner codex/controller-install, heartbeat13:05Z, lease until14:15Z or explicit
+release/merged+verified-green-main. Core298863f4/tree437041c/mainCI39240788047 and
+Agent233f081/tree6ae6b77/mainCI39251805260 accepted; both have no open PRs.
+PR21 explicitly released12:30Z, old CorePR34 lease released by green main.
+New branch in existing host-owned isolated worktree; old branches retained.
+Spec/plan superpowers/{specs,plans}/2026-10-19-controller-install.md. Scope private
+CLI init + static binaries/Web bundle and detached first-use browser/restart
+acceptance; no Agent/kernel changes or installed host service. Source/database
+authority explicit; no sample Grants. Routine approval pauses waived by user's
+autonomous mandate, focused plan/TDD/one review retained. Next after this: packaged
+Controller/Agent/ingress/application fresh-install acceptance, not repeated Gitea.
+Local baseline internal/cli passes; known Unix listener restrictions require full
+native CI. Final immutable evidence/release in final PR metadata, not this header.
+中文：推进私有初始化及无需源码/Go/npm运行的静态安装包；不自动安装宿主服务，
+安装到Agent与真实应用的联合验收另行完成。整体目标尚未宣称完成。
+
 ## Explicit HTTP path prefixes — acquisition 2026-10-19T10:18Z
 
 Owner codex/http-path-prefixes; heartbeat10:46Z; short lease until11:25Z or explicit

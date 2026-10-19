@@ -1,0 +1,30 @@
+# SPDX-License-Identifier: Apache-2.0
+# Opt-in template: create the user, deploy assets, and initialize private state first.
+[Unit]
+Description=PicketX Controller
+After=network.target
+
+[Service]
+Type=simple
+User=picketx
+Group=picketx
+WorkingDirectory=/var/lib/picketx/controller
+ExecStart=/opt/picketx/bin/picketx-controller -config /var/lib/picketx/controller/controller.yaml
+Restart=on-failure
+RestartSec=3s
+TimeoutStopSec=15s
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+CapabilityBoundingSet=
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+ReadWritePaths=/var/lib/picketx/controller
+
+[Install]
+WantedBy=multi-user.target
