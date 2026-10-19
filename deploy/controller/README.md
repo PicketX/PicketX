@@ -7,7 +7,8 @@ This opt-in Linux-amd64 bundle contains fully static `bin/picketx-controller`,
 libraries are **build-time only**, not runtime requirements. Nginx/another existing
 trusted ingress remains responsible for public TLS and application forwarding.
 This is one single-process SQLite Controller, not HA/PostgreSQL or an auto-installer.
-The systemd file is a template: native process/browser acceptance is not a boot test.
+The systemd file is an opt-in template. CI separately tests its real unprivileged
+service lifecycle and stopped restore; this is not a machine reboot test.
 
 ## Build and inspect
 
@@ -67,7 +68,13 @@ the binary/config/user paths match. It runs without capabilities, with a strict
 read-only filesystem except the initialized state directory. Start/enable manually;
 verify `http://127.0.0.1:8080/healthz` and `/readyz` separately. Type=simple is process
 startup, not readiness. Stop uses SIGTERM. No nftables/kernel privilege is required
-by this Controller. A real host boot/systemd/Agent acceptance is a separate gate.
+by this Controller. Real machine boot and Agent service acceptance remain separate.
+
+The service acceptance uses the shipped sandbox/restart settings on disposable
+Linux with an isolated test identity and paths. It checks the actual executable,
+non-root UID, zero capabilities, NoNewPrivileges, IPv4 HTTP/IPv6 Agent listener,
+SIGKILL automatic restart and clean SIGTERM. It does not enable or reboot your
+machine, verify a production reverse proxy, or validate an Agent service deployment.
 
 ## First sign-in and credentials
 
@@ -116,6 +123,19 @@ Do not copy only the SQLite main file while WAL is active. Restore ownership0700
 verified bundle and a pre-upgrade stopped-state backup. Migration rollback is not
 promised: do not open an upgraded database with an older binary without a tested
 restore. No schema/automatic data migration is introduced by this bundle increment.
+
+For a stopped relocation, first copy the **entire** private instance to a new0700
+backup and verify every file; never overwrite the original/backup or restore only
+the SQLite file. Restore to a new0700 directory under a trusted private parent,
+preserve each0600 file, then review the four absolute private paths in the copied
+JSON-syntax controller.yaml: database, credentials, management.credentials and
+authz.credentials. Keep the original authority, browser origin and asset path.
+Restore ownership to the service user, update the unit WorkingDirectory/config/
+ReadWritePaths to the new instance, then daemon-reload/start and verify readiness,
+fresh login, exact durable publication/accounts/audit and old-session rejection.
+Keep the stopped original and backup protected until recovery is accepted. Do not
+run controller-init on restored state. The CI helper is not a production backup
+command or an online/multi-writer backup procedure.
 
 Native CI installs a relocated bundle outside source with an empty runtime PATH,
 uses real Chromium to create/sign-in a human, publishes and restarts/readbacks
