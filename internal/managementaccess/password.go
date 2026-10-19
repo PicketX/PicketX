@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"github.com/PicketX/PicketX/internal/password"
 	"golang.org/x/crypto/bcrypt"
+	"strconv"
 )
 
 // Valid cost12 encoding used only to equalize missing/disabled-user work. It is
@@ -13,11 +14,15 @@ import (
 const dummyPasswordHash = "$2a$12$C6UzMDM.H6dfI/f/IKcEe.OYsR/b.njxQnsWCpiX.4HmpAmj53Eyy"
 
 func userFingerprint(u userRecord) string {
-	sum := sha256.Sum256([]byte("password\x00" + u.ID + "\x00" + u.Username + "\x00" + u.PasswordHash))
+	prefix := "password\x00"
+	if u.Version > 0 {
+		prefix = "database-password\x00" + strconv.FormatUint(u.Version, 10) + "\x00"
+	}
+	sum := sha256.Sum256([]byte(prefix + u.ID + "\x00" + u.Username + "\x00" + u.PasswordHash))
 	return hex.EncodeToString(sum[:])
 }
 func (a *Access) PasswordLoginEnabled() (bool, error) {
-	doc, e := loadCredentials(a.settings.Credentials)
+	doc, e := a.credentials()
 	if e != nil {
 		return false, e
 	}
@@ -32,7 +37,7 @@ func (a *Access) AuthenticatePassword(username, raw string) (Principal, string, 
 	if !validUsername(username) || !password.Valid(raw) {
 		return Principal{}, "", ErrUnauthorized
 	}
-	doc, e := loadCredentials(a.settings.Credentials)
+	doc, e := a.credentials()
 	if e != nil {
 		return Principal{}, "", e
 	}

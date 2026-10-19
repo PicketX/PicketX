@@ -21,11 +21,13 @@ var ErrUnavailable = management.ErrUnavailable
 
 type Settings struct {
 	Credentials                string
+	UsersMode                  string
 	Reload                     time.Duration
 	WarnRules, WarnLoadPercent int
 }
 type Principal = management.Principal
 type Access struct {
+	db            *gorm.DB
 	passwordSlots chan struct{}
 	settings      Settings
 	enforcer      *casbin.SyncedEnforcer
@@ -48,8 +50,14 @@ m = hasSubject(r.subjects, p.sub) && r.operation == p.operation
 `
 
 func New(db *gorm.DB, settings Settings, log *slog.Logger) (*Access, error) {
+	if settings.UsersMode == "" {
+		settings.UsersMode = "file"
+	}
 	if db == nil || log == nil || settings.Credentials == "" || settings.Reload <= 0 || settings.Reload > 24*time.Hour || settings.WarnRules < 1 || settings.WarnLoadPercent < 1 || settings.WarnLoadPercent > 1000 {
 		return nil, fmt.Errorf("invalid management access settings")
+	}
+	if settings.UsersMode != "file" && settings.UsersMode != "database" {
+		return nil, fmt.Errorf("invalid management users mode")
 	}
 	if _, e := loadPrincipals(settings.Credentials); e != nil {
 		return nil, e
@@ -87,7 +95,10 @@ func New(db *gorm.DB, settings Settings, log *slog.Logger) (*Access, error) {
 		}
 		return false, nil
 	})
-	a := &Access{settings: settings, enforcer: enforcer, log: log.With("component", "management_rbac"), passwordSlots: make(chan struct{}, 4)}
+	a := &Access{db: quietAccountsDB(db), settings: settings, enforcer: enforcer, log: log.With("component", "management_rbac"), passwordSlots: make(chan struct{}, 4)}
+	if e = a.initializeAccounts(); e != nil {
+		return nil, fmt.Errorf("invalid management identity authority")
+	}
 	if e = a.reload(true); e != nil {
 		return nil, e
 	}
@@ -106,9 +117,15 @@ func bootstrap(db *gorm.DB) error {
 		}
 		if r.RowsAffected > 0 {
 			if row.Version == 1 {
-				return bootstrapRequests(tx)
+				if e := bootstrapRequests(tx); e != nil {
+					return e
+				}
+				row.Version = 2
 			}
-			if row.Version != 2 {
+			if row.Version == 2 {
+				return bootstrapAccounts(tx)
+			}
+			if row.Version != 3 {
 				return fmt.Errorf("unsupported management schema version")
 			}
 			return nil
@@ -136,7 +153,10 @@ func bootstrap(db *gorm.DB) error {
 		if e := tx.Exec("INSERT INTO management_schema(id,version) VALUES(1,1)").Error; e != nil {
 			return e
 		}
-		return bootstrapRequests(tx)
+		if e := bootstrapRequests(tx); e != nil {
+			return e
+		}
+		return bootstrapAccounts(tx)
 	})
 }
 
@@ -166,6 +186,9 @@ func (a *Access) Allowed(p Principal, operation string) (bool, error) {
 	defer a.mu.RUnlock()
 	if !a.available {
 		return false, ErrUnavailable
+	}
+	if (operation == "account:read" || operation == "account:write") && a.settings.UsersMode != "database" {
+		return false, nil
 	}
 	if p.ID == "" || len(p.Roles) == 0 {
 		return false, nil
@@ -245,6 +268,6 @@ func (a *Access) Ready() bool {
 	if !available {
 		return false
 	}
-	_, e := loadPrincipals(a.settings.Credentials)
+	_, e := a.credentials()
 	return e == nil
 }

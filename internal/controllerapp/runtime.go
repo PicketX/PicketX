@@ -105,7 +105,7 @@ func Run(ctx context.Context, c runtimeconfig.Config, log *slog.Logger, d Depend
 		}
 		defer p.store.Close()
 		if c.Source.Mode == "database" {
-			access, e = managementaccess.New(p.store.GORM(), managementaccess.Settings{Credentials: c.Management.Credentials, Reload: c.Management.Reload, WarnRules: c.Management.WarnRules, WarnLoadPercent: c.Management.WarnLoadPercent}, log)
+			access, e = managementaccess.New(p.store.GORM(), managementaccess.Settings{Credentials: c.Management.Credentials, UsersMode: c.Management.UsersMode, Reload: c.Management.Reload, WarnRules: c.Management.WarnRules, WarnLoadPercent: c.Management.WarnLoadPercent}, log)
 			if e != nil {
 				return e
 			}

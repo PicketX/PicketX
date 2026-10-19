@@ -13,6 +13,7 @@ import (
 	"strings"
 
 	"github.com/PicketX/PicketX/internal/accessrequest"
+	"github.com/PicketX/PicketX/internal/account"
 	"github.com/PicketX/PicketX/internal/management"
 	"github.com/PicketX/PicketX/internal/publication"
 	"github.com/PicketX/PicketX/internal/strictjson"
@@ -79,6 +80,9 @@ func registerManagement(e *echo.Echo, service *management.Service, limits Manage
 	group.GET("/audit", h.audit)
 	group.GET("/http-decisions", h.httpAudit)
 	group.GET("/me", h.me)
+	group.GET("/accounts", h.accounts)
+	group.POST("/accounts", h.createAccount)
+	group.PUT("/accounts/:id", h.updateAccount)
 	group.GET("/grants", h.grants)
 	group.POST("/grants", h.issueGrant)
 	group.POST("/grants/:uid/revoke", h.revokeGrant)
@@ -98,6 +102,10 @@ func apiError(c *echo.Context, status int, code string) error {
 }
 func mappedError(c *echo.Context, e error) error {
 	switch {
+	case errors.Is(e, account.ErrInvalid):
+		return apiError(c, 400, "invalid_account")
+	case errors.Is(e, account.ErrNotFound):
+		return apiError(c, 404, "account_not_found")
 	case errors.Is(e, accessrequest.ErrNotFound):
 		return apiError(c, 404, "request_not_found")
 	case errors.Is(e, accessrequest.ErrConflict):
@@ -331,7 +339,7 @@ func (h *managementHTTP) me(c *echo.Context) error {
 		return mappedError(c, e)
 	}
 	operations := []string{}
-	for _, op := range []string{"publication:read", "publication:write", "audit:read", "request:create", "request:read-own", "request:review"} {
+	for _, op := range []string{"publication:read", "publication:write", "audit:read", "request:create", "request:read-own", "request:review", "account:read", "account:write"} {
 		e = h.service.Check(p, op)
 		if e == nil {
 			operations = append(operations, op)

@@ -30,7 +30,7 @@ type Config struct {
 	Database, Credentials string
 	Source                struct{ Mode, Policy, Facts string }
 	Management            struct {
-		Credentials                                          string
+		Credentials, UsersMode                               string
 		Reload                                               time.Duration
 		WarnRules, WarnLoadPercent, RequestsPerSecond, Burst int
 	}
@@ -49,7 +49,7 @@ func defaults() map[string]any {
 	return map[string]any{
 		"authz.enabled": false, "authz.network": "tcp", "authz.address": "", "authz.credentials": "",
 		"http.listen": "127.0.0.1:8080", "poll": "1s", "shutdown": "5s", "database": "", "credentials": "", "source.mode": "file", "source.policy": "", "source.facts": "",
-		"management.credentials": "", "management.reload": "30s", "management.warn_rules": 10000, "management.warn_load_percent": 50, "management.requests_per_second": 128, "management.burst": 256,
+		"management.credentials": "", "management.users_mode": "file", "management.reload": "30s", "management.warn_rules": 10000, "management.warn_load_percent": 50, "management.requests_per_second": 128, "management.burst": 256,
 		"browser.enabled": false, "browser.origin": "", "browser.assets": "",
 		"agent.enabled": false, "agent.listen": "127.0.0.1:9090", "agent.authority": "", "agent.tls_cert": "", "agent.tls_key": "",
 		"agent.max_credentials": 128, "agent.max_streams": 128, "agent.max_frame": 4 << 20, "agent.establish_per_second": 128, "agent.messages_per_second": 32, "agent.hello_timeout": "5s", "agent.send_timeout": "10s",
@@ -147,6 +147,7 @@ func Load(path string, env, overrides map[string]string) (Config, error) {
 	c.Source.Mode = k.String("source.mode")
 	c.Source.Facts = k.String("source.facts")
 	c.Management.Credentials = k.String("management.credentials")
+	c.Management.UsersMode = k.String("management.users_mode")
 	c.Management.WarnRules = k.Int("management.warn_rules")
 	c.Management.WarnLoadPercent = k.Int("management.warn_load_percent")
 	c.Management.RequestsPerSecond = k.Int("management.requests_per_second")
@@ -232,6 +233,12 @@ func (c Config) Validate() error {
 	}
 	if c.Source.Mode != "file" && c.Source.Mode != "database" {
 		return fmt.Errorf("invalid source mode")
+	}
+	if c.Management.UsersMode != "" && c.Management.UsersMode != "file" && c.Management.UsersMode != "database" {
+		return fmt.Errorf("invalid management users mode")
+	}
+	if c.Management.UsersMode == "database" && c.Source.Mode != "database" {
+		return fmt.Errorf("database users require database source mode")
 	}
 	if c.Source.Mode == "file" {
 		if c.Management.Credentials != "" {

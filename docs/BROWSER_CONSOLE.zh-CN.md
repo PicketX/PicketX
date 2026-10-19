@@ -1,6 +1,6 @@
 # 管理浏览器控制台
 
-本文说明完整期望策略/事实文档、事务审计和工作台部署。后续[授权](GRANT_MANAGEMENT.zh-CN.md)与[资源](RESOURCE_MANAGEMENT.zh-CN.md)页面提供结构化管理员流程；[HTTP授权](HTTP_AUTHORIZATION.zh-CN.md)是独立限权入口集成。[本地人员登录](HUMAN_LOGIN.zh-CN.md)支持管理员配置密码账户，OIDC/账户管理和申请审批尚未完成。保存不等于节点应用，节点观测是时间点报告而非独立内核确认。
+本文说明完整期望策略/事实文档、事务审计和工作台部署。[授权](GRANT_MANAGEMENT.zh-CN.md)与[资源](RESOURCE_MANAGEMENT.zh-CN.md)页面提供结构化管理员流程；[HTTP授权](HTTP_AUTHORIZATION.zh-CN.md)是独立限权入口集成。[本地人员登录](HUMAN_LOGIN.zh-CN.md)保留文件配置；[账户管理](MANAGED_ACCOUNTS.zh-CN.md)新增显式数据库人员权威及旧会话永久失效。OIDC 仍延后；申请与独立审批另段已交付。保存不等于节点应用，节点观测是时间点报告而非独立内核确认。
 
 ## 运行
 

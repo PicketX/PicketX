@@ -88,7 +88,7 @@ for boot in range(2):
         assert document['policy']==pathlib.Path('examples/static/gitea.yaml').read_text()
         db=sqlite3.connect(managed_db)
         assert db.execute('SELECT version FROM controller_schema').fetchone()==(4,)
-        assert db.execute('SELECT version FROM management_schema').fetchone()==(2,)
+        assert db.execute('SELECT version FROM management_schema').fetchone()==(3,)
         assert db.execute('SELECT count(*) FROM controller_access_request').fetchone()==(0,)
         assert db.execute('SELECT count(*) FROM controller_request_event').fetchone()==(0,)
         assert db.execute('SELECT mode FROM controller_source').fetchone()==('database',)
