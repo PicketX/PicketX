@@ -3,6 +3,8 @@ import assert from 'node:assert/strict'
 import { readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { spawnSync } from 'node:child_process'
+import { waitForOperation } from './wait-for-operation.mjs'
+import { readIdentity } from './read-identity.mjs'
 
 export async function accessRequests({ browser, origin, principalPath, root, evidence, databasePath }) {
  const password = 'independent request password!'
@@ -18,7 +20,7 @@ export async function accessRequests({ browser, origin, principalPath, root, evi
  // for configured policy reload below; do not mock current-user operations.
  const policies = spawnSync('python3', ['-c', `import sqlite3,sys
 c=sqlite3.connect(sys.argv[1])
-for role,op in [('role:create-only','request:create'),('role:approve-only','request:review'),('role:approve-only','publication:write')]:
+for role,op in [('role:approve-only','request:review'),('role:approve-only','publication:write')]:
  c.execute("INSERT INTO casbin_rule(ptype,v0,v1,v2,v3,v4,v5) VALUES('p',?,?,'allow','','','')",(role,op))
 c.commit()`, databasePath], { encoding: 'utf8' })
  assert.equal(policies.status, 0, policies.stderr)
@@ -162,9 +164,31 @@ c.commit()`, databasePath], { encoding: 'utf8' })
  const reviewerContext = await browser.newContext(), reviewer = await reviewerContext.newPage()
  for (const p of [creator, reviewer]) p.on('pageerror', e => errors.push(e.message))
  await login(creator, 'creator')
- await creator.waitForFunction(async () => (await (await fetch('/console/api/v1/me')).json()).operations?.includes('request:create'), null, { timeout: 45000 })
- await creator.reload()
- await creator.getByRole('heading', { name: 'Access requests', exact: true }).waitFor()
+ // Guarantee an actual empty first observation. Publish through real SQLite
+ // only AFTER that response; await the normal periodic policy reload.
+ let published = false
+ const readCreator = async () => {
+  const actual = await creator.evaluate(readIdentity, { url: '/console/api/v1/me' })
+  if (!published) {
+   assert.deepEqual(actual, { status: 200, id: 'principal:creator', operations: [] })
+   const grant = spawnSync('python3', ['-c', `import sqlite3,sys
+c=sqlite3.connect(sys.argv[1])
+c.execute("INSERT INTO casbin_rule(ptype,v0,v1,v2,v3,v4,v5) VALUES('p','role:create-only','request:create','allow','','','')")
+c.commit()`, databasePath], { encoding: 'utf8' })
+   assert.equal(grant.status, 0, 'real custom policy publication succeeded')
+   published = true
+   console.log('Observed actual creator200 with no capability BEFORE real SQLite policy publication')
+  }
+  return actual
+ }
+ assert.equal(await waitForOperation(readCreator, 'request:create'), true, 'actual custom capability must be observed, not a Promise resolving false')
+ for (let reload = 0; reload < 12; reload++) {
+  await creator.reload()
+  await creator.getByRole('heading', { name: 'Access requests', exact: true }).waitFor()
+  const actual = await creator.evaluate(readIdentity, { url: '/console/api/v1/me' })
+  assert.deepEqual(actual, { status: 200, id: 'principal:creator', operations: ['request:create'] }, `actual custom capability after reload ${reload}`)
+ }
+ console.log('PASS actual delayed custom capability: initial200[], periodic SQLite policy propagation, 12 strict browser reloads')
  assert.equal(await creator.getByLabel('Policy YAML').count(), 0)
  assert.equal(await creator.evaluate(async () => (await fetch('/console/api/v1/access-requests')).status), 403)
  await creator.getByLabel('Requested source IP or CIDR', { exact: true }).fill('192.0.2.66')

@@ -1,5 +1,23 @@
 # 自动交付检查点
 
+## PR37 权限就绪等待 — 2026-10-19T19:00Z
+Owner codex/capability-refresh，租约19:25Z或明确释放/合并且main完整验证全绿。
+原生RED39305662932确认Playwright异步Promise提前成功，不是生产授权缺陷。
+等待真实200权限，保留12次严格刷新。一次独立全分支评审的异常JSON泄露
+Important经一次根修复真实HTTP RED→GREEN；浏览器取消信号Minor明确延后。
+完整裁决/代价见validation/CAPABILITY_REFRESH_REVIEW.md。28Node测试通过；
+本地完整Go/race仅既有Unix权限限制。最终精确源码/main完整原生CI/四归档
+验证必须通过，准确证据/立即释放租约写入PR37最终记录。未改生产/API/UI/
+内核。下一段Agent服务/LKG与安装后联合验收，整体目标仍未完成。
+
+## 权限刷新排查 — 2026-10-19T18:38Z
+负责人codex/capability-refresh，心跳18:38Z，租约19:25Z或明确释放/合并且主线完整全绿。
+准确主线Core85fa14ef和Agent5373595最新任务及步骤全绿，无开放PR，36/23已释放。
+既有干净隔离工作区切出新分支，保留旧分支。先排查PR36首次create-only用户重载后
+操作/导航消失，不将同源复跑通过称作修复。设计/上下文图见superpowers/specs/
+2026-10-20-capability-refresh.md。本地管理权限/Controller基线通过；定位前不改生产
+鉴权、不放宽限流/断言。之后Agent服务/LKG恢复；最终证据和立即释放记录在本PR。
+
 ## Controller 服务验收接续 — 2026-10-19T17:45Z
 所有者 codex/controller-service；短租约18:35Z或明确释放/合并且main完整验收后立即释放。
 Core93024b2与Agent5373595主线所有必需任务/步骤通过，无开放PR；PR35/23已明确释放。

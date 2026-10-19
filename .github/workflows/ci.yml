@@ -83,6 +83,8 @@ jobs:
           nginx -V
           npx playwright install --with-deps chromium
           npm run test:e2e
+      - name: Actual HTTP capability readiness regressions
+        run: node --test e2e/wait-for-operation.test.mjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
