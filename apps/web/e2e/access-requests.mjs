@@ -132,11 +132,14 @@ c.commit()`, databasePath], { encoding: 'utf8' })
  await admin.getByLabel('Requested Resource', { exact: true }).selectOption('resource-gitea-v1')
  await admin.getByRole('checkbox', { name: /^https / }).check()
  await admin.getByLabel('Request reason', { exact: true }).fill('Held write navigation regression')
- let releaseWrite, writeStarted, writes = 0
+ let releaseWrite, writeStarted, finishWrite, writes = 0
  const writing = new Promise(resolve => { writeStarted = resolve })
+ const continued = new Promise(resolve => { finishWrite = resolve })
  await admin.route('**/console/api/v1/access-requests', async route => {
   if (route.request().method() !== 'POST') return route.continue()
-  writes++; writeStarted(); await new Promise(resolve => { releaseWrite = resolve }); await route.continue()
+  writes++; writeStarted()
+  try { await new Promise(resolve => { releaseWrite = resolve }); await route.continue() }
+  finally { finishWrite() }
  })
  await admin.getByRole('button', { name: 'Send access request', exact: true }).click()
  await writing
@@ -148,7 +151,7 @@ c.commit()`, databasePath], { encoding: 'utf8' })
   await admin.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))))
   assert.equal(await admin.getByRole('button', { name: 'Send access request', exact: true }).isDisabled(), true, 'completed GET cannot unlock pending POST')
   assert.equal(await admin.getByRole('button', { name: 'Sign out', exact: true }).isDisabled(), true)
- } finally { releaseWrite(); await admin.unroute('**/console/api/v1/access-requests') }
+ } finally { releaseWrite(); await continued; await admin.unroute('**/console/api/v1/access-requests') }
  await admin.getByText('Request saved. No access has been granted.', { exact: true }).waitFor()
  await admin.waitForFunction(() => ![...document.querySelectorAll('button')].find(b => b.textContent === 'Sign out')?.disabled)
  const persisted = await admin.evaluate(async () => (await (await fetch('/console/api/v1/access-requests')).json()).requests.filter(r => r.reason === 'Held write navigation regression'))
