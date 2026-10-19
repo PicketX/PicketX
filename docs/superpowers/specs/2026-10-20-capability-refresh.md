@@ -31,3 +31,14 @@ before any discovered production behavior change. Diagnose first, scope fix seco
 Reproduce before fixing; full Go/race/vet/build and locked Web checks, actual native
 browser/service gates; one independent review, exact-source/expected-head merge
 and main raw/artifact verification. Instrumentation alone is not a claimed fix.
+
+## Root-cause extension — 18:48Z
+Pinned Playwright coreBundle.js25672..25736 calls predicate() without awaiting its
+return before its truth check. An async function returns a truthy Promise: polling
+finishes even when that Promise resolves false. Existing creator readiness did not
+wait for the30s periodic policy propagation. Replace ONLY the test wait with an
+explicit awaited node-side loop. Guarantee /me200[] before real custom-rule INSERT;
+normal periodic reload must produce actual permission before any strict reload.
+Keep one bounded deadline/abort, reject non200/malformed/transport immediately,
+only poll valid200 missing operation. Real-HTTP tests and actual native RED/GREEN;
+not a production Casbin/React repair or policy widening. Layout/tokens untouched.

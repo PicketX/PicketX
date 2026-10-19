@@ -40,3 +40,26 @@ Self-review: all5focuses map to listener bounds/allowlist, strict per-iteration 
 and capability assertions, original-error rethrow and unchanged production policy.
 The plan is intentionally investigation-only until evidence identifies the fix;
 no unknown production implementation is authorized by an unspecified placeholder.
+
+### Task 2: Explicit awaited readiness (root-cause extension18:48Z)
+Pinned Playwright coreBundle.js25672..25736 tests predicate()'s Promise for truth,
+then adopts its false result without repolling. This explains initial30s Casbin
+propagation racing the old async wait and reload; production policy unchanged.
+**Files:** e2e/wait-for-operation{,.test}.mjs, access-requests.mjs, CI.
+**Interfaces:** waitForOperation(readIdentity, operation, {timeoutMs=45000,
+pollMs=100}={}) returns true ONLY after awaited200/operations contains operation.
+readIdentity(signal) is asynchronous; bounded deadline aborts pending I/O. Missing
+operation in a valid200 is the sole polling case. Non200/malformed/read failures
+reject immediately without response-body disclosure. No background polling after
+success/failure; original rejection preserved.
+- [ ] Extract old single-read predicate behavior, observe real-HTTP false!==true RED.
+- [ ] Native deterministic fixture: creator rule absent; pinned async wait resolves
+  false; actual first /me200[] THEN real SQLite INSERT. Old single-read readiness
+  must fail its true assertion (not random timeouts). Record exact native RED.
+- [ ] Implement deadline/abort/awaited polling; real-HTTP tests readiness, stop,
+  timeout, pending I/O,202/401/429/503 and malformed data RED→GREEN.
+- [ ] Remove temporary upstream characterization, retain actual delayed rule and
+  all12 strict reload assertions plus complete request/approval workflow.
+- [ ] Full locked Web/Go/native gates; one independent review and exact merge/main.
+Self-review: behavior only in test utilities; no production APIs/UI/auth changes,
+failure predicate preserved; valid200 absent operation is synchronization not retry.
