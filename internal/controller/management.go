@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/PicketX/PicketX/internal/accessrequest"
 	"github.com/PicketX/PicketX/internal/management"
 	"github.com/PicketX/PicketX/internal/publication"
 	"github.com/PicketX/PicketX/internal/strictjson"
@@ -70,6 +71,10 @@ func registerManagement(e *echo.Echo, service *management.Service, limits Manage
 		DenyHandler:  func(c *echo.Context, _ string, _ error) error { return apiError(c, 429, "rate_limited") },
 	}))
 	group.GET("/publication", h.getPublication)
+	group.GET("/access-request-catalog", h.requestCatalog)
+	group.GET("/access-requests", h.accessRequests)
+	group.POST("/access-requests", h.createAccessRequest)
+	group.POST("/access-requests/:uid/decision", h.decideAccessRequest)
 	group.PUT("/publication", h.putPublication)
 	group.GET("/audit", h.audit)
 	group.GET("/http-decisions", h.httpAudit)
@@ -93,6 +98,10 @@ func apiError(c *echo.Context, status int, code string) error {
 }
 func mappedError(c *echo.Context, e error) error {
 	switch {
+	case errors.Is(e, accessrequest.ErrNotFound):
+		return apiError(c, 404, "request_not_found")
+	case errors.Is(e, accessrequest.ErrConflict):
+		return apiError(c, 409, "request_conflict")
 	case errors.Is(e, management.ErrUnauthorized):
 		if strings.HasPrefix(c.Request().URL.Path, "/api/v1/") {
 			c.Response().Header().Set("WWW-Authenticate", "Bearer")
@@ -322,7 +331,7 @@ func (h *managementHTTP) me(c *echo.Context) error {
 		return mappedError(c, e)
 	}
 	operations := []string{}
-	for _, op := range []string{"publication:read", "publication:write", "audit:read"} {
+	for _, op := range []string{"publication:read", "publication:write", "audit:read", "request:create", "request:read-own", "request:review"} {
 		e = h.service.Check(p, op)
 		if e == nil {
 			operations = append(operations, op)

@@ -1,5 +1,56 @@
 # 自动交付检查点
 
+## 访问申请 — 代码已验收，最终集成待核实 2026-10-19T06:33Z
+
+[PR32](https://github.com/PicketX/PicketX/pull/32)代码验收：本地
+66fb33072f5cf0d2e7c6673c0fc2a2003162f374、远端
+dc55a3b972d75f748dbd9644c461accc6f6f2978、真实CI检出
+fd8bb9c5f6819a16b978593cad4e6712f7aa8490同树
+ee9b0bac97066d68ab911d8c5be34349337614d6。CI39209796875：Go117920419720/
+Web117920420197成功；原始231顶层/581含子测试，无fail/skip/race；Unix100重复、
+固定protobuf/OpenAPI、vet/build、Web锁文件检查、静态Controller/CLI及真实SQLite/
+gRPC/重启/SIGTERM通过。真实Chromium双人员申请/缩限批准、IPv6独立Grant、固定期限、
+拒绝/撤销/审计、自定义权限角色及挂起GET/POST导航保护通过。截图artifact12166992084
+的ZIP实测SHA256
+8b125e42978241fec4192276cb744e783d795f813f5391fa265ea10327e1a533匹配；
+375/1440已目视检查。UI/UX技能沿用既有React视觉体系、真实API/失败/新鲜度和权限边界。
+
+一次独立全分支评审00c9729..91682bc发现四项Important，单轮RED→GREEN修复；不伪造
+二次评审或GitHub批准。中文原因UTF8字节提示Minor延后。全部取舍、风险与回归见
+[评审记录](validation/ACCESS_REQUESTS_REVIEW.md)。早期fixture/schema/隐藏标签/限流/
+路由清理失败不算验收，未放宽生产守卫。本地完整普通测试仅Unix EPERM；完整race还在
+并发负载下出现既有流合并超时。四包重点race和既有流测试单独race通过，最终原生门禁
+覆盖完整测试，不跳过必需场景。
+
+负责人codex/access-requests；心跳06:33Z，短租约至07:08Z或明确释放/合并且main成功。
+本次最终文档/状态同步不改产品代码；准确head/tree/CI、按expected head合并及main核实
+记录于PR32最终元数据。合并且main成功后自动释放，不必等07:08Z。Agent未改，保留
+maine013926/treeb58e0e7/mainCI39191015351及既有PR17/18联合证据。下一步扩展真实特权
+流程到人员审批，再完善账户/OIDC、必要场景中的请求绑定协议身份及发布加固。
+整体目标未完成，继续交付，不暂停任务。
+
+## 访问申请获取 — 历史 2026-10-19T05:38Z
+
+负责人codex/access-requests；心跳06:16Z，短租约至07:08Z或明确释放/合并且main成功。
+Core main3f06ad3/tree9e7697f/mainCI39199382201成功；Agent maine013926/treeb58e0e7/
+mainCI39191015351成功；两仓库无开放PR，PR30/31租约已释放。保留宿主管理的隔离工作区，
+干净基线local00c9729与main同树。设计/计划：superpowers/{specs,plans}/2026-10-19-access-requests.md。
+实现真实持久申请、独立缩限审批/拒绝、中英文页面及审批/Grant/审计/发布事务；
+不混淆申请人和网络来源。本地完整Go基线仍仅既有Unix socket EPERM，完整原生门禁必需。
+无Agent/内核变更，不宣称OIDC或整体完成。最终准确证据、剩余项与租约释放记录于对应PR。
+
+PR32仍为草稿；本地3d2ccc8与远端b7e2237192f5fecd1fc6342f67862cfb74b35dc5
+同树93b9da0d88372ca3fc0cbdb04206dc15b1cc8e6d，CI39208921145正在验证。
+之前CI39208177332的Go门禁全部通过；Web真实挂起GET/导航回归复现退出被锁住。
+一次独立全分支评审00c9729..91682bc发现四项Important和一项Minor；同一修复轮覆盖
+页面读写操作归属、自定义能力组合、同UID的Grant当前范围观测和提交后额外查询。
+真实SQLite/HTTP/Agent服务修订/重启回归已通过，最终准确head的完整原生门禁尚待核实。
+中文原因UTF8字节反馈Minor延后；取舍与风险详见validation/ACCESS_REQUESTS_REVIEW.md。
+之前凭据fixture/静态schema/隐藏标签失败均未当作验收，也未放宽生产守卫。本地完整普通
+测试仅Unix EPERM；串行race并发负载时仍复现既有coalesce期限错误，保留失败，不跳测试。
+验收后下一段推进新审批流程与特权Agent/Nginx/应用联合场景，再按路线图完善账户/OIDC
+及发布加固；未证明整体目标完成，不暂停开发。
+
 ## 本地人员登录已交付 — 2026-10-19T04:14Z
 
 [PR30](https://github.com/PicketX/PicketX/pull/30)按准确head

@@ -119,6 +119,11 @@ func TestModeBindingVersionOneMigrationAndValidation(t *testing.T) {
 		t.Fatal(e)
 	}
 	// Simulate the deployed version1 schema, before mode/audit were introduced.
+	for _, table := range []string{"controller_request_event", "controller_access_request"} {
+		if e := s.db.Exec("DROP TABLE " + table).Error; e != nil {
+			t.Fatal(e)
+		}
+	}
 	if e := s.db.Exec("DROP TABLE controller_http_audit").Error; e != nil {
 		t.Fatal(e)
 	}

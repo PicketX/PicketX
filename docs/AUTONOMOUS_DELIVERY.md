@@ -1,5 +1,73 @@
 # Autonomous delivery checkpoint
 
+## Access requests — code accepted; final integration gated 2026-10-19T06:33Z
+
+[PR32](https://github.com/PicketX/PicketX/pull/32) code acceptance: local
+66fb33072f5cf0d2e7c6673c0fc2a2003162f374, remote
+dc55a3b972d75f748dbd9644c461accc6f6f2978, actual CI checkout
+fd8bb9c5f6819a16b978593cad4e6712f7aa8490 all share tree
+ee9b0bac97066d68ab911d8c5be34349337614d6. CI39209796875 Go117920419720/
+Web117920420197 SUCCESS: raw231 top-level/581 total, zero fail/skip/race;
+Unix100repeat, pinned protocol/OpenAPI, vet/build, locked Web checks, static
+Controller/CLI and actual SQLite/gRPC/restart/SIGTERM all pass. Real Chromium
+separate human requester/approver, narrowed IPv6 Grant, immutable deadlines,
+rejection/revoke/audit, custom capability roles and held GET/POST navigation pass.
+Artifact12166992084 SHA256
+8b125e42978241fec4192276cb744e783d795f813f5391fa265ea10327e1a533 matches
+downloaded ZIP;375/1440 visually inspected. UI/UX skills retained the established
+React design system, real API/failure/freshness states and permission boundaries.
+
+One independent whole-branch review00c9729..91682bc:4 Important fixed RED→GREEN in
+one pass; no re-review or fabricated GitHub approval. Minor Chinese reason UTF8
+byte feedback remains deferred. Full findings/rulings/costs:
+[ACCESS_REQUESTS_REVIEW.md](validation/ACCESS_REQUESTS_REVIEW.md). Earlier failed
+fixture/schema/label/throttle/route-cleanup runs are not acceptance; production
+guards were retained. Local full normal only Unix EPERM; full race also had the
+unchanged coalescing timeout under concurrent work. Focused four-package race and
+the unchanged stream race case pass; final full native gates cover all tests.
+
+Owner codex/access-requests heartbeat06:33Z, short lease until07:08Z or explicit
+release/merged+green main. This final docs/status reconciliation changes no product
+code; its exact head/tree/CI, expected-head merge and main verification are recorded
+in PR32 final metadata. Lease releases immediately on merged+green main even
+before its clock expiry; do not wait until07:08Z after acceptance. No Agent/kernel change; retain
+Agent maine013926/treeb58e0e7/mainCI39191015351 and prior PR17/18 combined proof.
+Next: extend real privileged workflow to human approval, then account/OIDC,
+request-bound verified protocol identities where required and release hardening.
+Whole goal remains incomplete; keep delivery active.
+
+## Access request acquisition — historical 2026-10-19T05:38Z
+
+Owner codex/access-requests; heartbeat06:16Z, short lease until07:08Z or explicit
+release/merged+green main. Core main3f06ad3/tree9e7697f/mainCI39199382201 green;
+Agent maine013926/treeb58e0e7/mainCI39191015351 green; neither has open PRs.
+Prior PR30/31 leases released. Host-owned isolated worktree retained, clean base
+local00c9729 matches main tree. Spec/plan superpowers/{specs,plans}/2026-10-19-access-requests.md.
+Deliver real durable requests, independent narrowing approval/rejection and live
+EN/ZH console; transactional publication/audit and no requester/source confusion.
+Baseline full Go has only known Unix socket EPERM; full native gates mandatory.
+No Agent/kernel change, no OIDC/full-goal completion claim. Final immutable evidence,
+remaining items and automatic lease release belong in this PR's final metadata.
+中文：推进持久申请与独立审批，真实API/数据库/页面及完整验证后安全合并。
+
+PR32 is draft, remote7e8a30b/tree54365d5. Native39208177332 complete Go gates pass;
+Web held-GET/navigation regression RED leaves logout disabled. One independent
+whole-branch review00c9729..91682bc found4 Important and1 Minor; same fix pass covers
+UI read/write ownership, custom capability composition, sameUID Grant provenance
+and postcommit readback. Actual SQLite/HTTP/service/restart regressions now pass;
+final native Web/full exact-head gates pending. Minor Chinese reason byte feedback
+deferred; full decisions/costs in validation/ACCESS_REQUESTS_REVIEW.md. Earlier
+native fixture/schema/label failures were not accepted, no production guard weakened.
+Local full normal retains Unix EPERM; serial race also reproduced existing coalesce
+deadline under concurrent load; native exact-source proof required, no test skipped.
+Next after acceptance: final new workflow→privileged Agent/Nginx/application
+conjunction, account lifecycle/OIDC as roadmap requires, and release hardening.
+Fix-pass code local3d2ccc8 / remoteb7e2237192f5fecd1fc6342f67862cfb74b35dc5
+shares tree93b9da0d88372ca3fc0cbdb04206dc15b1cc8e6d. CI39208921145 is running.
+Final metadata/documentation head, exact CI checkout/tree/main result and lease
+auto-release must be verified in PR32 after this pending handoff; do not infer
+acceptance from an earlier code head or claim UI/kernel application from approval.
+
 ## Local human login delivered — 2026-10-19T04:14Z
 
 [PR30](https://github.com/PicketX/PicketX/pull/30) merged by expected head

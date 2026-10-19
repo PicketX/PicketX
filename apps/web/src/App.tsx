@@ -9,6 +9,7 @@ import { Grants } from '@/features/grants/Grants'
 import { Resources } from '@/features/resources/Resources'
 import { Nodes } from '@/features/nodes/Nodes'
 import { HTTPRoutes } from '@/features/http-routes/HTTPRoutes'
+import { Requests } from '@/features/requests/Requests'
 
 type Draft = Publication & { etag: string }
 export default function App() {
@@ -23,7 +24,9 @@ export default function App() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
-  const [tab, setTab] = useState<'publication' | 'audit' | 'grants' | 'resources' | 'routes' | 'nodes'>('publication')
+  const [tab, setTab] = useState<'publication' | 'audit' | 'grants' | 'resources' | 'routes' | 'nodes' | 'requests'>('publication')
+  const [requestDirty, setRequestDirty] = useState(false)
+  const [requestBusy, setRequestBusy] = useState(false)
   const [routeDirty, setRouteDirty] = useState(false)
   const [routeBusy, setRouteBusy] = useState(false)
   const [grantDirty, setGrantDirty] = useState(false)
@@ -45,11 +48,14 @@ export default function App() {
   const [controllers] = useState(() => new Set<AbortController>())
   const dirty = !!draft && !!accepted && (draft.policy !== accepted.policy || draft.facts !== accepted.facts)
   const canWrite = identity?.operations.includes('publication:write') ?? false
+  const canRead = identity?.operations.includes('publication:read') ?? false
+  const canRequests = identity?.operations.some(op => op.startsWith('request:')) ?? false
   const passwordMode = session?.password_login && signInMethod === 'password'
 
   function clear() {
     setSignInMethod('key'); setUsername(''); setPassword(''); setShowPassword(false)
     setRouteDirty(false); setRouteBusy(false)
+    setRequestDirty(false); setRequestBusy(false)
     epoch.current++
     setIdentity(null); setAccepted(null); setDraft(null); setReason(''); setKey(''); setAudit([]); setCursor(0); setHasMore(false); setLastRead(0); setConflict(false); setGrantDirty(false); setGrantBusy(false); setResourceDirty(false); setResourceBusy(false)
   }
@@ -65,16 +71,20 @@ export default function App() {
   }
   async function load(signal?: AbortSignal, replaceDraft = false) {
     const generation = epoch.current
-    const [me, doc, events] = await Promise.all([
-      request<Identity>('/me', { signal }), request<Publication>('/publication', { signal }), request<AuditPage>('/audit?limit=50', { signal }),
+    const me = await request<Identity>('/me', { signal })
+    const [doc, events] = await Promise.all([
+      me.data.operations.includes('publication:read') ? request<Publication>('/publication', { signal }) : Promise.resolve(null),
+      me.data.operations.includes('audit:read') ? request<AuditPage>('/audit?limit=50', { signal }) : Promise.resolve(null),
     ])
     if (generation !== epoch.current) return
+    setIdentity(me.data)
+    if (!doc) { setAccepted(null); setDraft(null); setTab('requests'); setLastRead(Date.now()); setReadFailed(false); return }
     if (!/^"\d+"$/.test(doc.etag)) throw new Error('Missing strong revision')
-    setIdentity(me.data); setAccepted(doc.data)
+    setAccepted(doc.data)
     // A read must not advance the editor's CAS base behind a preserved draft.
     setDraft(previous => replaceDraft || previous === null ? { ...doc.data, etag: doc.etag } : previous)
     if (replaceDraft) { setReason(''); setConflict(false) }
-    setAudit(events.data.events ?? []); setCursor(events.data.next_after); setHasMore((events.data.events?.length ?? 0) === 50)
+    setAudit(events?.data.events ?? []); setCursor(events?.data.next_after ?? 0); setHasMore((events?.data.events?.length ?? 0) === 50)
     setLastRead(Date.now()); setReadFailed(false)
   }
   const bootstrap = useEffectEvent(async (controller: AbortController) => {
@@ -95,11 +105,11 @@ export default function App() {
   }, [controllers])
   useEffect(() => { if (error) errorBox.current?.focus() }, [error])
   useEffect(() => {
-    if (!dirty && !grantDirty && !resourceDirty && !routeDirty) return
+    if (!dirty && !grantDirty && !resourceDirty && !routeDirty && !requestDirty) return
     const prevent = (e: BeforeUnloadEvent) => e.preventDefault()
     window.addEventListener('beforeunload', prevent)
     return () => window.removeEventListener('beforeunload', prevent)
-  }, [dirty, grantDirty, resourceDirty, routeDirty])
+  }, [dirty, grantDirty, resourceDirty, routeDirty, requestDirty])
 
   async function refresh(replaceDraft = false) {
     if (busy) return
@@ -124,7 +134,7 @@ export default function App() {
     } catch (e) { if (e instanceof APIError && e.status === 401) setError(t(passwordMode ? 'humanLogin.rejected' : 'errors.unauthorized')); else fail(e) } finally { setKey(''); setPassword(''); setShowPassword(false); setBusy(false) }
   }
   async function logout() {
-    if (busy || grantBusy || resourceBusy || routeBusy || ((dirty || grantDirty || resourceDirty || routeDirty) && !window.confirm(t('routes.discardAll')))) return
+    if (busy || grantBusy || resourceBusy || routeBusy || requestBusy || ((dirty || grantDirty || resourceDirty || routeDirty || requestDirty) && !window.confirm(t('routes.discardAll')))) return
     setBusy(true); setError('')
     try { await request('/logout', { method: 'POST', headers: { 'X-CSRF-Token': session?.csrf ?? '' } }); clear(); setSession(s => s ? { ...s, authenticated: false } : null) }
     catch (e) { fail(e) } finally { setBusy(false) }
@@ -168,19 +178,20 @@ export default function App() {
   </div>
   return <div className="console-shell">
     <aside className="sidebar"><span className="brand"><ShieldCheck aria-hidden="true" />PicketX</span><p className="sidebar-subtitle">{t('operatorConsole')}</p>
-      <nav aria-label={t('navigation')}><Button variant={tab === 'publication' ? 'secondary' : 'ghost'} aria-current={tab === 'publication' ? 'page' : undefined} onClick={() => setTab('publication')}><FileText aria-hidden="true" />{t('configuration')}</Button><Button variant={tab === 'resources' ? 'secondary' : 'ghost'} aria-current={tab === 'resources' ? 'page' : undefined} onClick={() => setTab('resources')}><Boxes aria-hidden="true" />{t('resources.title')}</Button><Button variant={tab === 'grants' ? 'secondary' : 'ghost'} aria-current={tab === 'grants' ? 'page' : undefined} onClick={() => setTab('grants')}><KeyRound aria-hidden="true" />{t('grants.title')}</Button><Button variant={tab === 'routes' ? 'secondary' : 'ghost'} aria-current={tab === 'routes' ? 'page' : undefined} onClick={() => setTab('routes')}><Route aria-hidden="true" />{t('routes.title')}</Button><Button variant={tab === 'audit' ? 'secondary' : 'ghost'} aria-current={tab === 'audit' ? 'page' : undefined} onClick={() => { setTab('audit'); void refresh() }}><History aria-hidden="true" />{t('audit')}</Button><Button variant={tab === 'nodes' ? 'secondary' : 'ghost'} aria-current={tab === 'nodes' ? 'page' : undefined} onClick={() => setTab('nodes')}><ShieldCheck aria-hidden="true" />{t('nodes.title')}</Button></nav>
-      <div className="identity"><span>{identity?.id ?? t('loading')}</span><small>{identity?.roles.join(', ')}</small>{language}<Button variant="outline" disabled={busy || grantBusy || resourceBusy || routeBusy} onClick={() => void logout()}><LogOut aria-hidden="true" />{t('signOut')}</Button></div>
+      <nav aria-label={t('navigation')}>{canRead && <><Button variant={tab === 'publication' ? 'secondary' : 'ghost'} aria-current={tab === 'publication' ? 'page' : undefined} onClick={() => setTab('publication')}><FileText aria-hidden="true" />{t('configuration')}</Button><Button variant={tab === 'resources' ? 'secondary' : 'ghost'} aria-current={tab === 'resources' ? 'page' : undefined} onClick={() => setTab('resources')}><Boxes aria-hidden="true" />{t('resources.title')}</Button><Button variant={tab === 'grants' ? 'secondary' : 'ghost'} aria-current={tab === 'grants' ? 'page' : undefined} onClick={() => setTab('grants')}><KeyRound aria-hidden="true" />{t('grants.title')}</Button><Button variant={tab === 'routes' ? 'secondary' : 'ghost'} aria-current={tab === 'routes' ? 'page' : undefined} onClick={() => setTab('routes')}><Route aria-hidden="true" />{t('routes.title')}</Button>{identity?.operations.includes('audit:read') && <Button variant={tab === 'audit' ? 'secondary' : 'ghost'} aria-current={tab === 'audit' ? 'page' : undefined} onClick={() => { setTab('audit'); void refresh() }}><History aria-hidden="true" />{t('audit')}</Button>}<Button variant={tab === 'nodes' ? 'secondary' : 'ghost'} aria-current={tab === 'nodes' ? 'page' : undefined} onClick={() => setTab('nodes')}><ShieldCheck aria-hidden="true" />{t('nodes.title')}</Button></>}{canRequests && <Button variant={tab === 'requests' ? 'secondary' : 'ghost'} aria-current={tab === 'requests' ? 'page' : undefined} onClick={() => setTab('requests')}><FileText aria-hidden="true" />{t('requests.title')}</Button>}</nav>
+      <div className="identity"><span>{identity?.id ?? t('loading')}</span><small>{identity?.roles.join(', ')}</small>{language}<Button variant="outline" disabled={busy || grantBusy || resourceBusy || routeBusy || requestBusy} onClick={() => void logout()}><LogOut aria-hidden="true" />{t('signOut')}</Button></div>
     </aside>
     <main className="workspace" aria-busy={busy}>
-      <header className="workspace-header"><div><h1>{tab === 'publication' ? t('configuration') : tab === 'grants' ? t('grants.title') : tab === 'resources' ? t('resources.title') : tab === 'routes' ? t('routes.title') : tab === 'nodes' ? t('nodes.title') : t('audit')}</h1><p>{t('desiredBoundary')}</p></div>{tab !== 'grants' && tab !== 'resources' && tab !== 'routes' && tab !== 'nodes' && <Button variant="outline" disabled={busy} onClick={() => void refresh()}><RefreshCw aria-hidden="true" />{t('refresh')}</Button>}</header>
+      <header className="workspace-header"><div><h1>{tab === 'requests' ? t('requests.title') : tab === 'publication' ? t('configuration') : tab === 'grants' ? t('grants.title') : tab === 'resources' ? t('resources.title') : tab === 'routes' ? t('routes.title') : tab === 'nodes' ? t('nodes.title') : t('audit')}</h1><p>{t('desiredBoundary')}</p></div>{tab !== 'requests' && tab !== 'grants' && tab !== 'resources' && tab !== 'routes' && tab !== 'nodes' && <Button variant="outline" disabled={busy} onClick={() => void refresh()}><RefreshCw aria-hidden="true" />{t('refresh')}</Button>}</header>
       <section className="revision-strip" aria-label={t('status')}><div><span>{t('authority')}</span><strong>{accepted?.authority ?? '—'}</strong></div><div><span>{t('editorRevision')}</span><strong>{draft?.etag.slice(1, -1) ?? '—'}</strong></div><div><span>{t('lastRead')}</span><strong>{lastRead ? new Date(lastRead).toLocaleTimeString(i18n.language) : t('notRead')}</strong></div><div><span>{t('enforcement')}</span><strong>{t('notConfirmed')}</strong></div></section>
       {errorPanel}{notice && <div className="feedback success" role="status">{notice}</div>}
       {readFailed ? <p className="stale" role="status">{t('staleFailed')}</p> : lastRead > 0 && now - lastRead > 60000 ? <p className="stale" role="status">{t('staleAge')}</p> : null}
       {busy && <p role="status">{t('loading')}</p>}
-      <div hidden={tab !== 'grants'}><Grants csrf={session.csrf} canWrite={canWrite} onUnauthorized={() => fail(new APIError(401, 'unauthorized'))} onDirty={setGrantDirty} onBusy={setGrantBusy} /></div>
+      {canRead && <><div hidden={tab !== 'grants'}><Grants csrf={session.csrf} canWrite={canWrite} onUnauthorized={() => fail(new APIError(401, 'unauthorized'))} onDirty={setGrantDirty} onBusy={setGrantBusy} /></div>
       <div hidden={tab !== 'resources'}><Resources csrf={session.csrf} canWrite={canWrite} onUnauthorized={() => fail(new APIError(401, 'unauthorized'))} onDirty={setResourceDirty} onBusy={setResourceBusy} /></div>
       <div hidden={tab !== 'routes'}><HTTPRoutes csrf={session.csrf} canWrite={canWrite} onUnauthorized={() => fail(new APIError(401, 'unauthorized'))} onDirty={setRouteDirty} onBusy={setRouteBusy} /></div>
-      {tab === 'nodes' && <Nodes onUnauthorized={() => fail(new APIError(401, 'unauthorized'))} />}
+      {tab === 'nodes' && <Nodes onUnauthorized={() => fail(new APIError(401, 'unauthorized'))} />}</>}
+      {canRequests && identity && <div hidden={tab !== 'requests'}><Requests key={`${identity.id}-${identity.operations.join(',')}`} active={tab === 'requests'} csrf={session.csrf} identity={identity.id} canCreate={identity.operations.includes('request:create')} canList={identity.operations.includes('request:read-own') || identity.operations.includes('request:review')} canReview={identity.operations.includes('request:review')} canApprove={canWrite && identity.operations.includes('request:review')} onUnauthorized={() => fail(new APIError(401, 'unauthorized'))} onDirty={setRequestDirty} onBusy={setRequestBusy} /></div>}
       {tab === 'publication' ? <section className="editor-section"><div className="section-heading"><div><h2>{t('policyAndFacts')}</h2><p>{canWrite ? t('editorHelp') : t('readOnly')}</p></div><span className="draft-state">{dirty ? t('unsaved') : t('inSync')}</span></div>
         {conflict && <p className="stale" role="status">{t('publicationConflictHelp')}</p>}
         {draft ? <form onSubmit={e => void save(e)}><div className="editors"><div><label htmlFor="policy">{t('policyYaml')}</label><textarea id="policy" spellCheck={false} value={draft.policy} onChange={e => setDraft({ ...draft, policy: e.target.value })} readOnly={!canWrite} disabled={busy} required /></div><div><label htmlFor="facts">{t('factsJson')}</label><textarea id="facts" spellCheck={false} value={draft.facts} onChange={e => setDraft({ ...draft, facts: e.target.value })} readOnly={!canWrite} disabled={busy} required /></div></div>

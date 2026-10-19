@@ -1,4 +1,16 @@
 {
+  "requests": {
+    "title": "访问申请", "workflow": "申请与审批", "boundary": "提交申请不会开放访问。由另一名获授权人员审核明确的来源、命名入口与期限；审批仅代表期望状态，不是已执行证明。",
+    "refresh": "刷新申请", "rebase": "使用最新申请目录", "catalogRevision": "申请目录修订 {{revision}}", "discard": "丢弃保留的申请/审批草稿并使用最新目录？若写入结果不明，请先核对历史。",
+    "new": "新建访问申请", "source": "申请来源 IP 或 CIDR", "resource": "申请的资源", "endpoints": "申请入口", "duration": "申请时长（秒）", "reason": "申请原因", "send": "发送访问申请",
+    "sourceHelp": "填写受保护服务实际看到的来源。登录门户或转发头不能证明此地址；共享此来源的设备会共享网络可达性，不创建隧道或应用凭据。",
+    "durationHelp": "60–86400 秒。保存时由服务端确定绝对期限，等待审批不会延长期限。", "required": "请填写此必填值。", "pickResource": "选择已有资源", "pickEndpoints": "至少选择一个命名入口。", "fixFields": "请检查下方链接对应的字段。",
+    "sent": "申请已保存，尚未授予访问权限。", "decided": "审批结果已保存，不代表已确认应用。", "locked": "写入已阻止：结果可能已提交或基线已改变。请刷新核对历史，再显式使用最新申请目录后重试；草稿已保留。",
+    "review": "审核申请", "reviewing": "审核 {{uid}}", "requestedUntil": "申请截止 {{date}}", "approvedEntries": "批准入口（只能取子集）", "approveEntry": "批准 {{name}}", "expiry": "批准的绝对到期时间（RFC3339）", "expiryHelp": "使用含时区的 RFC3339 时间，须晚于当前时间且不晚于申请期限。", "decisionReason": "审批原因", "ack": "已确认审核", "ackHelp": "我已审核明确的共享来源、所选入口、期限及当前目录；发布不代表已应用。", "noSelf": "不能批准自己的申请，须由另一名获授权人员审核。", "approve": "批准并发布 Grant", "reject": "拒绝申请", "close": "关闭审核", "approvedScope": "已批准 {{names}}，截止 {{date}}", "notApplied": "尚未确认应用，管理员须检查当前节点观测及实际部署入口。", "grantState": "期望 Grant：{{state}}", "details": "固定目标与申请标识", "empty": "本页暂无申请，可提交申请或刷新审批收件箱。", "next": "下一页申请",
+    "errors": { "request_conflict": "此申请已不再待审批，或固定目标已改变。请刷新历史，不要对不同目标重试批准。", "request_not_found": "此申请已不存在，请刷新收件箱。", "revision_mismatch": "发布状态已改变，请刷新核对历史并显式使用最新申请目录后再重试。" },
+    "states": { "pending": "待审批", "approved": "已批准", "rejected": "已拒绝" },
+    "grantStates": { "valid-desired": "有效期望权限", "revoked": "已撤销", "expired": "已过期", "withdrawn": "已移除", "modified": "批准后已修改", "scheduled": "已计划，尚未生效", "unknown": "未知" }
+  },
   "humanLogin": { "method": "登录方式", "methodPassword": "用户名与密码", "username": "用户名", "password": "密码", "show": "显示密码", "hide": "隐藏密码", "help": "使用管理员配置的本地账户。用户名为小写，密码不自动去除空格；支持密码管理器与粘贴。", "passwordLimit": "请输入 12–72 UTF-8 字节的密码（纯汉字最多 24 个）。", "rejected": "登录信息未被接受，请检查或联系管理员。", "unavailable": "本地密码登录已不可用，请使用访问密钥或联系管理员。" },
   "publicationConflictHelp": "写入已阻止，草稿已保留，但变更可能已经提交。请先检查最新状态和审计，再显式将最新配置载入编辑器后重试。",
   "nodes": {
