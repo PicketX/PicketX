@@ -77,21 +77,62 @@ func TestBindingEndpointEditHTTP(t *testing.T) {
 		t.Fatal("changed scope/identity or ordering", got)
 	}
 	c, _ := s.Current()
-	projection, e := c.Plan().Projection("agent-a", time.Now())
-	if e != nil || len(projection.Protected) != 2 {
+	at := time.Date(2026, 10, 15, 9, 0, 0, 0, time.UTC)
+	projection, e := c.Plan().Projection("agent-a", at)
+	if e != nil || len(projection.Protected) != 2 || len(projection.Allow) != 2 || len(projection.Deny) != 1 {
 		t.Fatal(projection, e)
+	}
+	for _, protected := range projection.Protected {
+		if len(protected.Matches) != 2 {
+			t.Fatal("dual stack lost", protected)
+		}
 	}
 	w = request(h, "PUT", bindingEditPath, strings.Replace(bindingEditBody, `["ssh","https"]`, `["ssh"]`, 1), managementToken, `"2"`)
 	if w.Code != 200 {
 		t.Fatal(w.Code, w.Body.String())
 	}
 	c, _ = s.Current()
-	projection, e = c.Plan().Projection("agent-a", time.Now())
-	if e != nil || len(projection.Protected) != 1 {
+	projection, e = c.Plan().Projection("agent-a", at)
+	if e != nil || len(projection.Protected) != 1 || len(projection.Allow) != 1 || len(projection.Deny) != 0 || projection.Allow[0].Contribution.Source.Addr().Is4() {
 		t.Fatal("removal not projected", projection, e)
 	}
 	a, e := s.Audit(0, 100)
 	if e != nil || len(a) != 3 || a[2].Reason != "adjust protection" || a[2].Actor != "principal:operator" {
+		t.Fatal(a, e)
+	}
+}
+
+// Missing whole-candidate compilation would accept an unsupported new UDP target.
+func TestBindingEndpointEditCompilesWholeCandidate(t *testing.T) {
+	seed, _, _ := managementFixture(t)
+	policy, facts := bindingEditSeed(t, seed, "endpointNames: [https]")
+	h, s, _ := managementFixture(t)
+	policy = strings.Replace(policy, "protocol: TCP, port: 22", "protocol: UDP, port: 22", 1)
+	var decoded map[string]any
+	if e := json.Unmarshal([]byte(facts), &decoded); e != nil {
+		t.Fatal(e)
+	}
+	agents := decoded["agents"].([]any)
+	agents[0].(map[string]any)["Capabilities"].(map[string]any)["Protocols"] = []string{"tcp"}
+	raw, e := json.Marshal(decoded)
+	if e != nil {
+		t.Fatal(e)
+	}
+	body, _ := json.Marshal(map[string]string{"policy": policy, "facts": string(raw), "reason": "Restrict Agent capabilities"})
+	if w := request(h, "PUT", "/api/v1/publication", string(body), managementToken, `"0"`); w.Code != 200 {
+		t.Fatal(w.Code, w.Body.String())
+	}
+	before, _ := s.Snapshot()
+	w := request(h, "PUT", bindingEditPath, bindingEditBody, managementToken, `"1"`)
+	if w.Code != 400 {
+		t.Fatal(w.Code, w.Body.String())
+	}
+	after, _ := s.Snapshot()
+	if before != after {
+		t.Fatal("invalid compiled target committed")
+	}
+	a, e := s.Audit(0, 100)
+	if e != nil || len(a) != 1 {
 		t.Fatal(a, e)
 	}
 }

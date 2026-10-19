@@ -105,6 +105,33 @@ retain the draft and block retry until explicit reconciliation.
 
 ## Evidence and remaining work
 
+### Editing protected Endpoint names
+
+Select **Edit protected Endpoints** on a supported named host Binding. Review the
+fixed Resource UID, Agent selection, execution settings and current protected names.
+Select1–64 existing names, enter an audit reason and acknowledge the risks:
+adding protection can deny service traffic; removing protection can expose traffic.
+This does not revoke Grants or move the application. Cancel makes no write.
+
+PUT `/api/v1/bindings/{uid}/endpoints` and its session/CSRF equivalent accept
+`{endpoint_names:[...],reason,acknowledge_scope_change:true}`. Only explicit names
+on one pinned Resource and one explicit Agent, host-local/original-destination, are
+editable. All/label selectors and multi-target bindings return409 `binding_not_editable`;
+use the advanced editor for these. Inventory exposes optional `endpoint_edit` only
+for the supported shape; raw selectors remain available. Requested names are
+canonicalized in Resource order. UID/name/metadata, Resource/Agent/enforcement,
+Grants/Denies, facts and other source documents remain unchanged. The selected
+Binding is normalized; its comments/formatting may be lost. Existing strict JSON,
+auth, strong CAS, full compile and transaction audit apply;200 returns UID/revision/
+ETag, not Agent application. Stale412 precedes lookup; missing/wrong-kind404.
+
+Rebase retains the named draft and reason, displays latest values and resets
+acknowledgement. Changed fixed scope/unsupported shape/missing target or unavailable
+selected names blocks save until cancel/reopen. Unexpected status or malformed
+receipt retains the draft and blocks blind retry. A no-op selection cannot be
+submitted from the form. Native browser coverage uses the actual API/SQLite/audit;
+negative response injection tests recovery only, never enforcement.
+
 ### Editing network parameters before use
 
 Select **Edit network parameters** on an unreferenced Resource. Its UID/name and
@@ -131,7 +158,7 @@ conflict/draft, failed reads, viewer denial and375px layout, alongside the exist
 real Nginx/application authorization suite. Exact pass/fail, tested trees, review
 and CI are recorded in [the checkpoint](AUTONOMOUS_DELIVERY.md) and PR18.
 
-Referenced Resource/Endpoint editing, Endpoint membership changes, Binding editing, context enrollment, human
+Referenced Resource/Endpoint editing, Endpoint membership changes, advanced Binding scope editing, context enrollment, human
 identity/requests/approval and final combined Linux workflow remain. HTTPRoute
 creation and desired/applied node observations are already delivered. No new
 kernel execution evidence or completed product is

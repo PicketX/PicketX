@@ -6,7 +6,7 @@ import { APIError, request } from '@/lib/console'
 
 type Endpoint = { name: string; protocol: string; port: number; addresses?: string[] }
 type Resource = { name: string; uid: string; endpoints: Endpoint[] }
-type Binding = { name: string; uid: string; resources: string; agents: string; enforcement: string }
+type Binding = { name: string; uid: string; resources: string; agents: string; enforcement: string; endpoint_edit?: { resource_name: string; resource_uid: string; endpoint_names: string[] } }
 type Context = { agent_name: string; id: string; profile: string; class: string; stage: string; destinations: string[]; handling: string; selectable: boolean }
 type Inventory = { authority: string; revision: number; observed_at: string; resources: Resource[]; bindings: Binding[]; contexts: Context[] }
 type EndpointDraft = { name: string; protocol: string; port: string; addresses: string }
@@ -14,14 +14,17 @@ type Props = { csrf: string; canWrite: boolean; onUnauthorized: () => void; onDi
 const blankEndpoint = (): EndpointDraft => ({ name: '', protocol: 'TCP', port: '', addresses: '' })
 const contextKey = (c: Context) => JSON.stringify([c.agent_name, c.id])
 const addressList = (value: string) => value.trim() ? value.split(/[\n,]/).map(s => s.trim()).filter(Boolean) : undefined
+const bindingScope = (b: Binding) => JSON.stringify([b.endpoint_edit?.resource_name, b.endpoint_edit?.resource_uid, b.agents, b.enforcement])
 
 export function Resources({ csrf, canWrite, onUnauthorized, onDirty, onBusy }: Props) {
   const { t, i18n } = useTranslation()
   const [inventory, setInventory] = useState<Inventory | null>(null)
   const [catalog, setCatalog] = useState<Inventory | null>(null)
   const [base, setBase] = useState('')
-  const [mode, setMode] = useState<'resource' | 'binding' | 'remove'>('resource')
+  const [mode, setMode] = useState<'resource' | 'binding' | 'binding-edit' | 'remove'>('resource')
   const [editUID, setEditUID] = useState('')
+  const [editBindingUID, setEditBindingUID] = useState('')
+  const [originalBindingScope, setOriginalBindingScope] = useState('')
   const [removalUID, setRemovalUID] = useState('')
   const [removalKind, setRemovalKind] = useState<'binding' | 'resource'>('binding')
   const [acknowledged, setAcknowledged] = useState(false)
@@ -42,7 +45,11 @@ export function Resources({ csrf, canWrite, onUnauthorized, onDirty, onBusy }: P
   const [controllers] = useState(() => new Set<AbortController>())
   const errors = useRef<HTMLDivElement>(null)
   const removalHeading = useRef<HTMLHeadingElement>(null)
-  const dirty = !!(editUID || removalUID || name || reason || resourceUID || contextID || selectedEndpoints.length || endpoints.length !== 1 || endpoints.some(e => e.name || e.port || e.addresses || e.protocol !== 'TCP'))
+  const dirty = !!(editUID || editBindingUID || removalUID || name || reason || resourceUID || contextID || selectedEndpoints.length || endpoints.length !== 1 || endpoints.some(e => e.name || e.port || e.addresses || e.protocol !== 'TCP'))
+  const editBinding = catalog?.bindings.find(b => b.uid === editBindingUID)
+  const editBindingResource = catalog?.resources.find(r => r.uid === editBinding?.endpoint_edit?.resource_uid && r.name === editBinding?.endpoint_edit?.resource_name)
+  const bindingCompatible = !!editBinding?.endpoint_edit && !!editBindingResource && bindingScope(editBinding) === originalBindingScope && selectedEndpoints.every(n => editBindingResource.endpoints.some(e => e.name === n))
+  const bindingChanged = bindingCompatible && (selectedEndpoints.length !== editBinding.endpoint_edit!.endpoint_names.length || selectedEndpoints.some(n => !editBinding.endpoint_edit!.endpoint_names.includes(n)))
   const editTarget = catalog?.resources.find(r => r.uid === editUID)
   const editCompatible = !!editTarget && endpoints.length === editTarget.endpoints.length && new Set(endpoints.map(e => e.name)).size === endpoints.length && endpoints.every(e => editTarget.endpoints.some(old => old.name === e.name))
   const networkChanged = editCompatible && endpoints.some(e => {
@@ -59,12 +66,15 @@ export function Resources({ csrf, canWrite, onUnauthorized, onDirty, onBusy }: P
   useEffect(() => { if (error) errors.current?.focus() }, [error, fields])
   useEffect(() => { if (mode === 'remove') removalHeading.current?.focus() }, [mode, removalUID, removalKind])
   useEffect(() => { if (editUID) removalHeading.current?.focus() }, [editUID])
+  useEffect(() => { if (editBindingUID) removalHeading.current?.focus() }, [editBindingUID])
 
   function fail(e: unknown, reading = false) {
     if (e instanceof DOMException && e.name === 'AbortError') return
     if (e instanceof APIError && e.status === 401) { onUnauthorized(); return }
     if (e instanceof APIError && e.status === 412) { setConflict(true); setError(t('conflict')); return }
     if (editUID && e instanceof APIError && e.message === 'resource_in_use') { setError(t('resources.editInUse')); return }
+    if (editBindingUID && e instanceof APIError && e.status === 404) { setError(t('resources.missingBinding')); return }
+    if (editBindingUID && e instanceof APIError && e.message === 'binding_not_editable') { setError(t('resources.bindingScopeChanged')); return }
     setError(e instanceof APIError ? t(`errors.${e.message}`, { defaultValue: t('requestFailed') }) : t('requestFailed'))
     if (reading) setReadFailed(true)
   }
@@ -95,6 +105,7 @@ export function Resources({ csrf, canWrite, onUnauthorized, onDirty, onBusy }: P
   }
   function clear() {
     setEditUID('')
+    setEditBindingUID(''); setOriginalBindingScope('')
     setRemovalUID(''); setAcknowledged(false)
     setName(''); setReason(''); setEndpoints([blankEndpoint()]); setResourceUID(''); setSelectedEndpoints([]); setContextID(''); setFields({})
   }
@@ -104,6 +115,12 @@ export function Resources({ csrf, canWrite, onUnauthorized, onDirty, onBusy }: P
     clear(); setEditUID(uid); setMode('resource'); setName(target.name)
     setEndpoints(target.endpoints.map(e => ({ name: e.name, protocol: e.protocol, port: String(e.port), addresses: e.addresses?.join('\n') ?? '' })))
     setError(''); setNotice('')
+  }
+  function selectBindingEdit(uid: string) {
+    const target = catalog?.bindings.find(b => b.uid === uid)
+    if (!target?.endpoint_edit || busy || !canWrite || (dirty && !window.confirm(t('resources.discard')))) return
+    clear(); setEditBindingUID(uid); setOriginalBindingScope(bindingScope(target)); setMode('binding-edit')
+    setSelectedEndpoints([...target.endpoint_edit.endpoint_names]); setError(''); setNotice('')
   }
   function selectRemoval(uid: string, kind: typeof removalKind) {
     if (busy || !canWrite || (dirty && !window.confirm(t('resources.discard')))) return
@@ -120,8 +137,9 @@ export function Resources({ csrf, canWrite, onUnauthorized, onDirty, onBusy }: P
   async function submit(e: React.FormEvent) {
     e.preventDefault(); if (busy || !canWrite || !base || conflict) return
     if (editUID && (!editTarget || !acknowledged || !networkChanged || readFailed)) return
+    if (editBindingUID && (!bindingCompatible || !acknowledged || !bindingChanged || readFailed)) return
     const invalid: Record<string, string> = {}
-    if (mode !== 'remove' && !name.trim()) invalid[`${mode}-name`] = t('grants.required')
+    if (mode !== 'remove' && mode !== 'binding-edit' && !name.trim()) invalid[`${mode}-name`] = t('grants.required')
     if (!reason.trim()) invalid[`${mode}-reason`] = t('grants.required')
     if (mode === 'resource') {
       for (const [index, endpoint] of endpoints.entries()) {
@@ -133,29 +151,31 @@ export function Resources({ csrf, canWrite, onUnauthorized, onDirty, onBusy }: P
       if (!resource) invalid['binding-resource'] = t('grants.selectResource')
       if (!selectedEndpoints.length || selectedEndpoints.length > 64 || selectedEndpoints.some(n => !resource?.endpoints.some(e => e.name === n))) invalid['binding-endpoints'] = t('resources.selectEndpoints')
       if (!context) invalid['binding-context'] = t('resources.selectContext')
+    } else if (mode === 'binding-edit') {
+      if (!selectedEndpoints.length || selectedEndpoints.length > 64) invalid['binding-edit-endpoints'] = t('resources.selectEndpoints')
     } else {
       if (!removalTarget || !acknowledged) return
     }
     if (Object.keys(invalid).length) { setFields(invalid); setError(t('grants.fixFields')); return }
-    const body = mode === 'remove'
+    const body = mode === 'binding-edit' ? { endpoint_names: selectedEndpoints, reason, acknowledge_scope_change: acknowledged } : mode === 'remove'
       ? removalKind === 'resource' ? { reason, acknowledge_removal: acknowledged } : { reason, acknowledge_unprotection: acknowledged }
       : mode === 'resource'
       ? { ...(editUID ? {} : { name }), reason, endpoints: endpoints.map(e => ({ name: e.name, protocol: e.protocol, port: Number(e.port), addresses: addressList(e.addresses) })) }
       : { name, reason, resource_name: resource!.name, resource_uid: resource!.uid, endpoint_names: selectedEndpoints, agent_name: context!.agent_name, context_id: context!.id }
     const controller = new AbortController(); controllers.add(controller); setBusy(true); setError(''); setFields({}); setNotice('')
     try {
-      const result = await request<{ uid: string; revision: number }>(editUID ? `/resources/${encodeURIComponent(editUID)}/network` : mode === 'remove' ? `/${removalKind === 'resource' ? 'resources' : 'bindings'}/${encodeURIComponent(removalUID)}/remove` : mode === 'resource' ? '/resources' : '/bindings', { signal: controller.signal, method: editUID ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf, 'If-Match': base }, body: JSON.stringify(body) }, mode === 'remove' || editUID ? 200 : 201)
+      const result = await request<{ uid: string; revision: number }>(editBindingUID ? `/bindings/${encodeURIComponent(editBindingUID)}/endpoints` : editUID ? `/resources/${encodeURIComponent(editUID)}/network` : mode === 'remove' ? `/${removalKind === 'resource' ? 'resources' : 'bindings'}/${encodeURIComponent(removalUID)}/remove` : mode === 'resource' ? '/resources' : '/bindings', { signal: controller.signal, method: editUID || editBindingUID ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf, 'If-Match': base }, body: JSON.stringify(body) }, mode === 'remove' || editUID || editBindingUID ? 200 : 201)
       if (controller.signal.aborted) return
       // A successful HTTP status alone is not a valid removal receipt. Keep the
       // draft and require reconciliation on malformed/ambiguous responses.
-      if ((mode === 'remove' || editUID) && (!result.data || result.data.uid !== (editUID || removalUID) || !Number.isSafeInteger(result.data.revision) || !Number.isSafeInteger(Number(base.slice(1, -1))) || result.data.revision <= Number(base.slice(1, -1)) || result.etag !== `"${result.data.revision}"`)) throw new Error('Invalid mutation receipt')
-      clear(); setNotice(t(editUID ? 'resources.networkSaved' : mode === 'remove' ? removalKind === 'resource' ? 'resources.resourceRemoved' : 'resources.removed' : mode === 'resource' ? 'resources.created' : 'resources.bound')); setConflict(true)
-      if (mode === 'remove') setMode('resource')
+      if ((mode === 'remove' || editUID || editBindingUID) && (!result.data || result.data.uid !== (editBindingUID || editUID || removalUID) || !Number.isSafeInteger(result.data.revision) || !Number.isSafeInteger(Number(base.slice(1, -1))) || result.data.revision <= Number(base.slice(1, -1)) || result.etag !== `"${result.data.revision}"`)) throw new Error('Invalid mutation receipt')
+      clear(); setNotice(t(editBindingUID ? 'resources.bindingEndpointsSaved' : editUID ? 'resources.networkSaved' : mode === 'remove' ? removalKind === 'resource' ? 'resources.resourceRemoved' : 'resources.removed' : mode === 'resource' ? 'resources.created' : 'resources.bound')); setConflict(true)
+      if (mode === 'remove' || mode === 'binding-edit') setMode('resource')
       // The successful POST is not repeated if its follow-up read fails.
       try { await read(controller.signal, true) } catch (e) { if (!controller.signal.aborted) fail(e, true) }
     } catch (e) {
       if (!controller.signal.aborted) {
-        if (!(e instanceof APIError) || e.status >= 500 || ((mode === 'remove' || editUID) && e.status === 404)) setConflict(true)
+        if (!(e instanceof APIError) || e.status >= 500 || ((mode === 'remove' || editUID || editBindingUID) && e.status === 404)) setConflict(true)
         fail(e)
       }
     } finally { controllers.delete(controller); if (!controller.signal.aborted) setBusy(false) }
@@ -164,6 +184,8 @@ export function Resources({ csrf, canWrite, onUnauthorized, onDirty, onBusy }: P
   const fieldError = (id: string) => fields[id] && <p id={`${id}-error`} className="field-error">{fields[id]}</p>
   const fieldLabel = (id: string) => {
     const endpoint = /^endpoint-(\d+)-(name|port|addresses)$/.exec(id)
+    if (id === 'binding-edit-reason') return t('resources.bindingEditReason')
+    if (id === 'binding-edit-endpoints') return t('grants.endpoints')
     if (endpoint) return t(`resources.endpoint${endpoint[2][0].toUpperCase()}${endpoint[2].slice(1)}`, { n: Number(endpoint[1]) + 1 })
     const keys: Record<string, string> = { 'remove-reason': 'removeReason', 'resource-name': 'resourceName', 'resource-reason': 'resourceReason', 'binding-name': 'bindingName', 'binding-reason': 'bindingReason', 'binding-resource': 'bindingResource', 'binding-endpoints': 'selectEndpoints', 'binding-context': 'context' }
     return t(`resources.${keys[id]}`)
@@ -180,7 +202,16 @@ export function Resources({ csrf, canWrite, onUnauthorized, onDirty, onBusy }: P
     {!canWrite ? <p className="boundary">{t('readOnly')}</p> : <>
       <div className="actions resource-modes"><Button variant={mode === 'resource' ? 'secondary' : 'outline'} aria-pressed={mode === 'resource'} disabled={busy} onClick={() => switchMode('resource')}>{t('resources.newResource')}</Button><Button variant={mode === 'binding' ? 'secondary' : 'outline'} aria-pressed={mode === 'binding'} disabled={busy} onClick={() => switchMode('binding')}>{t('resources.newBinding')}</Button></div>
       <form className="grant-form resource-form" onSubmit={e => void submit(e)} noValidate><fieldset className="grant-fields-owner" disabled={busy}>
-        {mode === 'remove' ? <>
+        {mode === 'binding-edit' ? <>
+          <h3 ref={removalHeading} tabIndex={-1}>{t('resources.editBindingEndpoints')}</h3>
+          <p className="boundary">{t('resources.bindingEditWarning')}</p>
+          {editBinding ? <div className="context-preview binding-edit-current"><h4>{editBinding.name}</h4><p>{editBinding.uid}</p><h4>{t('resources.latestProtected')}</h4><ul>{editBinding.endpoint_edit?.endpoint_names.map(n => <li key={n}>{n}</li>)}</ul><h4>{t('resources.bindingResource')}</h4><p>{editBinding.endpoint_edit?.resource_name} · {editBinding.endpoint_edit?.resource_uid}</p><h4>{t('resources.agents')}</h4><code>{editBinding.agents}</code><h4>{t('resources.execution')}</h4><code>{editBinding.enforcement}</code></div> : <p className="stale">{t('resources.missingBinding')}</p>}
+          {!bindingCompatible && <p className="stale" role="status">{t('resources.bindingScopeChanged')}</p>}
+          <fieldset id="binding-edit-endpoints" tabIndex={-1} {...fieldProps('binding-edit-endpoints')}><legend>{t('grants.endpoints')}</legend><p className="hint">{t('resources.selectEndpoints')}</p><div className="endpoint-options">{editBindingResource?.endpoints.map(e => <label key={e.name}><input type="checkbox" checked={selectedEndpoints.includes(e.name)} onChange={event => { setSelectedEndpoints(old => event.target.checked ? [...old, e.name] : old.filter(n => n !== e.name)); setAcknowledged(false) }} />{e.name} <span>{e.protocol}/{e.port} · {e.addresses?.join(', ') ?? t('resources.bindingScope')}</span></label>)}</div>{fieldError('binding-edit-endpoints')}</fieldset>
+          <div><label htmlFor="binding-edit-reason">{t('resources.bindingEditReason')}</label><input id="binding-edit-reason" {...fieldProps('binding-edit-reason')} value={reason} onChange={e => setReason(e.target.value)} maxLength={512} required />{fieldError('binding-edit-reason')}</div>
+          <div className="endpoint-options"><label><input type="checkbox" checked={acknowledged} onChange={e => setAcknowledged(e.target.checked)} />{t('resources.acknowledgeBindingEdit')}</label></div>
+          <div className="actions"><Button type="submit" disabled={busy || conflict || !base || !bindingChanged || !acknowledged || readFailed || !selectedEndpoints.length}>{t('resources.saveBindingEndpoints')}</Button><Button type="button" variant="outline" onClick={() => { clear(); setMode('resource'); setError(''); setNotice('') }}>{t('resources.cancelBindingEdit')}</Button></div>
+        </> : mode === 'remove' ? <>
           <h3 ref={removalHeading} tabIndex={-1}>{t(removalKind === 'resource' ? 'resources.removeResource' : 'resources.remove')}</h3>
           <p className="boundary">{t(removalKind === 'resource' ? 'resources.removeResourceWarning' : 'resources.removeWarning')}</p>
           {removalKind === 'resource' ? removedResource ? <div className="context-preview"><h4>{removedResource.name}</h4><p>{removedResource.uid}</p><ul>{removedResource.endpoints.map(e => <li key={e.name}><strong>{e.name}</strong> · {e.protocol}/{e.port} · <code>{e.addresses?.join(', ') ?? t('resources.bindingScope')}</code></li>)}</ul></div> : <p className="stale">{t('resources.missingResource')}</p> : binding ? <div className="context-preview"><h4>{binding.name}</h4><p>{binding.uid}</p><h4>{t('resources.list')}</h4><code>{binding.resources}</code><h4>{t('resources.agents')}</h4><code>{binding.agents}</code><h4>{t('resources.execution')}</h4><code>{binding.enforcement}</code></div> : <p className="stale">{t('resources.missingBinding')}</p>}
@@ -214,7 +245,7 @@ export function Resources({ csrf, canWrite, onUnauthorized, onDirty, onBusy }: P
       </fieldset></form>
     </>}
     <div className="inventory-list"><h2>{t('resources.list')}</h2>{inventory?.resources.length === 0 && !busy && <p className="empty">{t('resources.empty')}</p>}{shown(inventory?.resources)?.map(r => <article key={r.uid} data-resource-id={r.uid}><h3>{r.name}</h3><p className="hint">{r.uid}</p><ul>{r.endpoints.map(e => <li key={e.name}><strong>{e.name}</strong> · {e.protocol}/{e.port} · <code>{e.addresses?.join(', ') ?? t('resources.bindingScope')}</code></li>)}</ul>{canWrite && <div className="actions"><Button variant="outline" disabled={busy || !catalog?.resources.some(item => item.uid === r.uid)} onClick={() => selectEdit(r.uid)}>{t('resources.editNetwork')}</Button><Button variant="outline" disabled={busy || !catalog?.resources.some(item => item.uid === r.uid)} onClick={() => selectRemoval(r.uid, 'resource')}>{t('resources.removeResource')}</Button></div>}</article>)}</div>
-    <div className="inventory-list"><h2>{t('resources.bindings')}</h2><p className="hint">{t('resources.selectionHelp')}</p>{inventory?.bindings.length === 0 && !busy && <p className="empty">{t('resources.emptyBindings')}</p>}{shown(inventory?.bindings)?.map(b => <article key={b.uid} data-binding-id={b.uid}><h3>{b.name}</h3><p className="hint">{b.uid}</p><details><summary>{t('resources.inspectBinding')}</summary><h4>{t('resources.list')}</h4><code>{b.resources}</code><h4>{t('resources.agents')}</h4><code>{b.agents}</code><h4>{t('resources.execution')}</h4><code>{b.enforcement}</code></details>{canWrite && <Button variant="outline" disabled={busy || !catalog?.bindings.some(item => item.uid === b.uid)} onClick={() => selectRemoval(b.uid, 'binding')}>{t('resources.remove')}</Button>}</article>)}</div>
+    <div className="inventory-list"><h2>{t('resources.bindings')}</h2><p className="hint">{t('resources.bindingEditHelp')}</p>{inventory?.bindings.length === 0 && !busy && <p className="empty">{t('resources.emptyBindings')}</p>}{shown(inventory?.bindings)?.map(b => <article key={b.uid} data-binding-id={b.uid}><h3>{b.name}</h3><p className="hint">{b.uid}</p><details><summary>{t('resources.inspectBinding')}</summary><h4>{t('resources.list')}</h4><code>{b.resources}</code><h4>{t('resources.agents')}</h4><code>{b.agents}</code><h4>{t('resources.execution')}</h4><code>{b.enforcement}</code></details>{canWrite && <div className="actions">{b.endpoint_edit && <Button variant="outline" disabled={busy || !catalog?.bindings.some(item => item.uid === b.uid && item.endpoint_edit)} onClick={() => selectBindingEdit(b.uid)}>{t('resources.editBindingEndpoints')}</Button>}<Button variant="outline" disabled={busy || !catalog?.bindings.some(item => item.uid === b.uid)} onClick={() => selectRemoval(b.uid, 'binding')}>{t('resources.remove')}</Button></div>}</article>)}</div>
     <div className="inventory-list"><h2>{t('resources.contexts')}</h2><p className="hint">{t('resources.contextBoundary')}</p>{inventory?.contexts.length === 0 && !busy && <p className="empty">{t('resources.noContexts')}</p>}{shown(inventory?.contexts)?.map(c => <article key={contextKey(c)}><h3>{c.agent_name} · {c.id}</h3><p>{c.profile} · {c.class} · {c.stage} · {c.handling}</p><p><code>{c.destinations.join(', ')}</code></p>{!c.selectable && <p className="hint">{t('resources.unsupportedContext')}</p>}</article>)}</div>
     {pages > 1 && <div className="actions"><Button variant="outline" disabled={page === 0 || busy} onClick={() => setPage(n => n - 1)}>{t('resources.previous')}</Button><span>{t('resources.page', { n: page + 1, pages })}</span><Button variant="outline" disabled={page >= pages - 1 || busy} onClick={() => setPage(n => n + 1)}>{t('resources.next')}</Button></div>}
   </section>

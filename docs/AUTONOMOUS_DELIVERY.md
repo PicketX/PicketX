@@ -13,6 +13,17 @@ mandatory. No kernel change or product-completion claim. Identity/approval,
 referenced Resource lifecycle and combined privileged browser/Linux acceptance remain.
 中文：本轮仅安全编辑绑定端点名单，保留作用域，原生验证与独立评审通过前不合并。
 
+[PR29](https://github.com/PicketX/PicketX/pull/29): tests-only remote
+cb04eb6500811928cf13e1a90015c82d6d96a57d/tree50a03351e301c545160fe2ff3ee4802ae5051b4f
+ran39182000541. Web117836540607 RED at the expected absent Edit protected Endpoints
+control after previous workflows passed. API projection/404 RED→GREEN; local
+configuration/controller/management checks pass. Full normal/race Go retain only
+TestAuthorizationRuntimeTCPUnixAndShutdown/unix EPERM, vet/build pass. UI consumes
+real inventory and fixed-scope PUT; locked Web typecheck/lint/build pass locally.
+Native complete Go/Web/Nginx acceptance and independent whole-branch review remain
+mandatory. No merge or application claim yet. Supplementary tests assert preserved
+dual-stack/Grant/Deny projection and complete compile refusal for unsupported UDP.
+
 ## Resource network editing (active)
 
 Owner codex/resource-network-edit; heartbeat2026-10-18T23:38Z; lease until00:38Z
