@@ -82,10 +82,44 @@ nftables/内核权限；整机开机与 Agent 服务联合验收另行完成。
 
 bootstrap-key 是独立于数据库人员账户的管理员恢复凭据，按离线恢复凭据保护。
 撤销/轮换需原子替换0600哈希注册文件，保留并实测另一恢复入口，验证旧 key 失效。
-Agent/入口不能复用恢复 key；入口 key 只绑定指定路由 UID。使用 examples/http 的
-入口约定，由可信代理覆盖外来原始请求头。代理头不会自动证明网络来源；来源与
+Agent/入口不能复用恢复 key；入口 key 只绑定指定路由 UID。使用以下交付包内的
+生成器，由可信代理覆盖外来原始请求头。代理头不会自动证明网络来源；来源与
 facts 必须匹配真实执行点。Grant 并集、deny 优先、独立绝对期限与 Agent 既有撤销
 语义不变；graceful SSH 只阻止新连接，不承诺断开已允许的现有连接。
+
+## 生成私有 Nginx auth_request 片段
+
+已有可信 Nginx 必须包含 http_auth_request_module。用可读取独立 ingress-token 的
+运维身份执行安装包中的 CLI；输出目录须为新的绝对路径，仅配置加载身份可读：
+
+```sh
+/opt/picketx/bin/picketx nginx-init \
+  --directory /var/lib/picketx/nginx-route-web \
+  --token-file /var/lib/picketx/controller/ingress-token \
+  --route-id route-web --authz-address 127.0.0.1:9081
+```
+
+在**同一个已有 server** 内 include server.conf；在受保护的 location 内 include
+location.conf，保留其已有业务 proxy_pass。路径含空格时加引号。每个路由使用新的
+独立目录、固定 UID 和匹配的 caller 注册作用域；按路由派生的名称支持多 location。
+命令不创建路由/Grant/注册项/监听/TLS/业务转发，不安装或重载 Nginx。在已鉴权的
+控制台/API 另行发布真实 Resource/HTTPRoute/来源 Grant；生成/发布不等于实际放行。
+
+回调地址只允许显式回环 IPv4/IPv6 IP:非零端口，例如 `[::1]:9081`，Controller 必须
+真实监听该处；拒绝 DNS、公网、映射地址和 zone。生成器**仅接受 controller-init
+生成的64位小写十六进制密钥**，可带单个末尾 LF；必须来自无符号链接的私有常规文件。
+决策 API 接受的其他格式密钥需另行审阅手工配置，此工具拒绝而不转换。路径须规范化
+（不含点段/多余分隔符）；父目录须存在、无符号链接并由可信运维独占控制。输出
+目录0700/两文件0600，拒绝覆盖；I/O
+失败保留部分私有目录供检查。
+
+私下审查完整配置，执行 nginx -t，再人工重载；禁止公开 nginx -T，其内容包含密钥。
+生成的 satisfy all 防止继承的 satisfy any/allow all 绕过鉴权；不得通过 error_page、
+rewrite、内部跳转、取消检查、其他未保护路径/公开上游或任意转发头绕过。真实来源
+解析信任、TLS、上游隔离仍由已有入口承担。轮换时生成到新目录后审查/重载，并独立
+撤销 Controller 上的旧 caller 哈希。禁止缓存决策；回调故障必须拒绝且不转发应用。
+原生 CI 实测安装包空 PATH CLI、双栈回调/来源、两个固定路由/方法、撤销、凭据
+撤销、故障及拒绝后的真实应用计数；不等同于 Agent/Gitea 打包联合部署验收。
 
 ## 备份、重启、升级
 

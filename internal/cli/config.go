@@ -90,5 +90,6 @@ func New(out, errOut io.Writer) *cobra.Command {
 	root.AddCommand(config)
 	root.AddCommand(passwordCommand())
 	root.AddCommand(controllerInitCommand())
+	root.AddCommand(nginxInitCommand())
 	return root
 }

@@ -1,5 +1,17 @@
 # Autonomous delivery checkpoint
 
+## Packaged ingress acquisition — 2026-10-19T22:40Z
+Owner codex/nginx-includes; heartbeat22:49Z; lease23:35Z or explicit release/merged+
+verified-green main. Core cdee150/treea86a890/main39308466228 and Agent c0eb1b8/
+tree555e00e/main39331868711 green; no open PRs and PR25 explicitly released22:08Z.
+Existing clean isolated worktree switched from exact origin/main; old branches
+preserved. Spec/plan superpowers/{specs,plans}/2026-10-20-nginx-includes.md. New
+private packaged CLI helper + real installed Nginx/Controller acceptance; no TLS,
+business proxying, Agent/kernel or UI change. Local baseline fails only inherited
+TestAuthorizationRuntimeTCPUnixAndShutdown/unix (socket EPERM); native mandatory.
+Next: installed helper/Agent/Gitea conjunction. Final exact receipts/release in PR
+metadata; overall goal not complete. 中文：本段补齐交付包的私有入口配置生成与真实验收。
+
 ## PR37 capability readiness — 2026-10-19T19:00Z
 Owner codex/capability-refresh; lease19:25Z or explicit release/merged+verified-green
 main. Native RED39305662932 identifies async Promise-truthiness in pinned Playwright,

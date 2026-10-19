@@ -111,7 +111,7 @@ jobs:
       - name: Build and inspect standalone Linux-amd64 Controller bundle
         run: |
           sudo apt-get update
-          sudo apt-get install -y musl-tools
+          sudo apt-get install -y musl-tools nginx
           musl-gcc --version
           bash scripts/build-controller-bundle.sh "$RUNNER_TEMP/controller-bundle"
       - name: Retained distribution notices and dependency licenses
@@ -133,6 +133,10 @@ jobs:
           npx playwright install --with-deps chromium
           cd ../..
           node apps/web/e2e/install.mjs "$RUNNER_TEMP/extracted-controller-bundle"
+      - name: Actual installed CLI includes and dual-stack trusted Nginx authorization
+        env:
+          PICKETX_INGRESS_EVIDENCE_DIR: ${{ runner.temp }}/install-evidence
+        run: node apps/web/e2e/installed-ingress.mjs "$RUNNER_TEMP/extracted-controller-bundle"
       - name: Actual unprivileged systemd and stopped complete-state restore
         run: |
           sudo --non-interactive env PICKETX_SERVICE_TESTS=1 \
