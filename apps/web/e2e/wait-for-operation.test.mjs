@@ -5,6 +5,7 @@ import { once } from 'node:events'
 import { setTimeout as pause } from 'node:timers/promises'
 import test from 'node:test'
 import { waitForOperation } from './wait-for-operation.mjs'
+import { readIdentity } from './read-identity.mjs'
 
 async function fixture(t, respond) {
  let requests = 0, reads = 0
@@ -14,15 +15,13 @@ async function fixture(t, respond) {
  const url = `http://127.0.0.1:${server.address().port}/me`
  const read = async signal => {
   reads++
-  const response = await fetch(url, { signal })
-  const { operations } = await response.json()
-  return { status: response.status, operations }
+  return readIdentity({ url }, signal)
  }
  return { read, requests: () => requests, reads: () => reads }
 }
 const json = (response, status, operations) => {
  response.writeHead(status, { 'content-type': 'application/json' })
- response.end(JSON.stringify({ operations, token: 'must-not-appear-in-errors' }))
+ response.end(JSON.stringify({ id: 'principal:creator', operations, token: 'must-not-appear-in-errors' }))
 }
 test('awaits actual HTTP responses until the operation exists, not an async false value', async t => {
  const f = await fixture(t, (r, n) => json(r, 200, n < 3 ? [] : ['request:create']))
@@ -57,5 +56,21 @@ test('malformed successful identity data is rejected without payload disclosure'
 test('deadline aborts an actual pending HTTP observation', { timeout: 2000 }, async t => {
  const f = await fixture(t, () => {})
  await assert.rejects(waitForOperation(f.read, 'request:create', { timeoutMs: 500, pollMs: 5 }), /operation readiness timed out/)
+ assert.equal(f.requests(), 1)
+})
+test('invalid JSON never exposes response bytes in error messages or stacks', async t => {
+ const f = await fixture(t, r => { r.writeHead(200); r.end('secret-token-example invalid-json') })
+ await assert.rejects(waitForOperation(f.read, 'request:create'), error => {
+  assert.match(error.message, /^invalid identity JSON$/)
+  assert(!error.stack.includes('secret-token')); assert.equal(error.cause, undefined); return true
+ })
+ assert.equal(f.requests(), 1)
+})
+test('HTTP failure does not parse a malformed response body', async t => {
+ const f = await fixture(t, r => { r.writeHead(503); r.end('secret-token-example invalid-json') })
+ await assert.rejects(waitForOperation(f.read, 'request:create'), error => {
+  assert.match(error.message, /^unexpected identity status 503$/)
+  assert(!error.stack.includes('secret-token')); return true
+ })
  assert.equal(f.requests(), 1)
 })

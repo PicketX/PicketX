@@ -1,5 +1,17 @@
 # Autonomous delivery checkpoint
 
+## PR37 capability readiness — 2026-10-19T19:00Z
+Owner codex/capability-refresh; lease19:25Z or explicit release/merged+verified-green
+main. Native RED39305662932 identifies async Promise-truthiness in pinned Playwright,
+not production authorization. Await real200 capability;12 strict reloads retained.
+One independent review: Important malformed JSON leak fixed in one root real-HTTP
+RED→GREEN pass; Minor browser cancellation deferred. Full rulings/costs:
+validation/CAPABILITY_REFRESH_REVIEW.md. Combined28Node pass; local normal/race only
+inherited Unix EPERM. Final exact source/main native CI/four archives mandatory;
+immutable receipt/immediate release in PR37 metadata. No production/API/UI/kernel
+change. Next Agent service/LKG and packaged ingress/application acceptance; whole
+goal incomplete.
+
 ## Capability refresh investigation — 2026-10-19T18:38Z
 Owner codex/capability-refresh; heartbeat18:38Z; lease19:25Z or explicit release/
 merged+verified-green-main. Core85fa14ef/tree522c105/main39300533866 and Agent5373595/

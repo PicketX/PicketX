@@ -4,6 +4,7 @@ import { readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { spawnSync } from 'node:child_process'
 import { waitForOperation } from './wait-for-operation.mjs'
+import { readIdentity } from './read-identity.mjs'
 
 export async function accessRequests({ browser, origin, principalPath, root, evidence, databasePath }) {
  const password = 'independent request password!'
@@ -167,11 +168,7 @@ c.commit()`, databasePath], { encoding: 'utf8' })
  // only AFTER that response; await the normal periodic policy reload.
  let published = false
  const readCreator = async () => {
-  const actual = await creator.evaluate(async () => {
-   const response = await fetch('/console/api/v1/me', { cache: 'no-store', signal: AbortSignal.timeout(15000) })
-   const { id, operations } = await response.json()
-   return { status: response.status, id, operations }
-  })
+  const actual = await creator.evaluate(readIdentity, { url: '/console/api/v1/me' })
   if (!published) {
    assert.deepEqual(actual, { status: 200, id: 'principal:creator', operations: [] })
    const grant = spawnSync('python3', ['-c', `import sqlite3,sys
@@ -188,11 +185,7 @@ c.commit()`, databasePath], { encoding: 'utf8' })
  for (let reload = 0; reload < 12; reload++) {
   await creator.reload()
   await creator.getByRole('heading', { name: 'Access requests', exact: true }).waitFor()
-  const actual = await creator.evaluate(async () => {
-   const response = await fetch('/console/api/v1/me', { cache: 'no-store' })
-   const { id, operations } = await response.json()
-   return { status: response.status, id, operations }
-  })
+  const actual = await creator.evaluate(readIdentity, { url: '/console/api/v1/me' })
   assert.deepEqual(actual, { status: 200, id: 'principal:creator', operations: ['request:create'] }, `actual custom capability after reload ${reload}`)
  }
  console.log('PASS actual delayed custom capability: initial200[], periodic SQLite policy propagation, 12 strict browser reloads')
