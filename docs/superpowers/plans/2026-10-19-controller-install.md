@@ -26,25 +26,25 @@ package existing runtime and React without changing their authority semantics.
 **Files:** internal/cli/config.go, controller_init{,_test}.go.
 **Interfaces:** consumes existing origin/config validation; produces Cobra
 controller-init directory with controller.yaml and three key/registry pairs.
-- [ ] Write real command tests for successful initialization, generated config,
+- [x] Write real command tests for successful initialization, generated config,
   audiences/modes/output, invalid input, preexisting paths, parent symlink and rerun.
-- [ ] Run `go test ./internal/cli -run ControllerInit -v`; expected missing command RED.
-- [ ] Implement command with validation before writes and exclusive target creation.
-- [ ] Run focused tests and full available Go normal/race/vet/build; expected focused
+- [x] Run `go test ./internal/cli -run ControllerInit -v`; expected missing command RED.
+- [x] Implement command with validation before writes and exclusive target creation.
+- [x] Run focused tests and full available Go normal/race/vet/build; expected focused
   GREEN; document any known local Unix socket EPERM, native full gate mandatory.
-- [ ] Commit tested command.
+- [x] Commit tested command.
 
 ### Task 2: Bundle and actual first-use verification
 **Files:** scripts/build-controller-bundle.sh, deploy/controller/*,
 apps/web/e2e/install.mjs, .github/workflows/ci.yml, delivery/review docs.
 **Interfaces:** consumes Task1 command and actual built web; produces detached
 bundle + SHA256/source metadata and public browser install evidence.
-- [ ] Write actual install runner requiring bundle executables; run against absent
+- [x] Write actual install runner requiring bundle executables; run against absent
   bundle, expected assertion RED; add invalid existing-output build invocation test.
-- [ ] Implement fail-closed static build/package script and bilingual service/runbook.
-- [ ] Actual runner verifies relocated PATH-empty init/start, audience rejection,
+- [x] Implement fail-closed static build/package script and bilingual service/runbook.
+- [x] Actual runner verifies relocated PATH-empty init/start, audience rejection,
   browser bootstrap/human creation/publication/restart/readback and public screenshots.
-- [ ] Native full Go and locked Web plus mandatory install run; inspect raw source,
+- [x] Native full Go and locked Web plus mandatory install run; inspect raw source,
   report and downloaded archive bytes/hash; commit checkpoints.
 - [ ] One independent whole-branch review, one Critical/Important TDD fix pass;
   defer Minors, no re-review. Exact final CI/head merge and main verification.

@@ -1,5 +1,24 @@
 # Autonomous delivery checkpoint
 
+## Controller install code accepted — 2026-10-19T13:46Z
+
+PR35 active, owner codex/controller-install, heartbeat13:46Z, lease until14:15Z or
+explicit release/merged+verified-green-main. Corrected code local8a2b3ee,
+remote92554c2/actualcheckouta01407f share tree72c34fe872d51836a9e81f8cdb8bb97b3e3a4d95.
+Native39261533014 Go118090142639/Web118090142370/install118090142737 all required
+steps pass; 247 top-level/607 total Go tests, no fail/skip/race; locked Web and
+detached musl-static tar installation, empty-PATH browser/human publication,
+SIGTERM/restart/audit pass. Three downloaded ZIP hashes, inner tar240-file manifest,
+actual checkout/tree/static ELF and public report verified;1440/375 screenshots
+inspected. One independent whole-branch review, two Important RED→GREEN fixes,
+two explicit deferred Minors and full rulings/costs: validation/CONTROLLER_INSTALL_REVIEW.md.
+Final documentation-only head still requires full3-job native CI, exact expected
+head merge and full main/source/archive verification. Immutable receipts and
+immediate lease release belong in PR35 final metadata. No Agent/kernel changes.
+Next: packaged Controller→Agent→trusted ingress→actual application installation/
+restart/host-service acceptance; prior Gitea proof is not packaged deployment proof.
+Whole goal remains incomplete; keep existing automation enabled.
+
 ## Controller install acquisition — 2026-10-19T13:05Z
 
 Owner codex/controller-install, heartbeat13:05Z, lease until14:15Z or explicit
