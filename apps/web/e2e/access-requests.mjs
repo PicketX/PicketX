@@ -48,7 +48,7 @@ export async function accessRequests({ browser, origin, principalPath, root, evi
  await requester.getByRole('heading', { name: 'Access requests', exact: true }).waitFor({ timeout: 5000 })
  assert.equal(await requester.getByLabel('Policy YAML').count(), 0)
  assert.equal(await requester.evaluate(async () => (await fetch('/console/api/v1/publication')).status), 403)
- await requester.getByLabel('Source IP or CIDR', { exact: true }).fill('2001:db8::42')
+ await requester.getByLabel('Requested source IP or CIDR', { exact: true }).fill('2001:db8::42')
  await requester.getByLabel('Requested Resource', { exact: true }).selectOption('resource-gitea-v1')
  await requester.getByRole('checkbox', { name: /^https / }).check()
  await requester.getByRole('checkbox', { name: /^ssh / }).check()
@@ -80,7 +80,7 @@ export async function accessRequests({ browser, origin, principalPath, root, evi
  assert(proof.audit.events.some(e => e.actor === 'principal:approver' && e.reason.includes(approved.uid)))
  for (const width of [375, 1440]) { await requester.setViewportSize({ width, height: 1000 }); assert(await requester.evaluate(() => document.documentElement.scrollWidth <= innerWidth)); await requester.screenshot({ path: join(evidence, `access-requests-${width}.png`), fullPage: true }) }
  // A separate real request is rejected; no publication revision is consumed.
- await requester.getByLabel('Source IP or CIDR', { exact: true }).fill('192.0.2.42')
+ await requester.getByLabel('Requested source IP or CIDR', { exact: true }).fill('192.0.2.42')
  await requester.getByLabel('Requested Resource', { exact: true }).selectOption('resource-gitea-v1')
  await requester.getByRole('checkbox', { name: /^https / }).check()
  await requester.getByLabel('Request reason', { exact: true }).fill('Browser rejected request')

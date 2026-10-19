@@ -36,7 +36,9 @@ try:
     subprocess.run(['go','run','./scripts/verify-controller',addresses['agent_listen'],str(tokenfile)],check=True,timeout=30)
     db=sqlite3.connect(work/'state'/'controller.sqlite')
     assert db.execute('SELECT authority,revision FROM controller_publication').fetchone()==('static:example-v1',1)
-    assert db.execute('SELECT version FROM controller_schema').fetchone()==(3,)
+    assert db.execute('SELECT version FROM controller_schema').fetchone()==(4,)
+    assert db.execute('SELECT count(*) FROM controller_access_request').fetchone()==(0,)
+    assert db.execute('SELECT count(*) FROM controller_request_event').fetchone()==(0,)
     assert db.execute('SELECT mode FROM controller_source').fetchone()==('file',)
     db.close()
     p.send_signal(signal.SIGTERM);assert p.wait(timeout=7)==0
@@ -85,6 +87,10 @@ for boot in range(2):
         assert document['revision']==2 and headers['ETag']=='"2"'
         assert document['policy']==pathlib.Path('examples/static/gitea.yaml').read_text()
         db=sqlite3.connect(managed_db)
+        assert db.execute('SELECT version FROM controller_schema').fetchone()==(4,)
+        assert db.execute('SELECT version FROM management_schema').fetchone()==(2,)
+        assert db.execute('SELECT count(*) FROM controller_access_request').fetchone()==(0,)
+        assert db.execute('SELECT count(*) FROM controller_request_event').fetchone()==(0,)
         assert db.execute('SELECT mode FROM controller_source').fetchone()==('database',)
         assert db.execute('SELECT actor,revision FROM controller_audit ORDER BY id').fetchall()==[('system:bootstrap',1),('principal:smoke',2)]
         db.close()
