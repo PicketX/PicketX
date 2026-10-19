@@ -1,5 +1,16 @@
 # Autonomous delivery checkpoint
 
+## Capability refresh investigation — 2026-10-19T18:38Z
+Owner codex/capability-refresh; heartbeat18:38Z; lease19:25Z or explicit release/
+merged+verified-green-main. Core85fa14ef/tree522c105/main39300533866 and Agent5373595/
+tree7e23d65/main39291377336 latest jobs/steps all green; no open PRs,36/23 released.
+New exact-main branch in existing clean isolated worktree; old branches preserved.
+Spec/context map: superpowers/specs/2026-10-20-capability-refresh.md. FIRST diagnose
+PR36 first-attempt create-only reload /me/UI failure; retry is NOT repair. Real
+local managementaccess/controller baseline passes. No auth/rate/assertion weakening
+or production fix without root-cause reproduction. Agent service/LKG restore next;
+final exact evidence and immediate release belong in this PR metadata.
+
 ## Controller service acquisition — 2026-10-19T17:45Z
 Owner codex/controller-service; lease18:35Z or explicit release/merged+verified-green
 main. Core93024b2/tree64ed0dc/main39265034648 and Agent5373595/tree7e23d65/main39291377336

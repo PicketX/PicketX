@@ -1,5 +1,13 @@
 # 自动交付检查点
 
+## 权限刷新排查 — 2026-10-19T18:38Z
+负责人codex/capability-refresh，心跳18:38Z，租约19:25Z或明确释放/合并且主线完整全绿。
+准确主线Core85fa14ef和Agent5373595最新任务及步骤全绿，无开放PR，36/23已释放。
+既有干净隔离工作区切出新分支，保留旧分支。先排查PR36首次create-only用户重载后
+操作/导航消失，不将同源复跑通过称作修复。设计/上下文图见superpowers/specs/
+2026-10-20-capability-refresh.md。本地管理权限/Controller基线通过；定位前不改生产
+鉴权、不放宽限流/断言。之后Agent服务/LKG恢复；最终证据和立即释放记录在本PR。
+
 ## Controller 服务验收接续 — 2026-10-19T17:45Z
 所有者 codex/controller-service；短租约18:35Z或明确释放/合并且main完整验收后立即释放。
 Core93024b2与Agent5373595主线所有必需任务/步骤通过，无开放PR；PR35/23已明确释放。
