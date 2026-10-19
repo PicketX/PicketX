@@ -4,6 +4,7 @@
 import assert from 'node:assert/strict'
 import { cp, mkdir, readFile, readdir, writeFile } from 'node:fs/promises'
 import { execFileSync } from 'node:child_process'
+import { createHash } from 'node:crypto'
 import { join, resolve } from 'node:path'
 
 const output = resolve(process.argv[2]), index = []
@@ -45,12 +46,22 @@ for (const directory of [...new Set(npmRoots)].sort()) {
   packages.push({ directory, meta, notices: await collect(directory, '') })
 }
 const repository = m => String(m.repository?.url ?? m.repository ?? '').replace(/^git\+/, '').replace(/\.git\/?$/, '').replace(/\/$/, '')
+const supplements = JSON.parse(await readFile('deploy/controller/licenses/supplements.json', 'utf8'))
 for (const p of packages) {
   // Platform binding packages sometimes ship only the native binary. Their
   // same-version/same-repository/same-SPDX parent ships the verbatim project and
   // third-party texts. Record that provenance; never synthesize a license from SPDX.
   const source = p.notices.length ? p : packages.find(q => q.notices.length && repository(p.meta) && repository(q.meta) === repository(p.meta) && q.meta.version === p.meta.version && typeof p.meta.license === 'string' && q.meta.license === p.meta.license)
-  assert(source, 'no verifiable upstream notice source: ' + p.meta.name)
+  if (!source) {
+    const supplement = supplements.find(x => x.dependency === p.meta.name && x.version === p.meta.version && x.repository === repository(p.meta) && x.license === p.meta.license)
+    assert(supplement, 'no verifiable upstream notice source: ' + p.meta.name)
+    const bytes = await readFile(join('deploy/controller/licenses', supplement.file))
+    assert.equal(createHash('sha256').update(bytes).digest('hex'), supplement.sha256, 'upstream supplement integrity')
+    const path = join('licenses/npm', p.meta.name + '@' + p.meta.version, 'LICENSE')
+    await mkdir(join(output, path, '..'), { recursive: true }); await writeFile(join(output, path), bytes)
+    index.push({ dependency: p.meta.name, version: p.meta.version, files: [path], noticeSource: supplement.source, note: supplement.note })
+    continue
+  }
   await retain(p.meta.name, p.meta.version, source.directory, join('npm', p.meta.name + '@' + p.meta.version), source === p ? undefined : `${source.meta.name}@${source.meta.version}`)
 }
 const goroot = run('go', ['env', 'GOROOT'])
