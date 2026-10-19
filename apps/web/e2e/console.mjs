@@ -18,6 +18,7 @@ import { nodeObservations } from './nodes.mjs'
 import { rejectedMutationReceipt } from './mutation-receipts.mjs'
 import { humanLogin } from './human-login.mjs'
 import { accessRequests } from './access-requests.mjs'
+import { managedAccounts } from './accounts.mjs'
 
 const root = resolve(import.meta.dirname, '../../..')
 const temp = await mkdtemp(join(tmpdir(), 'picketx-browser-'))
@@ -63,6 +64,7 @@ authz: {enabled: true, network: tcp, address: "127.0.0.1:${authzPort}", credenti
   assert(ready, logs)
   ingress = await startIngress({ root, temp, authzPort, token: ingressToken })
   browser = await chromium.launch({ headless: true })
+  await managedAccounts({ browser, root, temp, evidence })
   const context = await browser.newContext()
   const page = await context.newPage()
   const errors = []; page.on('pageerror', e => errors.push(e.message))

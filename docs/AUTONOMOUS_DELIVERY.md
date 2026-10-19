@@ -1,5 +1,22 @@
 # Autonomous delivery checkpoint
 
+## Managed human accounts acquisition — 2026-10-19T08:05Z
+
+Owner codex/managed-accounts; heartbeat08:05Z; short lease until09:20Z or explicit
+release/merged+green main. Core mainb79e242/tree99c2068/mainCI39211404452 green;
+Agent main1084a336/tree3d9e0bf/mainCI39214825482 green; no open PRs at acquisition.
+PR32/Core and PR19/Agent leases explicitly released in final metadata. Agent19
+already proves29 real human/browser/Agent/nftables/Nginx/app cases and11 actual
+confirmations,112 native/9 systemd; do not repeat as missing. Preserve clean
+host-owned isolated worktree codex/resource-onboarding. Spec/plan:
+superpowers/{specs,plans}/2026-10-19-managed-accounts.md. Deliver opt-in sticky
+database-user authority, version-bound sessions, CAS/audit API and real EN/ZH
+Accounts console. No implicit file import/overwrite, no OIDC/Agent/kernel change
+or full-goal claim. Final exact PR/CI/tree/artifact/main evidence and lease release
+belong in this PR's final metadata. Next after acceptance: OIDC/protocol identity
+where required, actual GiteaHTTPS/SSH and deployment/release hardening.
+中文：推进数据库权威的真实账户管理及可靠会话失效，不重做已合并的申请审批链路。
+
 ## Access requests — code accepted; final integration gated 2026-10-19T06:33Z
 
 [PR32](https://github.com/PicketX/PicketX/pull/32) code acceptance: local

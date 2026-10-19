@@ -26,6 +26,7 @@ type userRecord struct {
 	PasswordHash string   `json:"password_hash"`
 	Roles        []string `json:"roles"`
 	Disabled     bool     `json:"disabled"`
+	Version      uint64   `json:"-"`
 }
 type credentialDocument struct {
 	Principals *[]principalRecord `json:"principals"`
@@ -125,10 +126,11 @@ func (a *Access) Authenticate(raw string) (Principal, error) {
 			return Principal{}, ErrUnauthorized
 		}
 	}
-	entries, e := loadPrincipals(a.settings.Credentials)
+	doc, e := a.credentials()
 	if e != nil {
 		return Principal{}, e
 	}
+	entries := *doc.Principals
 	sum := sha256.Sum256([]byte(raw))
 	var found *principalRecord
 	for i := range entries {
@@ -150,7 +152,7 @@ func (a *Access) ResolveSession(id, fingerprint string) (Principal, error) {
 	if e != nil || len(key) != sha256.Size {
 		return Principal{}, ErrUnauthorized
 	}
-	document, e := loadCredentials(a.settings.Credentials)
+	document, e := a.credentials()
 	if e != nil {
 		return Principal{}, e
 	}

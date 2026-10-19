@@ -93,6 +93,81 @@
                 },
                 "type": "object"
             },
+            "account.Account": {
+                "properties": {
+                    "disabled": {
+                        "type": "boolean"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "roles": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "username": {
+                        "type": "string"
+                    },
+                    "version": {
+                        "type": "integer"
+                    }
+                },
+                "type": "object"
+            },
+            "account.Event": {
+                "properties": {
+                    "accountId": {
+                        "type": "string"
+                    },
+                    "actor": {
+                        "type": "string"
+                    },
+                    "at": {
+                        "type": "string"
+                    },
+                    "operation": {
+                        "type": "string"
+                    },
+                    "reason": {
+                        "type": "string"
+                    },
+                    "revision": {
+                        "type": "integer"
+                    }
+                },
+                "type": "object"
+            },
+            "account.Page": {
+                "properties": {
+                    "accounts": {
+                        "items": {
+                            "$ref": "#/components/schemas/account.Account"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "events": {
+                        "items": {
+                            "$ref": "#/components/schemas/account.Event"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "mode": {
+                        "type": "string"
+                    },
+                    "observedAt": {
+                        "type": "string"
+                    },
+                    "revision": {
+                        "type": "integer"
+                    }
+                },
+                "type": "object"
+            },
             "agentsync.NodeObservation": {
                 "properties": {
                     "agent_ref": {
@@ -486,6 +561,49 @@
                     "resource_name",
                     "resource_uid",
                     "source"
+                ],
+                "type": "object",
+                "additionalProperties": false
+            },
+            "controller.CreateAccountRequest": {
+                "properties": {
+                    "password": {
+                        "maxLength": 72,
+                        "type": "string",
+                        "writeOnly": true,
+                        "description": "12–72 UTF-8 bytes; no trimming. On update omitted or empty retains the hash."
+                    },
+                    "reason": {
+                        "maxLength": 512,
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "roles": {
+                        "items": {
+                            "type": "string",
+                            "enum": [
+                                "role:admin",
+                                "role:viewer",
+                                "role:requester",
+                                "role:blocked"
+                            ]
+                        },
+                        "maxItems": 4,
+                        "minItems": 1,
+                        "type": "array",
+                        "uniqueItems": true
+                    },
+                    "username": {
+                        "maxLength": 64,
+                        "minLength": 3,
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "password",
+                    "reason",
+                    "roles",
+                    "username"
                 ],
                 "type": "object",
                 "additionalProperties": false
@@ -1037,6 +1155,46 @@
                     }
                 },
                 "type": "object"
+            },
+            "controller.UpdateAccountRequest": {
+                "properties": {
+                    "disabled": {
+                        "type": "boolean"
+                    },
+                    "password": {
+                        "maxLength": 72,
+                        "type": "string",
+                        "writeOnly": true,
+                        "description": "12–72 UTF-8 bytes; no trimming. On update omitted or empty retains the hash."
+                    },
+                    "reason": {
+                        "maxLength": 512,
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "roles": {
+                        "items": {
+                            "type": "string",
+                            "enum": [
+                                "role:admin",
+                                "role:viewer",
+                                "role:requester",
+                                "role:blocked"
+                            ]
+                        },
+                        "maxItems": 4,
+                        "minItems": 1,
+                        "type": "array",
+                        "uniqueItems": true
+                    }
+                },
+                "required": [
+                    "disabled",
+                    "reason",
+                    "roles"
+                ],
+                "type": "object",
+                "additionalProperties": false
             },
             "controller.UpdateBindingEndpointsRequest": {
                 "properties": {
@@ -1847,6 +2005,406 @@
                 "summary": "Independently approve a narrowed absolute Grant or reject a pending request",
                 "tags": [
                     "requests"
+                ]
+            }
+        },
+        "/api/v1/accounts": {
+            "get": {
+                "description": "Explicit database users mode only; revision is independent of publication. No usernames are recycled. Requires account:read.",
+                "operationId": "listAccounts",
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/account.Page"
+                                }
+                            }
+                        },
+                        "description": "OK",
+                        "headers": {
+                            "ETag": {
+                                "description": "Strong account directory revision",
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "429": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "503": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    }
+                },
+                "security": [
+                    {
+                        "ManagementBearer": []
+                    }
+                ],
+                "summary": "Read bounded human directory and latest50 credential-free audit events",
+                "tags": [
+                    "accounts"
+                ]
+            },
+            "post": {
+                "description": "Strict JSON16KiB; password12–72 UTF-8 bytes, bcrypt12; max128 accounts. Requires account:write. Does not create a network Grant.",
+                "operationId": "createAccount",
+                "parameters": [
+                    {
+                        "description": "Strong account directory revision, not publication revision",
+                        "in": "header",
+                        "name": "If-Match",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/controller.CreateAccountRequest",
+                                "summary": "account",
+                                "description": "Password is write-only and never logged or audited"
+                            }
+                        }
+                    },
+                    "description": "Password is write-only and never logged or audited",
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/account.Account"
+                                }
+                            }
+                        },
+                        "description": "Created",
+                        "headers": {
+                            "ETag": {
+                                "description": "New account directory revision",
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "412": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "413": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "415": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "428": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "429": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "503": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    }
+                },
+                "security": [
+                    {
+                        "ManagementBearer": []
+                    }
+                ],
+                "summary": "Create a local human account with immutable username and audited CAS",
+                "tags": [
+                    "accounts"
+                ]
+            }
+        },
+        "/api/v1/accounts/{id}": {
+            "put": {
+                "description": "Every committed edit advances persistent account version, even if values do not change. Re-enabling never revives old cookies. No delete/rename. Requires account:write.",
+                "operationId": "updateAccount",
+                "parameters": [
+                    {
+                        "description": "Immutable account principal ID",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Strong account directory revision",
+                        "in": "header",
+                        "name": "If-Match",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/controller.UpdateAccountRequest",
+                                "summary": "account",
+                                "description": "disabled required; omitted or empty password retains hash"
+                            }
+                        }
+                    },
+                    "description": "disabled required; omitted or empty password retains hash",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/account.Account"
+                                }
+                            }
+                        },
+                        "description": "OK",
+                        "headers": {
+                            "ETag": {
+                                "description": "New account directory revision",
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "412": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "413": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "415": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "428": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "429": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "503": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    }
+                },
+                "security": [
+                    {
+                        "ManagementBearer": []
+                    }
+                ],
+                "summary": "Change roles, enable/disable or reset password; revoke all old human sessions",
+                "tags": [
+                    "accounts"
                 ]
             }
         },
@@ -4950,6 +5508,406 @@
                 "summary": "Independently approve a narrowed absolute Grant or reject a pending request",
                 "tags": [
                     "requests"
+                ]
+            }
+        },
+        "/console/api/v1/accounts": {
+            "get": {
+                "description": "Explicit database users mode only; revision is independent of publication. No usernames are recycled. Requires account:read.",
+                "operationId": "browser_listAccounts_get",
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/account.Page"
+                                }
+                            }
+                        },
+                        "description": "OK",
+                        "headers": {
+                            "ETag": {
+                                "description": "Strong account directory revision",
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "429": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "503": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    }
+                },
+                "security": [
+                    {
+                        "BrowserCookie": []
+                    }
+                ],
+                "summary": "Read bounded human directory and latest50 credential-free audit events",
+                "tags": [
+                    "accounts"
+                ]
+            },
+            "post": {
+                "description": "Strict JSON16KiB; password12–72 UTF-8 bytes, bcrypt12; max128 accounts. Requires account:write. Does not create a network Grant. Requires exact configured Origin and native Echo CSRF; legacy clients send X-CSRF-Token from session bootstrap. Strict JSON16KiB.",
+                "operationId": "browser_createAccount_post",
+                "parameters": [
+                    {
+                        "description": "Strong account directory revision, not publication revision",
+                        "in": "header",
+                        "name": "If-Match",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/controller.CreateAccountRequest",
+                                "summary": "account",
+                                "description": "Password is write-only and never logged or audited"
+                            }
+                        }
+                    },
+                    "description": "Password is write-only and never logged or audited",
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/account.Account"
+                                }
+                            }
+                        },
+                        "description": "Created",
+                        "headers": {
+                            "ETag": {
+                                "description": "New account directory revision",
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "412": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "413": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "415": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "428": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "429": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "503": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    }
+                },
+                "security": [
+                    {
+                        "BrowserCookie": []
+                    }
+                ],
+                "summary": "Create a local human account with immutable username and audited CAS",
+                "tags": [
+                    "accounts"
+                ]
+            }
+        },
+        "/console/api/v1/accounts/{id}": {
+            "put": {
+                "description": "Every committed edit advances persistent account version, even if values do not change. Re-enabling never revives old cookies. No delete/rename. Requires account:write. Requires exact configured Origin and native Echo CSRF; legacy clients send X-CSRF-Token from session bootstrap. Strict JSON16KiB.",
+                "operationId": "browser_updateAccount_put",
+                "parameters": [
+                    {
+                        "description": "Immutable account principal ID",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Strong account directory revision",
+                        "in": "header",
+                        "name": "If-Match",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/controller.UpdateAccountRequest",
+                                "summary": "account",
+                                "description": "disabled required; omitted or empty password retains hash"
+                            }
+                        }
+                    },
+                    "description": "disabled required; omitted or empty password retains hash",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/account.Account"
+                                }
+                            }
+                        },
+                        "description": "OK",
+                        "headers": {
+                            "ETag": {
+                                "description": "New account directory revision",
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "412": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "413": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "415": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "428": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "429": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "503": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    }
+                },
+                "security": [
+                    {
+                        "BrowserCookie": []
+                    }
+                ],
+                "summary": "Change roles, enable/disable or reset password; revoke all old human sessions",
+                "tags": [
+                    "accounts"
                 ]
             }
         },

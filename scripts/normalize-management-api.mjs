@@ -9,15 +9,22 @@ spec.components.schemas["agentsync.NodeObservation"].properties.report = {
   oneOf: [{ $ref: "#/components/schemas/agentsync.ReportedState" }, { type: "null" }],
 };
 const request = spec.components.schemas["controller.PublicationRequest"];
+for (const name of ['controller.CreateAccountRequest', 'controller.UpdateAccountRequest']) {
+  const s = spec.components.schemas[name]; s.additionalProperties = false;
+  Object.assign(s.properties.roles, {uniqueItems:true, minItems:1, maxItems:4});
+  s.properties.roles.items = {type:'string',enum:['role:admin','role:viewer','role:requester','role:blocked']};
+  Object.assign(s.properties.password,{writeOnly:true,maxLength:72,description:'12–72 UTF-8 bytes; no trimming. On update omitted or empty retains the hash.'});
+  s.properties.reason.minLength = 1;
+}
 for (const name of ["controller.CreateAccessRequest", "controller.DecideAccessRequest"]) {
   const s = spec.components.schemas[name]; s.additionalProperties = false;
   if (s.properties.endpoint_names) { s.properties.endpoint_names.uniqueItems = true; Object.assign(s.properties.endpoint_names.items, { minLength: 1, maxLength: 1024 }); }
 }
 // Both transport aliases use the same handlers, but not the same credentials.
-for (const [path, methods] of Object.entries(spec.paths)) if (path.startsWith('/console/api/v1/access-request')) {
+for (const [path, methods] of Object.entries(spec.paths)) if (path.startsWith('/console/api/v1/access-request') || path.startsWith('/console/api/v1/accounts')) {
   for (const [verb, operation] of Object.entries(methods)) {
     operation.security = [{ BrowserCookie: [] }]; operation.operationId = `browser_${operation.operationId}_${verb}`;
-    if (verb === 'post') operation.description = `${operation.description ?? ''} Requires exact configured Origin and native Echo CSRF; legacy clients send X-CSRF-Token from session bootstrap. Strict JSON16KiB.`;
+    if (verb === 'post' || verb === 'put') operation.description = `${operation.description ?? ''} Requires exact configured Origin and native Echo CSRF; legacy clients send X-CSRF-Token from session bootstrap. Strict JSON16KiB.`;
   }
 }
 request.additionalProperties = false;
