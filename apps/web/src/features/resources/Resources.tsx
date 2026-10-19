@@ -21,6 +21,7 @@ export function Resources({ csrf, canWrite, onUnauthorized, onDirty, onBusy }: P
   const [catalog, setCatalog] = useState<Inventory | null>(null)
   const [base, setBase] = useState('')
   const [mode, setMode] = useState<'resource' | 'binding' | 'remove'>('resource')
+  const [editUID, setEditUID] = useState('')
   const [removalUID, setRemovalUID] = useState('')
   const [removalKind, setRemovalKind] = useState<'binding' | 'resource'>('binding')
   const [acknowledged, setAcknowledged] = useState(false)
@@ -41,7 +42,13 @@ export function Resources({ csrf, canWrite, onUnauthorized, onDirty, onBusy }: P
   const [controllers] = useState(() => new Set<AbortController>())
   const errors = useRef<HTMLDivElement>(null)
   const removalHeading = useRef<HTMLHeadingElement>(null)
-  const dirty = !!(removalUID || name || reason || resourceUID || contextID || selectedEndpoints.length || endpoints.length !== 1 || endpoints.some(e => e.name || e.port || e.addresses || e.protocol !== 'TCP'))
+  const dirty = !!(editUID || removalUID || name || reason || resourceUID || contextID || selectedEndpoints.length || endpoints.length !== 1 || endpoints.some(e => e.name || e.port || e.addresses || e.protocol !== 'TCP'))
+  const editTarget = catalog?.resources.find(r => r.uid === editUID)
+  const editCompatible = !!editTarget && endpoints.length === editTarget.endpoints.length && new Set(endpoints.map(e => e.name)).size === endpoints.length && endpoints.every(e => editTarget.endpoints.some(old => old.name === e.name))
+  const networkChanged = editCompatible && endpoints.some(e => {
+    const old = editTarget.endpoints.find(old => old.name === e.name)
+    return !old || e.protocol !== old.protocol || Number(e.port) !== old.port || JSON.stringify(addressList(e.addresses)) !== JSON.stringify(old.addresses)
+  })
   const binding = catalog?.bindings.find(b => b.uid === removalUID)
   const removedResource = catalog?.resources.find(r => r.uid === removalUID)
   const removalTarget = removalKind === 'resource' ? removedResource : binding
@@ -51,11 +58,13 @@ export function Resources({ csrf, canWrite, onUnauthorized, onDirty, onBusy }: P
   useEffect(() => { onBusy(busy) }, [busy, onBusy])
   useEffect(() => { if (error) errors.current?.focus() }, [error, fields])
   useEffect(() => { if (mode === 'remove') removalHeading.current?.focus() }, [mode, removalUID, removalKind])
+  useEffect(() => { if (editUID) removalHeading.current?.focus() }, [editUID])
 
   function fail(e: unknown, reading = false) {
     if (e instanceof DOMException && e.name === 'AbortError') return
     if (e instanceof APIError && e.status === 401) { onUnauthorized(); return }
     if (e instanceof APIError && e.status === 412) { setConflict(true); setError(t('conflict')); return }
+    if (editUID && e instanceof APIError && e.message === 'resource_in_use') { setError(t('resources.editInUse')); return }
     setError(e instanceof APIError ? t(`errors.${e.message}`, { defaultValue: t('requestFailed') }) : t('requestFailed'))
     if (reading) setReadFailed(true)
   }
@@ -85,22 +94,32 @@ export function Resources({ csrf, canWrite, onUnauthorized, onDirty, onBusy }: P
     finally { controllers.delete(controller); if (!controller.signal.aborted) setBusy(false) }
   }
   function clear() {
+    setEditUID('')
     setRemovalUID(''); setAcknowledged(false)
     setName(''); setReason(''); setEndpoints([blankEndpoint()]); setResourceUID(''); setSelectedEndpoints([]); setContextID(''); setFields({})
+  }
+  function selectEdit(uid: string) {
+    const target = catalog?.resources.find(r => r.uid === uid)
+    if (!target || busy || !canWrite || (dirty && !window.confirm(t('resources.discard')))) return
+    clear(); setEditUID(uid); setMode('resource'); setName(target.name)
+    setEndpoints(target.endpoints.map(e => ({ name: e.name, protocol: e.protocol, port: String(e.port), addresses: e.addresses?.join('\n') ?? '' })))
+    setError(''); setNotice('')
   }
   function selectRemoval(uid: string, kind: typeof removalKind) {
     if (busy || !canWrite || (dirty && !window.confirm(t('resources.discard')))) return
     clear(); setRemovalUID(uid); setRemovalKind(kind); setMode('remove'); setError(''); setNotice('')
   }
   function switchMode(value: typeof mode) {
-    if (value === mode || busy || (dirty && !window.confirm(t('resources.discard')))) return
+    if ((value === mode && !editUID) || busy || (dirty && !window.confirm(t('resources.discard')))) return
     clear(); setMode(value); setError(''); setNotice('')
   }
   function editEndpoint(index: number, field: keyof EndpointDraft, value: string) {
     setEndpoints(old => old.map((e, n) => n === index ? { ...e, [field]: value } : e))
+    if (editUID) setAcknowledged(false)
   }
   async function submit(e: React.FormEvent) {
     e.preventDefault(); if (busy || !canWrite || !base || conflict) return
+    if (editUID && (!editTarget || !acknowledged || !networkChanged || readFailed)) return
     const invalid: Record<string, string> = {}
     if (mode !== 'remove' && !name.trim()) invalid[`${mode}-name`] = t('grants.required')
     if (!reason.trim()) invalid[`${mode}-reason`] = t('grants.required')
@@ -121,22 +140,22 @@ export function Resources({ csrf, canWrite, onUnauthorized, onDirty, onBusy }: P
     const body = mode === 'remove'
       ? removalKind === 'resource' ? { reason, acknowledge_removal: acknowledged } : { reason, acknowledge_unprotection: acknowledged }
       : mode === 'resource'
-      ? { name, reason, endpoints: endpoints.map(e => ({ name: e.name, protocol: e.protocol, port: Number(e.port), addresses: addressList(e.addresses) })) }
+      ? { ...(editUID ? {} : { name }), reason, endpoints: endpoints.map(e => ({ name: e.name, protocol: e.protocol, port: Number(e.port), addresses: addressList(e.addresses) })) }
       : { name, reason, resource_name: resource!.name, resource_uid: resource!.uid, endpoint_names: selectedEndpoints, agent_name: context!.agent_name, context_id: context!.id }
     const controller = new AbortController(); controllers.add(controller); setBusy(true); setError(''); setFields({}); setNotice('')
     try {
-      const result = await request<{ uid: string; revision: number }>(mode === 'remove' ? `/${removalKind === 'resource' ? 'resources' : 'bindings'}/${encodeURIComponent(removalUID)}/remove` : mode === 'resource' ? '/resources' : '/bindings', { signal: controller.signal, method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf, 'If-Match': base }, body: JSON.stringify(body) }, mode === 'remove' ? 200 : 201)
+      const result = await request<{ uid: string; revision: number }>(editUID ? `/resources/${encodeURIComponent(editUID)}/network` : mode === 'remove' ? `/${removalKind === 'resource' ? 'resources' : 'bindings'}/${encodeURIComponent(removalUID)}/remove` : mode === 'resource' ? '/resources' : '/bindings', { signal: controller.signal, method: editUID ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf, 'If-Match': base }, body: JSON.stringify(body) }, mode === 'remove' || editUID ? 200 : 201)
       if (controller.signal.aborted) return
       // A successful HTTP status alone is not a valid removal receipt. Keep the
       // draft and require reconciliation on malformed/ambiguous responses.
-      if (mode === 'remove' && (!result.data || result.data.uid !== removalUID || !Number.isSafeInteger(result.data.revision) || !Number.isSafeInteger(Number(base.slice(1, -1))) || result.data.revision <= Number(base.slice(1, -1)) || result.etag !== `"${result.data.revision}"`)) throw new Error('Invalid removal receipt')
-      clear(); setNotice(t(mode === 'remove' ? removalKind === 'resource' ? 'resources.resourceRemoved' : 'resources.removed' : mode === 'resource' ? 'resources.created' : 'resources.bound')); setConflict(true)
+      if ((mode === 'remove' || editUID) && (!result.data || result.data.uid !== (editUID || removalUID) || !Number.isSafeInteger(result.data.revision) || !Number.isSafeInteger(Number(base.slice(1, -1))) || result.data.revision <= Number(base.slice(1, -1)) || result.etag !== `"${result.data.revision}"`)) throw new Error('Invalid mutation receipt')
+      clear(); setNotice(t(editUID ? 'resources.networkSaved' : mode === 'remove' ? removalKind === 'resource' ? 'resources.resourceRemoved' : 'resources.removed' : mode === 'resource' ? 'resources.created' : 'resources.bound')); setConflict(true)
       if (mode === 'remove') setMode('resource')
       // The successful POST is not repeated if its follow-up read fails.
       try { await read(controller.signal, true) } catch (e) { if (!controller.signal.aborted) fail(e, true) }
     } catch (e) {
       if (!controller.signal.aborted) {
-        if (!(e instanceof APIError) || e.status >= 500 || (mode === 'remove' && e.status === 404)) setConflict(true)
+        if (!(e instanceof APIError) || e.status >= 500 || ((mode === 'remove' || editUID) && e.status === 404)) setConflict(true)
         fail(e)
       }
     } finally { controllers.delete(controller); if (!controller.signal.aborted) setBusy(false) }
@@ -169,17 +188,19 @@ export function Resources({ csrf, canWrite, onUnauthorized, onDirty, onBusy }: P
           <div className="endpoint-options"><label><input type="checkbox" checked={acknowledged} onChange={e => setAcknowledged(e.target.checked)} />{t(removalKind === 'resource' ? 'resources.acknowledgeResource' : 'resources.acknowledge')}</label></div>
           <div className="actions"><Button variant="destructive" type="submit" disabled={busy || conflict || !base || !removalTarget || !acknowledged}>{t(removalKind === 'resource' ? 'resources.confirmResourceRemoval' : 'resources.confirmRemoval')}</Button><Button variant="outline" type="button" onClick={() => { clear(); setMode('resource'); setError(''); setNotice('') }}>{t('resources.cancelRemoval')}</Button></div>
         </> : <>
-        <h3>{t(mode === 'resource' ? 'resources.create' : 'resources.bind')}</h3>
-        <div><label htmlFor={`${mode}-name`}>{t(`resources.${mode}Name`)}</label><input id={`${mode}-name`} {...fieldProps(`${mode}-name`)} value={name} onChange={e => setName(e.target.value)} maxLength={128} required />{fieldError(`${mode}-name`)}</div>
+        <h3 ref={editUID ? removalHeading : undefined} tabIndex={editUID ? -1 : undefined}>{t(editUID ? 'resources.editNetwork' : mode === 'resource' ? 'resources.create' : 'resources.bind')}</h3>
+        {editUID && editTarget && !editCompatible && <p className="stale" role="status">{t('resources.editMembershipChanged')}</p>}
+        {editUID && <><p className="boundary">{t('resources.editWarning')}</p><p className="hint">{editUID}</p>{editTarget ? <div className="context-preview network-edit-current"><h4>{t('resources.latestNetwork')}</h4><p>{editTarget.name}</p><ul>{editTarget.endpoints.map(e => <li key={e.name}>{e.name} · {e.protocol}/{e.port} · <code>{e.addresses?.join(', ') ?? t('resources.bindingScope')}</code></li>)}</ul></div> : <p className="stale">{t('resources.missingResource')}</p>}</>}
+        <div><label htmlFor={`${mode}-name`}>{t(`resources.${mode}Name`)}</label><input id={`${mode}-name`} {...fieldProps(`${mode}-name`)} value={name} readOnly={!!editUID} onChange={e => setName(e.target.value)} maxLength={128} required />{fieldError(`${mode}-name`)}</div>
         {mode === 'resource' ? <>
           <p className="hint">{t('resources.endpointHelp')}</p>
           {endpoints.map((endpoint, index) => <fieldset key={index} className="endpoint-editor"><legend>{t('resources.endpoint', { n: index + 1 })}</legend><div className="grant-fields">
-            <div><label htmlFor={`endpoint-${index}-name`}>{t('resources.endpointName', { n: index + 1 })}</label><input id={`endpoint-${index}-name`} {...fieldProps(`endpoint-${index}-name`)} value={endpoint.name} onChange={e => editEndpoint(index, 'name', e.target.value)} maxLength={128} required />{fieldError(`endpoint-${index}-name`)}</div>
+            <div><label htmlFor={`endpoint-${index}-name`}>{t('resources.endpointName', { n: index + 1 })}</label><input id={`endpoint-${index}-name`} {...fieldProps(`endpoint-${index}-name`)} value={endpoint.name} readOnly={!!editUID} onChange={e => editEndpoint(index, 'name', e.target.value)} maxLength={128} required />{fieldError(`endpoint-${index}-name`)}</div>
             <div><label htmlFor={`endpoint-${index}-protocol`}>{t('resources.endpointProtocol', { n: index + 1 })}</label><select id={`endpoint-${index}-protocol`} value={endpoint.protocol} onChange={e => editEndpoint(index, 'protocol', e.target.value)}><option>TCP</option><option>UDP</option></select></div>
             <div><label htmlFor={`endpoint-${index}-port`}>{t('resources.endpointPort', { n: index + 1 })}</label><input id={`endpoint-${index}-port`} {...fieldProps(`endpoint-${index}-port`)} type="number" min={1} max={65535} step={1} value={endpoint.port} onChange={e => editEndpoint(index, 'port', e.target.value)} required />{fieldError(`endpoint-${index}-port`)}</div>
             <div><label htmlFor={`endpoint-${index}-addresses`}>{t('resources.endpointAddresses', { n: index + 1 })}</label><textarea id={`endpoint-${index}-addresses`} {...fieldProps(`endpoint-${index}-addresses`)} value={endpoint.addresses} onChange={e => editEndpoint(index, 'addresses', e.target.value)} maxLength={8256} rows={3} spellCheck={false} />{fieldError(`endpoint-${index}-addresses`)}</div>
-          </div><Button type="button" variant="outline" disabled={endpoints.length === 1} onClick={() => { setEndpoints(old => old.filter((_, n) => n !== index)); setFields({}) }}>{t('resources.removeEndpoint', { n: index + 1 })}</Button></fieldset>)}
-          <Button type="button" variant="outline" disabled={endpoints.length >= 64} onClick={() => setEndpoints(old => [...old, blankEndpoint()])}>{t('resources.addEndpoint')}</Button>
+          </div>{!editUID && <Button type="button" variant="outline" disabled={endpoints.length === 1} onClick={() => { setEndpoints(old => old.filter((_, n) => n !== index)); setFields({}) }}>{t('resources.removeEndpoint', { n: index + 1 })}</Button>}</fieldset>)}
+          {!editUID && <Button type="button" variant="outline" disabled={endpoints.length >= 64} onClick={() => setEndpoints(old => [...old, blankEndpoint()])}>{t('resources.addEndpoint')}</Button>}
         </> : <>
           <div><label htmlFor="binding-resource">{t('resources.bindingResource')}</label><select id="binding-resource" {...fieldProps('binding-resource')} value={resourceUID} onChange={e => { setResourceUID(e.target.value); setSelectedEndpoints([]) }} required><option value="">{t('grants.selectResource')}</option>{catalog?.resources.map(r => <option key={r.uid} value={r.uid}>{r.name} · {r.uid}</option>)}</select>{fieldError('binding-resource')}</div>
           <fieldset id="binding-endpoints" tabIndex={-1} {...fieldProps('binding-endpoints')}><legend>{t('grants.endpoints')}</legend><div className="endpoint-options">{resource?.endpoints.map(e => <label key={e.name}><input type="checkbox" checked={selectedEndpoints.includes(e.name)} onChange={event => setSelectedEndpoints(old => event.target.checked ? [...old, e.name] : old.filter(n => n !== e.name))} />{e.name} <span>{e.protocol}/{e.port}</span></label>)}</div>{fieldError('binding-endpoints')}</fieldset>
@@ -187,11 +208,12 @@ export function Resources({ csrf, canWrite, onUnauthorized, onDirty, onBusy }: P
           {context && <div className="context-preview"><h4>{t('resources.reviewContext')}</h4><p>{context.agent_name} · {context.id} · {context.profile}</p><p>{context.class} · {context.stage} · {context.handling}</p><p><code>{context.destinations.join(', ')}</code></p><p className="hint">{t('resources.contextBoundary')}</p></div>}
         </>}
         <div><label htmlFor={`${mode}-reason`}>{t(`resources.${mode}Reason`)}</label><input id={`${mode}-reason`} {...fieldProps(`${mode}-reason`)} value={reason} onChange={e => setReason(e.target.value)} maxLength={512} required />{fieldError(`${mode}-reason`)}</div>
-        <div className="actions"><Button type="submit" disabled={busy || conflict || !base}>{t(mode === 'resource' ? 'resources.create' : 'resources.bind')}</Button><Button type="button" variant="outline" disabled={!dirty} onClick={() => { if (window.confirm(t('resources.discard'))) clear() }}>{t('resources.clear')}</Button></div>
+        {editUID && <div className="endpoint-options"><label><input type="checkbox" checked={acknowledged} onChange={e => setAcknowledged(e.target.checked)} />{t('resources.acknowledgeEdit')}</label></div>}
+        <div className="actions"><Button type="submit" disabled={busy || conflict || !base || (!!editUID && (!editTarget || !networkChanged || !acknowledged || readFailed))}>{t(editUID ? 'resources.saveNetwork' : mode === 'resource' ? 'resources.create' : 'resources.bind')}</Button>{editUID ? <Button type="button" variant="outline" onClick={() => { clear(); setError(''); setNotice('') }}>{t('resources.cancelEdit')}</Button> : <Button type="button" variant="outline" disabled={!dirty} onClick={() => { if (window.confirm(t('resources.discard'))) clear() }}>{t('resources.clear')}</Button>}</div>
         </>}
       </fieldset></form>
     </>}
-    <div className="inventory-list"><h2>{t('resources.list')}</h2>{inventory?.resources.length === 0 && !busy && <p className="empty">{t('resources.empty')}</p>}{shown(inventory?.resources)?.map(r => <article key={r.uid} data-resource-id={r.uid}><h3>{r.name}</h3><p className="hint">{r.uid}</p><ul>{r.endpoints.map(e => <li key={e.name}><strong>{e.name}</strong> · {e.protocol}/{e.port} · <code>{e.addresses?.join(', ') ?? t('resources.bindingScope')}</code></li>)}</ul>{canWrite && <Button variant="outline" disabled={busy || !catalog?.resources.some(item => item.uid === r.uid)} onClick={() => selectRemoval(r.uid, 'resource')}>{t('resources.removeResource')}</Button>}</article>)}</div>
+    <div className="inventory-list"><h2>{t('resources.list')}</h2>{inventory?.resources.length === 0 && !busy && <p className="empty">{t('resources.empty')}</p>}{shown(inventory?.resources)?.map(r => <article key={r.uid} data-resource-id={r.uid}><h3>{r.name}</h3><p className="hint">{r.uid}</p><ul>{r.endpoints.map(e => <li key={e.name}><strong>{e.name}</strong> · {e.protocol}/{e.port} · <code>{e.addresses?.join(', ') ?? t('resources.bindingScope')}</code></li>)}</ul>{canWrite && <div className="actions"><Button variant="outline" disabled={busy || !catalog?.resources.some(item => item.uid === r.uid)} onClick={() => selectEdit(r.uid)}>{t('resources.editNetwork')}</Button><Button variant="outline" disabled={busy || !catalog?.resources.some(item => item.uid === r.uid)} onClick={() => selectRemoval(r.uid, 'resource')}>{t('resources.removeResource')}</Button></div>}</article>)}</div>
     <div className="inventory-list"><h2>{t('resources.bindings')}</h2><p className="hint">{t('resources.selectionHelp')}</p>{inventory?.bindings.length === 0 && !busy && <p className="empty">{t('resources.emptyBindings')}</p>}{shown(inventory?.bindings)?.map(b => <article key={b.uid} data-binding-id={b.uid}><h3>{b.name}</h3><p className="hint">{b.uid}</p><details><summary>{t('resources.inspectBinding')}</summary><h4>{t('resources.list')}</h4><code>{b.resources}</code><h4>{t('resources.agents')}</h4><code>{b.agents}</code><h4>{t('resources.execution')}</h4><code>{b.enforcement}</code></details>{canWrite && <Button variant="outline" disabled={busy || !catalog?.bindings.some(item => item.uid === b.uid)} onClick={() => selectRemoval(b.uid, 'binding')}>{t('resources.remove')}</Button>}</article>)}</div>
     <div className="inventory-list"><h2>{t('resources.contexts')}</h2><p className="hint">{t('resources.contextBoundary')}</p>{inventory?.contexts.length === 0 && !busy && <p className="empty">{t('resources.noContexts')}</p>}{shown(inventory?.contexts)?.map(c => <article key={contextKey(c)}><h3>{c.agent_name} · {c.id}</h3><p>{c.profile} · {c.class} · {c.stage} · {c.handling}</p><p><code>{c.destinations.join(', ')}</code></p>{!c.selectable && <p className="hint">{t('resources.unsupportedContext')}</p>}</article>)}</div>
     {pages > 1 && <div className="actions"><Button variant="outline" disabled={page === 0 || busy} onClick={() => setPage(n => n - 1)}>{t('resources.previous')}</Button><span>{t('resources.page', { n: page + 1, pages })}</span><Button variant="outline" disabled={page >= pages - 1 || busy} onClick={() => setPage(n => n + 1)}>{t('resources.next')}</Button></div>}

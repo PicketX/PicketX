@@ -811,6 +811,30 @@
                 },
                 "type": "object"
             },
+            "controller.UpdateResourceNetworkRequest": {
+                "properties": {
+                    "endpoints": {
+                        "items": {
+                            "$ref": "#/components/schemas/controller.ResourceEndpointRequest"
+                        },
+                        "maxItems": 64,
+                        "minItems": 1,
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "reason": {
+                        "maxLength": 512,
+                        "type": "string",
+                        "minLength": 1
+                    }
+                },
+                "required": [
+                    "endpoints",
+                    "reason"
+                ],
+                "type": "object",
+                "additionalProperties": false
+            },
             "management.GrantChange": {
                 "properties": {
                     "expires_at": {
@@ -2915,6 +2939,184 @@
                     }
                 ],
                 "summary": "Create a Resource with named network Endpoints; does not grant or confirm access",
+                "tags": [
+                    "management"
+                ]
+            }
+        },
+        "/api/v1/resources/{uid}/network": {
+            "put": {
+                "description": "Keeps UID/name/Endpoint membership/type/labels. Normalizes selected document; does not configure the service or confirm enforcement. All references including revoked/expired block.",
+                "operationId": "updateResourceNetwork",
+                "parameters": [
+                    {
+                        "description": "Resource UID, never name",
+                        "in": "path",
+                        "name": "uid",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Strong current revision; stale checked before lookup",
+                        "in": "header",
+                        "name": "If-Match",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/controller.UpdateResourceNetworkRequest",
+                                "summary": "network",
+                                "description": "Complete existing named Endpoints; omitted addresses use binding scope; empty/null rejected"
+                            }
+                        }
+                    },
+                    "description": "Complete existing named Endpoints; omitted addresses use binding scope; empty/null rejected",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/management.InventoryChange"
+                                }
+                            }
+                        },
+                        "description": "OK",
+                        "headers": {
+                            "ETag": {
+                                "description": "Strong accepted revision, not applied state",
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "409": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "412": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "413": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "415": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "428": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "429": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "503": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    }
+                },
+                "security": [
+                    {
+                        "ManagementBearer": []
+                    }
+                ],
+                "summary": "Edit existing Endpoint networks only on an unreferenced Resource",
                 "tags": [
                     "management"
                 ]
@@ -5514,6 +5716,201 @@
                     }
                 ],
                 "summary": "Create Resource using the operator session and CSRF protection",
+                "tags": [
+                    "console"
+                ]
+            }
+        },
+        "/console/api/v1/resources/{uid}/network": {
+            "put": {
+                "operationId": "browserUpdateResourceNetwork",
+                "parameters": [
+                    {
+                        "description": "Immutable Resource UID",
+                        "in": "path",
+                        "name": "uid",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Strong current revision",
+                        "in": "header",
+                        "name": "If-Match",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Exact configured origin",
+                        "in": "header",
+                        "name": "Origin",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Session CSRF token",
+                        "in": "header",
+                        "name": "X-CSRF-Token",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/controller.UpdateResourceNetworkRequest",
+                                "summary": "network",
+                                "description": "Complete existing Endpoint networks and audit reason"
+                            }
+                        }
+                    },
+                    "description": "Complete existing Endpoint networks and audit reason",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/management.InventoryChange"
+                                }
+                            }
+                        },
+                        "description": "OK",
+                        "headers": {
+                            "ETag": {
+                                "description": "Strong accepted revision, not applied state",
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "409": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "412": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "413": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "415": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "428": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "429": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "503": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    }
+                },
+                "security": [
+                    {
+                        "BrowserCookie": []
+                    }
+                ],
+                "summary": "Edit unreferenced Resource networks with operator session and CSRF",
                 "tags": [
                     "console"
                 ]

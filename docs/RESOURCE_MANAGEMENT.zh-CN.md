@@ -1,5 +1,20 @@
 # 资源接入（alpha）
 
+## 使用前修改网络参数
+
+选择未被引用资源的“编辑网络参数”，只改既有 Endpoint 的协议、端口和可选双栈
+目的地址；资源 UID/名称及 Endpoint 名称、类型和标签不变。核对最新目标、填写
+原因并确认后保存；取消不写入。此操作不配置/迁移应用，也不确认 Agent 已应用。
+所选文档规范化，注释/格式不保证保留；其他对象/源文本及 facts 不变。
+
+PUT `/api/v1/resources/{uid}/network` 及会话/CSRF `/console/api/v1` 对应路由接受
+`{endpoints:[{name,protocol,port,addresses?}],reason}`。须包含所有既有入口且不重复，
+不可增删/改名。200 返回 UID/修订/ETag，语义无变化保留修订。任何 Grant（含撤销、
+过期、零匹配选择器）、Deny、Binding、HTTPRoute 引用返回409；陈旧412先于目标查询，
+缺失/错误类型404。继承严格 JSON、鉴权、CAS、完整编译及事务审计。显式重基准保留
+草稿、展示最新值并清除确认；同名重建不会替换原 UID。异常状态/回执阻止盲目重试。
+引用中的网络编辑、Endpoint 集合变更、Binding 编辑、身份/审批及联合验收仍待完成。
+
 [English](RESOURCE_MANAGEMENT.md) | 简体中文
 
 [浏览器工作台](BROWSER_CONSOLE.zh-CN.md)的资源页读取真实数据库发布，创建

@@ -11,6 +11,7 @@ import { once } from 'node:events'
 import { chromium } from 'playwright'
 import { freePort, startIngress } from './ingress.mjs'
 import { resourceOnboarding } from './resources.mjs'
+import { resourceNetworkEditing } from './resource-edit.mjs'
 import { httpRouteManagement } from './http-routes.mjs'
 import { nodeObservations } from './nodes.mjs'
 import { rejectedMutationReceipt } from './mutation-receipts.mjs'
@@ -287,6 +288,7 @@ spec:
   await writeFile(callersPath, '{"callers":null}', { mode: 0o600 }); await ingress.verifyUnavailable()
   console.log('PASS actual browser publication → source authorization → Nginx → application; revoke/deadline/audit/IPv6/scoped caller removal')
   await resourceOnboarding({ operator, view, origin, token, policy, facts, evidence })
+  await resourceNetworkEditing({ operator, view, origin, token, evidence })
   await httpRouteManagement({ operator, view, origin, token, root, temp, authzPort, ingressToken, callersPath, evidence })
   await nodeObservations({ operator, view, temp, evidence })
   await import('./request.mjs')

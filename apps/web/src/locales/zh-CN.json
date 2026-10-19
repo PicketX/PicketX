@@ -31,6 +31,12 @@
   },
   "language": "语言", "loginTitle": "管理访问，明确边界。", "loginDescription": "登录以查看和发布本 Controller 管理的配置。", "desiredBoundary": "这里只展示期望状态。保存配置不表示节点已应用。", "signIn": "登录", "accessKey": "访问密钥", "keyHelp": "使用独立管理访问密钥换取服务端会话，密钥不会写入浏览器存储。", "sessionBoundary": "单 Controller 会话最长8小时，空闲30分钟失效。重启或凭据轮换后需重新登录。", "loading": "加载中…", "retry": "重试", "operatorConsole": "管理工作台", "navigation": "工作台导航", "configuration": "期望配置", "audit": "审计", "signOut": "退出登录", "refresh": "刷新状态", "status": "发布状态", "authority": "权威来源", "editorRevision": "编辑基线修订", "lastRead": "最后成功读取", "notRead": "尚未读取", "enforcement": "节点应用", "notConfirmed": "此视图无法确认", "policyAndFacts": "策略与绑定事实", "editorHelp": "编辑完整策略与事实文档。接受之前运行共享校验。", "readOnly": "只读访问，当前角色不能发布修改。", "unsaved": "未保存草稿", "inSync": "编辑内容未修改", "policyYaml": "策略 YAML", "factsJson": "事实 JSON", "changeReason": "变更原因", "reasonHelp": "说明此次修改，原因将写入追加式发布审计。", "reloadLatest": "重新载入最新配置", "save": "保存期望配置", "noConfiguration": "无法读取配置，请刷新重试。", "publicationHistory": "发布历史", "auditHelp": "配置变更与接受结果在同一事务中记录。这不是执行报告或请求决策日志。", "emptyAudit": "尚无配置变更记录。", "revisionNumber": "修订 {{revision}}", "digest": "配置摘要", "moreAudit": "加载更多审计", "discard": "放弃未保存草稿并载入最新配置？", "expired": "会话已过期或访问已撤销，请重新登录。", "conflict": "修订已改变。草稿已保留，请显式重新载入后再编辑。", "saved": "期望配置已保存，尚未确认节点应用。", "staleFailed": "上次读取失败，显示的数据可能已过时。", "staleAge": "此视图已超过一分钟，请刷新后再使用。", "requestFailed": "请求失败，请检查连接和 Controller 就绪状态后重试。",
   "resources": {
+    "editNetwork": "编辑网络参数", "saveNetwork": "保存网络参数", "cancelEdit": "取消网络编辑",
+    "latestNetwork": "草稿修订中的最新目标", "acknowledgeEdit": "我已核对最新目标及网络变更",
+    "editMembershipChanged": "最新修订中的 Endpoint 成员已变更。请取消此草稿并重新打开 Resource 后再编辑。",
+    "editWarning": "仅能编辑未被引用的资源。UID、名称和标签不变；此操作不配置或迁移应用。保存会规范化本资源文档，其注释和格式可能丢失，其他文档保持不变。",
+    "editInUse": "资源仍被引用，包含撤销或过期 Grant 时也不能编辑网络。请核对 Grant、Deny、Binding 和 HTTPRoute；未执行任何级联变更。",
+    "networkSaved": "资源网络参数已作为期望状态保存，未确认应用配置或 Agent 已应用。",
     "removeResource": "移除资源",
     "confirmResourceRemoval": "确认移除资源",
     "removeResourceWarning": "仅移除未引用的资源定义及其入口。被引用的资源不能移除。此操作不会停止应用或撤销访问。",

@@ -1,5 +1,58 @@
 # Autonomous delivery checkpoint
 
+## Resource network editing (active)
+
+Owner codex/resource-network-edit; heartbeat2026-10-18T23:38Z; lease until00:38Z
+or merged+green main/explicit release. Core aa19b91e004750f8b577a4e6f4f8da655d2f9063,
+tree565966dcd69f7a65816dc6bb424c3e38c9de0302/mainCI39174548179 GREEN; PR27 released.
+Agent95a5f7f/mainCI39118687475 GREEN; no open PRs at acquisition. Existing isolated
+clean worktree retained. Plan/spec: superpowers/{plans,specs}/2026-10-19-resource-edit.md.
+Deliver unreferenced Resource network edits preserving identities/labels; referenced
+edits/Binding changes/identity/approval/combined Linux acceptance remain.
+Full local baseline fails only known Unix socket EPERM; native full gates required.
+Final immutable evidence and release will be recorded in the PR and checkpoint.
+
+[PR28](https://github.com/PicketX/PicketX/pull/28): local API01c9c3b and browser tests
+1f2e0bc published1caf7d4b/treee5aef399. HTTP404 and absent OpenAPI contract RED→GREEN;
+all local configuration/controller packages pass. Full normal/race tests retain only
+Unix socket EPERM; vet/build pass. Native39177786803 intentionally tests absent UI
+entry before implementation. Required final full native CI and independent review
+are pending. No merge or completed-product claim yet.
+
+Implementation local03cbd1c9814584be5af84bbb673aa6bb98c02ed3, remote
+edd34d071bd95b1caff0110db2c5e5804ff92810 and CI checkoutc56df626 share tree
+9dd43b2c1a1c85d1adfe3d81b12ecb9fe8472939. Tests-only39177786803 Web failed at the
+expected absent Edit network parameters control; Go205/518 passed. Native full
+39178242924 Go117825294811/Web117825294870 SUCCESS:205 top/518 total, no fail/skip/
+race; actual Unix100repeat, vet/build, pinned protocol/OpenAPI, static SQLite/gRPC/
+persistence/restart/SIGTERM. Locked Web checks and actual Chromium editing/CAS/
+audit/rebase/ambiguous-receipt recovery pass alongside existing Nginx/application.
+Negative-response injection is recovery evidence only, not simulated enforcement.
+Screenshot artifact12155177633 digest
+bffb94e5f4608e7144159b51fe32560e36a26b17fa761ac7829db2bc20197f6c matches download;
+375px and1440px inspected. UX/UI skills retained the existing design system and
+required announced errors, explicit latest-value preview and acknowledgement.
+Independent full-branch review b987c79..03cbd1c found one Important: positional
+Endpoint comparison misclassified retained drafts after concurrent reordering.
+The actual predicate reproduced RED; name-keyed comparison passes locally and
+blocks incompatible membership with actionable bilingual guidance. New real
+two-Endpoint browser coverage uses a full-publication competing writer, verifies
+unchanged vs changed drafts and actual saved named networks, then tests added
+membership. Tests-only f8c053c/remote8e7b1303/tree0cbfafe3 runs in39178995737 to prove
+native RED. The fix must pass full exact-head CI before merge; final raw evidence,
+PR28 head/main CI and lease release belong in PR28. No deferred review minors.
+
+Review boundary rulings: (1) imported values beyond creation limits still require
+advanced editing (cost: convenience editor cannot handle all imported Resources);
+(2) rebase retains full intent, not automatic three-way merge (cost: acknowledged
+save may replace concurrent fields); (3) full-publication permissions stay unchanged
+(cost: advanced editing still needs whole-candidate discipline); (4) general GET
+schema hardening remains separate (cost: malformed reads may confuse/break existing
+UI); (5) no Agent/kernel application claim (cost if overstated: desired state can
+be mistaken for protection). Combined privileged acceptance remains mandatory.
+Next: referenced Resource/Binding lifecycle, human identity/approval and combined
+Agent/Linux/browser acceptance. Overall goal remains incomplete.
+
 ## Management mutation completion (active)
 
 Owner codex/mutation-completion; heartbeat2026-10-18T22:40Z; lease until23:40Z

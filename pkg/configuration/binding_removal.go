@@ -29,62 +29,12 @@ func (b *Bundle) RemoveBinding(uid string) ([]byte, error) {
 // Callers enforce kind-specific lifecycle/reference restrictions first.
 func (b *Bundle) removeDocument(index int) ([]byte, error) {
 	uid := b.objects[index].Metadata.UID
-	// Decode accepts YAML's UTF-16 encodings, but the source editor uses UTF-8
-	// byte coordinates. Reject unsupported presentation before indexing lines.
-	if !utf8.Valid(b.source) {
-		return nil, fmt.Errorf("structured policy edits require UTF-8")
+	start, end, err := b.documentSpan(index)
+	if err != nil {
+		return nil, err
 	}
 	expected := slices.Delete(slices.Clone(b.objects), index, index+1)
-	lines := []int{0}
-	for p := 0; p < len(b.source); {
-		if n := yamlBreak(b.source, p); n > 0 {
-			p += n
-			lines = append(lines, p)
-		} else {
-			p++
-		}
-	}
-	dec := yaml.NewDecoder(bytes.NewReader(b.source))
-	start, end := -1, len(b.source)
-	for {
-		var doc yaml.Node
-		if err := dec.Decode(&doc); err == io.EOF {
-			break
-		} else if err != nil {
-			return nil, err
-		}
-		if start >= 0 {
-			end = lines[doc.Line-1]
-			break
-		}
-		_, meta := yamlField(doc.Content[0], "metadata")
-		_, id := yamlField(meta, "uid")
-		if id != nil && id.Value == uid {
-			start = lines[doc.Line-1]
-		}
-	}
-	if start < 0 {
-		return nil, fmt.Errorf("target document not found in source")
-	}
-	// Document.Line identifies the next document, not the end of this one.
-	// An explicit column-zero end marker closes the removed document sooner;
-	// comments/blank lines/directives after its line belong to the surviving stream.
-	for i, p := range lines {
-		if p < start || p+3 > end || !bytes.Equal(b.source[p:p+3], []byte("...")) {
-			continue
-		}
-		q := p + 3
-		if q < len(b.source) && b.source[q] != ' ' && b.source[q] != '\t' && yamlBreak(b.source, q) == 0 {
-			continue
-		}
-		if i+1 < len(lines) {
-			end = lines[i+1]
-		}
-		break
-	}
 	if len(expected) == 0 {
-		// A valid imported target may itself use our conventional marker UID.
-		// The new Configuration must not reuse it across an immutable kind boundary.
 		emptyUID := "empty-binding-removal"
 		if uid == emptyUID {
 			emptyUID = "empty-document-removal"
@@ -106,4 +56,61 @@ func (b *Bundle) removeDocument(index int) ([]byte, error) {
 		return nil, fmt.Errorf("document removal changed unrelated policy")
 	}
 	return out, nil
+}
+
+func (b *Bundle) documentSpan(index int) (int, int, error) {
+	uid := b.objects[index].Metadata.UID
+	// Decode accepts YAML's UTF-16 encodings, but the source editor uses UTF-8
+	// byte coordinates. Reject unsupported presentation before indexing lines.
+	if !utf8.Valid(b.source) {
+		return 0, 0, fmt.Errorf("structured policy edits require UTF-8")
+	}
+	lines := []int{0}
+	for p := 0; p < len(b.source); {
+		if n := yamlBreak(b.source, p); n > 0 {
+			p += n
+			lines = append(lines, p)
+		} else {
+			p++
+		}
+	}
+	dec := yaml.NewDecoder(bytes.NewReader(b.source))
+	start, end := -1, len(b.source)
+	for {
+		var doc yaml.Node
+		if err := dec.Decode(&doc); err == io.EOF {
+			break
+		} else if err != nil {
+			return 0, 0, err
+		}
+		if start >= 0 {
+			end = lines[doc.Line-1]
+			break
+		}
+		_, meta := yamlField(doc.Content[0], "metadata")
+		_, id := yamlField(meta, "uid")
+		if id != nil && id.Value == uid {
+			start = lines[doc.Line-1]
+		}
+	}
+	if start < 0 {
+		return 0, 0, fmt.Errorf("target document not found in source")
+	}
+	// Document.Line identifies the next document, not the end of this one.
+	// An explicit column-zero end marker closes the removed document sooner;
+	// comments/blank lines/directives after its line belong to the surviving stream.
+	for i, p := range lines {
+		if p < start || p+3 > end || !bytes.Equal(b.source[p:p+3], []byte("...")) {
+			continue
+		}
+		q := p + 3
+		if q < len(b.source) && b.source[q] != ' ' && b.source[q] != '\t' && yamlBreak(b.source, q) == 0 {
+			continue
+		}
+		if i+1 < len(lines) {
+			end = lines[i+1]
+		}
+		break
+	}
+	return start, end, nil
 }
