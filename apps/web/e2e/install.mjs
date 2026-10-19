@@ -12,6 +12,7 @@ import { chromium } from 'playwright'
 import { freePort } from './ingress.mjs'
 import { createControllerService } from '../../../scripts/controller-service-fixture.mjs'
 import { copyPrivateState, relocateInstanceConfig, snapshotPrivateTree } from '../../../scripts/controller-state-copy.mjs'
+import { durableServiceView } from '../../../scripts/controller-service-evidence.mjs'
 
 const input = resolve(process.argv[2] ?? '/missing-controller-bundle')
 const serviceMode = process.argv[3] === '--systemd'
@@ -130,8 +131,11 @@ try {
   assert(JSON.stringify(audit).includes('Installed operator publication'), 'durable publication audit missing')
   if (service) {
     const views = async () => Object.fromEntries(await Promise.all(['publication', 'accounts', 'audit'].map(async path => {
+      const started = Date.now()
       const response = await api(path, keys[0]); assert.equal(response.status, 200)
-      return [path, await response.json()]
+      const body = await response.json()
+      if (path === 'accounts') assert(Date.parse(body.observedAt) >= started - 1000 && Date.parse(body.observedAt) <= Date.now() + 1000, 'fresh accounts observation required')
+      return [path, durableServiceView(path, body)]
     })))
     const beforeRestore = await views(), oldConfig = JSON.parse(await readFile(join(instance, 'controller.yaml'), 'utf8'))
     const restoreCookie = await human.cookies()
@@ -154,7 +158,7 @@ try {
     assert.equal((await fetch(origin + '/console/api/v1/publication', { headers: { Cookie: restoreCookie.map(c => `${c.name}=${c.value}`).join('; ') } })).status, 401, 'session survived restored process')
     assert.deepEqual(await views(), beforeRestore, 'restored durable views changed')
     await human.clearCookies(); await humanLogin()
-    service.proof.restore = { completeFiles: Object.keys(snapshot).length, snapshotSHA256: createHash('sha256').update(JSON.stringify(snapshot)).digest('hex'), changedOnlyConfigPaths: true, originalUnavailable: true, durableViewsEqual: true, oldSessionRejected: true, freshHumanLogin: true, authorityRetained: config.agent.authority === oldConfig.agent.authority }
+    service.proof.restore = { completeFiles: Object.keys(snapshot).length, snapshotSHA256: createHash('sha256').update(JSON.stringify(snapshot)).digest('hex'), changedOnlyConfigPaths: true, originalUnavailable: true, durableViewsEqual: true, onlyExcludedReadMetadata: ['accounts.observedAt'], freshObservationValidated: true, oldSessionRejected: true, freshHumanLogin: true, authorityRetained: config.agent.authority === oldConfig.agent.authority }
     service.proof.status = 'pass'
   }
   for (const width of [1440, 375]) {

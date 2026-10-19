@@ -105,7 +105,7 @@ jobs:
         with:
           node-version-file: .node-version
       - name: Reject existing bundle targets before building
-        run: node --test scripts/controller-bundle.test.mjs scripts/controller-state-copy.test.mjs
+        run: node --test scripts/controller-bundle.test.mjs scripts/controller-state-copy.test.mjs scripts/controller-service.test.mjs
       - name: Build and inspect standalone Linux-amd64 Controller bundle
         run: |
           sudo apt-get update

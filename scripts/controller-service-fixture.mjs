@@ -17,6 +17,23 @@ const quoted = value => {
   return '"' + value.replaceAll('\\', '\\\\').replaceAll('"', '\\"').replaceAll('%', '%%') + '"'
 }
 
+// Directive grammars differ: WorkingDirectory consumes an unquoted path, while
+// ExecStart and ReadWritePaths parse word lists. Exercise the actual parser.
+export function renderControllerUnit(template, { user, binary, instance }) {
+  assert(instance.startsWith('/') && !/[\r\n\0]/.test(instance))
+  let service = template
+  for (const [pattern, replacement] of [
+    [/^User=picketx$/m, 'User=' + user], [/^Group=picketx$/m, 'Group=' + user],
+    [/^WorkingDirectory=.+$/m, 'WorkingDirectory=' + instance.replaceAll('\\', '\\\\').replaceAll('%', '%%')],
+    [/^ExecStart=.+$/m, 'ExecStart=' + quoted(binary) + ' -config ' + quoted(join(instance, 'controller.yaml'))],
+    [/^ReadWritePaths=.+$/m, 'ReadWritePaths=' + quoted(instance)],
+  ]) {
+    assert(pattern.test(service), 'shipped unit contract changed')
+    service = service.replace(pattern, replacement)
+  }
+  return service.replace('[Service]\n', '[Service]\nEnvironment=PATH=\n')
+}
+
 export async function createControllerService({ temp, bundle, stateParent }) {
   assert(process.getuid() === 0 && process.env.PICKETX_SERVICE_TESTS === '1', 'real service opt-in/root required')
   assert(temp.startsWith('/run/picketx-service-'), 'owned /run fixture required')
@@ -78,17 +95,7 @@ export async function createControllerService({ temp, bundle, stateParent }) {
       identity: { uid, gid }, proof,
       async start(instance) {
         if (unitCreated) assert.equal(value('MainPID'), '0', 'stop before changing service paths')
-        let service = template
-        for (const [pattern, replacement] of [
-          [/^User=picketx$/m, 'User=' + user], [/^Group=picketx$/m, 'Group=' + user],
-          [/^WorkingDirectory=.+$/m, 'WorkingDirectory=' + quoted(instance)],
-          [/^ExecStart=.+$/m, 'ExecStart=' + quoted(expectedBinary) + ' -config ' + quoted(join(instance, 'controller.yaml'))],
-          [/^ReadWritePaths=.+$/m, 'ReadWritePaths=' + quoted(instance)],
-        ]) {
-          assert(pattern.test(service), 'shipped unit contract changed')
-          service = service.replace(pattern, replacement)
-        }
-        service = service.replace('[Service]\n', '[Service]\nEnvironment=PATH=\n')
+        const service = renderControllerUnit(template, { user, binary: expectedBinary, instance })
         if (unitCreated) {
           const info = await lstat(unitPath); assert(info.isFile() && info.uid === 0)
         }
