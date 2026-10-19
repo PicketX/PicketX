@@ -94,7 +94,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
-      PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/installed-playwright
+      PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/node_modules/.cache/installed-playwright
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
