@@ -111,7 +111,14 @@ func (s *Store) CreateRequest(expected uint64, r accessrequest.Record) (accessre
 		if e := tx.Exec("INSERT INTO controller_access_request(uid,requester,state,version,data) VALUES(?,?,?,?,?)", r.UID, r.Requester, r.State, r.Version, data).Error; e != nil {
 			return e
 		}
-		return tx.Exec("INSERT INTO controller_request_event(request_uid,actor,action,at,data) VALUES(?,?,?,?,?)", r.UID, r.Requester, "created", r.CreatedAt, data).Error
+		if e := tx.Exec("INSERT INTO controller_request_event(request_uid,actor,action,at,data) VALUES(?,?,?,?,?)", r.UID, r.Requester, "created", r.CreatedAt, data).Error; e != nil {
+			return e
+		}
+		// Resolve the generated ID before commit, so read failure rolls back all
+		// writes. A committed operation needs no further fallible DB readback.
+		var e error
+		r, e = requestRow(tx, r.UID)
+		return e
 	})
 	if errors.Is(err, ErrPrecondition) {
 		return r, err
@@ -119,7 +126,7 @@ func (s *Store) CreateRequest(expected uint64, r accessrequest.Record) (accessre
 	if err != nil {
 		return r, &PersistenceError{Err: err}
 	}
-	return requestRow(s.db, r.UID)
+	return r, nil
 }
 
 // DecideRequest holds the same store mutex as publication. The callback runs
@@ -178,5 +185,6 @@ func (s *Store) DecideRequest(expected uint64, r accessrequest.Record, policy, f
 	} else {
 		return r, fmt.Errorf("invalid request decision")
 	}
-	return requestRow(s.db, r.UID)
+	r.ID = current.ID
+	return r, nil
 }

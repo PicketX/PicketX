@@ -106,6 +106,32 @@ func TestAccessRequestIndependentApprovalAndOwnership(t *testing.T) {
 	if doc, _ := store.Snapshot(); doc.Revision != 2 {
 		t.Fatal("rejection changed publication", doc.Revision)
 	}
+	// An authorized advanced writer can edit Grant semantics; do not falsely
+	// associate the new contribution with the immutable historical approval.
+	for _, change := range []struct{ from, to, want string }{
+		{`"cidr":"2001:db8::42/128"`, `"cidr":"2001:db8::99/128"`, "modified"},
+		{`"endpointNames":["https"]`, `"endpointNames":["ssh"]`, "modified"},
+		{row.ExpiresAt.Add(-time.Minute).Format(time.RFC3339Nano), row.ExpiresAt.Add(-2 * time.Minute).Format(time.RFC3339Nano), "modified"},
+		{`"expiresAt":"` + row.ExpiresAt.Add(-time.Minute).Format(time.RFC3339Nano) + `"`, `"notBefore":"` + time.Now().Add(time.Minute).UTC().Format(time.RFC3339Nano) + `","expiresAt":"` + row.ExpiresAt.Add(-time.Minute).Format(time.RFC3339Nano) + `"`, "scheduled"},
+	} {
+		before, _ := store.Snapshot()
+		changed := strings.Replace(before.Policy, change.from, change.to, 1)
+		if changed == before.Policy {
+			t.Fatal("mutation fixture missing", change.from)
+		}
+		_, err := store.AcceptManaged(before.Revision, "principal:operator", "authorized advanced edit", []byte(changed), []byte(before.Facts), nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		view := request(h, "GET", "/api/v1/access-requests", "", requesterToken, "")
+		if !strings.Contains(view.Body.String(), `"grant_state":"`+change.want+`"`) || strings.Contains(view.Body.String(), "2001:db8::99") {
+			t.Fatal("misleading desired approval", view.Body.String())
+		}
+		current, _ := store.Snapshot()
+		if _, err = store.AcceptManaged(current.Revision, "principal:operator", "restore approved desired intent", []byte(before.Policy), []byte(before.Facts), nil); err != nil {
+			t.Fatal(err)
+		}
+	}
 	var grantList struct {
 		Grants []struct{ UID, Source string }
 	}
@@ -114,7 +140,8 @@ func TestAccessRequestIndependentApprovalAndOwnership(t *testing.T) {
 		if g.Source != "2001:db8::42/128" {
 			continue
 		}
-		w = request(h, "POST", "/api/v1/grants/"+g.UID+"/revoke", `{"reason":"approved contribution revoked"}`, managementToken, `"2"`)
+		current, _ := store.Snapshot()
+		w = request(h, "POST", "/api/v1/grants/"+g.UID+"/revoke", `{"reason":"approved contribution revoked"}`, managementToken, fmt.Sprintf(`"%d"`, current.Revision))
 		if w.Code != 200 {
 			t.Fatal(w.Code, w.Body.String())
 		}

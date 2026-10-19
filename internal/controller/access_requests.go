@@ -37,7 +37,7 @@ type DecideAccessRequest struct {
 // @Router /api/v1/access-request-catalog [get]
 // @Router /console/api/v1/access-request-catalog [get]
 func (h *managementHTTP) requestCatalog(c *echo.Context) error {
-	p, err := h.principal(c, "request:create")
+	p, err := h.principal(c, "")
 	if err != nil {
 		return mappedError(c, err)
 	}

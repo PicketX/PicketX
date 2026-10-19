@@ -15,9 +15,9 @@ type AccessRequest = {
 type Page = { requests: AccessRequest[]; next_after: number; has_more: boolean; observed_at: string }
 type Form = { source: string; resource: string; endpoints: string[]; duration: string; reason: string }
 const empty: Form = { source: '', resource: '', endpoints: [], duration: '3600', reason: '' }
-type Props = { active: boolean; csrf: string; identity: string; canCreate: boolean; canReview: boolean; canApprove: boolean; onUnauthorized: () => void; onDirty: (v: boolean) => void; onBusy: (v: boolean) => void }
+type Props = { active: boolean; csrf: string; identity: string; canCreate: boolean; canList: boolean; canReview: boolean; canApprove: boolean; onUnauthorized: () => void; onDirty: (v: boolean) => void; onBusy: (v: boolean) => void }
 
-export function Requests({ active, csrf, identity, canCreate, canReview, canApprove, onUnauthorized, onDirty, onBusy }: Props) {
+export function Requests({ active, csrf, identity, canCreate, canList, canReview, canApprove, onUnauthorized, onDirty, onBusy }: Props) {
   const { t, i18n } = useTranslation()
   const [page, setPage] = useState<Page | null>(null)
   const [catalog, setCatalog] = useState<Catalog | null>(null)
@@ -38,6 +38,8 @@ export function Requests({ active, csrf, identity, canCreate, canReview, canAppr
   const [now, setNow] = useState(() => Date.now())
   const errors = useRef<HTMLDivElement>(null)
   const [controllers] = useState(() => new Set<AbortController>())
+  const [writers] = useState(() => new Set<AbortController>())
+  function finish(c: AbortController) { controllers.delete(c); writers.delete(c); setBusy(controllers.size > 0) }
   const dirty = form.source !== '' || form.resource !== '' || form.reason !== '' || form.duration !== empty.duration || review !== null
   useEffect(() => { onDirty(dirty) }, [dirty, onDirty])
   useEffect(() => { onBusy(busy) }, [busy, onBusy])
@@ -53,7 +55,7 @@ export function Requests({ active, csrf, identity, canCreate, canReview, canAppr
   }
   async function read(signal: AbortSignal, rebase = false, next = false) {
     const [rows, latest] = await Promise.all([
-      request<Page>(`/access-requests?limit=50${next && page ? `&after=${page.next_after}` : ''}`, { signal }),
+      canList ? request<Page>(`/access-requests?limit=50${next && page ? `&after=${page.next_after}` : ''}`, { signal }) : Promise.resolve({ data: { requests: [], next_after: 0, has_more: false, observed_at: new Date().toISOString() } }),
       canCreate || canApprove ? request<Catalog>('/access-request-catalog', { signal }) : Promise.resolve(null),
     ])
     if (signal.aborted) return
@@ -65,23 +67,23 @@ export function Requests({ active, csrf, identity, canCreate, canReview, canAppr
   const start = useEffectEvent(async (controller: AbortController) => {
     setBusy(true)
     try { await read(controller.signal) } catch (e) { if (!controller.signal.aborted) fail(e) }
-    finally { controllers.delete(controller); if (!controller.signal.aborted) setBusy(false) }
+    finally { finish(controller) }
   })
   useEffect(() => {
     if (!active) return
     const c = new AbortController(); controllers.add(c)
     queueMicrotask(() => { if (!c.signal.aborted) void start(c) })
     const timer = window.setInterval(() => setNow(Date.now()), 15000)
-    return () => { c.abort(); controllers.delete(c); window.clearInterval(timer) }
-  }, [active, controllers])
-  useEffect(() => () => { for (const c of controllers) c.abort(); controllers.clear() }, [controllers])
+    return () => { for (const read of controllers) { if (!writers.has(read)) { read.abort(); controllers.delete(read) } } setBusy(controllers.size > 0); window.clearInterval(timer) }
+  }, [active, controllers, writers])
+  useEffect(() => () => { for (const c of controllers) c.abort(); controllers.clear(); writers.clear() }, [controllers, writers])
 
   async function refresh(rebase = false, next = false) {
     if (busy || (rebase && dirty && !window.confirm(t('requests.discard')))) return
     const c = new AbortController(); controllers.add(c); setBusy(true); setError(''); setFields({}); setNotice('')
     try { await read(c.signal, rebase, next); if (rebase) { setForm(empty); setReview(null); setDecisionReason(''); setAcknowledged(false) } }
     catch (e) { if (!c.signal.aborted) fail(e) }
-    finally { controllers.delete(c); if (!c.signal.aborted) setBusy(false) }
+    finally { finish(c) }
   }
   async function submit(e: React.FormEvent) {
     e.preventDefault(); if (busy || locked || !canCreate || !base) return
@@ -93,13 +95,13 @@ export function Requests({ active, csrf, identity, canCreate, canReview, canAppr
     if (!form.endpoints.length) invalid['request-endpoints'] = t('requests.pickEndpoints')
     if (!/^\d+$/.test(form.duration) || Number(form.duration) < 60 || Number(form.duration) > 86400) invalid['request-duration'] = t('requests.durationHelp')
     if (Object.keys(invalid).length) { setFields(invalid); setError(t('requests.fixFields')); return }
-    const c = new AbortController(); controllers.add(c); setBusy(true); setError(''); setNotice(''); setFields({})
+    const c = new AbortController(); controllers.add(c); writers.add(c); setBusy(true); setError(''); setNotice(''); setFields({})
     try {
       await request('/access-requests', { method: 'POST', signal: c.signal, headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf, 'If-Match': `"${base.revision}"` }, body: JSON.stringify({ source: form.source, resource_name: resource!.name, resource_uid: resource!.uid, endpoint_names: form.endpoints, duration_seconds: Number(form.duration), reason: form.reason }) }, 201)
       if (c.signal.aborted) return
       setForm(empty); setLocked(true); setNotice(t('requests.sent')); await read(c.signal, true)
     } catch (e) { if (!c.signal.aborted) fail(e, true) }
-    finally { controllers.delete(c); if (!c.signal.aborted) setBusy(false) }
+    finally { finish(c) }
   }
   function openReview(r: AccessRequest) {
     if (busy || locked || !canReview) return
@@ -119,13 +121,13 @@ export function Requests({ active, csrf, identity, canCreate, canReview, canAppr
       if (!canApprove || review.requester === identity || !reviewRevision) return
     }
     if (Object.keys(invalid).length) { setFields(invalid); setError(t('requests.fixFields')); return }
-    const c = new AbortController(); controllers.add(c); setBusy(true); setError(''); setNotice(''); setFields({})
+    const c = new AbortController(); controllers.add(c); writers.add(c); setBusy(true); setError(''); setNotice(''); setFields({})
     try {
       await request(`/access-requests/${encodeURIComponent(review.uid)}/decision`, { method: 'POST', signal: c.signal, headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf, ...(action === 'approve' ? { 'If-Match': `"${reviewRevision}"` } : {}) }, body: JSON.stringify({ version: review.version, action, reason: decisionReason, ...(action === 'approve' ? { endpoint_names: approvedNames, expires_at: approvedExpiry } : {}) }) }, 200)
       if (c.signal.aborted) return
       setReview(null); setLocked(true); setNotice(t('requests.decided')); await read(c.signal, true)
     } catch (e) { if (!c.signal.aborted) fail(e, true) }
-    finally { controllers.delete(c); if (!c.signal.aborted) setBusy(false) }
+    finally { finish(c) }
   }
   const field = (id: string) => ({ 'aria-invalid': !!fields[id], 'aria-describedby': fields[id] ? `${id}-error` : undefined })
   const fieldError = (id: string) => fields[id] && <p id={`${id}-error`} className="field-error">{fields[id]}</p>

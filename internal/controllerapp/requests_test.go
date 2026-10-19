@@ -9,6 +9,7 @@ import (
 	"github.com/PicketX/PicketX/internal/accessrequest"
 	agentv1 "github.com/PicketX/PicketX/pkg/protocol/agent/v1alpha1"
 	"os"
+	"strings"
 	"testing"
 	"time"
 )
@@ -65,6 +66,28 @@ func TestAccessRequestRuntimeApprovalGRPCAndRestart(t *testing.T) {
 	code, _, data = apiCall(t, p, "GET", "/api/v1/access-requests", nil, "", requester)
 	var page accessrequest.Page
 	if code != 200 || json.Unmarshal(data, &page) != nil || len(page.Requests) != 1 || page.Requests[0].Requester != "principal:requester" || page.Requests[0].Approver != "principal:approver" || !page.Requests[0].ExpiresAt.Equal(requested) || page.Requests[0].GrantUID != r.GrantUID {
+		t.Fatal(code, string(data))
+	}
+	// Advanced desired-state writers may edit a same-UID contribution. After
+	// recovery its new source must not validate the old historical approval.
+	code, _, data = apiCall(t, p, "GET", "/api/v1/publication", nil, "", adminToken)
+	var doc struct{ Policy, Facts string }
+	if code != 200 || json.Unmarshal(data, &doc) != nil {
+		t.Fatal(code, string(data))
+	}
+	changed := strings.Replace(doc.Policy, `"cidr":"2001:db8::42/128"`, `"cidr":"2001:db8::99/128"`, 1)
+	if changed == doc.Policy {
+		t.Fatal("missing advanced edit fixture")
+	}
+	body, _ = json.Marshal(map[string]string{"policy": changed, "facts": doc.Facts, "reason": "advanced same-UID edit"})
+	if code, _, data = apiCall(t, p, "PUT", "/api/v1/publication", body, `"3"`, adminToken); code != 200 {
+		t.Fatal(code, string(data))
+	}
+	p.stop(t)
+	p = start(t, c)
+	ready(t, p, 200)
+	code, _, data = apiCall(t, p, "GET", "/api/v1/access-requests", nil, "", requester)
+	if code != 200 || !strings.Contains(string(data), `"grant_state":"modified"`) || !strings.Contains(string(data), "2001:db8::42/128") || strings.Contains(string(data), "2001:db8::99") {
 		t.Fatal(code, string(data))
 	}
 }

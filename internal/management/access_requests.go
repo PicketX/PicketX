@@ -27,7 +27,15 @@ type RequestCatalog struct {
 
 func (s *Service) RequestCatalog(p Principal) (RequestCatalog, error) {
 	if err := s.Check(p, "request:create"); err != nil {
-		return RequestCatalog{}, err
+		if !errors.Is(err, ErrForbidden) {
+			return RequestCatalog{}, err
+		}
+		if err = s.Check(p, "request:review"); err != nil {
+			return RequestCatalog{}, err
+		}
+		if err = s.Check(p, "publication:write"); err != nil {
+			return RequestCatalog{}, err
+		}
 	}
 	doc, err := s.repository.Snapshot()
 	if err != nil {
@@ -168,12 +176,48 @@ func (s *Service) AccessRequests(p Principal, after int64, limit int) (accessreq
 				r.GrantState = "unknown"
 			} else if !expiry.After(time.Now()) {
 				r.GrantState = "expired"
+			} else if !approvedRequestGrantMatches(b, g, *r, expiry) {
+				r.GrantState = "modified"
+			} else if g.NotBefore != "" {
+				start, e := time.Parse(time.RFC3339Nano, g.NotBefore)
+				if e != nil {
+					r.GrantState = "unknown"
+				} else if start.After(time.Now()) {
+					r.GrantState = "scheduled"
+				} else {
+					r.GrantState = "modified"
+				}
 			}
 			break
 		}
 	}
 	page.ObservedAt = time.Now().UTC()
 	return page, nil
+}
+
+// Historical approval is immutable; a UID alone does not prove the currently
+// desired contribution still matches it. Do not expose the replacement scope.
+func approvedRequestGrantMatches(b *configuration.Bundle, g configuration.GrantView, r accessrequest.Record, expiry time.Time) bool {
+	if g.Source != r.Source || g.Mode != "bounded" || r.ApprovedExpiresAt == nil || !expiry.Equal(*r.ApprovedExpiresAt) || len(g.Scopes) != 1 {
+		return false
+	}
+	scope := g.Scopes[0]
+	names := slices.Clone(scope.EndpointNames)
+	slices.Sort(names)
+	if scope.ResourceName != r.Resource.Name || scope.ResourceUID != r.Resource.UID || scope.Selection != "named" || !slices.Equal(names, r.ApprovedEndpoints) {
+		return false
+	}
+	current, err := selectedRequestResource(b, r.Resource.Name, r.Resource.UID, r.ApprovedEndpoints)
+	if err != nil {
+		return false
+	}
+	frozen := configuration.InventoryResource{Name: r.Resource.Name, UID: r.Resource.UID, Endpoints: []configuration.InventoryEndpoint{}}
+	for _, e := range r.Resource.Endpoints {
+		if slices.Contains(r.ApprovedEndpoints, e.Name) {
+			frozen.Endpoints = append(frozen.Endpoints, e)
+		}
+	}
+	return reflect.DeepEqual(current, frozen)
 }
 func (s *Service) DecideAccessRequest(p Principal, uid string, expected uint64, in accessrequest.Decision) (accessrequest.Record, error) {
 	if err := s.Check(p, "request:review"); err != nil {

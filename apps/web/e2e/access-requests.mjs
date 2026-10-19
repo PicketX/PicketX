@@ -4,14 +4,24 @@ import { readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { spawnSync } from 'node:child_process'
 
-export async function accessRequests({ browser, origin, principalPath, root, evidence }) {
+export async function accessRequests({ browser, origin, principalPath, root, evidence, databasePath }) {
  const password = 'independent request password!'
  const result = spawnSync('go', ['run', './cmd/picketx', 'password-hash'], { cwd: root, input: password, encoding: 'utf8' })
  assert.equal(result.status, 0, result.stderr)
  await writeFile(principalPath, JSON.stringify({ principals: [], users: [
   { id: 'principal:requester', username: 'requester', password_hash: result.stdout.trim(), roles: ['role:requester'] },
   { id: 'principal:approver', username: 'approver', password_hash: result.stdout.trim(), roles: ['role:admin'] },
+  { id: 'principal:creator', username: 'creator', password_hash: result.stdout.trim(), roles: ['role:create-only'] },
+  { id: 'principal:reviewer', username: 'reviewer', password_hash: result.stdout.trim(), roles: ['role:approve-only'] },
  ] }), { mode: 0o600 })
+ // Explicit fixture provisioning through the real SQLite Casbin adapter. Wait
+ // for configured policy reload below; do not mock current-user operations.
+ const policies = spawnSync('python3', ['-c', `import sqlite3,sys
+c=sqlite3.connect(sys.argv[1])
+for role,op in [('role:create-only','request:create'),('role:approve-only','request:review'),('role:approve-only','publication:write')]:
+ c.execute("INSERT INTO casbin_rule(ptype,v0,v1,v2,v3,v4,v5) VALUES('p',?,?,'allow','','','')",(role,op))
+c.commit()`, databasePath], { encoding: 'utf8' })
+ assert.equal(policies.status, 0, policies.stderr)
  const contexts = await Promise.all([browser.newContext(), browser.newContext()])
  const [requester, admin] = await Promise.all(contexts.map(c => c.newPage()))
  const errors = []; for (const page of [requester, admin]) page.on('pageerror', e => errors.push(e.message))
@@ -42,7 +52,7 @@ export async function accessRequests({ browser, origin, principalPath, root, evi
  await admin.getByRole('button', { name: 'Access requests', exact: true }).click()
  await held
  await admin.getByRole('button', { name: 'Desired configuration', exact: true }).click()
- try { await admin.getByRole('button', { name: 'Sign out', exact: true }).waitFor(); assert.equal(await admin.getByRole('button', { name: 'Sign out', exact: true }).isDisabled(), false, 'leaving cancelled request read releases busy state') }
+ try { await admin.waitForFunction(() => ![...document.querySelectorAll('button')].find(b => b.textContent === 'Sign out')?.disabled, null, { timeout: 5000 }); assert.equal(await admin.getByRole('button', { name: 'Sign out', exact: true }).isDisabled(), false, 'leaving cancelled request read releases busy state') }
  finally { releaseRead(); await admin.unroute('**/console/api/v1/access-requests?limit=50') }
  await login(requester, 'requester')
  await requester.getByRole('heading', { name: 'Access requests', exact: true }).waitFor({ timeout: 5000 })
@@ -101,6 +111,62 @@ export async function accessRequests({ browser, origin, principalPath, root, evi
  assert.equal(revoke, 200)
  await requester.getByRole('button', { name: 'Refresh requests', exact: true }).click()
  await requestRow.getByText('Desired Grant: revoked', { exact: true }).waitFor()
+ await admin.getByRole('button', { name: 'Use latest request catalog', exact: true }).click()
+ // A new read after navigating back must not unlock an in-flight POST. Hold
+ // only transport, then let the actual Controller persist exactly one request.
+ await admin.getByLabel('Requested source IP or CIDR', { exact: true }).fill('192.0.2.88')
+ await admin.getByLabel('Requested Resource', { exact: true }).selectOption('resource-gitea-v1')
+ await admin.getByRole('checkbox', { name: /^https / }).check()
+ await admin.getByLabel('Request reason', { exact: true }).fill('Held write navigation regression')
+ let releaseWrite, writeStarted, writes = 0
+ const writing = new Promise(resolve => { writeStarted = resolve })
+ await admin.route('**/console/api/v1/access-requests', async route => {
+  if (route.request().method() !== 'POST') return route.continue()
+  writes++; writeStarted(); await new Promise(resolve => { releaseWrite = resolve }); await route.continue()
+ })
+ await admin.getByRole('button', { name: 'Send access request', exact: true }).click()
+ await writing
+ try {
+  await admin.getByRole('button', { name: 'Desired configuration', exact: true }).click()
+  const reread = admin.waitForResponse(r => r.url().endsWith('/access-requests?limit=50') && r.request().method() === 'GET')
+  await admin.getByRole('button', { name: 'Access requests', exact: true }).click()
+  await (await reread).finished()
+  await admin.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))))
+  assert.equal(await admin.getByRole('button', { name: 'Send access request', exact: true }).isDisabled(), true, 'completed GET cannot unlock pending POST')
+  assert.equal(await admin.getByRole('button', { name: 'Sign out', exact: true }).isDisabled(), true)
+ } finally { releaseWrite(); await admin.unroute('**/console/api/v1/access-requests') }
+ await admin.getByText('Request saved. No access has been granted.', { exact: true }).waitFor()
+ await admin.waitForFunction(() => ![...document.querySelectorAll('button')].find(b => b.textContent === 'Sign out')?.disabled)
+ const persisted = await admin.evaluate(async () => (await (await fetch('/console/api/v1/access-requests')).json()).requests.filter(r => r.reason === 'Held write navigation regression'))
+ assert.equal(writes, 1); assert.equal(persisted.length, 1)
+ // Independent custom capabilities: creation does not depend on history-read;
+ // review/publication-write does not depend on creation or publication-read.
+ const creatorContext = await browser.newContext(), creator = await creatorContext.newPage()
+ const reviewerContext = await browser.newContext(), reviewer = await reviewerContext.newPage()
+ for (const p of [creator, reviewer]) p.on('pageerror', e => errors.push(e.message))
+ await login(creator, 'creator')
+ await creator.waitForFunction(async () => (await (await fetch('/console/api/v1/me')).json()).operations?.includes('request:create'), null, { timeout: 45000 })
+ await creator.reload()
+ await creator.getByRole('heading', { name: 'Access requests', exact: true }).waitFor()
+ assert.equal(await creator.getByLabel('Policy YAML').count(), 0)
+ assert.equal(await creator.evaluate(async () => (await fetch('/console/api/v1/access-requests')).status), 403)
+ await creator.getByLabel('Requested source IP or CIDR', { exact: true }).fill('192.0.2.66')
+ await creator.getByLabel('Requested Resource', { exact: true }).selectOption('resource-gitea-v1')
+ await creator.getByRole('checkbox', { name: /^https / }).check()
+ await creator.getByLabel('Request reason', { exact: true }).fill('Create-only to approve-only capability regression')
+ await creator.getByRole('button', { name: 'Send access request', exact: true }).click()
+ await creator.getByText('Request saved. No access has been granted.', { exact: true }).waitFor()
+ await login(reviewer, 'reviewer')
+ await reviewer.getByRole('heading', { name: 'Access requests', exact: true }).waitFor()
+ assert.equal(await reviewer.getByLabel('Policy YAML').count(), 0)
+ assert.equal(await reviewer.getByLabel('Requested source IP or CIDR', { exact: true }).count(), 0)
+ await reviewer.locator('.request-row').filter({ hasText: 'Create-only to approve-only capability regression' }).getByRole('button', { name: 'Review request', exact: true }).click()
+ await reviewer.getByLabel('Decision reason', { exact: true }).fill('Independent custom capability approval')
+ await reviewer.getByLabel('Review confirmed', { exact: true }).check()
+ await reviewer.getByRole('button', { name: 'Approve and publish Grant', exact: true }).click()
+ await reviewer.getByText('Decision saved. Approval is not confirmed application.', { exact: true }).waitFor()
+ await reviewer.locator('.request-row').filter({ hasText: 'Create-only to approve-only capability regression' }).getByText('Approved', { exact: true }).waitFor()
+ await creatorContext.close(); await reviewerContext.close()
  assert.deepEqual(errors, [])
  for (const c of contexts) await c.close()
  console.log('PASS real human requester → independent approval/rejection → atomic Grant/SQLite/audit; IPv6 named narrowing, absolute deadline, requester isolation and revoke')

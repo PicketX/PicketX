@@ -25,7 +25,10 @@ and human authentication work with the same backend checks.
    commit; delivery/persistence failures retain existing fail-stop/reopen semantics.
 5. Requesters see original and approved scopes/deadlines, actors, decision reason,
    Grant UID/revision and current desired Grant state (valid-desired, revoked,
-   expired, withdrawn, unknown). Approval history does not become 'revoked' when the
+   expired, withdrawn, modified, scheduled, unknown). Same-UID source/scope/deadline
+   or target-network changes do not validate the historical approval; future start
+   is scheduled, not active. Replacement scope is not disclosed to requesters.
+   Approval history does not become 'revoked' when the
    independent Grant is revoked. No displayed state is independent execution proof.
    Administrators use Grants to revoke that contribution and Nodes to inspect actual
    reported target/stream/freshness. Applications retain their own authentication.
@@ -62,8 +65,11 @@ tables and owner index; no policy migration or file-authority takeover. Casbin
 business schema1→2 adds only new defaults once: admin create/read-own/review,
 requester create/read-own, blocked denies. Existing/custom rules are retained;
 an existing rule for a built-in role/new operation is not replaced. Approval also
-requires publication:write. Custom roles/policies must explicitly receive the
-corresponding operations. Policy synchronization remains periodic and credentials
+requires publication:write. Catalog access requires request:create OR both
+request:review and publication:write. Creation does not require history-read;
+review-only roles can load the inbox and reject without catalog/creation access.
+Custom roles/policies must explicitly receive the corresponding operations.
+Policy synchronization remains periodic and credentials
 are reread per request; audit IDs cannot establish packet/user attribution.
 
 ## Verification and remaining scope
