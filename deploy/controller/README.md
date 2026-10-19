@@ -106,8 +106,53 @@ remains authoritative independently of database human accounts. To revoke/rotate
 atomically replace its hash registry with a new private0600 file, retain another
 tested admin recovery path, and verify invalidation. Agent and ingress credentials
 are independent: never reuse the bootstrap key for either. A caller is bound to
-explicit route UIDs, never all routes. Use the existing `examples/http` ingress
-contract and overwrite untrusted original-request headers at the trusted proxy.
+explicit route UIDs, never all routes. Use the packaged helper below to overwrite
+untrusted original-request headers at the trusted proxy.
+
+## Generate private Nginx auth_request includes
+
+For an existing trusted Nginx with http_auth_request_module, run the installed CLI
+as an operator who can read the dedicated ingress-token. Use a new private output
+directory readable by the Nginx configuration-loading identity, never by web users:
+
+```sh
+/opt/picketx/bin/picketx nginx-init \
+  --directory /var/lib/picketx/nginx-route-web \
+  --token-file /var/lib/picketx/controller/ingress-token \
+  --route-id route-web --authz-address 127.0.0.1:9081
+```
+
+Inside the **same existing server** include `server.conf`. Inside the protected
+`location` include `location.conf`, leaving its existing application proxy_pass in
+place. Quote absolute include paths when they contain spaces. Each route needs
+its own new output directory, fixed UID and matching caller-registry scope; the
+helper's route-derived names allow multiple protected locations in one server.
+The generator does not create routes, Grants, registries, listeners, TLS or business
+proxying and does not reload/install Nginx. Publish actual Resource/HTTPRoute/source
+Grants through the authenticated console/API separately. Do not mistake generation
+or publication for proof that real requests reached the protected application.
+
+Callback address must be an explicit literal loopback IPv4/IPv6 IP:nonzero-port
+(e.g. `[::1]:9081`), with the real Controller listening there. No DNS/public/mapped/
+zoned address. This helper accepts **only the64lowercase-hex token emitted by
+controller-init**, optionally one final LF, from an absolute private regular file
+without symlinks. Other tokens supported by the decision API require separately
+reviewed manual configuration; they are refused, never transformed by this helper.
+Parents must already exist without symlinks and be exclusively operator-controlled.
+Output0700/two files0600, no overwrite; partial output remains on I/O failure.
+
+Review the complete ingress configuration privately, run `nginx -t`, then reload
+manually. Never publish `nginx -T`: server.conf and dumps contain the raw key.
+Generated `satisfy all` prevents an inherited `satisfy any; allow all` from bypassing
+the callback. Do not add error_page/rewrite/internal-redirect bypasses, remove the
+generated check, expose alternate unprotected paths/upstreams, or trust arbitrary
+forwarded source headers. Existing ingress still owns real-client-address trust,
+TLS and upstream isolation. Rotate by regenerating into a NEW directory and
+reviewed reload; revoke the old caller hash in the Controller independently.
+No decision caching; callback failure denies and must not forward to the app.
+Native CI tests the actual shipped empty-PATH CLI, both callback IP families,
+IPv4/IPv6 request sources, two fixed route/method contexts, revoke/caller/outage
+and denied application-hit counts. This is not Agent/Gitea deployment acceptance.
 Portal reverse-proxy headers do not magically establish the network subject;
 operator-approved source/facts must match actual enforcement. Grant unions, deny
 priority, independent absolute expiry and graceful/strict flow behavior remain as
