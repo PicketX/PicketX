@@ -36,20 +36,23 @@ GetRequest/DecideRequest, publisher bridge with existing CheckPublication/Publis
 Service RequestCatalog/CreateAccessRequest/AccessRequests/DecideAccessRequest;
 HTTP /access-request-catalog and /access-requests[/:uid/decision] on both adapters.
 
-- [ ] Write failing HTTP lifecycle tests, real Store atomicity/recovery/CAS tests.
+- [x] Write failing HTTP lifecycle tests, real Store atomicity/recovery/CAS tests.
   Run focused Go; expected missing route/capability RED. Implement strict business,
   versioned migrations and transactional publication; expected focused GREEN.
-- [ ] Add real runtime approval→gRPC/restart test and requester-only isolation tests;
+- [x] Add real runtime approval→gRPC/restart test and requester-only isolation tests;
   expected durable independent absolute Grant and no self-approval/duplicate writes.
-- [ ] Add actual browser workflow before UI; expected absent Requests control RED.
-- [ ] Implement EN/ZH live page and permission-aware shell, preserve all old flows.
+- [x] Add actual browser workflow. Initial fixture failures were not absent-UI RED;
+  real held-read navigation RED and full workflow GREEN are recorded in the review.
+- [x] Implement EN/ZH live page and permission-aware shell, preserve all old flows.
   Locked npm ci/typecheck/lint/build expected GREEN; browser true two-person API,
   SQLite/audit/decision/revocation and375/1440 expected GREEN on native CI.
-- [ ] Full Go normal/race/vet/build; regenerate/check OpenAPI; locked Web checks.
+- [x] Full Go normal/race/vet/build; regenerate/check OpenAPI; locked Web checks.
   Record exact local failures, no invented native success. Commit logical changes.
-- [ ] One fresh whole-branch review; fix blockers RED→GREEN; complete exact-head CI,
-  compare local/remote/CI trees and raw logs; merge expected head; verify main CI,
-  record immutable evidence, remaining work and lease release in PR/checkpoints.
+- [x] One fresh whole-branch review; fix blockers RED→GREEN; complete code-head CI,
+  compare local/remote/CI trees and raw logs. CI39209796875 passes231/581 tests and
+  all native/browser/static gates. Details: validation/ACCESS_REQUESTS_REVIEW.md.
+- [ ] Final metadata-only head gates, expected-head merge and main CI; immutable
+  final result/lease release are tracked in PR32 (not inferred from code-head CI).
 
 ## Context map (reviewed before implementation)
 

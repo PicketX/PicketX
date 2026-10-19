@@ -1,6 +1,35 @@
 # 自动交付检查点
 
-## 访问申请/独立审批 — 进行中 2026-10-19T05:38Z
+## 访问申请 — 代码已验收，最终集成待核实 2026-10-19T06:33Z
+
+[PR32](https://github.com/PicketX/PicketX/pull/32)代码验收：本地
+66fb33072f5cf0d2e7c6673c0fc2a2003162f374、远端
+dc55a3b972d75f748dbd9644c461accc6f6f2978、真实CI检出
+fd8bb9c5f6819a16b978593cad4e6712f7aa8490同树
+ee9b0bac97066d68ab911d8c5be34349337614d6。CI39209796875：Go117920419720/
+Web117920420197成功；原始231顶层/581含子测试，无fail/skip/race；Unix100重复、
+固定protobuf/OpenAPI、vet/build、Web锁文件检查、静态Controller/CLI及真实SQLite/
+gRPC/重启/SIGTERM通过。真实Chromium双人员申请/缩限批准、IPv6独立Grant、固定期限、
+拒绝/撤销/审计、自定义权限角色及挂起GET/POST导航保护通过。截图artifact12166992084
+的ZIP实测SHA256
+8b125e42978241fec4192276cb744e783d795f813f5391fa265ea10327e1a533匹配；
+375/1440已目视检查。UI/UX技能沿用既有React视觉体系、真实API/失败/新鲜度和权限边界。
+
+一次独立全分支评审00c9729..91682bc发现四项Important，单轮RED→GREEN修复；不伪造
+二次评审或GitHub批准。中文原因UTF8字节提示Minor延后。全部取舍、风险与回归见
+[评审记录](validation/ACCESS_REQUESTS_REVIEW.md)。早期fixture/schema/隐藏标签/限流/
+路由清理失败不算验收，未放宽生产守卫。本地完整普通测试仅Unix EPERM；完整race还在
+并发负载下出现既有流合并超时。四包重点race和既有流测试单独race通过，最终原生门禁
+覆盖完整测试，不跳过必需场景。
+
+负责人codex/access-requests；心跳06:33Z，短租约至07:08Z或明确释放/合并且main成功。
+本次最终文档/状态同步不改产品代码；准确head/tree/CI、按expected head合并及main核实
+记录于PR32最终元数据。合并且main成功后自动释放，不必等07:08Z。Agent未改，保留
+maine013926/treeb58e0e7/mainCI39191015351及既有PR17/18联合证据。下一步扩展真实特权
+流程到人员审批，再完善账户/OIDC、必要场景中的请求绑定协议身份及发布加固。
+整体目标未完成，继续交付，不暂停任务。
+
+## 访问申请获取 — 历史 2026-10-19T05:38Z
 
 负责人codex/access-requests；心跳06:16Z，短租约至07:08Z或明确释放/合并且main成功。
 Core main3f06ad3/tree9e7697f/mainCI39199382201成功；Agent maine013926/treeb58e0e7/

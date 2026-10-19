@@ -1,6 +1,42 @@
 # Autonomous delivery checkpoint
 
-## Access requests / independent approval — active 2026-10-19T05:38Z
+## Access requests — code accepted; final integration gated 2026-10-19T06:33Z
+
+[PR32](https://github.com/PicketX/PicketX/pull/32) code acceptance: local
+66fb33072f5cf0d2e7c6673c0fc2a2003162f374, remote
+dc55a3b972d75f748dbd9644c461accc6f6f2978, actual CI checkout
+fd8bb9c5f6819a16b978593cad4e6712f7aa8490 all share tree
+ee9b0bac97066d68ab911d8c5be34349337614d6. CI39209796875 Go117920419720/
+Web117920420197 SUCCESS: raw231 top-level/581 total, zero fail/skip/race;
+Unix100repeat, pinned protocol/OpenAPI, vet/build, locked Web checks, static
+Controller/CLI and actual SQLite/gRPC/restart/SIGTERM all pass. Real Chromium
+separate human requester/approver, narrowed IPv6 Grant, immutable deadlines,
+rejection/revoke/audit, custom capability roles and held GET/POST navigation pass.
+Artifact12166992084 SHA256
+8b125e42978241fec4192276cb744e783d795f813f5391fa265ea10327e1a533 matches
+downloaded ZIP;375/1440 visually inspected. UI/UX skills retained the established
+React design system, real API/failure/freshness states and permission boundaries.
+
+One independent whole-branch review00c9729..91682bc:4 Important fixed RED→GREEN in
+one pass; no re-review or fabricated GitHub approval. Minor Chinese reason UTF8
+byte feedback remains deferred. Full findings/rulings/costs:
+[ACCESS_REQUESTS_REVIEW.md](validation/ACCESS_REQUESTS_REVIEW.md). Earlier failed
+fixture/schema/label/throttle/route-cleanup runs are not acceptance; production
+guards were retained. Local full normal only Unix EPERM; full race also had the
+unchanged coalescing timeout under concurrent work. Focused four-package race and
+the unchanged stream race case pass; final full native gates cover all tests.
+
+Owner codex/access-requests heartbeat06:33Z, short lease until07:08Z or explicit
+release/merged+green main. This final docs/status reconciliation changes no product
+code; its exact head/tree/CI, expected-head merge and main verification are recorded
+in PR32 final metadata. Lease releases immediately on merged+green main even
+before its clock expiry; do not wait until07:08Z after acceptance. No Agent/kernel change; retain
+Agent maine013926/treeb58e0e7/mainCI39191015351 and prior PR17/18 combined proof.
+Next: extend real privileged workflow to human approval, then account/OIDC,
+request-bound verified protocol identities where required and release hardening.
+Whole goal remains incomplete; keep delivery active.
+
+## Access request acquisition — historical 2026-10-19T05:38Z
 
 Owner codex/access-requests; heartbeat06:16Z, short lease until07:08Z or explicit
 release/merged+green main. Core main3f06ad3/tree9e7697f/mainCI39199382201 green;

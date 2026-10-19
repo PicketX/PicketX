@@ -64,3 +64,25 @@ mandatory, including all Unix tests, static artifacts and previous browser/Nginx
 
 中文：独立全分支评审发现四项阻塞，按真实失败回归修复并重新验证；不伪造二次评审或
 原生执行结果。中文原因字节计数反馈作为 Minor 延后，完整证据以 PR32 为准。
+
+## Accepted code verification — 2026-10-19T06:31Z
+
+Local66fb33072f5cf0d2e7c6673c0fc2a2003162f374, remote
+dc55a3b972d75f748dbd9644c461accc6f6f2978 and actual Go/Web CI checkout
+fd8bb9c5f6819a16b978593cad4e6712f7aa8490 share tree
+ee9b0bac97066d68ab911d8c5be34349337614d6. CI39209796875 Go117920419720 and
+Web117920420197 are SUCCESS. Raw Go231 top-level/581 total, zero fail/skip/race;
+all Unix100repeat, protocol/OpenAPI, vet/build, static Controller/CLI, real SQLite/
+gRPC/restart/SIGTERM gates pass. All old Chromium/Nginx suites and new separate
+human requester/admin workflow, held GET/POST navigation, custom create-only and
+approve-only roles, approval/rejection/revoke assertions pass. Screenshots375/1440
+visually inspected; artifact12166992084 downloaded ZIP independently matches
+SHA2568b125e42978241fec4192276cb744e783d795f813f5391fa265ea10327e1a533.
+
+Harness corrections did not weaken production: real429 consumes the same peer's
+password burst after preceding tests; wait10.1s for configured0.1/s refill. Retained
+request CAS requires explicit rebase before a later submission. Held route cleanup
+waits for actual continuation before unregistering, avoiding double-handled routes.
+Prior failed runs remain failures. Unchanged coalescing test alone passes race
+16.489s; complete local normal/race failures stay documented. Final documentation
+head still requires full exact-head CI, expected-head merge and green main.

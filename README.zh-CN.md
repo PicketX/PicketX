@@ -8,7 +8,11 @@ PicketX 通过自助申请、策略和审批，为受保护资源提供有期限
 
 ## 项目状态
 
-当前仓库仍在开发，不是完整访问管理产品。共享Core/配置、SQLite发布、认证gRPC及原生PicketXD PR16 Provider已实现。[管理API](docs/MANAGEMENT_API.zh-CN.md)提供独立主体/Casbin/CAS/审计，[浏览器工作台](docs/BROWSER_CONSOLE.zh-CN.md)提供SCS/CSRF及真实文档发布/审计。[alpha HTTP适配器](docs/HTTP_AUTHORIZATION.zh-CN.md)增加来源HTTPRoute、限权本地决策及Nginx集成。[结构化Grant](docs/GRANT_MANAGEMENT.zh-CN.md)支持管理员签发/撤销；[资源接入](docs/RESOURCE_MANAGEMENT.zh-CN.md)增加资源/入口创建和精确既有主机Binding表单。精确CI验收见检查点。人员/OIDC、资源/绑定编辑删除、审批/新鲜应用状态和最终Linux联合工作流仍待完成，不声明完整生产产品。 HTTPRoute已补齐结构化创建/查看与真实Nginx授权验收，精确合并/CI证据见PR20与检查点；入口/调用方配置仍需独立显式完成。
+当前仓库仍在开发，不是完整访问管理产品。Core/配置、SQLite持久发布、认证gRPC及原生PicketXD Controller Provider已实现。[管理API](docs/MANAGEMENT_API.zh-CN.md)与[浏览器工作台](docs/BROWSER_CONSOLE.zh-CN.md)提供独立主体/Casbin/CAS/审计、SCS/CSRF及真实配置。[alpha HTTP适配器](docs/HTTP_AUTHORIZATION.zh-CN.md)提供来源HTTPRoute、限权本地决策及真实Nginx集成，入口/调用方配置仍需独立显式完成。
+
+真实管理页面支持[Grant签发/撤销](docs/GRANT_MANAGEMENT.zh-CN.md)、[资源/入口创建、网络编辑/移除和精确主机Binding创建、命名入口编辑/移除](docs/RESOURCE_MANAGEMENT.zh-CN.md)、HTTPRoute创建/查看/移除、[人员本地密码/密钥登录](docs/HUMAN_LOGIN.zh-CN.md)，以及[持久申请与独立缩限批准/拒绝](docs/ACCESS_REQUESTS.zh-CN.md)。批准原子发布限时Grant，不证明已实施。准确源码/CI与集成状态见[交付检查点](docs/AUTONOMOUS_DELIVERY.md)。
+
+OIDC/账户生命周期、必要场景中的请求绑定协议身份、新审批流程的特权联合验收、部署/备份和发布加固仍待完成。保留既有Agent/浏览器/Nginx联合证据，不把它推断为每个后续流程都已验收；不声明完整生产产品。
 
 [节点观测](docs/NODE_OBSERVATIONS.zh-CN.md)分别展示已下发目标、流连接与报告新鲜度。Agent 声明不是独立内核验证，持续应用状态证明尚未提供。
 
@@ -28,11 +32,15 @@ SQLite 选用 GORM 官方驱动（v1.6.0 基线）和 mattn/go-sqlite3（v1.14.5
 
 首期执行范围为IP/CIDR网络准入、现有入口HTTP/HTTPS授权和本地TCP/Unix决策接口。[alpha HTTP适配器](docs/HTTP_AUTHORIZATION.zh-CN.md)新增来源HTTPRoute、限权本地TCP/Unix决策、持久审计及Nginx集成，精确CI验收见检查点；不是已验证用户授权或完整产品。NFQUEUE/镜像探测、透明代理/TLS终止及原生数据库代理仍后移。
 
-管理API使用Casbin3.11.0和官方GORM adapter3.41.0，支持独立主体可信角色、多角色deny优先和可观察周期重载。浏览器会话每次请求解析同一可信角色；人员身份和按资源委派待实现，见[ADR 0001](docs/decisions/0001-rbac-authorization.zh-CN.md)及[实际边界](docs/MANAGEMENT_API.zh-CN.md)。
+管理API使用Casbin3.11.0和官方GORM adapter3.41.0，支持独立主体可信角色、多角色deny优先和可观察周期重载。浏览器会话每次请求解析同一可信角色；本地人员账户已实现，OIDC和按资源委派待实现，见[ADR 0001](docs/decisions/0001-rbac-authorization.zh-CN.md)及[实际边界](docs/MANAGEMENT_API.zh-CN.md)。
 
 运行支持已接SCS2.9.0浏览器会话、Echo原生CSRF、普通/Agent独立限流、官方gRPC、独立Agent Token与可选服务端TLS；指标及更广集成待实现，见[ADR 0002](docs/decisions/0002-runtime-support.zh-CN.md)。
 
-M0 Linux 数据面验证已在 [PicketXD](https://github.com/PicketX/PicketXD/pull/1) 实现并合并。[最终已测源码](https://github.com/PicketX/PicketXD/commit/13fdf2d9aacd79be74578ebe9c23af19a6b33d6a)在 Linux 6.17.0-1022-azure / Go 1.27.0 上通过 [17 项必需真实内核场景](https://github.com/PicketX/PicketXD/actions/runs/38547987642)。这是可复用验证基础设施，尚不是生产 Agent。已批准的 [M1.1 设计](docs/superpowers/specs/2026-10-15-shared-network-core-design.zh-CN.md)与[实施计划](docs/superpowers/plans/2026-10-15-shared-network-core.zh-CN.md)已有仅依赖标准库的逻辑引擎 [`pkg/core`](pkg/core)：校验来源、选择器、入口范围和明确期限，合并匹配 Grant、优先处理 deny，并解释独立贡献与未来变化。Gitea HTTPS/SSH 固定断言覆盖重叠、撤销、不可变替换和重放不延期。Controller 工作流尚未实现；逻辑允许不代表 Agent 已实际放行。
+## 历史实施阶段
+
+下文保留各阶段原始证据与当时限制；上方项目状态和交付检查点优先于历史待办。
+
+M0 Linux 数据面验证已在 [PicketXD](https://github.com/PicketX/PicketXD/pull/1) 实现并合并。[最终已测源码](https://github.com/PicketX/PicketXD/commit/13fdf2d9aacd79be74578ebe9c23af19a6b33d6a)在 Linux 6.17.0-1022-azure / Go 1.27.0 上通过 [17 项必需真实内核场景](https://github.com/PicketX/PicketXD/actions/runs/38547987642)。这是可复用验证基础设施，尚不是生产 Agent。已批准的 [M1.1 设计](docs/superpowers/specs/2026-10-15-shared-network-core-design.zh-CN.md)与[实施计划](docs/superpowers/plans/2026-10-15-shared-network-core.zh-CN.md)已有仅依赖标准库的逻辑引擎 [`pkg/core`](pkg/core)：校验来源、选择器、入口范围和明确期限，合并匹配 Grant、优先处理 deny，并解释独立贡献与未来变化。Gitea HTTPS/SSH 固定断言覆盖重叠、撤销、不可变替换和重放不延期。M1.1不包含Controller工作流；逻辑允许不代表Agent已实际放行。
 
 M1.2 已实现并经 [PR #7](https://github.com/PicketX/PicketX/pull/7) 合并。已批准的 [M1.2 设计](docs/superpowers/specs/2026-10-15-physical-network-planner-design.zh-CN.md)与[已执行计划](docs/superpowers/plans/2026-10-15-physical-network-planner.zh-CN.md)现有仅依赖标准库的物理规划层 [`pkg/networkplan`](pkg/networkplan)，消费 Core 独立解析视图。它校验明确 TCP/UDP 单端口定义、可信上下文边界/能力、Binding 笛卡尔积与物理冲突；输出不可变且独立持有的清单和显式时间 allow/deny 投影，并对完整替换提供约束及旧目标撤回来源记录。入口 nil 地址使用明确上下文边界，非 nil 空地址报错；离线目标仍保留，未绑定入口不受管理。NextChange 包含未来 allow/deny 边界，不延长绝对期限。M1.1 省略开始时间时的历史时钟边界问题已修正。
 
