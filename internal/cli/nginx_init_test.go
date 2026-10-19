@@ -149,3 +149,42 @@ func TestNginxInitRejectsUnsafeInputs(t *testing.T) {
 		})
 	}
 }
+
+// Cleaning a lexical parent must not erase symlink traversal still present in
+// the path subsequently opened/created. This needs no race or malicious root.
+func TestNginxInitRejectsSymlinkDotDotTraversal(t *testing.T) {
+	for _, which := range []string{"output", "token"} {
+		t.Run(which, func(t *testing.T) {
+			p := t.TempDir()
+			real := filepath.Join(p, "actual")
+			if err := os.MkdirAll(filepath.Join(real, "child"), 0700); err != nil {
+				t.Fatal(err)
+			}
+			if err := os.Symlink(filepath.Join(real, "child"), filepath.Join(p, "alias")); err != nil {
+				t.Fatal(err)
+			}
+			key := filepath.Join(p, "key")
+			if err := os.WriteFile(key, []byte(ingressKey), 0600); err != nil {
+				t.Fatal(err)
+			}
+			if err := os.WriteFile(filepath.Join(real, "key"), []byte(ingressKey), 0600); err != nil {
+				t.Fatal(err)
+			}
+			dir := filepath.Join(p, "new")
+			// filepath.Join would erase the very traversal under test.
+			if which == "output" {
+				dir = p + "/alias/../new"
+			} else {
+				key = p + "/alias/../key"
+			}
+			if _, err := nginxCommand(dir, key); err == nil {
+				t.Fatal("uncanonical traversal accepted")
+			}
+			for _, target := range []string{filepath.Join(p, "new"), filepath.Join(real, "new")} {
+				if _, err := os.Lstat(target); !os.IsNotExist(err) {
+					t.Fatal("created output through unvalidated parent")
+				}
+			}
+		})
+	}
+}

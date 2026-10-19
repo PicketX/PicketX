@@ -43,6 +43,9 @@ func initializeNginx(o nginxInitOptions) error {
 	if !filepath.IsAbs(o.directory) || !filepath.IsAbs(o.tokenFile) {
 		return fmt.Errorf("directory and token-file require absolute paths")
 	}
+	if o.directory != filepath.Clean(o.directory) || o.tokenFile != filepath.Clean(o.tokenFile) {
+		return fmt.Errorf("directory and token-file require canonical paths without dot segments or redundant separators")
+	}
 	for _, parent := range []string{filepath.Dir(filepath.Clean(o.directory)), filepath.Dir(filepath.Clean(o.tokenFile))} {
 		resolved, err := filepath.EvalSymlinks(parent)
 		if err != nil || resolved != parent {
@@ -91,7 +94,9 @@ func initializeNginx(o nginxInitOptions) error {
 		}
 	}
 	sum := sha256.Sum256([]byte(o.routeID))
-	id := hex.EncodeToString(sum[:])
+	// 128-bit route namespace keeps the method variable within stock Nginx's
+	// 64-byte hash bucket; a collision rejects duplicate locations, never grants.
+	id := hex.EncodeToString(sum[:16])
 	method := "$picketx_method_" + id
 	callback := "/_picketx_auth_" + id
 	location := fmt.Sprintf("# Private PicketX protected-location include. No Grant is created.\nsatisfy all;\nset %s $request_method;\nauth_request %s;\n", method, callback)

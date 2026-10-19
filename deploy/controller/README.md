@@ -138,7 +138,8 @@ zoned address. This helper accepts **only the64lowercase-hex token emitted by
 controller-init**, optionally one final LF, from an absolute private regular file
 without symlinks. Other tokens supported by the decision API require separately
 reviewed manual configuration; they are refused, never transformed by this helper.
-Parents must already exist without symlinks and be exclusively operator-controlled.
+Paths must be canonical (no dot segments/redundant separators); parents must
+already exist without symlinks and be exclusively operator-controlled.
 Output0700/two files0600, no overwrite; partial output remains on I/O failure.
 
 Review the complete ingress configuration privately, run `nginx -t`, then reload
