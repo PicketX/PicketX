@@ -60,6 +60,9 @@ func TestHTTPPathPrefixes(t *testing.T) {
 		if !strings.Contains(string(encoded), `"path_prefixes":["/repo"]`) {
 			t.Fatal(string(encoded))
 		}
+		if !strings.Contains(selectors, "paths:") && !strings.Contains(string(encoded), `"paths":[]`) {
+			t.Fatal("Inventory must preserve its non-null paths array contract", string(encoded))
+		}
 		data, err := b.AddResource("extra", "extra-v1", []InventoryEndpoint{{Name: "ssh", Protocol: "TCP", Port: 22}})
 		if err != nil {
 			t.Fatal(err)

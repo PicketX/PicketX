@@ -53,7 +53,7 @@ func (b *Bundle) Inventory(f Facts) Inventory {
 	for _, o := range b.objects {
 		switch s := o.Spec.(type) {
 		case httpRouteSpec:
-			out.HTTPRoutes = append(out.HTTPRoutes, InventoryHTTPRoute{o.Metadata.Name, o.Metadata.UID, s.ResourceRef.Name, s.ResourceRef.UID, s.EndpointName, s.Host, slices.Clone(s.Methods), slices.Clone(s.Paths), slices.Clone(s.PathPrefixes)})
+			out.HTTPRoutes = append(out.HTTPRoutes, InventoryHTTPRoute{o.Metadata.Name, o.Metadata.UID, s.ResourceRef.Name, s.ResourceRef.UID, s.EndpointName, s.Host, slices.Clone(s.Methods), append([]string{}, s.Paths...), slices.Clone(s.PathPrefixes)})
 		case resourceSpec:
 			r := InventoryResource{Name: o.Metadata.Name, UID: o.Metadata.UID, Endpoints: []InventoryEndpoint{}}
 			for _, e := range s.Endpoints {

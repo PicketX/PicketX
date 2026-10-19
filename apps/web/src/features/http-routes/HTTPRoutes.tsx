@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { APIError, request } from '@/lib/console'
 
 type Resource = { name: string; uid: string; endpoints: { name: string; protocol: string; port: number }[] }
-type Route = { name: string; uid: string; resource_name: string; resource_uid: string; endpoint_name: string; host: string; methods: string[]; paths: string[] }
+type Route = { name: string; uid: string; resource_name: string; resource_uid: string; endpoint_name: string; host: string; methods: string[]; paths: string[]; path_prefixes?: string[] }
 type Inventory = { revision: number; observed_at: string; resources: Resource[]; http_routes: Route[] }
 type Props = { csrf: string; canWrite: boolean; onUnauthorized: () => void; onDirty: (value: boolean) => void; onBusy: (value: boolean) => void }
 const methods = ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
@@ -25,6 +25,7 @@ export function HTTPRoutes({ csrf, canWrite, onUnauthorized, onDirty, onBusy }: 
   const [host, setHost] = useState('')
   const [selectedMethods, setSelectedMethods] = useState<string[]>([])
   const [paths, setPaths] = useState('')
+  const [prefixes, setPrefixes] = useState('')
   const [reason, setReason] = useState('')
   const [busy, setBusy] = useState(true)
   const [error, setError] = useState('')
@@ -37,7 +38,7 @@ export function HTTPRoutes({ csrf, canWrite, onUnauthorized, onDirty, onBusy }: 
   const [controllers] = useState(() => new Set<AbortController>())
   const errors = useRef<HTMLDivElement>(null)
   const removalHeading = useRef<HTMLHeadingElement>(null)
-  const dirty = !!(removalUID || name || resourceUID || endpoint || host || selectedMethods.length || paths || reason)
+  const dirty = !!(removalUID || name || resourceUID || endpoint || host || selectedMethods.length || paths || prefixes || reason)
   const removalTarget = routeCatalog.find(r => r.uid === removalUID)
   const resource = catalog.find(r => r.uid === resourceUID)
   useEffect(() => { onDirty(dirty) }, [dirty, onDirty])
@@ -78,7 +79,7 @@ export function HTTPRoutes({ csrf, canWrite, onUnauthorized, onDirty, onBusy }: 
     try { await read(controller.signal, rebase) } catch (e) { if (!controller.signal.aborted) fail(e, true) }
     finally { controllers.delete(controller); if (!controller.signal.aborted) setBusy(false) }
   }
-  function clear() { setRemovalUID(''); setAcknowledged(false); setName(''); setResourceUID(''); setEndpoint(''); setHost(''); setSelectedMethods([]); setPaths(''); setReason(''); setFields({}) }
+  function clear() { setRemovalUID(''); setAcknowledged(false); setName(''); setResourceUID(''); setEndpoint(''); setHost(''); setSelectedMethods([]); setPaths(''); setPrefixes(''); setReason(''); setFields({}) }
   function beginRemoval(uid: string) {
     if (busy || dirty || conflict || !canWrite || !base || !routeCatalog.some(r => r.uid === uid)) return
     setRemovalUID(uid); setAcknowledged(false); setError(''); setFields({}); setNotice('')
@@ -103,17 +104,23 @@ export function HTTPRoutes({ csrf, canWrite, onUnauthorized, onDirty, onBusy }: 
   async function submit(e: React.FormEvent) {
     e.preventDefault(); if (busy || !canWrite || !base || conflict) return
     const invalid: Record<string, string> = {}
-    const pathList = paths.split('\n')
+    const pathList = paths ? paths.split('\n') : []
+    const prefixList = prefixes ? prefixes.split('\n') : []
     if (!name.trim() || bytes(name) > 128) invalid.name = t('routes.nameLimit')
     if (!resource) invalid.resource = t('grants.selectResource')
     if (!resource?.endpoints.some(e => e.name === endpoint && e.protocol === 'TCP')) invalid.endpoint = t('routes.selectEndpoint')
     if (!host || host.length > 253 || /[\s/?#@]/.test(host)) invalid.host = t('routes.hostHelp')
     if (!selectedMethods.length) invalid.methods = t('routes.selectMethods')
-    if (!paths || pathList.length > 128 || new Set(pathList).size !== pathList.length || pathList.some(p => !p.startsWith('/') || p.length > 8192 || /[^\x21-\x7e]|[%\\?#]/.test(p) || p.includes('//') || p.split('/').some(s => s === '.' || s === '..'))) invalid.paths = t('routes.pathHelp')
+    const invalidPath = (p: string) => !p.startsWith('/') || p.length > 8192 || /[^\x21-\x7e]|[%\\?#]/.test(p) || p.includes('//') || p.split('/').some(s => s === '.' || s === '..')
+    if (new Set(pathList).size !== pathList.length || pathList.some(invalidPath)) invalid.paths = t('routes.pathHelp')
+    if (new Set(prefixList).size !== prefixList.length || prefixList.some(p => invalidPath(p) || (p !== '/' && p.endsWith('/')))) invalid.prefixes = t('routes.prefixHelp')
+    if (!pathList.length && !prefixList.length || pathList.length + prefixList.length > 128) {
+      invalid.paths = t('routes.selectorLimit'); invalid.prefixes = t('routes.selectorLimit')
+    }
     if (!reason.trim() || bytes(reason) > 512) invalid.reason = t('routes.reasonLimit')
     if (Object.keys(invalid).length) { setFields(invalid); setError(t('grants.fixFields')); return }
-    const body = JSON.stringify({ name, resource_name: resource!.name, resource_uid: resource!.uid, endpoint_name: endpoint, host, methods: selectedMethods, paths: pathList, reason })
-    if (bytes(body) > 16384) { setFields({ paths: t('routes.bodyLimit') }); setError(t('grants.fixFields')); return }
+    const body = JSON.stringify({ name, resource_name: resource!.name, resource_uid: resource!.uid, endpoint_name: endpoint, host, methods: selectedMethods, ...(pathList.length ? { paths: pathList } : {}), ...(prefixList.length ? { path_prefixes: prefixList } : {}), reason })
+    if (bytes(body) > 16384) { setFields({ paths: t('routes.bodyLimit'), prefixes: t('routes.bodyLimit') }); setError(t('grants.fixFields')); return }
     const controller = new AbortController(); controllers.add(controller); setBusy(true); setError(''); setFields({}); setNotice('')
     try {
       const result = await request<{ uid: string }>('/http-routes', { method: 'POST', signal: controller.signal, headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf, 'If-Match': base }, body }, 201)
@@ -127,6 +134,10 @@ export function HTTPRoutes({ csrf, canWrite, onUnauthorized, onDirty, onBusy }: 
   }
   const fieldProps = (key: string) => ({ id: `route-${key}`, 'aria-invalid': !!fields[key], 'aria-describedby': fields[key] ? `route-${key}-error` : undefined })
   const fieldError = (key: string) => fields[key] && <p id={`route-${key}-error`} className="field-error">{fields[key]}</p>
+  const selectors = (route: Route) => <>
+    <details><summary>{t('routes.inspectPaths', { n: route.paths.length })}</summary><ul>{route.paths.map(p => <li key={p}><code>{p}</code></li>)}</ul></details>
+    {!!route.path_prefixes?.length && <details><summary>{t('routes.inspectPrefixes', { n: route.path_prefixes.length })}</summary><ul>{route.path_prefixes.map(p => <li key={p}><code>{p}</code></li>)}</ul>{route.path_prefixes.includes('/') && <p className="boundary">{t('routes.rootWarning')}</p>}</details>}
+  </>
   const pages = Math.ceil((inventory?.http_routes.length ?? 0) / 50)
   return <section className="http-routes-section" aria-busy={busy}>
     <div className="section-heading"><div><h2>{t('routes.management')}</h2><p>{t('routes.boundary')}</p></div><div className="actions"><Button variant="outline" disabled={busy} onClick={() => void refresh()}>{t('routes.refresh')}</Button><Button variant="outline" disabled={busy} onClick={() => void refresh(true)}>{t('routes.rebase')}</Button></div></div>
@@ -138,7 +149,7 @@ export function HTTPRoutes({ csrf, canWrite, onUnauthorized, onDirty, onBusy }: 
     {!canWrite ? <p className="boundary">{t('readOnly')}</p> : removalUID ? <form className="grant-form resource-form" onSubmit={e => void remove(e)} noValidate><fieldset className="grant-fields-owner" disabled={busy}>
       <h3 tabIndex={-1} ref={removalHeading}>{t('routes.confirmRemoval')}</h3><p className="boundary">{t('routes.removeWarning')}</p>
       <p><strong>{t('routes.uid')}</strong> <code>{removalUID}</code></p>
-      {!removalTarget ? <p className="feedback error" role="status">{t('routes.missing')}</p> : <div><h4>{removalTarget.name}</h4><p>{removalTarget.resource_name} · {removalTarget.resource_uid} · {removalTarget.endpoint_name}</p><p><strong>{removalTarget.host}</strong> · {removalTarget.methods.join(', ')}</p><details><summary>{t('routes.inspectPaths', { n: removalTarget.paths.length })}</summary><ul>{removalTarget.paths.map(p => <li key={p}><code>{p}</code></li>)}</ul></details></div>}
+      {!removalTarget ? <p className="feedback error" role="status">{t('routes.missing')}</p> : <div><h4>{removalTarget.name}</h4><p>{removalTarget.resource_name} · {removalTarget.resource_uid} · {removalTarget.endpoint_name}</p><p><strong>{removalTarget.host}</strong> · {removalTarget.methods.join(', ')}</p>{selectors(removalTarget)}</div>}
       <div><label htmlFor="route-removalReason">{t('routes.removalReason')}</label><input {...fieldProps('removalReason')} value={reason} onChange={e => setReason(e.target.value)} maxLength={512} required />{fieldError('removalReason')}</div>
       <label className="endpoint-options"><input type="checkbox" checked={acknowledged} disabled={!removalTarget} onChange={e => setAcknowledged(e.target.checked)} />{t('routes.acknowledge')}</label>
       <div className="actions"><Button type="submit" disabled={busy || conflict || !base || !removalTarget || !acknowledged || !reason.trim()}>{t('routes.confirmRemoval')}</Button><Button type="button" variant="outline" onClick={() => { clear(); setError('') }}>{t('routes.cancelRemoval')}</Button></div>
@@ -151,13 +162,14 @@ export function HTTPRoutes({ csrf, canWrite, onUnauthorized, onDirty, onBusy }: 
       </div>
       <div><label htmlFor="route-host">{t('routes.host')}</label><input {...fieldProps('host')} value={host} onChange={e => setHost(e.target.value)} maxLength={253} spellCheck={false} required /><p className="hint">{t('routes.hostHelp')}</p>{fieldError('host')}</div>
       <fieldset {...fieldProps('methods')} tabIndex={-1}><legend>{t('routes.methods')}</legend><div className="endpoint-options">{methods.map(method => <label key={method}><input type="checkbox" checked={selectedMethods.includes(method)} onChange={e => setSelectedMethods(old => e.target.checked ? [...old, method] : old.filter(m => m !== method))} />{method}</label>)}</div>{fieldError('methods')}</fieldset>
-      <div><label htmlFor="route-paths">{t('routes.paths')}</label><textarea {...fieldProps('paths')} value={paths} onChange={e => setPaths(e.target.value)} maxLength={16384} rows={4} spellCheck={false} required /><p className="hint">{t('routes.pathHelp')}</p>{fieldError('paths')}</div>
+      <div><label htmlFor="route-paths">{t('routes.paths')}</label><textarea {...fieldProps('paths')} aria-describedby={`route-paths-help${fields.paths ? ' route-paths-error' : ''}`} value={paths} onChange={e => setPaths(e.target.value)} maxLength={16384} rows={4} spellCheck={false} /><p id="route-paths-help" className="hint">{t('routes.pathHelp')}</p>{fieldError('paths')}</div>
+      <div><label htmlFor="route-prefixes">{t('routes.prefixes')}</label><textarea {...fieldProps('prefixes')} aria-describedby={`route-prefixes-help${fields.prefixes ? ' route-prefixes-error' : ''}`} value={prefixes} onChange={e => setPrefixes(e.target.value)} maxLength={16384} rows={4} spellCheck={false} /><p id="route-prefixes-help" className="hint">{t('routes.prefixHelp')}</p>{prefixes.split('\n').includes('/') && <p className="boundary" role="status">{t('routes.rootWarning')}</p>}{fieldError('prefixes')}</div>
       <div><label htmlFor="route-reason">{t('routes.reason')}</label><input {...fieldProps('reason')} value={reason} onChange={e => setReason(e.target.value)} maxLength={512} required />{fieldError('reason')}</div>
       <div className="actions"><Button type="submit" disabled={busy || conflict || !base}>{t('routes.create')}</Button><Button type="button" variant="outline" disabled={!dirty} onClick={() => { if (window.confirm(t('routes.discard'))) clear() }}>{t('routes.clear')}</Button></div>
     </fieldset></form>}
     <div className="inventory-list"><h2>{t('routes.list')}</h2><p className="hint">{t('routes.setup')}</p>
       {inventory?.http_routes.length === 0 && !busy && <p className="empty">{t('routes.empty')}</p>}
-      {inventory?.http_routes.slice(page * 50, (page + 1) * 50).map(r => <article key={r.uid} data-route-id={r.uid}><h3>{r.name}</h3><p><strong>{t('routes.uid')}</strong> <code>{r.uid}</code></p><p>{r.resource_name} · {r.resource_uid} · {r.endpoint_name}</p><p><strong>{r.host}</strong> · {r.methods.join(', ')}</p><details><summary>{t('routes.inspectPaths', { n: r.paths.length })}</summary><ul>{r.paths.map(p => <li key={p}><code>{p}</code></li>)}</ul></details>{canWrite && <Button variant="outline" disabled={busy || dirty || conflict || !base || !routeCatalog.some(target => target.uid === r.uid)} onClick={() => beginRemoval(r.uid)}>{t('routes.remove')}</Button>}</article>)}
+      {inventory?.http_routes.slice(page * 50, (page + 1) * 50).map(r => <article key={r.uid} data-route-id={r.uid}><h3>{r.name}</h3><p><strong>{t('routes.uid')}</strong> <code>{r.uid}</code></p><p>{r.resource_name} · {r.resource_uid} · {r.endpoint_name}</p><p><strong>{r.host}</strong> · {r.methods.join(', ')}</p>{selectors(r)}{canWrite && <Button variant="outline" disabled={busy || dirty || conflict || !base || !routeCatalog.some(target => target.uid === r.uid)} onClick={() => beginRemoval(r.uid)}>{t('routes.remove')}</Button>}</article>)}
     </div>
     {pages > 1 && <div className="actions"><Button variant="outline" disabled={page === 0 || busy} onClick={() => setPage(n => n - 1)}>{t('resources.previous')}</Button><span>{t('resources.page', { n: page + 1, pages })}</span><Button variant="outline" disabled={page >= pages - 1 || busy} onClick={() => setPage(n => n + 1)}>{t('resources.next')}</Button></div>}
   </section>
