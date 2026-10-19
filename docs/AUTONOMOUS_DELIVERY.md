@@ -1,5 +1,18 @@
 # Autonomous delivery checkpoint
 
+## Named Binding Endpoint editing (active)
+
+Owner codex/binding-endpoint-edit; heartbeat2026-10-19T00:37Z; lease until01:37Z
+or merged+green main/explicit release. Core f105e25e4e143789ffc2aa1a66f123e90b681a66,
+treee0e5955582145af74aa73c847ecc4da3a3022211/mainCI39179520965 GREEN; PR28 released.
+Agent95a5f7f/mainCI39118687475 GREEN; no open PRs at acquisition. Existing clean
+isolated host worktree retained. Plan/spec: superpowers/{plans,specs}/2026-10-19-binding-endpoint-edit.md.
+Scope: protected Endpoint names only, fixed Binding/Resource/Agent/enforcement.
+Local baseline full Go fails only known Unix socket EPERM; native full gates remain
+mandatory. No kernel change or product-completion claim. Identity/approval,
+referenced Resource lifecycle and combined privileged browser/Linux acceptance remain.
+中文：本轮仅安全编辑绑定端点名单，保留作用域，原生验证与独立评审通过前不合并。
+
 ## Resource network editing (active)
 
 Owner codex/resource-network-edit; heartbeat2026-10-18T23:38Z; lease until00:38Z
