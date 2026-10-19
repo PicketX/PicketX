@@ -142,16 +142,30 @@ browser: {enabled: true, origin: ${JSON.stringify(origin)}, assets: ${JSON.strin
     // Writer survives navigation; no client cancellation is mistaken for rollback.
     let release; const held = new Promise(r => { release = r }); let intercepted
     const started = new Promise(r => { intercepted = r })
-    await page.route('**/console/api/v1/accounts', async r => { if (r.request().method() !== 'POST') return r.continue(); intercepted(); await held; return r.continue() })
+    let releaseOldRead, capturedOldRead, holdNextRead = false
+    const oldRead = new Promise(r => { releaseOldRead = r }), oldReadCaptured = new Promise(r => { capturedOldRead = r })
+    await page.route('**/console/api/v1/accounts', async r => {
+      if (r.request().method() === 'POST') { intercepted(); await held; return r.continue() }
+      if (holdNextRead && r.request().method() === 'GET') {
+        holdNextRead = false; const actual = await r.fetch(); capturedOldRead(); await oldRead; return r.fulfill({ response: actual })
+      }
+      return r.continue()
+    })
     await page.getByLabel('Account username', { exact: true }).fill('bob')
     await page.getByLabel('Account password', { exact: true }).fill(password)
     await page.getByLabel('Account change reason', { exact: true }).fill('writer navigation')
     await page.getByRole('button', { name: 'Create account', exact: true }).click(); await started
     await page.getByRole('button', { name: 'Desired configuration', exact: true }).click()
     assert(await page.getByRole('button', { name: 'Sign out', exact: true }).isDisabled())
-    release(); await page.unroute('**/console/api/v1/accounts')
+    holdNextRead = true
     await page.getByRole('button', { name: 'Accounts', exact: true }).click()
+    await oldReadCaptured // Real pre-write directory5 held across committed directory6.
+    release()
     await page.locator('.account-row').getByRole('heading', { name: 'bob', exact: true }).waitFor()
+    releaseOldRead()
+    await page.waitForFunction(() => document.querySelector('.accounts-section')?.getAttribute('aria-busy') === 'false')
+    assert(await page.locator('.account-row').getByRole('heading', { name: 'bob', exact: true }).isVisible(), 'late pre-write GET must not replace committed account state')
+    await page.unroute('**/console/api/v1/accounts')
     // Real directory-only capability without publication or request privileges.
     const policy = spawnSync('python3', ['-c', 'import sqlite3,sys\nc=sqlite3.connect(sys.argv[1])\nfor op in ("account:read","account:write"): c.execute("INSERT INTO casbin_rule(ptype,v0,v1,v2,v3,v4,v5) VALUES(?,?,?,?,?,?,?)",("p","role:directory",op,"allow","","",""))\nc.commit()', join(dir, 'state/db.sqlite')], { encoding: 'utf8' })
     assert.equal(policy.status, 0, policy.stderr)

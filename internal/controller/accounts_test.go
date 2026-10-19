@@ -76,6 +76,9 @@ func TestManagedAccountsHTTPStrictCASAndSecretFreeDirectory(t *testing.T) {
 	if w = request(h, "GET", "/api/v1/accounts?unknown=x", "", managementToken, ""); w.Code != 400 {
 		t.Fatal(w.Code)
 	}
+	if w = request(h, "PUT", strings.ReplaceAll(path, ":", "%3A"), update, managementToken, `"2"`); w.Code != 200 {
+		t.Fatal("browser encoded principal path", w.Code, w.Body.String())
+	}
 	file, _, _ := managementFixture(t)
 	if w = request(file, "GET", "/api/v1/accounts", "", managementToken, ""); w.Code != 403 {
 		t.Fatal("file account API exposed", w.Code, w.Body.String())

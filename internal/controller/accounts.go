@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/PicketX/PicketX/internal/account"
 	"github.com/labstack/echo/v5"
+	"net/url"
 )
 
 type CreateAccountRequest struct {
@@ -111,7 +112,12 @@ func (h *managementHTTP) saveAccount(c *echo.Context, create bool) error {
 		if err = h.validate.Struct(dto); err != nil {
 			return apiError(c, 400, "invalid_fields")
 		}
-		id = c.Param("id")
+		// Echo retains escaped parameter bytes. Browser encodeURIComponent escapes
+		// the ':' in principal IDs; decode once, then domain-validate the exact ID.
+		id, err = url.PathUnescape(c.Param("id"))
+		if err != nil {
+			return apiError(c, 400, "invalid_fields")
+		}
 		change = account.Change{Password: dto.Password, Roles: dto.Roles, Disabled: *dto.Disabled, Reason: dto.Reason}
 	}
 	out, revision, err := h.service.SaveAccount(p, expected, id, change)
