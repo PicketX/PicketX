@@ -231,20 +231,46 @@ func TestNewCredentialReceivesPrepublishedNonemptyInventory(t *testing.T) {
 	write(t, c.Credentials, []byte(`{"credentials":[]}`))
 	p := start(t, c)
 	ready(t, p, 200)
+	until := time.Now().Add(3 * time.Second)
+	// Each admission attempt owns its connection and deadline. grpc-go can expose
+	// an early authentication rejection as Send(io.EOF); Recv carries its status.
+	// Do not use stream(t,p): that success-only helper fatals before retry can run.
+	attempt := func() (*agentv1.ControllerFrame, error) {
+		cc, err := grpc.NewClient(p.agent, grpc.WithTransportCredentials(insecure.NewCredentials()))
+		if err != nil {
+			return nil, err
+		}
+		defer cc.Close()
+		ctx, cancel := context.WithDeadline(context.Background(), until)
+		defer cancel()
+		ctx = metadata.AppendToOutgoingContext(ctx, "authorization", "Bearer "+token)
+		st, err := agentv1.NewAgentSyncClient(cc).Connect(ctx)
+		if err != nil {
+			return nil, err
+		}
+		if err = st.Send(&agentv1.AgentFrame{Body: &agentv1.AgentFrame_Hello{Hello: &agentv1.Hello{ProtocolVersion: 1}}}); err != nil && !errors.Is(err, io.EOF) {
+			return nil, err
+		}
+		return st.Recv()
+	}
+	if _, err := attempt(); status.Code(err) != codes.Unauthenticated {
+		t.Fatalf("unregistered credential must be rejected: %v", err)
+	}
 	sum := sha256.Sum256([]byte(token))
 	raw, _ = json.Marshal(map[string]any{"credentials": []map[string]string{{"id": "b", "agent_ref": "agent-b", "sha256": hex.EncodeToString(sum[:])}}})
 	write(t, c.Credentials, raw)
 	// Wait for the polling owner to load the credential set. Failed admission is
 	// harmless and rate-limited; retry uses a fresh connection, not test hooks.
-	until := time.Now().Add(3 * time.Second)
 	for time.Now().Before(until) {
-		st := stream(t, p)
-		m, e := st.Recv()
+		m, e := attempt()
 		if e == nil {
-			if m.Snapshot.AgentRef != "agent-b" || len(m.Snapshot.Targets) != 2 || m.Snapshot.Revision != 1 {
+			if m == nil || m.Snapshot == nil || m.Snapshot.AgentRef != "agent-b" || len(m.Snapshot.Targets) != 2 || m.Snapshot.Revision != 1 {
 				t.Fatal(m)
 			}
 			return
+		}
+		if status.Code(e) != codes.Unauthenticated {
+			t.Fatalf("unexpected admission failure: %v", e)
 		}
 		time.Sleep(15 * time.Millisecond)
 	}

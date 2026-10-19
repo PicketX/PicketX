@@ -2,7 +2,7 @@
 
 ## Explicit HTTP path prefixes — acquisition 2026-10-19T10:18Z
 
-Owner codex/http-path-prefixes; heartbeat10:37Z; short lease until11:10Z or explicit
+Owner codex/http-path-prefixes; heartbeat10:46Z; short lease until11:25Z or explicit
 release/merged+green main. Core main31c7ac7/treef53e60e/mainCI39225809309 and Agent
 main937b34c/treec5a3d5e/mainCI39234459599 accepted; no open PRs at acquisition.
 PR33/Core and PR20/Agent final metadata explicitly release previous leases.
@@ -38,6 +38,18 @@ full native CI and expected-head merge/main recheck; immutable final proof and
 immediate lease release in PR34 metadata. Next: actual Gitea HTTPS/SSH conjunction
 using this additive Core contract; explicit root/segment route scope and native
 Gitea accounts/tokens/SSH keys remain distinct from portal/source authorization.
+
+Final39238841570/Web118014445576 passed but Go118014445917 failed existing
+new-credential test at runtime_test.go241 Send EOF before its intended retry.
+This run is NOT acceptance; later mandatory Go steps skipped, no merge performed.
+One CI-found Important test-only fix pass retrieves real rejection status after
+Send EOF, retries only Unauthenticated with bounded fresh connections, verifies
+pre-registration rejection, and retains exact agent-b/revision1/two-target receipt.
+Native RED→local race100 GREEN; pre-fix local100 happened to pass, not a claimed
+reproduction. Production authentication unchanged. Added mandatory native100
+repeat gate; new exact-head full CI and main recheck still required. Full details
+in validation/HTTP_PATH_PREFIXES_REVIEW.md. Prior prefix code acceptance remains
+valid evidence of its source tree, not a substitute for this final fixed head.
 
 ## Managed human accounts acquisition — 2026-10-19T08:05Z
 

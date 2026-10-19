@@ -29,7 +29,29 @@ implementer, not inferred from that review.
    Chinese screenshots. Cost: mixed-language retained feedback, not stale policy
    acceptance or a loss of drafts/CAS. Deferred, not silently called fully localized.
 
-No Critical/Important fix pass was needed. Minors were not opportunistically fixed.
+The independent review needed no blocking code fix; final native CI subsequently
+exposed the existing credential test robustness defect below. It enters the one
+final TDD fix pass, not another review dispatch. Minors were not opportunistically fixed.
+
+## Final native CI-found test defect
+
+Final run39238841570 Go118014445917 failed the unchanged
+TestNewCredentialReceivesPrepublishedNonemptyInventory at runtime_test.go241:
+EOF from Hello Send. Web118014445576 passed, but later Go build/Unix/static steps
+were skipped by the failed mandatory suite; this run is NOT accepted or merged.
+Root cause: its purported admission retry loop called the success-only stream
+helper, which fatals on Send before Recv can expose the legitimate Unauthenticated
+status while credential polling is pending. Production rejection is correct.
+
+The fix is test-only: each bounded attempt owns/closes its real connection, obtains
+status from Recv after Send EOF, retries only Unauthenticated, immediately fails
+other errors, explicitly proves rejection before registration, and still requires
+the exact agent-b/revision1/two-target nonempty snapshot after polling. Local race
+100 repetitions pass after the observed native RED. A pre-fix local100 run happened
+to pass; it is not presented as a deterministic reproduction. Add the same100
+real native repetitions as a mandatory CI step; no skip, sleep-increase, weaker
+server authentication or fabricated snapshot is used. Full final-source/main
+Go/Web and raw/archive provenance gates must run again after this fix.
 
 ## Decisions and costs (complete ledger rulings)
 
