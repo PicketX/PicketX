@@ -111,7 +111,7 @@ func newCandidate(b *Bundle, in networkplan.Input, p *networkplan.Plan) (*Candid
 		if !found {
 			return nil, fmt.Errorf("HTTPRoute requires pinned TCP resource endpoint")
 		}
-		routes = append(routes, httpauth.Route{ID: o.Metadata.UID, Resource: s.ResourceRef.UID, Endpoint: s.EndpointName, Host: s.Host, Methods: s.Methods, Paths: s.Paths})
+		routes = append(routes, httpauth.Route{ID: o.Metadata.UID, Resource: s.ResourceRef.UID, Endpoint: s.EndpointName, Host: s.Host, Methods: s.Methods, Paths: s.Paths, PathPrefixes: s.PathPrefixes})
 	}
 	c.http, e = httpauth.Compile(in.Logical, routes)
 	if e != nil {

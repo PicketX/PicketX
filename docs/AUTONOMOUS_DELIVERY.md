@@ -1,5 +1,20 @@
 # Autonomous delivery checkpoint
 
+## Explicit HTTP path prefixes — acquisition 2026-10-19T10:18Z
+
+Owner codex/http-path-prefixes; heartbeat10:18Z; short lease until11:10Z or explicit
+release/merged+green main. Core main31c7ac7/treef53e60e/mainCI39225809309 and Agent
+main937b34c/treec5a3d5e/mainCI39234459599 accepted; no open PRs at acquisition.
+PR33/Core and PR20/Agent final metadata explicitly release previous leases.
+Preserve host-owned isolated worktree codex/resource-onboarding. Focused spec/plan:
+superpowers/{specs,plans}/2026-10-19-http-path-prefixes.md. Exact-only L7 cannot
+express real Gitea repository/static subtrees; add explicit segment-prefix
+selectors and actual API/React/Nginx acceptance, preserving exact semantics,
+source authorization and independent lifetimes. No Agent/kernel changes. Gitea
+HTTPS/SSH and deployment/release acceptance remain pending; whole goal incomplete.
+Final immutable commit/PR/CI/tree/archive proof and lease release belong in final
+PR metadata. 中文：补齐真实目录级七层授权，不用入口绕过代替授权。
+
 ## Managed human accounts acquisition — 2026-10-19T08:05Z
 
 Owner codex/managed-accounts; heartbeat08:41Z; short lease until09:20Z or explicit

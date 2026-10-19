@@ -58,11 +58,17 @@ for (const name of ["controller.IssueGrantRequest", "controller.CreateBindingReq
   Object.assign(names.items, { minLength: 1, maxLength: 1024 });
 }
 const endpoint = spec.components.schemas["controller.ResourceEndpointRequest"].properties;
-const route = spec.components.schemas["controller.CreateHTTPRouteRequest"].properties;
+const routeSchema = spec.components.schemas["controller.CreateHTTPRouteRequest"];
+const route = routeSchema.properties;
+routeSchema.required = routeSchema.required.filter(name => !['paths', 'path_prefixes'].includes(name));
+routeSchema.anyOf = [{required:['paths']}, {required:['path_prefixes']}];
+routeSchema.description = 'At least one exact path or segment prefix, maximum128 selectors combined. Omitted lists contribute nothing; explicit empty/null lists invalid. Prefix /repo matches itself and /repo/ descendants, not /repository. Explicit / covers every canonical path.';
 Object.assign(route.methods, { minItems: 1, maxItems: 7, uniqueItems: true });
 route.methods.items = { type: "string", enum: ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"] };
-Object.assign(route.paths, { minItems: 1, maxItems: 128, uniqueItems: true });
-Object.assign(route.paths.items, { minLength: 1, maxLength: 8192 });
+for (const list of [route.paths, route.path_prefixes]) {
+  Object.assign(list, { minItems: 1, maxItems: 128, uniqueItems: true });
+  Object.assign(list.items, { minLength: 1, maxLength: 8192 });
+}
 // rc6 promotes dive,required from each address to the optional parent list.
 const endpointSchema = spec.components.schemas["controller.ResourceEndpointRequest"];
 endpointSchema.required = endpointSchema.required.filter(name => name !== "addresses");

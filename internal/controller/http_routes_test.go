@@ -15,9 +15,16 @@ const routeCreate = `{"name":"gitea-web","resource_name":"gitea","resource_uid":
 
 // Catches missing route publication, source rewriting and lost durable audit.
 func TestHTTPRouteCreateDurableInventory(t *testing.T) {
+	t.Run("exact", func(t *testing.T) { testHTTPRouteCreateDurableInventory(t, routeCreate, false) })
+	t.Run("prefix-only", func(t *testing.T) {
+		testHTTPRouteCreateDurableInventory(t, strings.Replace(routeCreate, `"paths":["/","/repositories"]`, `"path_prefixes":["/repositories"]`, 1), true)
+	})
+}
+
+func testHTTPRouteCreateDurableInventory(t *testing.T, payload string, prefix bool) {
 	h, store, _ := managementFixture(t)
 	original, facts := inventorySeed(t, h, false)
-	w := request(h, "POST", "/api/v1/http-routes", routeCreate, managementToken, `"1"`)
+	w := request(h, "POST", "/api/v1/http-routes", payload, managementToken, `"1"`)
 	if w.Code != 201 || w.Header().Get("ETag") != `"2"` {
 		t.Fatal(w.Code, w.Body.String())
 	}
@@ -42,13 +49,18 @@ func TestHTTPRouteCreateDurableInventory(t *testing.T) {
 			ResourceUID     string `json:"resource_uid"`
 			EndpointName    string `json:"endpoint_name"`
 			Methods, Paths  []string
+			PathPrefixes    []string `json:"path_prefixes"`
 		} `json:"http_routes"`
 	}
 	if e = json.Unmarshal(w.Body.Bytes(), &page); e != nil || w.Code != 200 || len(page.Routes) != 1 {
 		t.Fatal(w.Code, w.Body.String(), e)
 	}
 	r := page.Routes[0]
-	if r.UID != change.UID || r.Name != "gitea-web" || r.ResourceUID != "resource-gitea-v1" || r.EndpointName != "https" || r.Host != "git.example" || strings.Join(r.Methods, ",") != "GET,HEAD" || strings.Join(r.Paths, ",") != "/,/repositories" {
+	wantPaths, wantPrefixes := "/,/repositories", ""
+	if prefix {
+		wantPaths, wantPrefixes = "", "/repositories"
+	}
+	if r.UID != change.UID || r.Name != "gitea-web" || r.ResourceUID != "resource-gitea-v1" || r.EndpointName != "https" || r.Host != "git.example" || strings.Join(r.Methods, ",") != "GET,HEAD" || strings.Join(r.Paths, ",") != wantPaths || strings.Join(r.PathPrefixes, ",") != wantPrefixes {
 		t.Fatal(r)
 	}
 	events, e := store.Audit(0, 100)
@@ -91,6 +103,14 @@ func TestHTTPRouteRejectsUnsafeCreation(t *testing.T) {
 	h, store, creds := managementFixture(t)
 	original, facts := inventorySeed(t, h, false)
 	cases := []struct{ old, new string }{
+		{`"paths":["/","/repositories"],`, ``},
+		{`"paths":["/","/repositories"]`, `"path_prefixes":[]`},
+		{`"paths":["/","/repositories"]`, `"path_prefixes":null`},
+		{`"paths":["/","/repositories"]`, `"path_prefixes":["/repo","/repo"]`},
+		{`"paths":["/","/repositories"]`, `"path_prefixes":["/repo/"]`},
+		{`"paths":["/","/repositories"]`, `"paths":[],"path_prefixes":["/repo"]`},
+		{`"paths":["/","/repositories"]`, `"paths":["/"],"path_prefixes":[]`},
+		{`"paths":["/","/repositories"]`, `"paths":["/"],"path_prefixes":["/%72epo"]`},
 		{`"gitea-web"`, `"gitea-web","uid":"caller-controlled"`}, {`"gitea-web"`, `"gitea-web","name":"other"`},
 		{`resource-gitea-v1`, `wrong`}, {`"https"`, `"missing"`}, {`git.example`, `https://git.example`}, {`git.example`, `*.example`},
 		{`["GET","HEAD"]`, `[]`}, {`["GET","HEAD"]`, `null`}, {`["GET","HEAD"]`, `["GET","GET"]`}, {`["GET","HEAD"]`, `["TRACE"]`},
@@ -202,6 +222,7 @@ func TestHTTPRouteOpenAPIContract(t *testing.T) {
 			Schemas map[string]struct {
 				AdditionalProperties bool
 				Required             []string
+				AnyOf                []struct{ Required []string }
 				Properties           map[string]struct {
 					MinItems, MaxItems int
 					UniqueItems        bool
@@ -222,7 +243,7 @@ func TestHTTPRouteOpenAPIContract(t *testing.T) {
 		}
 	}
 	schema := spec.Components.Schemas["controller.CreateHTTPRouteRequest"]
-	if schema.AdditionalProperties || len(schema.Required) != 8 {
+	if schema.AdditionalProperties || strings.Join(schema.Required, ",") != "endpoint_name,host,methods,name,reason,resource_name,resource_uid" || len(schema.AnyOf) != 2 || strings.Join(schema.AnyOf[0].Required, ",") != "paths" || strings.Join(schema.AnyOf[1].Required, ",") != "path_prefixes" {
 		t.Fatal("non-strict required fields", schema)
 	}
 	methods, paths := schema.Properties["methods"], schema.Properties["paths"]
@@ -231,5 +252,9 @@ func TestHTTPRouteOpenAPIContract(t *testing.T) {
 	}
 	if paths.MinItems != 1 || paths.MaxItems != 128 || !paths.UniqueItems || paths.Items.MinLength != 1 || paths.Items.MaxLength != 8192 {
 		t.Fatal("paths contract", paths)
+	}
+	prefixes := schema.Properties["path_prefixes"]
+	if prefixes.MinItems != 1 || prefixes.MaxItems != 128 || !prefixes.UniqueItems || prefixes.Items.MinLength != 1 || prefixes.Items.MaxLength != 8192 {
+		t.Fatal("prefixes contract", prefixes)
 	}
 }
