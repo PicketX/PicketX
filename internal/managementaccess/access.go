@@ -105,7 +105,10 @@ func bootstrap(db *gorm.DB) error {
 			return r.Error
 		}
 		if r.RowsAffected > 0 {
-			if row.Version != 1 {
+			if row.Version == 1 {
+				return bootstrapRequests(tx)
+			}
+			if row.Version != 2 {
 				return fmt.Errorf("unsupported management schema version")
 			}
 			return nil
@@ -130,8 +133,30 @@ func bootstrap(db *gorm.DB) error {
 				}
 			}
 		}
-		return tx.Exec("INSERT INTO management_schema(id,version) VALUES(1,1)").Error
+		if e := tx.Exec("INSERT INTO management_schema(id,version) VALUES(1,1)").Error; e != nil {
+			return e
+		}
+		return bootstrapRequests(tx)
 	})
+}
+
+// Add new defaults once; retain all existing/custom p/g rules and explicit denies.
+func bootstrapRequests(tx *gorm.DB) error {
+	for _, op := range []string{"request:create", "request:read-own", "request:review"} {
+		for _, role := range []string{"role:admin", "role:requester", "role:blocked"} {
+			if role == "role:requester" && op == "request:review" {
+				continue
+			}
+			effect := "allow"
+			if role == "role:blocked" {
+				effect = "deny"
+			}
+			if e := tx.Exec("INSERT INTO casbin_rule(ptype,v0,v1,v2,v3,v4,v5) SELECT 'p',?,?,?,'','','' WHERE NOT EXISTS (SELECT 1 FROM casbin_rule WHERE ptype='p' AND v0=? AND v1=?)", role, op, effect, role, op).Error; e != nil {
+				return e
+			}
+		}
+	}
+	return tx.Exec("UPDATE management_schema SET version=2 WHERE id=1").Error
 }
 
 // Allowed performs one combined effect evaluation, after resolving shared role inheritance.

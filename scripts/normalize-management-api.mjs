@@ -9,6 +9,17 @@ spec.components.schemas["agentsync.NodeObservation"].properties.report = {
   oneOf: [{ $ref: "#/components/schemas/agentsync.ReportedState" }, { type: "null" }],
 };
 const request = spec.components.schemas["controller.PublicationRequest"];
+for (const name of ["controller.CreateAccessRequest", "controller.DecideAccessRequest"]) {
+  const s = spec.components.schemas[name]; s.additionalProperties = false;
+  if (s.properties.endpoint_names) { s.properties.endpoint_names.uniqueItems = true; Object.assign(s.properties.endpoint_names.items, { minLength: 1, maxLength: 1024 }); }
+}
+// Both transport aliases use the same handlers, but not the same credentials.
+for (const [path, methods] of Object.entries(spec.paths)) if (path.startsWith('/console/api/v1/access-request')) {
+  for (const [verb, operation] of Object.entries(methods)) {
+    operation.security = [{ BrowserCookie: [] }]; operation.operationId = `browser_${operation.operationId}_${verb}`;
+    if (verb === 'post') operation.description = `${operation.description ?? ''} Requires exact configured Origin and native Echo CSRF; legacy clients send X-CSRF-Token from session bootstrap. Strict JSON16KiB.`;
+  }
+}
 request.additionalProperties = false;
 for (const property of Object.values(request.properties)) property.minLength = 1;
 const login = spec.components.schemas["controller.LoginRequest"];

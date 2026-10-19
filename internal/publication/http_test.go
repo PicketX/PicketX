@@ -79,6 +79,11 @@ func TestHTTPDecisionDurableAuditFailureAndUpgrade(t *testing.T) {
 	if e = s.db.Exec("UPDATE controller_schema SET version=2").Error; e != nil {
 		t.Fatal(e)
 	}
+	for _, table := range []string{"controller_request_event", "controller_access_request"} {
+		if e = s.db.Exec("DROP TABLE " + table).Error; e != nil {
+			t.Fatal(e)
+		}
+	}
 	s.Close()
 	s, e = OpenMode(path, "test", "database")
 	if e != nil {

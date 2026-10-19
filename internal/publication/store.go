@@ -126,7 +126,13 @@ func OpenMode(path, authority, mode string) (out *Store, err error) {
 			}
 			version.Version = 3
 		}
-		if version.Version != 3 {
+		if version.Version == 3 {
+			if e := migrateRequests(tx); e != nil {
+				return e
+			}
+			version.Version = 4
+		}
+		if version.Version != 4 {
 			return fmt.Errorf("unsupported publication schema version")
 		}
 		var source struct{ Mode string }
@@ -178,6 +184,10 @@ func (s *Store) Accept(policy, facts []byte, preflight func(*configuration.Candi
 
 // accept requires s.mu. A managed audit and publication are committed together.
 func (s *Store) accept(policy, facts []byte, actor, reason string, preflight func(*configuration.Candidate, uint64) error) (bool, error) {
+	return s.acceptWithTransaction(policy, facts, actor, reason, preflight, nil)
+}
+
+func (s *Store) acceptWithTransaction(policy, facts []byte, actor, reason string, preflight func(*configuration.Candidate, uint64) error, transaction func(*gorm.DB) error) (bool, error) {
 	if s.closed {
 		return false, fmt.Errorf("publication store closed")
 	}
@@ -200,6 +210,11 @@ func (s *Store) accept(policy, facts []byte, actor, reason string, preflight fun
 	r := record{ID: 1, Authority: s.authority, Revision: int64(next), Policy: append([]byte(nil), policy...), Facts: append([]byte(nil), facts...)}
 	r.Digest = recordDigest(r)
 	e = s.db.Transaction(func(tx *gorm.DB) error {
+		if transaction != nil {
+			if e := transaction(tx); e != nil {
+				return e
+			}
+		}
 		if s.revision == 0 {
 			if e := tx.Exec("INSERT INTO controller_publication(id,authority,revision,policy,facts,digest) VALUES(1,?,?,?,?,?)", r.Authority, r.Revision, r.Policy, r.Facts, r.Digest).Error; e != nil {
 				return e

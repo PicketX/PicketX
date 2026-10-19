@@ -15,6 +15,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/PicketX/PicketX/internal/accessrequest"
 	"github.com/PicketX/PicketX/internal/management"
 	"github.com/PicketX/PicketX/internal/managementaccess"
 	"github.com/PicketX/PicketX/internal/publication"
@@ -24,6 +25,10 @@ import (
 const managementToken = "management-api-independent-token-1234567890"
 
 type directRepository struct{ *publication.Store }
+
+func (r directRepository) DecideAccessRequest(expected uint64, row accessrequest.Record, policy, facts string) (accessrequest.Record, error) {
+	return r.DecideRequest(expected, row, policy, facts, nil)
+}
 
 func (r directRepository) Replace(expected uint64, actor, reason, policy, facts string) (publication.Document, error) {
 	_, e := r.AcceptManaged(expected, actor, reason, []byte(policy), []byte(facts), nil)
