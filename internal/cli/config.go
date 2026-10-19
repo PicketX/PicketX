@@ -13,7 +13,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// New assembles read-only diagnostics. It opens no listeners and applies no rules.
+// New assembles local operator commands. No command opens listeners or applies rules.
 func New(out, errOut io.Writer) *cobra.Command {
 	root := &cobra.Command{Use: "picketx", Short: "PicketX configuration diagnostics", SilenceErrors: true, SilenceUsage: true}
 	root.SetOut(out)
@@ -89,5 +89,6 @@ func New(out, errOut io.Writer) *cobra.Command {
 	config.AddCommand(check)
 	root.AddCommand(config)
 	root.AddCommand(passwordCommand())
+	root.AddCommand(controllerInitCommand())
 	return root
 }
