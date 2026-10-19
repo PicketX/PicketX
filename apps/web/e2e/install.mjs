@@ -11,6 +11,8 @@ import { chromium } from 'playwright'
 import { freePort } from './ingress.mjs'
 
 const input = resolve(process.argv[2] ?? '/missing-controller-bundle')
+const serviceMode = process.argv[3] === '--systemd'
+if (serviceMode) assert(process.getuid() === 0 && process.env.PICKETX_SERVICE_TESTS === '1', 'real system-manager opt-in required')
 assert((await stat(join(input, 'bin/picketx')).catch(() => null))?.isFile(), 'standalone CLI bundle required')
 const temp = await mkdtemp(join(tmpdir(), 'picketx-install-'))
 const bundle = join(temp, 'relocated bundle'), instance = join(temp, 'private instance')
@@ -110,6 +112,7 @@ try {
   await stop()
   for (const key of keys) assert(!logs.includes(key), 'runtime logged a credential')
   const report = { result: 'pass', source, runtimePATH: 'empty', relocated: true, initialRevision: 1, recoveredRevision: 2, accounts: 1, oldSessionRejected: true, independentAudiences: true, cleanSIGTERM: true }
+  if (serviceMode) assert(report.service?.status === 'pass', 'actual systemd and stopped restore proof required')
   await writeFile(join(evidence, 'install-report.json'), JSON.stringify(report, null, 2) + '\n')
   console.log('PASS detached static Controller: private init, real browser bootstrap/human publication, restart/audit, no runtime tools')
   completed = true
