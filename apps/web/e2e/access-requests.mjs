@@ -161,10 +161,43 @@ c.commit()`, databasePath], { encoding: 'utf8' })
  const creatorContext = await browser.newContext(), creator = await creatorContext.newPage()
  const reviewerContext = await browser.newContext(), reviewer = await reviewerContext.newPage()
  for (const p of [creator, reviewer]) p.on('pageerror', e => errors.push(e.message))
+ // Observe actual public identity responses, never cookies/session/credential
+ // bodies. Keep bounded evidence even if the readiness poll makes many calls.
+ const identities = [], identityReads = new Set()
+ const observeIdentity = response => {
+  if (!response.url().endsWith('/console/api/v1/me')) return
+  const read = (async () => {
+   const row = { at: new Date().toISOString(), status: response.status() }
+   try {
+    const body = await response.json()
+    if (typeof body.id === 'string') row.id = body.id
+    if (Array.isArray(body.roles)) row.roles = body.roles.filter(x => typeof x === 'string')
+    if (Array.isArray(body.operations)) row.operations = body.operations.filter(x => typeof x === 'string')
+   } catch { row.unreadable = true }
+   identities.push(row); if (identities.length > 16) identities.shift()
+  })()
+  identityReads.add(read); void read.finally(() => identityReads.delete(read))
+ }
+ creator.on('response', observeIdentity)
+ try {
  await login(creator, 'creator')
  await creator.waitForFunction(async () => (await (await fetch('/console/api/v1/me')).json()).operations?.includes('request:create'), null, { timeout: 45000 })
- await creator.reload()
- await creator.getByRole('heading', { name: 'Access requests', exact: true }).waitFor()
+ for (let reload = 0; reload < 12; reload++) {
+  await creator.reload()
+  await creator.getByRole('heading', { name: 'Access requests', exact: true }).waitFor()
+  const actual = await creator.evaluate(async () => {
+   const response = await fetch('/console/api/v1/me', { cache: 'no-store' })
+   const { id, operations } = await response.json()
+   return { status: response.status, id, operations }
+  })
+  assert.deepEqual(actual, { status: 200, id: 'principal:creator', operations: ['request:create'] }, `actual custom capability after reload ${reload}`)
+ }
+ } catch (error) {
+  await Promise.allSettled([...identityReads])
+  // Diagnostic failure cannot swallow the original browser assertion.
+  console.log(`Actual creator identity response history: ${JSON.stringify(identities)}`)
+  throw error
+ } finally { creator.off('response', observeIdentity) }
  assert.equal(await creator.getByLabel('Policy YAML').count(), 0)
  assert.equal(await creator.evaluate(async () => (await fetch('/console/api/v1/access-requests')).status), 403)
  await creator.getByLabel('Requested source IP or CIDR', { exact: true }).fill('192.0.2.66')
