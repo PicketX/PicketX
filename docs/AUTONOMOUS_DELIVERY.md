@@ -24,6 +24,33 @@ Native complete Go/Web/Nginx acceptance and independent whole-branch review rema
 mandatory. No merge or application claim yet. Supplementary tests assert preserved
 dual-stack/Grant/Deny projection and complete compile refusal for unsupported UDP.
 
+Implementation and independent review are complete. Locald79a4827e80cb0fc8e13ed27eb1872747d8f29d6,
+remote4e9b5cc4eff5f8cbb0fb2a14bdb4573ef29c1756 and CI checkouta55213a78e437a2213561aa505bf624a41b8e1fb
+share tree521a73af2c1537473a1a1e7e3245b4f48722eab6. Native39182631085
+Go117838447990/Web117838447798 SUCCESS; raw logs confirm212 top/534 total, zero
+fail/skip/race, actual Unix100repeat, vet/build, pinned protocol/OpenAPI, fully-static
+SQLite/gRPC/persistence/restart/SIGTERM. Locked Web and real Chromium/API/SQLite/
+audit/rebase/scope-lock/missing-target/viewer/Nginx/application suites pass.
+Screenshot artifact12156417759 digest
+1c3d68334f5e096745bac2c7d6f15b697b11451821e7e1a78981ae560432481d verified and375/1440
+views inspected. UX/UI skills retained the console design, linked errors, current
+scope preview and explicit acknowledgement. An intermediate browser failure in
+39182382455 was an invalid peer fixture trying to alter an exact execution-context
+contract; corrected to a legal Resource rebind and characterized via real HTTP.
+No production safety guard was weakened. Final independent whole-branch review
+9884175..d79a482 found no Critical/Important/Minor issues; reviewer independently ran
+configuration/controller/management, focused normal/race, Web typecheck/lint and
+diff checks. Exact final head/main CI and lease release will be recorded in PR29.
+
+Review boundary rulings: no new kernel-application evidence from management-only
+changes (cost if overstated: publication mistaken for protection); dynamic and
+advanced execution-scope edits remain advanced-editor-only (cost: no convenience
+workflow for those shapes). No deferred review minors. Next: human identity/
+request/approval workflows and combined privileged Controller→Agent→application
+acceptance, then remaining referenced Resource/advanced Binding lifecycle as needed.
+中文：真实 API、数据库、浏览器与既有 Nginx 链路通过，独立评审无阻塞项；未宣称
+新增内核执行证据。最终准确合并/主线 CI 与租约释放见 PR29，整体目标仍未完成。
+
 ## Resource network editing (active)
 
 Owner codex/resource-network-edit; heartbeat2026-10-18T23:38Z; lease until00:38Z
