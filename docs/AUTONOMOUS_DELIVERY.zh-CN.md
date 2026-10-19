@@ -1,5 +1,41 @@
 # 自动交付检查点
 
+## 本地人员登录已交付 — 2026-10-19T04:14Z
+
+[PR30](https://github.com/PicketX/PicketX/pull/30)按准确head
+fb6ab9a04e2859e6a804cdd297d4e422b028dfb3合并至main
+5c8f4c91ef84a81afba45a645eb21ecb74be4dde。本地6c37ac5、远端head、Go/Web真实CI检出
+7cc4f127138a36d798c33f4f2fa65978f0006859及合并main，源码树均为
+8f53344a1db26b36bc7b2878f4f189b980ea25f4。CI39197895181：Go117884507768/
+Web117884507579成功；原始日志220顶层/555含子测试，无fail/skip/race，真实Unix100重复、
+固定protobuf/OpenAPI、vet/build、全静态Controller/CLI、SQLite/gRPC/持久恢复/重启/SIGTERM
+通过。mainCI39198514343正在复核，最终准确结果及自动租约释放记录于PR30。
+
+已实现：私有文件配置本地人员、bcrypt12标准输入哈希命令、沿用SCS/Casbin、每请求
+刷新可信角色与凭据绑定、轮换/禁用/移除、准确Origin/CSRF以及本地对端/CPU限制。
+真实中英文React页面接实际API。原生Chromium验证人员发布/修订/精确持久策略/审计操作者、
+viewer后端拒绝、退出Cookie重放、密码轮换重登、禁用后401与最新登录方式；保留全部
+密钥/Nginx→应用/IPv6/Grant/HTTPRoute/管理流程。375/1440截图已目视检查；产物
+12162945624的SHA256
+93673fb0ac164644648aeb0ac2eb4bc96b814c48a71df8f95ab59429f181fa71与独立下载ZIP一致。
+两项UI/UX技能保留原有设计体系，补充显式加载/失败、字段标签及密码管理器支持。
+
+一次独立新上下文全分支评审9122dee..03f7fab无遗留生产阻塞或延后Minor。仅注释的
+语义无效发布夹具、隐藏视图定位歧义、刷新点击与有效自动401的测试竞态，已在同一验证/
+修复轮次修正，并通过最终完整原生CI；未放宽生产权威、CAS或撤销保护。全部范围裁决、
+代价与准确评审范围见[评审记录](validation/HUMAN_LOGIN_REVIEW.md)。本地完整normal/race
+仍仅既有Unix socket EPERM失败，原生已覆盖，不增加skip。
+
+Agent保持e013926/树b58e0e7/mainCI39191015351成功。其PR17/18已经交付真实浏览器/
+Controller/gRPC/Agent/nftables/Nginx/应用联合验收，不重复当成未实现项；本轮人员登录
+不产生新的Agent/内核声明。基本完成仍需路线图中的持久人员申请/审批、需要时的请求绑定
+可信身份，以及账户/OIDC/部署/发布剩余工作。下一步：人员ID审计、持久申请与基础审批，
+接受限Grant发布；请求者不等于网络来源，审批/发布不等于已应用。
+
+交付记录同步负责人codex/local-human-login，心跳04:18Z，短租约至05:00Z或合并且main
+成功/明确释放。本次后续只同步中英文检查点事实，不修改产品代码；对应PR记录最终准确
+head/CI/main并释放租约。下文“进行中”均为历史接手记录，不能当作新任务或永久锁。
+
 ## Resource 网络参数编辑（进行中）
 
 负责人 codex/resource-network-edit；心跳2026-10-18T23:38Z；租约至00:38Z，或
