@@ -26,9 +26,10 @@ type InventoryBinding struct {
 	Name string `json:"name"`
 	UID  string `json:"uid"`
 	// JSON preserves imported named/all/selector selections without claiming matches.
-	Resources   string `json:"resources"`
-	Agents      string `json:"agents"`
-	Enforcement string `json:"enforcement"`
+	Resources    string               `json:"resources"`
+	Agents       string               `json:"agents"`
+	Enforcement  string               `json:"enforcement"`
+	EndpointEdit *BindingEndpointEdit `json:"endpoint_edit,omitempty"`
 }
 type InventoryContext struct {
 	AgentName    string   `json:"agent_name"`
@@ -63,7 +64,7 @@ func (b *Bundle) Inventory(f Facts) Inventory {
 			resources, _ := json.Marshal(s.Resources)
 			agents, _ := json.Marshal(s.Agents)
 			enforcement, _ := json.Marshal(s.Enforcement)
-			out.Bindings = append(out.Bindings, InventoryBinding{o.Metadata.Name, o.Metadata.UID, string(resources), string(agents), string(enforcement)})
+			out.Bindings = append(out.Bindings, InventoryBinding{o.Metadata.Name, o.Metadata.UID, string(resources), string(agents), string(enforcement), bindingEndpointEdit(s)})
 		}
 	}
 	for _, c := range f.Contexts {

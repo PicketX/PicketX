@@ -1,5 +1,27 @@
 # 资源接入（alpha）
 
+## 编辑受保护 Endpoint
+
+在受支持的具名主机 Binding 上选择“编辑受保护 Endpoint”，核对固定 Resource UID、
+Agent、完整执行设置及当前保护名单。选择1–64个既有名称、填写原因并确认风险：
+增加保护可能拒绝服务流量，移除保护可能暴露流量。这不是撤销 Grant，也不迁移应用。
+取消不写入。
+
+PUT `/api/v1/bindings/{uid}/endpoints` 及会话/CSRF 对应路由接受
+`{endpoint_names:[...],reason,acknowledge_scope_change:true}`。仅支持单固定 Resource、
+单明确 Agent、host-local/original-destination 的非空具名选择；全部/标签动态选择与
+多目标返回409 `binding_not_editable`，继续使用高级编辑器。清单仅为受支持形状增加
+可选 `endpoint_edit` 投影，原始选择条件仍可查看。输入按 Resource 入口顺序规范化。
+UID/名称/元数据、Resource/Agent/执行设置、Grant/Deny、facts 和其他源文档不变；
+所选 Binding 文档规范化，其注释/格式可能丢失。继承严格 JSON、鉴权、强 CAS、
+完整编译及事务审计，200返回UID/修订/ETag，不表示 Agent 应用。陈旧412先于查询，
+缺失或错误类型404。
+
+使用最新修订保留名单草稿和原因，展示最新值并重置确认。固定作用域改变、形状不再
+支持、目标或已选入口不存在时，须取消后重新打开；异常状态/回执保留草稿并阻止盲目
+重试。表单禁止未修改名单提交。原生浏览器验收使用真实 API/SQLite/审计，负响应注入
+仅验证恢复行为，不模拟执行。
+
 ## 使用前修改网络参数
 
 选择未被引用资源的“编辑网络参数”，只改既有 Endpoint 的协议、端口和可选双栈
@@ -13,7 +35,7 @@ PUT `/api/v1/resources/{uid}/network` 及会话/CSRF `/console/api/v1` 对应路
 过期、零匹配选择器）、Deny、Binding、HTTPRoute 引用返回409；陈旧412先于目标查询，
 缺失/错误类型404。继承严格 JSON、鉴权、CAS、完整编译及事务审计。显式重基准保留
 草稿、展示最新值并清除确认；同名重建不会替换原 UID。异常状态/回执阻止盲目重试。
-引用中的网络编辑、Endpoint 集合变更、Binding 编辑、身份/审批及联合验收仍待完成。
+引用中的网络编辑、Endpoint 集合变更、Binding 高级作用域编辑、身份/审批及联合验收仍待完成。
 
 [English](RESOURCE_MANAGEMENT.md) | 简体中文
 
@@ -100,6 +122,6 @@ CSRF、CAS、审计回滚、持久重开。浏览器验收覆盖真实资源→B
 冲突草稿、失败读取、Viewer拒绝和375px布局，并保留真实Nginx/应用授权套件。
 精确通过/失败、源码树、评审及CI见[检查点](AUTONOMOUS_DELIVERY.md)和PR18。
 
-资源/入口编辑、入口删除、Binding编辑、上下文注册、人员身份/申请审批及最终Linux
+引用中的资源/入口编辑、入口删除、Binding高级作用域编辑、上下文注册、人员身份/申请审批及最终Linux
 联合流程仍待完成。结构化HTTPRoute创建和真实期望/应用节点观察已交付。
 本段不声明新增内核执行证据或产品整体完成。

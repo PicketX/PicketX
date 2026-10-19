@@ -194,6 +194,7 @@ func (b *Browser) register(e *echo.Echo, limits ManagementLimits) {
 	g.PUT("/resources/:uid/network", h.browserUpdateResourceNetwork)
 	g.POST("/resources/:uid/remove", h.browserRemoveResource)
 	g.POST("/bindings", h.browserCreateBinding)
+	g.PUT("/bindings/:uid/endpoints", h.browserUpdateBindingEndpoints)
 	g.POST("/bindings/:uid/remove", h.browserRemoveBinding)
 	g.POST("/http-routes", h.browserCreateHTTPRoute)
 	g.POST("/http-routes/:uid/remove", h.browserRemoveHTTPRoute)
