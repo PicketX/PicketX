@@ -28,9 +28,21 @@ c.commit()`, databasePath], { encoding: 'utf8' })
  const login = async (page, user) => {
   await page.goto(`${origin}/console/`)
   await page.getByLabel('Sign-in method', { exact: true }).selectOption('password')
-  await page.getByLabel('Username', { exact: true }).fill(user)
-  await page.getByLabel('Password', { exact: true }).fill(password)
-  await page.getByRole('button', { name: 'Sign in', exact: true }).click()
+  for (let attempt = 0; attempt < 3; attempt++) {
+   await page.getByLabel('Username', { exact: true }).fill(user)
+   await page.getByLabel('Password', { exact: true }).fill(password)
+   const response = page.waitForResponse(r => r.url().endsWith('/console/api/v1/login/password') && r.request().method() === 'POST')
+   await page.getByRole('button', { name: 'Sign in', exact: true }).click()
+   const result = await response
+   if (result.status() === 200) return
+   assert.equal(result.status(), 429, `real ${user} login: ${result.status()} ${await result.text()}`)
+   // The preceding human-login suite legitimately consumes this same local
+   // peer's 5-token burst. Honor the production 0.1/s refill, never reset/bypass it.
+   console.log(`Observed real password-login429 for ${user}; waiting for configured refill`)
+   await page.getByRole('alert').waitFor()
+   await new Promise(resolve => setTimeout(resolve, 10100))
+  }
+  assert.fail(`password-login rate did not refill for ${user}`)
  }
  await login(admin, 'approver')
  await admin.getByLabel('Policy YAML').waitFor()
@@ -90,6 +102,8 @@ c.commit()`, databasePath], { encoding: 'utf8' })
  assert(proof.audit.events.some(e => e.actor === 'principal:approver' && e.reason.includes(approved.uid)))
  for (const width of [375, 1440]) { await requester.setViewportSize({ width, height: 1000 }); assert(await requester.evaluate(() => document.documentElement.scrollWidth <= innerWidth)); await requester.screenshot({ path: join(evidence, `access-requests-${width}.png`), fullPage: true }) }
  // A separate real request is rejected; no publication revision is consumed.
+ // Plain refresh intentionally preserves its old CAS base after the approval.
+ await requester.getByRole('button', { name: 'Use latest request catalog', exact: true }).click()
  await requester.getByLabel('Requested source IP or CIDR', { exact: true }).fill('192.0.2.42')
  await requester.getByLabel('Requested Resource', { exact: true }).selectOption('resource-gitea-v1')
  await requester.getByRole('checkbox', { name: /^https / }).check()
