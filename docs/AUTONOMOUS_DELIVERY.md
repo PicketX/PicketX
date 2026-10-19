@@ -1,5 +1,23 @@
 # Autonomous delivery checkpoint
 
+## Controller install acquisition — 2026-10-19T13:05Z
+
+Owner codex/controller-install, heartbeat13:05Z, lease until14:15Z or explicit
+release/merged+verified-green-main. Core298863f4/tree437041c/mainCI39240788047 and
+Agent233f081/tree6ae6b77/mainCI39251805260 accepted; both have no open PRs.
+PR21 explicitly released12:30Z, old CorePR34 lease released by green main.
+New branch in existing host-owned isolated worktree; old branches retained.
+Spec/plan superpowers/{specs,plans}/2026-10-19-controller-install.md. Scope private
+CLI init + static binaries/Web bundle and detached first-use browser/restart
+acceptance; no Agent/kernel changes or installed host service. Source/database
+authority explicit; no sample Grants. Routine approval pauses waived by user's
+autonomous mandate, focused plan/TDD/one review retained. Next after this: packaged
+Controller/Agent/ingress/application fresh-install acceptance, not repeated Gitea.
+Local baseline internal/cli passes; known Unix listener restrictions require full
+native CI. Final immutable evidence/release in final PR metadata, not this header.
+中文：推进私有初始化及无需源码/Go/npm运行的静态安装包；不自动安装宿主服务，
+安装到Agent与真实应用的联合验收另行完成。整体目标尚未宣称完成。
+
 ## Explicit HTTP path prefixes — acquisition 2026-10-19T10:18Z
 
 Owner codex/http-path-prefixes; heartbeat10:46Z; short lease until11:25Z or explicit
