@@ -68,13 +68,15 @@ export async function bindingEndpointEditing({ operator: p, view, origin, token,
   await p.screenshot({ path: join(evidence, 'binding-endpoint-edit-desktop.png'), fullPage: true })
   await choice('web').uncheck()
   await p.getByLabel('Binding edit reason', { exact: true }).fill('Never move protection silently')
+  const replacement = await write('/resources', { name: 'binding-edit-other-resource', endpoints, reason: 'Prepare concurrent pinned Resource change' }, 'POST')
+  assert.equal(replacement.status, 201); const other = await replacement.json()
   const current = await (await fetch(`${origin}/api/v1/publication`, { headers })).json()
   let count = 0
   const policy = current.policy.split('\n').map(line => {
     if (!line.startsWith('{')) return line
     const doc = JSON.parse(line)
     if (doc.kind !== 'EnforcementBinding' || doc.metadata.uid !== target.uid) return line
-    count++; doc.spec.enforcement.allowedDestinations = ['192.0.2.100']; return JSON.stringify(doc)
+    count++; doc.spec.resources[0].resourceRef = { name: 'binding-edit-other-resource', uid: other.uid }; return JSON.stringify(doc)
   }).join('\n')
   assert.equal(count, 1)
   assert.equal((await write('/publication', { policy, facts: current.facts, reason: 'Concurrent execution scope change' })).status, 200)

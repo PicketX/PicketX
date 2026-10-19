@@ -137,6 +137,25 @@ func TestBindingEndpointEditCompilesWholeCandidate(t *testing.T) {
 	}
 }
 
+// Characterizes a valid advanced writer for the browser's fixed-scope rebase
+// test: existing Binding UID moves to a distinct Resource, not a mutated context.
+func TestBindingEndpointEditAdvancedPeerChangesPinnedResource(t *testing.T) {
+	h, _, _ := managementFixture(t)
+	policy, facts := bindingEditSeed(t, h, "endpointNames: [https]")
+	last := strings.LastIndex(policy, "---\n")
+	policy = policy[:last] + strings.Replace(policy[last:], "{name: gitea, uid: resource-gitea-v1}", "{name: other, uid: resource-other}", 1)
+	policy += "---\napiVersion: picketx.io/v1alpha1\nkind: Resource\nmetadata: {name: other, uid: resource-other}\nspec: {endpoints: [{name: https, network: {protocol: TCP, port: 443}}, {name: ssh, network: {protocol: TCP, port: 22}}]}\n"
+	body, _ := json.Marshal(map[string]string{"policy": policy, "facts": facts, "reason": "Concurrent pinned target change"})
+	w := request(h, "PUT", "/api/v1/publication", string(body), managementToken, `"1"`)
+	if w.Code != 200 {
+		t.Fatal(w.Code, w.Body.String())
+	}
+	inv := request(h, "GET", "/api/v1/inventory", "", managementToken, "")
+	if !strings.Contains(inv.Body.String(), `"endpoint_edit":{"resource_name":"other","resource_uid":"resource-other"`) {
+		t.Fatal(inv.Body.String())
+	}
+}
+
 func TestBindingEndpointEditRefusalsAndRollback(t *testing.T) {
 	h, s, creds := managementFixture(t)
 	policy, facts := bindingEditSeed(t, h, "endpointNames: [https]")
