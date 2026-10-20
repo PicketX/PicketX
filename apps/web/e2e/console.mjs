@@ -20,7 +20,7 @@ import { humanLogin } from './human-login.mjs'
 import { accessRequests } from './access-requests.mjs'
 import { managedAccounts } from './accounts.mjs'
 import { oidcLogin } from './oidc.mjs'
-import { initialHTTPAudit } from './http-audit.mjs'
+import { initialHTTPAudit, populatedHTTPAudit } from './http-audit.mjs'
 
 const root = resolve(import.meta.dirname, '../../..')
 const temp = await mkdtemp(join(tmpdir(), 'picketx-browser-'))
@@ -293,6 +293,7 @@ spec:
   assert(decisionAudit.events.some(e => !e.allowed && e.reason === 'no-active-grant'))
   assert(decisionAudit.events.some(e => !e.allowed && e.reason === 'explicit-deny' && e.deny_ids.includes('http-block-v1')))
   assert(decisionAudit.events.every(e => !('uri' in e) && !('host' in e)))
+  await populatedHTTPAudit({ browser, origin, authzPort, ingressPort: ingress.port, ingressToken, principalPath, evidence })
   await writeFile(callersPath, '{"callers":[]}', { mode: 0o600 }); await ingress.verifyCallerRevoked()
   await writeFile(callersPath, '{"callers":null}', { mode: 0o600 }); await ingress.verifyUnavailable()
   console.log('PASS actual browser publication → source authorization → Nginx → application; revoke/deadline/audit/IPv6/scoped caller removal')

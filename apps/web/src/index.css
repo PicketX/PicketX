@@ -108,6 +108,25 @@ footer { padding: 24px 32px; text-align: center; color: var(--muted-foreground);
 summary { cursor: pointer; min-height: 44px; padding-block: 10px; font-size: .875rem; }
 .audit-list code { font-size: .8rem; }
 .empty { padding: 48px 0; }
+.audit-switch, .http-audit-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-block: 16px; }
+.http-audit-section { min-width: 0; }
+.http-audit-section .section-heading { align-items: start; }
+.http-audit-section .boundary { padding-left: 12px; border-left: 3px solid var(--primary); margin-block: 16px; }
+.http-decision-list article { border-top: 1px solid #c3cedb; padding-block: 24px; overflow-wrap: anywhere; }
+.http-decision-heading { display: flex; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
+.http-decision-heading time { color: var(--muted-foreground); }
+.http-decision-list dl { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px 24px; }
+.http-decision-list dl > div { min-width: 0; }
+.http-decision-list dt { color: var(--muted-foreground); font-size: .875rem; }
+.http-decision-list dd { margin-top: 4px; }
+.http-decision-list details h4 { margin-block: 8px; font-weight: 600; }
+.http-decision-list details ul { list-style: disc; padding-left: 20px; }
+@media(max-width: 700px) {
+  .http-decision-list dl { grid-template-columns: 1fr; }
+  .http-decision-heading { flex-direction: column; gap: 4px; }
+  .audit-switch, .http-audit-actions { width: 100%; }
+  .audit-switch button, .http-audit-actions button { flex: 1 1 auto; white-space: normal; }
+}
 @media(max-width: 1100px) { .editors, .save-area { grid-template-columns: 1fr; } .revision-strip { grid-template-columns: 1fr 1fr; } }
 @media(max-width: 700px) {
   .login-main { grid-template-columns: 1fr; padding: 32px 20px; gap: 32px; } .login-panel { padding: 24px; }

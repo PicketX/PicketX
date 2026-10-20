@@ -1,4 +1,16 @@
 {
+  "httpAudit": {
+    "navigation": "HTTP decisions", "view": "Audit view", "title": "HTTP authorization decisions",
+    "help": "Read durable decisions in ascending event order. Read next to continue; start from oldest to restart.",
+    "boundary": "A recorded allow or deny is not proof of forwarding, application access or current permission. Source addresses do not identify a person. No request URI, query, headers or credentials are shown.",
+    "next": "Read next decisions", "reset": "Start from oldest", "loading": "Reading HTTP decisions…",
+    "empty": "No HTTP decisions have been recorded.", "emptyTail": "No newer HTTP decisions at the last read.",
+    "failed": "HTTP decision read failed. Earlier records are retained and may be behind newer decisions.",
+    "forbidden": "Permission to read HTTP decisions is unavailable. Retry after refreshing your session.",
+    "outdated": "Loaded history may be behind newer decisions. Read again to update it.",
+    "lastRead": "Last successful HTTP decision read: {{at}}", "window": "{{count}} loaded records shown (at most 200), through event {{cursor}}. This is not a total or a complete history.",
+    "allowed": "Allowed", "denied": "Denied", "source": "Source IP", "reason": "Decision reason", "route": "Route ID", "caller": "Trusted caller", "event": "Event ID", "revision": "Decision revision", "details": "Decision details", "grants": "Contributing Grant IDs", "denies": "Contributing deny IDs", "none": "None recorded"
+  },
   "oidc": { "continue": "Continue with organization", "help": "Opens your organization’s sign-in page. PicketX roles and network access remain separate.", "rejected": "Organization sign-in failed. Try again or contact your administrator.", "unavailable": "Organization sign-in is unavailable. Retry later or use your local sign-in method." },
   "accounts": {
     "title": "Accounts", "directory": "Human account directory", "boundary": "Human sign-in and roles only. Account changes grant no network access and do not confirm Agent application.", "refresh": "Refresh accounts", "clear": "Clear account draft", "discard": "Inspect the latest directory and audit first if a save outcome was unknown. Discard this account draft and use the latest revision?", "revision": "Account draft revision {{revision}}",

@@ -1,4 +1,16 @@
 {
+  "httpAudit": {
+    "navigation": "HTTP 决策", "view": "审计视图", "title": "HTTP 授权决策",
+    "help": "按事件序号读取已持久保存的决策。读取下一批可继续，从最早事件重新读取可回到起点。",
+    "boundary": "允许或拒绝决策不证明请求已转发、应用已访问或权限当前仍有效。来源地址不代表人员身份。不显示请求 URI、查询、请求头或凭据。",
+    "next": "读取下一批决策", "reset": "从最早事件重新读取", "loading": "正在读取 HTTP 决策…",
+    "empty": "尚未记录 HTTP 决策。", "emptyTail": "上次读取时没有更新的 HTTP 决策。",
+    "failed": "HTTP 决策读取失败。已保留此前记录，可能尚未包含更新的决策。",
+    "forbidden": "当前无法读取 HTTP 决策，请刷新会话后重试。",
+    "outdated": "已加载历史可能尚未包含更新的决策，请重新读取。",
+    "lastRead": "上次成功读取 HTTP 决策：{{at}}", "window": "显示已加载的 {{count}} 条记录（最多 200 条），截至事件 {{cursor}}。这不是总数或完整历史。",
+    "allowed": "允许", "denied": "拒绝", "source": "来源 IP", "reason": "决策原因", "route": "路由 ID", "caller": "可信调用方", "event": "事件 ID", "revision": "决策修订", "details": "决策明细", "grants": "贡献的 Grant ID", "denies": "贡献的拒绝规则 ID", "none": "无相关记录"
+  },
   "oidc": { "continue": "使用组织账户登录", "help": "将前往组织登录页面。PicketX 角色与网络访问权限仍独立管理。", "rejected": "组织登录失败，请重试或联系管理员。", "unavailable": "组织登录暂不可用，请稍后重试或使用本地登录方式。" },
   "accounts": {
     "title": "账户", "directory": "人员账户目录", "boundary": "仅管理人员登录与角色。账户修改不授予网络访问，也不代表 Agent 已应用。", "refresh": "刷新账户", "clear": "清除账户草稿", "discard": "若保存结果未知，请先检查最新目录与审计。放弃此账户草稿并使用最新修订？", "revision": "账户草稿修订 {{revision}}",

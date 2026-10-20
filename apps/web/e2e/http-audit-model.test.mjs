@@ -35,6 +35,8 @@ for (const [name, mutate, after = 10] of [
   ['unsafe revision', p => { p.events[0].revision = Number.MAX_SAFE_INTEGER + 1 }],
   ['non-string caller', p => { p.events[0].caller = {} }], ['oversize source', p => { p.events[0].source = 'x'.repeat(257) }],
   ['missing IDs', p => { delete p.events[0].deny_ids }], ['bad ID list', p => { p.events[0].grant_ids = [''] }],
+  ['oversized contributing list', p => { p.events[0].deny_ids = Array.from({ length: 4097 }, (_, i) => `deny-${i}`) }],
+  ['duplicate contributing IDs', p => { p.events[0].grant_ids = ['grant-1', 'grant-1'] }],
   ['secret extra page field', p => { p.credentials = 'private-unit-marker' }],
   ['private extra event field', p => { p.events[0].uri = '/private-unit-marker' }],
 ]) test(`rejects ${name} with fixed error and no input disclosure`, () => {

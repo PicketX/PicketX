@@ -1,5 +1,17 @@
 # Autonomous delivery checkpoint
 
+## HTTP decision audit implementation — 2026-10-20T11:50Z
+Same owner/lease12:40Z, PR44. Test-first remote cda2127, native39416795817/web
+118607673736 actual Chromium RED at missing HTTP decisions button; raw log saved.
+Model missing implementation RED, duplicate-contributing-ID assertion RED→GREEN;
+full38Node nofail/skip. Local lockedWeb ci/typecheck/lint/build and Go vet/build
+pass; normal/race only inherited TestAuthorizationRuntimeTCPUnixAndShutdown/unix
+EPERM (not nativegreen). Real subview/strict50page+200window, cleanup/401/403/
+latency/emptytail/paired copy implemented; browser helper extends actual real
+Nginx/SQLite decisions with205 actual API decision records, not mocked forwarding.
+ONE final independent whole-branch review/full exact-head CI/raw/fouractualarchives/
+source/static/screenshots/expectedhead/main still mandatory; not accepted or merged.
+
 ## HTTP decision audit acquisition — 2026-10-20T11:40Z
 Owner codex/http-decision-audit; lease12:40Z or earlier verified-main release.
 Fresh Core81ec5bc/tree1b04ceb9/main39405913826 and Agent665c9a4/tree5907b051/

@@ -1,5 +1,14 @@
 # 自动交付检查点
 
+## HTTP决策审计实现 — 2026-10-20T11:50Z
+同一负责人/租约12:40Z，PR44。测试先行远端cda2127，真实Chromium在缺少HTTP
+decisions按钮处RED，CI39416795817/web118607673736原始日志已保存。模型缺失与
+重复贡献ID断言先失败再修复；完整38Node无fail/skip。锁文件Web与Go vet/build
+通过；普通/race仅既有Unix授权socket EPERM，不算原生成功。已实现子视图、50条
+游标/200窗口、清理/401/403/延迟过时/空尾页/双语；浏览器扩展真实Nginx/SQLite
+记录并增加205次实际API决策，不冒充转发。唯一全分支独立评审及最终精确head
+原生CI/日志/四份实际归档/源码/静态/截图/expectedhead/main仍必需，尚未验收合并。
+
 ## HTTP决策审计接续 — 2026-10-20T11:40Z
 负责人codex/http-decision-audit；短租约12:40Z或验证main后提前释放。Core81ec5bc/
 tree1b04ceb9/main39405913826与Agent665c9a4/tree5907b051/main39412700638通过，
