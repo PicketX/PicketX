@@ -6,6 +6,22 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { spawnSync } from 'node:child_process'
 import { copyPrivateState, snapshotPrivateTree, relocateInstanceConfig } from './controller-state-copy.mjs'
+import * as stateCopy from './controller-state-copy.mjs'
+
+for (const kind of ['binding bytes', 'provider object']) test(`private ${kind} mismatch rejects without disclosing either document`, () => {
+  const markers = ['SUBJECT-PRIVATE-A', 'PRINCIPAL-PRIVATE-A', 'GENERATION-PRIVATE-A', 'ISSUER-PRIVATE-A', 'CLIENT-PRIVATE-A', 'SECRET-PRIVATE-A', 'SUBJECT-PRIVATE-B', 'PRINCIPAL-PRIVATE-B', 'GENERATION-PRIVATE-B', 'ISSUER-PRIVATE-B', 'CLIENT-PRIVATE-B', 'SECRET-PRIVATE-B']
+  const document = offset => Object.fromEntries(['subject', 'principal', 'generation', 'issuer', 'client_id', 'client_secret'].map((key, i) => [key, markers[offset + i]]))
+  const actual = kind === 'binding bytes' ? JSON.stringify(document(0)) : document(0)
+  const expected = kind === 'binding bytes' ? JSON.stringify(document(6)) : document(6)
+  stateCopy.assertPrivateStateEqual(actual, structuredClone(actual))
+  let failure
+  try { stateCopy.assertPrivateStateEqual(actual, expected) } catch (error) { failure = error }
+  assert(failure instanceof assert.AssertionError, 'unequal private state must reject')
+  // The runner prints this stack after literal credential redaction. Neither
+  // complete document nor unknown private fields may reach that public boundary.
+  for (const marker of markers) assert(!failure.stack.includes(marker), 'private marker reached public failure output')
+  assert.equal(failure.message, 'private restored state differs')
+})
 
 async function fixture(t) {
   const dir = await mkdtemp(join(tmpdir(), 'picketx-state-test-'))
@@ -58,4 +74,29 @@ test('relocation changes only four exact instance paths, retaining authority and
 test('relocation rejects a path outside original complete instance', () => {
   const c = config(); c.database = '/operator/live.sqlite'
   assert.throws(() => relocateInstanceConfig(c, '/private/old', '/private/new'))
+})
+test('optional OIDC runtime path follows the complete private instance', () => {
+  const original = config(); original.browser.oidc_config = '/private/old/identity/provider.json'
+  const actual = relocateInstanceConfig(original, '/private/old', '/private/new')
+  assert.equal(actual.browser.oidc_config, '/private/new/identity/provider.json')
+  assert.equal(actual.browser.assets, '/bundle/web'); assert.equal(actual.agent.authority, 'authority-stays')
+  assert.equal(original.browser.oidc_config, '/private/old/identity/provider.json')
+})
+test('optional OIDC runtime relocation refuses unknown or external private paths', () => {
+  for (const path of ['/operator/identity/provider.json', '/private/old/identity/../provider.json', 'identity/provider.json']) {
+    const original = config(); original.browser.oidc_config = path
+    assert.throws(() => relocateInstanceConfig(original, '/private/old', '/private/new'))
+    assert.equal(original.browser.oidc_config, path)
+  }
+})
+test('nested provider relocation preserves every nonpath identity field', () => {
+  const original = { issuer: 'https://identity.example.test', client_id: 'picketx-fixture', client_secret: 'not-a-real-secret', bindings: '/private/old/identity/bindings.json' }
+  const actual = stateCopy.relocateOIDCProvider(original, '/private/old', '/private/new')
+  assert.deepEqual(actual, { issuer: 'https://identity.example.test', client_id: 'picketx-fixture', client_secret: 'not-a-real-secret', bindings: '/private/new/identity/bindings.json' })
+  assert.equal(original.bindings, '/private/old/identity/bindings.json')
+})
+test('nested provider relocation refuses missing or external binding state', () => {
+  for (const bindings of [undefined, '', '/operator/bindings.json', '/private/old/identity/../bindings.json']) {
+    assert.throws(() => stateCopy.relocateOIDCProvider({ bindings }, '/private/old', '/private/new'))
+  }
 })

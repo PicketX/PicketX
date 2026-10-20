@@ -1,5 +1,29 @@
 # Autonomous delivery checkpoint
 
+## Installed OIDC recovery review correction — 2026-10-20T05:05Z
+Same owner codex/oidc-restore, PR40, heartbeat05:05Z, lease05:35Z or explicit
+release/merged+fully-verified main. One whole-branch review0Critical/1Important/
+1Minor, With fixes; root ONE regression-first pass replaces private document
+assertion diffs with boolean/fixed diagnostic. Two real RED→GREEN disclosure
+regressions; Node23 pass. Screenshot filename1440 actually1280 deferred/reported.
+All declined-scope rulings/costs: validation/OIDC_RESTORE_REVIEW*.md. Candidate
+39371678322 green260/660 and four actual archives is NOT final corrected-head proof.
+Fresh complete native/raw/source/four actual archives/expected-head/main remain
+mandatory. Final receipts/immediate release in PR40 supersede pending source text.
+Whole goal active; actual deployed IdP/HTTPS/installed full conjunction still next.
+
+## Installed OIDC recovery acquisition — 2026-10-20T04:42Z
+Owner codex/oidc-restore; short lease05:35Z or explicit release/merged+verified main.
+Fresh Core72ab5d0/tree69500be/main39364792738 and Agent0255d4d/treeced537d/
+main39347548020 green; no open PR, PR39 explicitly released03:38:40Z. Existing clean
+linked worktree switched from exact fetched main, originals retained. Spec/plan:
+superpowers/{specs,plans}/2026-10-20-oidc-restore.md. Complete stopped private provider/
+nested binding path +actual fresh OIDC browser restoration; all old gates retained.
+Signed protocol fixture NOT production IdP. No Agent/kernel/runtime/UI changes;
+deployed real IdP/HTTPS/installed Agent conjunction remains next. One fresh final
+review/full native/raw/four actual archives/expected-head/main required. Final exact
+receipt and immediate lease release belong in this PR. Whole goal remains active.
+
 ## OIDC review correction — 2026-10-20T02:05Z
 Same owner codex/oidc-login, heartbeat02:05Z, lease02:35Z or explicit release/
 merged+fully-verified main. PR39 active. ONE whole-branch review0Critical/2Important,

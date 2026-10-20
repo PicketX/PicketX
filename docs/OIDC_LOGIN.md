@@ -103,10 +103,15 @@ Counters/sessions/pending state are process-local, not HA/distributed quotas.
 Keep the provider and binding files inside the private instance directory when
 backing up the complete stopped instance, or separately include every external
 referenced file. A restore to a different path also requires explicitly reviewing
-`browser.oidc_config` and the nested provider `bindings` path; the existing
-test-only four-path relocation helper does not rewrite those. Installed OIDC
-service/backup/restore acceptance is still pending; existing non-OIDC restore
-evidence is not evidence for this optional configuration.
+`browser.oidc_config` and the nested provider `bindings` path. The test/deployment
+verification utility supports the exact in-instance `identity/provider.json` and
+`identity/bindings.json` layout in addition to the original four paths; it refuses
+unexpected/external OIDC paths. It is not a general backup/migration API. The
+native installed service suite keeps the original password/key flow and adds
+real OIDC login before stop and after complete private-state relocation, old
+cookie rejection, exact account/roles/revision and restored binding withdrawal.
+Its issuer remains a signed protocol fixture, not deployed-provider or installed
+Agent conjunction evidence. Final exact-run receipts live in the delivery PR.
 
 ## Evidence boundary
 

@@ -1,5 +1,26 @@
 # 自动交付检查点
 
+## 安装版OIDC恢复评审修复 — 2026-10-20T05:05Z
+同owner codex/oidc-restore，PR40，heartbeat05:05Z，租约05:35Z或明确释放/合并且
+main完整验证。一次全分支评审0Critical/1Important/1Minor、With fixes；root同轮
+先回归再修复私有文档断言diff，改布尔比较＋固定提示。两个实际泄露RED→GREEN，
+Node23通过。图片名1440实际1280明确延期/按实汇报。全部保留判断/代价见
+validation/OIDC_RESTORE_REVIEW*.md。候选39371678322绿260/660和四实际归档不是
+最终修复head证据；新完整native/原始日志/源码/四归档/expected-head/main仍必需。
+最终准确证据/即时释放写PR40且优先于源码pending。整体继续，实际IdP/HTTPS/
+安装版完整闭环仍是后续。
+
+## 安装版 OIDC 停服恢复接续 — 2026-10-20T04:42Z
+Owner codex/oidc-restore，短租约05:35Z或明确释放/合并且main完整验证。
+最新 Core72ab5d0/tree69500be/main39364792738、Agent0255d4d/treeced537d/
+main39347548020全绿；无开放PR，PR39已03:38:40Z明确释放。既有干净隔离工作区
+从准确远端main建新分支，保留原目录。设计/计划：superpowers/{specs,plans}/
+2026-10-20-oidc-restore.md。补齐私有provider及嵌套bindings路径的完整停服迁移、
+恢复后真实OIDC登录；保留全部旧门禁。签名协议fixture不是生产IdP；不改变
+Agent/内核/运行时/UI。真实IdP/HTTPS/安装版Agent联合验证仍是后续；单次独立
+全分支评审、完整原生CI/原始日志/四份实际归档/expected-head合并及main复核必需。
+本PR最终记录准确证据并立即释放租约，整体目标仍继续。
+
 ## OIDC 评审修复 — 2026-10-20T02:05Z
 同owner codex/oidc-login，heartbeat02:05Z，租约02:35Z或明确释放/合并且main完整验证。
 PR39活跃。一次全分支评审0Critical/2Important、With fixes；root同一轮回归优先修复：
