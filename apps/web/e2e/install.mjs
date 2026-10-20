@@ -147,6 +147,9 @@ try {
   if (service) {
     // Additional context: preserve the original password flow and all its gates.
     const external = await browser.newContext(), oidcPage = await external.newPage()
+    // Existing Accounts form starts with requester; checking Admin adds to it.
+    // Exact local roles, not the fixture token's admin claim, are authoritative.
+    assert.deepEqual(accounts.accounts[0].roles, ['role:requester', 'role:admin'])
     const bindingBytes = JSON.stringify({ bindings: [{ subject: 'installed-operator', principal_id: accounts.accounts[0].id, generation: randomBytes(16).toString('hex') }] })
     await writeFile(join(instance, 'identity/bindings.json'), bindingBytes)
     async function oidcLogin() {
@@ -156,7 +159,7 @@ try {
       await oidcPage.getByRole('link', { name: 'Continue as test user', exact: true }).click()
       await oidcPage.getByRole('heading', { name: 'Desired configuration', exact: true }).waitFor()
       const response = await external.request.get(origin + '/console/api/v1/me'); assert.equal(response.status(), 200)
-      const identity = await response.json(); assert.equal(identity.id, accounts.accounts[0].id); assert.deepEqual(identity.roles, ['role:admin'])
+      const identity = await response.json(); assert.equal(identity.id, accounts.accounts[0].id); assert.deepEqual(identity.roles, ['role:requester', 'role:admin'])
       const publication = await external.request.get(origin + '/console/api/v1/publication'); assert.equal(publication.status(), 200)
       assert.equal((await publication.json()).revision, 2)
       assert.equal(await oidcPage.evaluate(() => localStorage.length + sessionStorage.length), 0)
