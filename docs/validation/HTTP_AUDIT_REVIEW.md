@@ -72,3 +72,9 @@ The reviewer explicitly considered and set aside each behavior below; root rules
 
 Final exact receipts and explicit lease release live in PR44 metadata; source
 pending text does not supersede later immutable evidence.
+
+Native39419815539/web118617663623 passed the new observed-capability and clock
+boundaries, then exposed an invalid reset expectation: initial history had26rows;
+after205 actual new decisions the current oldest page correctly has50. Compare
+reset/re-entry against a fresh actual query, never the obsolete initial snapshot.
+No product behavior or required scenario is changed/removed. Final rerun required.

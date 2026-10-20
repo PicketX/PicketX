@@ -147,9 +147,12 @@ export async function populatedHTTPAudit({ browser, origin, authzPort, ingressPo
     await section.getByText('No newer HTTP decisions at the last read.', { exact: true }).waitFor()
     await section.getByText('Loaded history may be behind newer decisions. Read again to update it.', { exact: true }).waitFor()
     await page.unroute(path)
+    // The initial read had fewer than50 rows. Real205 new decisions now fill
+    // the oldest page; compare against the current actual keyset query.
+    const restartedFirst = await readPage(0)
     await section.getByRole('button', { name: 'Start from oldest', exact: true }).click()
-    await section.locator(`[data-http-decision-id="${first.events.at(-1).id}"]`).waitFor()
-    assert.deepEqual(await ids(), first.events.map(e => e.id))
+    await section.locator(`[data-http-decision-id="${restartedFirst.events[0].id}"]`).waitFor()
+    assert.deepEqual(await ids(), restartedFirst.events.map(e => e.id))
     let releaseOld, oldEntered, oldDone, blocked = false
     const oldGate = new Promise(r => { releaseOld = r }), oldWaiting = new Promise(r => { oldEntered = r }), oldComplete = new Promise(r => { oldDone = r })
     await page.route(path, async route => {
@@ -162,10 +165,10 @@ export async function populatedHTTPAudit({ browser, origin, authzPort, ingressPo
     await section.getByRole('button', { name: 'Read next decisions', exact: true }).click(); await oldWaiting
     await page.getByRole('button', { name: 'Publication history', exact: true }).click()
     await page.getByRole('button', { name: 'HTTP decisions', exact: true }).click()
-    await section.locator(`[data-http-decision-id="${first.events.at(-1).id}"]`).waitFor()
+    await section.locator(`[data-http-decision-id="${restartedFirst.events.at(-1).id}"]`).waitFor()
     releaseOld(); await oldComplete
     await page.evaluate(() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))))
-    assert.deepEqual(await ids(), first.events.map(e => e.id), 'late old-page response cannot update the new mount')
+    assert.deepEqual(await ids(), restartedFirst.events.map(e => e.id), 'late old-page response cannot update the new mount')
     await page.unroute(path)
     await section.getByRole('button', { name: 'Read next decisions', exact: true }).focus()
     assert(await section.getByRole('button', { name: 'Read next decisions', exact: true }).evaluate(e => e === document.activeElement))
