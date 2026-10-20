@@ -1,5 +1,14 @@
 # 自动交付检查点
 
+## Controller CLI诊断接续 — 2026-10-20T09:33Z
+负责人codex/controller-cli-diagnostics；租约10:45Z或已验证main后提前释放。
+Coree899b9a/tree3764b521/CI39394733598及Agentb14b54d/tree5b243935/CI39388341832已通过，
+无开放PR，PR42已08:45:54Z释放。复用干净隔离工作树，从准确main新建分支，保留其他工作。
+设计/上下文图/计划superpowers/{specs,plans}/2026-10-20-controller-cli-diagnostics.md。
+实现Cobra status/doctor，经鉴权Controller只读API区分期望、Agent报告和新鲜度，输出无密钥
+固定诊断。无API/UI/内核/DB/依赖变化。自主授权免例行确认，不免TDD/一次评审/真实CI/
+原始日志/四归档/源码/安全合并/main。最终PR证据及即时释放优先于pending，整体继续。
+
 ## 真实提供方停服恢复接续 — 2026-10-20T08:16Z
 Owner codex/real-idp-restore；租约09:15Z或主线验收完成立即释放。
 基于Core64c8cb8/tree4637c029及Agentb14b54d/tree5b243935；无打开PR。
