@@ -19,7 +19,7 @@ func (b *Browser) oidcCookie(value string, maxAge int) *http.Cookie {
 
 // startOIDC godoc
 // @Summary Start one browser-bound OIDC authorization-code transaction
-// @Description Exact Origin/Host and Echo CSRF required. Pending5min, max128, S256 PKCE and nonce. No external token is returned; provider is opt-in and local roles stay authoritative.
+// @Description Exact Origin/Host and Echo CSRF required. Revokes the originating local session before external navigation. Pending5min, max128, S256 PKCE and nonce. No external token is returned; provider is opt-in and local roles stay authoritative.
 // @ID browserOIDCStart
 // @Tags console
 // @Produce json
@@ -29,6 +29,11 @@ func (b *Browser) oidcCookie(value string, maxAge int) *http.Cookie {
 // @Failure 400,403,429,503 {object} APIError
 // @Router /console/api/v1/oidc/start [post]
 func (b *Browser) startOIDC(c *echo.Context) error {
+	// The external callback omits the Strict SCS cookie. Revoke its originating
+	// session here, under wrap's same-token lock, before emitting a usable URL.
+	if err := b.sessions.Destroy(c.Request().Context()); err != nil {
+		return apiError(c, 503, "session_unavailable")
+	}
 	auth, _, correlation, e := b.oidc.Start()
 	if e != nil {
 		return apiError(c, 503, "oidc_unavailable")

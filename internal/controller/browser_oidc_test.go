@@ -48,9 +48,17 @@ func TestBrowserOIDCProtectedStartCorrelationAndSafeCallback(t *testing.T) {
 	if w := c.request("POST", "/console/api/v1/oidc/start", "", "http://127.0.0.1:8080", ""); w.Code != 403 {
 		t.Fatal("missing CSRF", w.Code)
 	}
+	if w := c.request("POST", "/console/api/v1/login", `{"token":"`+managementToken+`"}`, "http://127.0.0.1:8080", c.csrf); w.Code != 200 {
+		t.Fatal("seed login", w.Code)
+	}
+	oldCookie := *c.cookies["picketx_session"]
 	w := c.request("POST", "/console/api/v1/oidc/start", "", "http://127.0.0.1:8080", c.csrf)
 	if w.Code != 200 {
 		t.Fatal("start", w.Code, w.Body.String())
+	}
+	old := &browserClient{h: h, cookies: map[string]*http.Cookie{"picketx_session": &oldCookie}}
+	if replay := old.request("GET", "/console/api/v1/me", "", "", ""); replay.Code != 401 {
+		t.Fatal("OIDC replacement left originating session valid", replay.Code)
 	}
 	var body struct {
 		URL string `json:"url"`

@@ -1,5 +1,22 @@
 # Autonomous delivery checkpoint
 
+## OIDC review correction — 2026-10-20T02:05Z
+Same owner codex/oidc-login, heartbeat02:05Z, lease02:35Z or explicit release/
+merged+fully-verified main. PR39 active. ONE whole-branch review0Critical/2Important,
+With fixes; root ONE regression-first pass revokes originating SCS before cross-site
+navigation (actual old-cookie200 RED→race GREEN), replaces invalid mixed empty-marker
+browser fixture with literal Resource and exact persisted revision/audit assertions.
+Local full normal/race only inherited Unix EPERM, focused four-package race/vet/build
+and locked Web checks pass. Real initial missing-button RED39355817801 then actual
+login/invalid-publication RED39356233386 preserved, neither is acceptance. All12
+declined-scope rulings/costs and deferred transport-fault test breadth:
+validation/OIDC_LOGIN_REVIEW*.md. Corrected native full browser/Go/install/raw/source/
+four actual archives/expected-head merge/main still REQUIRED. No second review or
+platform approval fabricated. Final exact immutable receipts and immediate release
+belong in PR39 metadata, superseding pending source paragraphs. Next actual deployed
+IdP + installed Controller/Agent/Nginx/app and OIDC restore; signed issuer fixture
+does not prove those or whole-goal completion. Do not repeat delivered Agent/LKG work.
+
 ## OIDC acquisition — 2026-10-20T01:41Z
 Owner codex/oidc-login; heartbeat01:41Z; short lease02:35Z or explicit release/
 merged+verified main. Fresh Coreadfa1b1/tree7a5cbb6/main39339061250 and Agent0255d4d/

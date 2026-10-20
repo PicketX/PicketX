@@ -62,6 +62,9 @@ bucket6/minute/burst5 applies. State, nonce, verifier and browser correlation ar
 independent256bit values. Pending transactions are one-use, max128, expire after
 5minutes and are lost on restart. Starting another flow overwrites that browser's
 correlation cookie; finish the latest flow or restart sign-in.
+Starting replacement sign-in also destroys the originating PicketX session before
+leaving the site, even if provider authentication later fails. This prevents a
+captured old Strict cookie surviving a cross-site replacement and later logout.
 
 Only a top-level GET callback is supported, not form_post/implicit/hybrid. A
 separate callback-path HttpOnly SameSite=Lax cookie allows cross-site return.

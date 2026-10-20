@@ -75,7 +75,14 @@ browser: {enabled: true, origin: ${JSON.stringify(origin)}, assets: ${JSON.strin
     await page.getByRole('button', { name: '使用组织账户登录', exact: true }).waitFor(); await page.screenshot({ path: join(evidence, 'oidc-login-zh-1440.png'), fullPage: true })
     await page.getByRole('button', { name: '语言', exact: true }).click()
     async function login() { await page.getByRole('button', { name: 'Continue with organization', exact: true }).click(); await page.getByRole('heading', { name: 'Signed OIDC test issuer' }).waitFor(); await page.getByRole('link', { name: 'Continue as test user' }).click() }
-    await login(); await page.getByRole('heading', { name: 'Desired configuration', exact: true }).waitFor(); await page.getByText(account.id, { exact: true }).waitFor()
+    // A stale signed-out tab can initiate replacement while another tab has a
+    // session. The Strict cookie is absent at cross-site callback, so start must
+    // revoke that original token under its existing same-session request lock.
+    await page.getByLabel('Access key', { exact: true }).fill(token); await page.getByRole('button', { name: 'Sign in', exact: true }).click(); await page.getByRole('heading', { name: 'Desired configuration', exact: true }).waitFor()
+    const originatingCookie = (await context.cookies()).find(c => c.name === 'picketx_session')
+    const start = await page.evaluate(async () => (await fetch('/console/api/v1/oidc/start', { method: 'POST' })).json())
+    assert.equal((await fetch(`${origin}/console/api/v1/me`, { headers: { Cookie: `picketx_session=${originatingCookie.value}` } })).status, 401)
+    await page.goto(start.url); await page.getByRole('link', { name: 'Continue as test user' }).click(); await page.getByRole('heading', { name: 'Desired configuration', exact: true }).waitFor(); await page.getByText(account.id, { exact: true }).waitFor()
     const cookie = (await context.cookies()).find(c => c.name === 'picketx_session'); assert(cookie?.httpOnly && cookie.sameSite === 'Strict'); assert(!(await context.cookies()).some(c => c.name === 'picketx_oidc'))
     const me = await (await context.request.get(`${origin}/console/api/v1/me`)).json(); assert.equal(me.id, account.id); assert.deepEqual(me.roles, ['role:admin'])
     assert.equal(await page.evaluate(() => localStorage.length + sessionStorage.length), 0)
@@ -107,6 +114,7 @@ browser: {enabled: true, origin: ${JSON.stringify(origin)}, assets: ${JSON.strin
     await page.goto(`${origin}/console/`); await login(); await page.getByRole('heading', { name: 'Desired configuration', exact: true }).waitFor()
     const logoutCookie = (await context.cookies()).find(c => c.name === 'picketx_session'); await page.getByRole('button', { name: 'Sign out', exact: true }).click()
     assert.equal((await fetch(`${origin}/console/api/v1/me`, { headers: { Cookie: `picketx_session=${logoutCookie.value}` } })).status, 401)
+    assert.equal((await fetch(`${origin}/console/api/v1/me`, { headers: { Cookie: `picketx_session=${originatingCookie.value}` } })).status, 401)
     assert.deepEqual(errors, []); assert(!logs.includes(secret) && !logs.includes('fixture-not-persisted'))
     console.log('PASS actual cross-site Chromium → signed OIDC protocol fixture → Controller SCS/Casbin → SQLite publication/audit, fresh roles/binding/replay/nonce/logout; fixture is NOT a production IdP')
   } finally {

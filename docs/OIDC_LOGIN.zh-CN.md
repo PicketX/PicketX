@@ -32,6 +32,8 @@ generation用16随机字节的小写hex，示例说明不是可用值。最多12
 额外直接peer本地限流6次/分钟、突发5。独立256bit state/nonce/verifier/关联随机值；
 最多128个待处理、绝对5分钟、一次消费、重启丢失。新尝试覆盖该浏览器关联Cookie，
 请完成最新一次。只支持顶层GET回调，不支持form_post、implicit或hybrid。
+开始替换登录时先销毁原PicketX会话，即使随后IdP认证失败也不保留原会话。
+跨站返回不会发送Strict Cookie，因此必须在离站前撤销旧Cookie，不能只在回调销毁。
 
 回调用单独路径限定HttpOnly SameSite=Lax Cookie；普通SCS保持Strict，HTTPS均Secure。
 校验state/关联/PKCE、精确issuer、audience、签名、expiry、nonce、非空subject、iat/azp。

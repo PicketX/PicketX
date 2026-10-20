@@ -8129,7 +8129,7 @@
         },
         "/console/api/v1/oidc/start": {
             "post": {
-                "description": "Exact Origin/Host and Echo CSRF required. Pending5min, max128, S256 PKCE and nonce. No external token is returned; provider is opt-in and local roles stay authoritative.",
+                "description": "Exact Origin/Host and Echo CSRF required. Revokes the originating local session before external navigation. Pending5min, max128, S256 PKCE and nonce. No external token is returned; provider is opt-in and local roles stay authoritative.",
                 "operationId": "browserOIDCStart",
                 "parameters": [
                     {
