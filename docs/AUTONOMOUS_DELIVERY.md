@@ -1,5 +1,17 @@
 # Autonomous delivery checkpoint
 
+## Installed OIDC recovery acquisition — 2026-10-20T04:42Z
+Owner codex/oidc-restore; short lease05:35Z or explicit release/merged+verified main.
+Fresh Core72ab5d0/tree69500be/main39364792738 and Agent0255d4d/treeced537d/
+main39347548020 green; no open PR, PR39 explicitly released03:38:40Z. Existing clean
+linked worktree switched from exact fetched main, originals retained. Spec/plan:
+superpowers/{specs,plans}/2026-10-20-oidc-restore.md. Complete stopped private provider/
+nested binding path +actual fresh OIDC browser restoration; all old gates retained.
+Signed protocol fixture NOT production IdP. No Agent/kernel/runtime/UI changes;
+deployed real IdP/HTTPS/installed Agent conjunction remains next. One fresh final
+review/full native/raw/four actual archives/expected-head/main required. Final exact
+receipt and immediate lease release belong in this PR. Whole goal remains active.
+
 ## OIDC review correction — 2026-10-20T02:05Z
 Same owner codex/oidc-login, heartbeat02:05Z, lease02:35Z or explicit release/
 merged+fully-verified main. PR39 active. ONE whole-branch review0Critical/2Important,
