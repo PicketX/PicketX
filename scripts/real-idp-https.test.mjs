@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import assert from 'node:assert/strict'
 import { test, before, after } from 'node:test'
-import { mkdtemp, readFile, rm } from 'node:fs/promises'
+import { mkdtemp, mkdir, readFile, writeFile, stat, readdir, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import https from 'node:https'
@@ -43,4 +43,26 @@ test('oversized HTTPS body is refused without returning private bytes', async ()
 test('invalid successful JSON never appears in diagnostics', async () => {
   const response = await helper.requestHTTPS(origin + '/invalid', { ca: await readFile(tls.ca) })
   assert.throws(() => response.json(), { message: 'HTTPS response JSON invalid' })
+})
+
+for (const outcome of ['success', 'failure']) test(`provider state is private and removed after ${outcome}, input distribution unchanged`, async () => {
+  const root = await mkdtemp(join(tmpdir(), 'picketx-provider-lifecycle-'))
+  const source = join(root, 'input'), owned = join(root, 'owned')
+  try {
+    await mkdir(join(source, 'bin'), { recursive: true }); await mkdir(join(source, 'data'))
+    await writeFile(join(source, 'bin/kc.sh'), 'pristine provider executable', { mode: 0o755 })
+    await mkdir(owned, { mode: 0o700 })
+    const home = await helper.stagePrivateProvider(source, owned), database = join(home, 'data/runtime-state')
+    const mode = (await stat(home)).mode & 0o777
+    try {
+      // Real filesystem runtime mutation, not a mocked cleanup assertion.
+      await writeFile(database, 'disposable provider persistent state')
+      if (outcome === 'failure') throw new Error('controlled deployment failure')
+    } catch (error) { assert.equal(error.message, 'controlled deployment failure') }
+    finally { await rm(owned, { recursive: true, force: true }) }
+    await assert.rejects(stat(database), { code: 'ENOENT' }, 'provider runtime state survived owned-tree cleanup')
+    assert.equal(mode, 0o700); assert.notEqual(home, source)
+    assert.equal(await readFile(join(source, 'bin/kc.sh'), 'utf8'), 'pristine provider executable')
+    assert.deepEqual(await readdir(join(source, 'data')), [])
+  } finally { await rm(root, { recursive: true, force: true }) }
 })

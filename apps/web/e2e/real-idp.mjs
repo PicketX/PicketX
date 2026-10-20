@@ -2,7 +2,7 @@
 // Actual upstream Keycloak + installed Controller, not a protocol fixture.
 // Run ONLY in disposable CI: the owned temporary CA is added to user NSS trust.
 import assert from 'node:assert/strict'
-import { mkdtemp, mkdir, readFile, writeFile, rm } from 'node:fs/promises'
+import { mkdtemp, mkdir, readFile, writeFile, stat, rm } from 'node:fs/promises'
 import { tmpdir, homedir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { spawn, spawnSync } from 'node:child_process'
@@ -10,11 +10,11 @@ import { once } from 'node:events'
 import { randomBytes } from 'node:crypto'
 import { chromium } from 'playwright'
 import { freePort } from './ingress.mjs'
-import { createTestCertificate, requestHTTPS } from '../../../scripts/real-idp-https.mjs'
+import { createTestCertificate, requestHTTPS, stagePrivateProvider } from '../../../scripts/real-idp-https.mjs'
 
-const bundle = resolve(process.argv[2] ?? '/missing-bundle'), keycloak = resolve(process.argv[3] ?? '/missing-keycloak')
+const bundle = resolve(process.argv[2] ?? '/missing-bundle'), keycloakSource = resolve(process.argv[3] ?? '/missing-keycloak')
 const archiveSHA256 = '4e2740b181faa2ea623a1c2ecf00855935311e546046e2f857615a47ed24cbe8'
-let phase = 'setup', directory, browser, context, trustLabel, realmFile, activePage, siteOrigins, completed = false
+let phase = 'setup', directory, browser, context, trustLabel, activePage, siteOrigins, completed = false
 const children = [], observations = { s256: false, nonce: false }
 const nss = join(homedir(), '.pki/nssdb')
 const command = (bin, args, options = {}) => {
@@ -52,6 +52,7 @@ try {
   const source = JSON.parse(await readFile(join(bundle, 'SOURCE.json'), 'utf8'))
   assert.match(source.commit, /^[a-f0-9]{40}$/); assert.match(source.tree, /^[a-f0-9]{40}$/)
   phase = 'provider-version'
+  const keycloak = await stagePrivateProvider(keycloakSource, privateDir)
   assert(command(join(keycloak, 'bin/kc.sh'), ['--version']).includes('26.8.1'), 'pinned actual provider version')
   await mkdir(join(keycloak, 'data/import'), { recursive: true, mode: 0o700 })
   const importPath = join(keycloak, 'data/import/picketx-acceptance-realm.json')
@@ -59,7 +60,7 @@ try {
     realm: 'picketx-acceptance', enabled: true, sslRequired: 'all', registrationAllowed: false,
     users: [{ id: subject, username: 'picketx-operator', enabled: true, emailVerified: true, firstName: 'Test', lastName: 'Operator', email: 'operator@example.test', credentials: [{ type: 'password', value: password, temporary: false }] }],
     clients: [{ clientId: 'picketx-installed', enabled: true, protocol: 'openid-connect', publicClient: false, secret, standardFlowEnabled: true, directAccessGrantsEnabled: false, redirectUris: [origin + '/console/api/v1/oidc/callback'], webOrigins: [origin], attributes: { 'pkce.code.challenge.method': 'S256' } }],
-  }), { mode: 0o600, flag: 'wx' }); realmFile = importPath
+  }), { mode: 0o600, flag: 'wx' })
   phase = 'provider-start'
   const provider = start(join(keycloak, 'bin/kc.sh'), ['start', '--db=dev-file', '--http-enabled=false', '--http-host=127.0.0.2', `--https-port=${providerPort}`, `--hostname=${providerOrigin}`, `--https-certificate-file=${certificate.cert}`, `--https-certificate-key-file=${certificate.key}`, '--import-realm'], { ...process.env, JAVA_OPTS_APPEND: '-Xms128m -Xmx512m' })
   await ready(provider, async () => (await requestHTTPS(issuer + '/.well-known/openid-configuration', { ca })).status === 200)
@@ -145,6 +146,10 @@ try {
   await stop(core, true); await stop(nginx); await stop(provider)
   phase = 'cleanup-trust'
   command('certutil', ['-D', '-d', `sql:${nss}`, '-n', trustLabel]); trustLabel = undefined
+  phase = 'cleanup-state'
+  await rm(directory, { recursive: true, force: true })
+  await assert.rejects(stat(keycloak), { code: 'ENOENT' }, 'owned provider state was not removed')
+  directory = undefined
   await writeFile(join(evidence, 'real-idp-report.json'), JSON.stringify({ result: 'pass', source, provider: { kind: 'real-keycloak', version: '26.8.1', archiveSHA256, disposable: true }, runtimePATH: 'empty', proofs: { normalVerifiedTLS: true, unknownCARejected: true, wrongSANRejected: true, realPasswordRejected: true, validUnboundRejected: true, explicitSubjectBinding: true, s256: true, nonce: true, secureLaxCorrelation: true, secureStrictSession: true, correlationCleared: true, noBrowserTokenStorage: true, sameLocalPrincipal: true, humanPublicationAndAudit: true, currentLocalRoles: true, oldCookieRejected: true, viewerWriteDenied: true, bindingWithdrawalDenied: true, localLogout: true, ownedTrustRemoved: true, cleanControllerShutdown: true } }, null, 2) + '\n')
   console.log('PASS actual Keycloak26.8.1 → normal CA/SAN HTTPS → installed Controller/React/SCS/Casbin/SQLite: password/unbound denial, Secure cookies, current roles, publication/audit and revoke/logout; disposable real provider NOT production deployment or Agent conjunction')
   completed = true
@@ -164,7 +169,6 @@ finally {
   await context?.close().catch(() => {}); await browser?.close().catch(() => {})
   for (const child of children.toReversed()) { try { await stop(child) } catch { console.error('Real IdP owned-process cleanup failed'); process.exitCode = 1 } }
   if (trustLabel) { try { command('certutil', ['-D', '-d', `sql:${nss}`, '-n', trustLabel]) } catch { console.error('Real IdP owned-trust cleanup failed'); process.exitCode = 1 } }
-  if (realmFile) await rm(realmFile).catch(() => { console.error('Real IdP owned-import cleanup failed'); process.exitCode = 1 })
   if (directory) await rm(directory, { recursive: true, force: true }).catch(() => { console.error('Real IdP owned-state cleanup failed'); process.exitCode = 1 })
 }
 assert(completed || process.exitCode === 1)

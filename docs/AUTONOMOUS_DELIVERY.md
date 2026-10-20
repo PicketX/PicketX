@@ -1,5 +1,17 @@
 # Autonomous delivery checkpoint
 
+## Real-provider review correction — 2026-10-20T06:10Z
+Same owner codex/real-idp-https, PR41, lease06:45Z or explicit verified-main release.
+One whole-branch review0Critical/1Important/0Minor, With fixes. Root retained
+provider dev-file DB outside private cleanup; real success/failure filesystem
+regressions RED→GREEN with unique private distribution copy, never deleting or
+mutating caller input. CombinedNode32 pass. Full rulings/costs:
+validation/REAL_IDP_HTTPS_REVIEW*.md. Candidate39377577216 all3jobs/steps green,
+Go260/660, actual Keycloak26.8.1/HTTPS/installed browser, four archives verified;
+NOT corrected-head evidence. New full native/raw/source/four archives/expected-head/
+fresh main still required; final receipt/immediate release in PR41 supersedes this.
+No product UI/Agent change; installed OIDC/Agent/ingress/application next, goal active.
+
 ## Real IdP/HTTPS acquisition — 2026-10-20T05:39Z
 Owner codex/real-idp-https, short lease06:45Z or explicit release/verified merged main.
 Core0b3d8c1/tree98f977d/main39373684266, Agent0255d4d/treeced537d/main39347548020

@@ -2,8 +2,17 @@
 // Integration utilities only: normal CA/SAN verification, never a TLS bypass.
 import https from 'node:https'
 import { spawnSync } from 'node:child_process'
-import { chmod, writeFile } from 'node:fs/promises'
+import { chmod, cp, mkdtemp, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
+
+export async function stagePrivateProvider(source, privateDirectory) {
+  // Never run from, mutate, or delete the caller's verified input distribution.
+  // The parent is an owned 0700 tree, including while cp preserves source modes.
+  const home = join(await mkdtemp(join(privateDirectory, 'provider-')), 'keycloak')
+  await cp(source, home, { recursive: true, force: false, errorOnExist: true })
+  await chmod(home, 0o700)
+  return home
+}
 
 export async function createTestCertificate(directory) {
   const ca = join(directory, 'ca.pem'), cert = join(directory, 'leaf.pem'), key = join(directory, 'leaf.key')

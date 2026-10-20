@@ -1,5 +1,15 @@
 # 自动交付检查点
 
+## 真实Provider评审修复 — 2026-10-20T06:10Z
+同owner codex/real-idp-https，PR41，租约06:45Z或明确main完整验证后释放。
+一次全分支评审0Critical/1Important/0Minor、With fixes。root保留Provider dev-file
+DB未纳入私有清理问题，成功/失败两条真实文件系统回归RED→GREEN，改唯一私有发行副本，
+不修改/删除调用方输入。合并Node32过。完整裁决/代价：validation/REAL_IDP_HTTPS_REVIEW*.md。
+候选39377577216全部3job/step绿，Go260/660、真实Keycloak26.8.1/HTTPS/安装版浏览器
+及四实际归档核验；不是修复head证据。仍需新完整native/原始日志/源码/四归档/expected-head/
+新main；最终证据和即时释放写PR41且优先于本段。无产品UI/Agent变化；安装版OIDC/Agent/
+入口/应用完整联合验收仍下一段，整体继续。
+
 ## 真实IdP/HTTPS接续 — 2026-10-20T05:39Z
 Owner codex/real-idp-https，短租约06:45Z或明确释放/合并且main完整验证。
 Core0b3d8c1/tree98f977d/main39373684266、Agent0255d4d/treeced537d/main39347548020

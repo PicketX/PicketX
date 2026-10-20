@@ -29,18 +29,19 @@ Nginx and exact existing account/session APIs; retain all original gates.
 requestHTTPS(url,{ca,method,headers,body}) -> {status,headers,body,json()};
 real-idp.mjs BUNDLE KEYCLOAK_DIRECTORY -> real-idp-report.json +success PNG.
 
-- [ ] Add actual TLS server tests: explicit CA success, no CA failure, wrong SAN failure,
+- [x] Add actual TLS server tests: explicit CA success, no CA failure, wrong SAN failure,
   HTTP rejection, bounded request timeout and fixed diagnostic without payload.
-- [ ] Observe missing helper RED, implement minimal strict TLS helper and rerun GREEN.
-- [ ] Implement real Keycloak realm/import/TLS lifecycle and Nginx/installed Controller;
+- [x] Observe missing helper RED, implement minimal strict TLS helper and rerun GREEN.
+- [x] Implement real Keycloak realm/import/TLS lifecycle and Nginx/installed Controller;
   native browser asserts wrong password/unbound identity, exact bound principal,
   S256/nonce/cookies, publication/audit, role generation401/newviewer403/revoke/logout.
-- [ ] Add pinned SHA download/JDK21/certutil and mandatory native script step, preserve
+- [x] Add pinned SHA download/JDK21/certutil and mandatory native script step, preserve
   every original gate. Public allowlisted receipt/success-only screenshot/phase errors.
 - [ ] Run complete Node, actual HTTP regressions, locked Web, full Go normal/race/vet/build;
   native exact-head full3jobs/no skips +real provider gate required. Synchronize docs.
-- [ ] ONE independent whole-branch review; ONE root RED→GREEN blocker pass, defer minors.
-  Final exact source/raw/four actual archives/static/notices/images, expected-head merge,
+- [x] ONE independent whole-branch review; ONE root RED→GREEN blocker pass, no new minors.
+  Private provider staging +success/failure lifecycle regressions; Node32 pass.
+- [ ] Final exact source/raw/four actual archives/static/notices/images, expected-head merge,
   fresh main full proof and immediate lease release in PR; not overall goal completion.
 
 Self-review: spec coverage and5review-focus conditions map to actual tests/native
