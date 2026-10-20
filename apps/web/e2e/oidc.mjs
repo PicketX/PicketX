@@ -79,9 +79,13 @@ browser: {enabled: true, origin: ${JSON.stringify(origin)}, assets: ${JSON.strin
     const cookie = (await context.cookies()).find(c => c.name === 'picketx_session'); assert(cookie?.httpOnly && cookie.sameSite === 'Strict'); assert(!(await context.cookies()).some(c => c.name === 'picketx_oidc'))
     const me = await (await context.request.get(`${origin}/console/api/v1/me`)).json(); assert.equal(me.id, account.id); assert.deepEqual(me.roles, ['role:admin'])
     assert.equal(await page.evaluate(() => localStorage.length + sessionStorage.length), 0)
-    const current = await (await api('/publication')).json(), policy = current.policy + '\n---\napiVersion: picketx.io/v1alpha1\nkind: Resource\nmetadata: {name: oidc-proof, uid: oidc-proof-v1}\nspec:\n  endpoints:\n  - name: web\n    network: {protocol: TCP, port: 9443}\n'
+    const current = await (await api('/publication')).json(); assert.equal(current.revision, 1)
+    // A new managed authority contains the explicit-empty marker. Replace it,
+    // never append objects to it: mixed empty/nonempty candidates must still fail.
+    const policy = 'apiVersion: picketx.io/v1alpha1\nkind: Resource\nmetadata: {name: oidc-proof, uid: oidc-proof-v1}\nspec:\n  endpoints:\n  - name: web\n    network: {protocol: TCP, port: 9443}\n'
     await page.getByLabel('Policy YAML', { exact: true }).fill(policy); await page.getByLabel('Change reason', { exact: true }).fill('OIDC verified human publication'); await page.getByRole('button', { name: 'Save desired configuration', exact: true }).click(); await page.getByText('Desired configuration saved. Node application is not confirmed.', { exact: true }).waitFor()
     assert((await (await api('/audit')).json()).events.some(e => e.actor === account.id && e.reason === 'OIDC verified human publication'))
+    const persisted = await (await api('/publication')).json(); assert.equal(persisted.revision, 2); assert.equal(persisted.policy, policy)
     // Exact replay is consumed without another token exchange, even on real navigation.
     const priorExchanges = exchanges; await page.goto(lastCallback); assert.equal(exchanges, priorExchanges)
     assert.equal((await api(`/accounts/${account.id}`, 'PUT', { roles: ['role:viewer'], disabled: false, reason: 'OIDC role generation change' }, 1)).status, 200)
