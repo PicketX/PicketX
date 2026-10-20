@@ -105,7 +105,10 @@ try {
   const correlation = (await context.cookies()).find(cookie => cookie.name === 'picketx_oidc')
   assert(correlation?.secure && correlation.httpOnly && correlation.sameSite === 'Lax', 'HTTPS correlation cookie boundary')
   phase = 'wrong-password'
-  await page.locator('#username').fill('picketx-operator'); await page.locator('#password').fill('deliberately-incorrect-password'); await page.locator('#kc-login').click(); await page.locator('#input-error').waitFor()
+  await page.locator('#username').fill('picketx-operator'); await page.locator('#password').fill('deliberately-incorrect-password'); await page.locator('#kc-login').click()
+  // The pinned release's default keycloak.v2 theme associates rejection with
+  // the username field, unlike the older base theme's global #input-error.
+  await page.locator('#input-error-username').waitFor(); await page.locator('#username[aria-invalid="true"]').waitFor()
   phase = 'valid-unbound-callback'
   await page.locator('#password').fill(password); await page.locator('#kc-login').click()
   await page.getByRole('alert').getByText('Organization sign-in failed. Try again or contact your administrator.', { exact: true }).waitFor()
@@ -151,7 +154,7 @@ try {
   if (activePage) {
     try {
       const actualOrigin = new URL(activePage.url()).origin
-      const flags = { atProvider: actualOrigin === siteOrigins.provider, atController: actualOrigin === siteOrigins.controller, usernamePresent: await activePage.locator('#username').count() > 0, passwordPresent: await activePage.locator('#password').count() > 0, providerErrorPresent: await activePage.locator('#kc-error-message').count() > 0, inputErrorPresent: await activePage.locator('#input-error').count() > 0, controllerAlertPresent: await activePage.getByRole('alert').count() > 0 }
+      const flags = { atProvider: actualOrigin === siteOrigins.provider, atController: actualOrigin === siteOrigins.controller, usernamePresent: await activePage.locator('#username').count() > 0, passwordPresent: await activePage.locator('#password').count() > 0, providerErrorPresent: await activePage.locator('#kc-error-message').count() > 0, inputErrorPresent: await activePage.locator('#input-error-username').count() > 0, controllerAlertPresent: await activePage.getByRole('alert').count() > 0 }
       console.error('Real IdP failure classification ' + JSON.stringify(flags))
     } catch { console.error('Real IdP failure classification unavailable') }
   }
