@@ -1,5 +1,30 @@
 # Autonomous delivery checkpoint
 
+## CLI diagnostics review correction — 2026-10-20T09:59Z
+Same owner codex/controller-cli-diagnostics, PR43, lease10:45Z or earlier verified-main
+release. ONE independent whole-branch review0Critical/2Important/noMinor, With fixes.
+Root verified Cobra private-argument echo and valid escape-expanding publication
+incompatibility, both real regressions RED→GREEN in ONE blocker correction pass.
+Fixed pre-RunE errors, derived bounded JSON cap and both decoded field limits;
+actual accepted Controller/API largepublication covered. Installed detached/systemd
+runner now checks actual private-argument stderr. No second review/gate bypass.
+All declined-scope rulings/costs: validation/CLI_DIAGNOSTICS_REVIEW*.md. Candidate
+39403452137 all3jobs/raw269top/701total/fouractualarchives/tree00b41005 accepted,
+NOT corrected-head proof. Corrected full native/raw/fourarchives/source/static/
+notices/images/expected-head/main still mandatory; final immutable receipt/release
+in PR43 supersedes pending source. Whole-goal audit after verified CLI integration.
+
+## Controller CLI diagnostics acquisition — 2026-10-20T09:33Z
+Owner codex/controller-cli-diagnostics; lease10:45Z or earlier verified-main release.
+Fresh Coree899b9a/tree3764b521/CI39394733598 and Agentb14b54d/tree5b243935/CI39388341832
+green; no openPR; PR42 released08:45:54Z. Existing clean isolated worktree/new exact-main
+branch, other work preserved. Spec/context/plan superpowers/{specs,plans}/2026-10-20-controller-cli-diagnostics.md.
+Implement Cobra status/doctor through authenticated Controller read APIs, truthful
+desired/reported-applied/freshness and fixed private diagnostics. No API/UI/kernel/
+DB/dependency changes. Routine design/plan/push/merge pauses waived by user, not TDD/
+one review/native/raw/fourarchives/source/expected-head/main gates. Final PR receipt
+and immediate release supersede pending source. Overall goal active.
+
 ## Real-provider stopped recovery acquisition — 2026-10-20T08:16Z
 Owner codex/real-idp-restore; lease09:15Z or explicit verified-main release earlier.
 Fresh Core64c8cb8/tree4637c029 and Agentb14b54d/tree5b243935; no open PR.

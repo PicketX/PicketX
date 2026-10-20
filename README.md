@@ -26,7 +26,7 @@ Runtime configuration loading is selected as Koanf v2.3.8, with typed module con
 
 Runtime logging uses standard-library `log/slog`, JSON stderr and injected module loggers. Managed configuration audit is separately persisted; selectable formats/levels and request-time authorization records remain pending.
 
-The `picketx` CLI uses Cobra v1.10.2 and currently supplies read-only configuration checks. The Controller now loads Koanf runtime configuration; authenticated administrative CLI commands remain unimplemented.
+The `picketx` CLI uses Cobra v1.10.2 for configuration/deployment commands and authenticated [Controller status/doctor](docs/CLI_DIAGNOSTICS.md). Diagnostics separate desired versions from current Agent assertions and never claim independent kernel verification. The Controller loads Koanf runtime configuration.
 
 SQLite is selected as the official GORM driver (v1.6.0 baseline) with mattn/go-sqlite3 (v1.14.52 baseline). Default Linux releases must be fully static without additional shared-library installation. PostgreSQL uses official gorm.io/driver/postgres v1.6.3 with pgx/v5 v5.10.0. The Controller publication store and fully static SQLite artifact smoke are implemented; PostgreSQL, business migrations and release packaging remain pending.
 

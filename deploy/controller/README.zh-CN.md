@@ -140,3 +140,19 @@ CI 辅助程序不是生产备份命令，也不是在线/多写者备份过程�
 原生 CI 在源码目录外复制安装包，运行时 PATH 为空，用真实 Chromium 完成开户、
 人员登录、发布、重启后数据库/审计读取，拒绝错误用途 key 与旧会话，并检查归档。
 这不等于已验证打包 Agent→入口→Gitea 的真实部署或主机重启。
+
+## 只读诊断
+
+由有权读取私有管理密钥的运维身份执行安装包CLI：
+
+```sh
+/opt/picketx/bin/picketx status --controller https://picketx.example.com --key-file /var/lib/picketx/controller/bootstrap-key
+/opt/picketx/bin/picketx doctor --controller https://picketx.example.com --key-file /var/lib/picketx/controller/bootstrap-key --agent node-a --format json
+```
+
+填写准确Controller origin，正常HTTPS信任，可用--ca-file增加PEM CA；仅字面回环可用HTTP。
+须独立管理密钥，Agent/入口Token不可代替；具备publication:read的viewer密钥即可。
+不跟随重定向、不用环境代理；总--timeout默认5s、最多30s。status有效读取返回0，即使
+断连/空范围；doctor在未就绪、缺少任一新鲜匹配APPLIED报告或新发布仍待应用时返回1。
+始终enforcement_confirmed=false，清楚标为Agent声明；读取失败无成功报告，不输出
+policy/facts/密钥/私有异常。命令不修复/重载，也不独立证明报文可达。

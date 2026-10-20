@@ -13,9 +13,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// New assembles local operator commands. No command opens listeners or applies rules.
+// New assembles operator commands. No command opens listeners or applies rules.
 func New(out, errOut io.Writer) *cobra.Command {
-	root := &cobra.Command{Use: "picketx", Short: "PicketX configuration diagnostics", SilenceErrors: true, SilenceUsage: true}
+	root := &cobra.Command{Use: "picketx", Short: "PicketX operator commands and diagnostics", SilenceErrors: true, SilenceUsage: true}
 	root.SetOut(out)
 	root.SetErr(errOut)
 	config := &cobra.Command{Use: "config", Short: "Validate desired network configuration"}
@@ -91,5 +91,6 @@ func New(out, errOut io.Writer) *cobra.Command {
 	root.AddCommand(passwordCommand())
 	root.AddCommand(controllerInitCommand())
 	root.AddCommand(nginxInitCommand())
+	root.AddCommand(statusCommand(false), statusCommand(true))
 	return root
 }
