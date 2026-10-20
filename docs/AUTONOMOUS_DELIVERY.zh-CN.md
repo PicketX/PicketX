@@ -1,5 +1,15 @@
 # 自动交付检查点
 
+## HTTP决策审计接续 — 2026-10-20T11:40Z
+负责人codex/http-decision-audit；短租约12:40Z或验证main后提前释放。Core81ec5bc/
+tree1b04ceb9/main39405913826与Agent665c9a4/tree5907b051/main39412700638通过，
+无开放PR；Agent29明确11:18:35Z释放已读回。复用干净隔离工作区，从准确main建新
+分支，保留原工作。设计/上下文图/计划superpowers/{specs,plans}/2026-10-20-http-decision-audit.md
+已自审。真实API只读决策审计、游标/有界窗口/错误隐私/过时状态，不改Go/API/DB/
+Agent/依赖。ui-ux-pro-max/frontend-design保留现有浅色规范，拒绝不适用营销模板。
+TDD、唯一全分支评审、完整原生CI/原始日志/四包/精确head/main不可豁免；最终PR
+不可变回执/释放覆盖待验收源码。整体任务继续。
+
 ## CLI诊断评审修复 — 2026-10-20T09:59Z
 同一负责人codex/controller-cli-diagnostics、PR43；租约10:45Z或验证main后提前释放。
 唯一独立全分支评审0严重/2重要/无次要，需修复。根执行者核实Cobra私有参数回显、

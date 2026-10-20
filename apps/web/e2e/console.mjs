@@ -20,6 +20,7 @@ import { humanLogin } from './human-login.mjs'
 import { accessRequests } from './access-requests.mjs'
 import { managedAccounts } from './accounts.mjs'
 import { oidcLogin } from './oidc.mjs'
+import { initialHTTPAudit } from './http-audit.mjs'
 
 const root = resolve(import.meta.dirname, '../../..')
 const temp = await mkdtemp(join(tmpdir(), 'picketx-browser-'))
@@ -134,6 +135,7 @@ authz: {enabled: true, network: tcp, address: "127.0.0.1:${authzPort}", credenti
   await page.getByRole('button', { name: 'Audit', exact: true }).click()
   await page.getByText('Browser actual publish', { exact: true }).waitFor()
   await page.getByText('Concurrent external update', { exact: true }).waitFor()
+  await initialHTTPAudit({ page, evidence })
   await page.setViewportSize({ width: 1440, height: 1000 })
   await page.screenshot({ path: join(evidence, 'audit-desktop.png'), fullPage: true })
   const longPolicy = `${policy}\n${'# readonly scrolling\n'.repeat(100)}`

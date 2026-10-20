@@ -1,5 +1,17 @@
 # Autonomous delivery checkpoint
 
+## HTTP decision audit acquisition — 2026-10-20T11:40Z
+Owner codex/http-decision-audit; lease12:40Z or earlier verified-main release.
+Fresh Core81ec5bc/tree1b04ceb9/main39405913826 and Agent665c9a4/tree5907b051/
+main39412700638 green, no openPR; Agent29 explicit11:18:35Z release read back.
+Existing clean isolated worktree/new exact-main branch, original/old work preserved.
+Spec/context/plan superpowers/{specs,plans}/2026-10-20-http-decision-audit.md self-
+reviewed. Real HTTP audit API-backed view, bounded keyset window/failure/privacy/
+freshness; no Go/API/DB/Agent/dependency change. ui-ux-pro-max/frontend-design
+retain existing light tokens (search marketing patterns rejected, no new fonts).
+TDD/ONEreview/fullnative/raw/fouractualarchives/expectedhead/main remain mandatory;
+final PR immutable receipt/release supersedes pending source. Overall goal active.
+
 ## CLI diagnostics review correction — 2026-10-20T09:59Z
 Same owner codex/controller-cli-diagnostics, PR43, lease10:45Z or earlier verified-main
 release. ONE independent whole-branch review0Critical/2Important/noMinor, With fixes.
