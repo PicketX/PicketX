@@ -164,7 +164,8 @@ try {
   assert.equal(provider.exitCode, null); assert.equal(provider.signalCode, null)
   assert.equal((await requestHTTPS(issuer + '/.well-known/openid-configuration', { ca })).status, 200)
   phase = 'restored-human-publication'
-  const restoredPolicy = policy + '# restored real IdP publication\n'
+  // A comment-only edit is deliberately a semantic no-op and cannot prove a publication.
+  const restoredPolicy = policy.replace('port: 9443', 'port: 9444')
   await page.getByLabel('Policy YAML', { exact: true }).fill(restoredPolicy)
   await page.getByLabel('Change reason', { exact: true }).fill('restored real Keycloak human publication')
   await page.getByRole('button', { name: 'Save desired configuration', exact: true }).click()
