@@ -1,5 +1,34 @@
 # 自动交付检查点
 
+## HTTP审计评审修复 — 2026-10-20T12:07Z
+同一负责人/租约12:40Z/PR44。唯一全分支评审0严重/3重要/1次要，根执行者一次修复：
+/me已观测撤权不被依赖失败阻挡、混合能力审计保留选择、详情单条懒加载/每类50ID/
+memo账本。实际App.load三项先失败后通过，旧真实JSX收起8192li失败→新200条0li通过；
+44Node无跳过、Web检查通过。浏览器新增旧响应挂起/撤权/依赖503、两类混合权限、
+近限ID。候选39418402856在受控时钟断言失败，不验收；墙钟休眠模拟保留15s超时。
+13项裁定及代价、一项键盘覆盖次要延期详见validation/HTTP_AUDIT_REVIEW*.md。
+仍需准确head完整原生/日志/四份实际归档/源码/静态/通知/截图/expectedhead/main；
+不加评审或绕门禁，最终PR回执/释放覆盖待验收源码。
+
+## HTTP决策审计实现 — 2026-10-20T11:50Z
+同一负责人/租约12:40Z，PR44。测试先行远端cda2127，真实Chromium在缺少HTTP
+decisions按钮处RED，CI39416795817/web118607673736原始日志已保存。模型缺失与
+重复贡献ID断言先失败再修复；完整38Node无fail/skip。锁文件Web与Go vet/build
+通过；普通/race仅既有Unix授权socket EPERM，不算原生成功。已实现子视图、50条
+游标/200窗口、清理/401/403/延迟过时/空尾页/双语；浏览器扩展真实Nginx/SQLite
+记录并增加205次实际API决策，不冒充转发。唯一全分支独立评审及最终精确head
+原生CI/日志/四份实际归档/源码/静态/截图/expectedhead/main仍必需，尚未验收合并。
+
+## HTTP决策审计接续 — 2026-10-20T11:40Z
+负责人codex/http-decision-audit；短租约12:40Z或验证main后提前释放。Core81ec5bc/
+tree1b04ceb9/main39405913826与Agent665c9a4/tree5907b051/main39412700638通过，
+无开放PR；Agent29明确11:18:35Z释放已读回。复用干净隔离工作区，从准确main建新
+分支，保留原工作。设计/上下文图/计划superpowers/{specs,plans}/2026-10-20-http-decision-audit.md
+已自审。真实API只读决策审计、游标/有界窗口/错误隐私/过时状态，不改Go/API/DB/
+Agent/依赖。ui-ux-pro-max/frontend-design保留现有浅色规范，拒绝不适用营销模板。
+TDD、唯一全分支评审、完整原生CI/原始日志/四包/精确head/main不可豁免；最终PR
+不可变回执/释放覆盖待验收源码。整体任务继续。
+
 ## CLI诊断评审修复 — 2026-10-20T09:59Z
 同一负责人codex/controller-cli-diagnostics、PR43；租约10:45Z或验证main后提前释放。
 唯一独立全分支评审0严重/2重要/无次要，需修复。根执行者核实Cobra私有参数回显、

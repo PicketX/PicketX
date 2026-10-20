@@ -1,5 +1,42 @@
 # Autonomous delivery checkpoint
 
+## HTTP audit review correction — 2026-10-20T12:07Z
+Same owner/lease12:40Z, PR44. ONE whole-branch review0Critical/3Important/1Minor;
+root ONE correction pass: observed /me capability loss before dependent failures,
+preserve authorized mixed-capability audit selection, lazy single-event50-ID pages/
+memoized ledger. ActualApp.load three RED→GREEN and oldJSX8192collapsedli RED→
+new200rows0li GREEN;44Node nofail/skip, lockedWeb checks pass. Browser adds held old
+response+observed removal+dependency503, both mixed capabilities and near-limit IDs.
+Candidate39418402856 web failed controlled clock freshness, not accepted; corrected
+wall-only suspension retains15s transport timeout. All13rulings/costs and deferred
+keyboard coverage minor in validation/HTTP_AUDIT_REVIEW*.md. Final corrected-head
+fullnative/raw/fouractualarchives/source/static/notices/screenshots/expectedhead/
+freshmain mandatory. No extra review/gate bypass; finalPRreceipt/release supersedes.
+
+## HTTP decision audit implementation — 2026-10-20T11:50Z
+Same owner/lease12:40Z, PR44. Test-first remote cda2127, native39416795817/web
+118607673736 actual Chromium RED at missing HTTP decisions button; raw log saved.
+Model missing implementation RED, duplicate-contributing-ID assertion RED→GREEN;
+full38Node nofail/skip. Local lockedWeb ci/typecheck/lint/build and Go vet/build
+pass; normal/race only inherited TestAuthorizationRuntimeTCPUnixAndShutdown/unix
+EPERM (not nativegreen). Real subview/strict50page+200window, cleanup/401/403/
+latency/emptytail/paired copy implemented; browser helper extends actual real
+Nginx/SQLite decisions with205 actual API decision records, not mocked forwarding.
+ONE final independent whole-branch review/full exact-head CI/raw/fouractualarchives/
+source/static/screenshots/expectedhead/main still mandatory; not accepted or merged.
+
+## HTTP decision audit acquisition — 2026-10-20T11:40Z
+Owner codex/http-decision-audit; lease12:40Z or earlier verified-main release.
+Fresh Core81ec5bc/tree1b04ceb9/main39405913826 and Agent665c9a4/tree5907b051/
+main39412700638 green, no openPR; Agent29 explicit11:18:35Z release read back.
+Existing clean isolated worktree/new exact-main branch, original/old work preserved.
+Spec/context/plan superpowers/{specs,plans}/2026-10-20-http-decision-audit.md self-
+reviewed. Real HTTP audit API-backed view, bounded keyset window/failure/privacy/
+freshness; no Go/API/DB/Agent/dependency change. ui-ux-pro-max/frontend-design
+retain existing light tokens (search marketing patterns rejected, no new fonts).
+TDD/ONEreview/fullnative/raw/fouractualarchives/expectedhead/main remain mandatory;
+final PR immutable receipt/release supersedes pending source. Overall goal active.
+
 ## CLI diagnostics review correction — 2026-10-20T09:59Z
 Same owner codex/controller-cli-diagnostics, PR43, lease10:45Z or earlier verified-main
 release. ONE independent whole-branch review0Critical/2Important/noMinor, With fixes.
