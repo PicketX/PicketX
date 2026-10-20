@@ -1,5 +1,16 @@
 # 自动交付检查点
 
+## 真实IdP/HTTPS接续 — 2026-10-20T05:45Z
+Owner codex/real-idp-https，短租约06:45Z或明确释放/合并且main完整验证。
+Core0b3d8c1/tree98f977d/main39373684266、Agent0255d4d/treeced537d/main39347548020
+全部job/step绿，无开放PR；PR40已05:20:33Z明确释放且回读。复用干净隔离工作区
+从准确main建新分支，保留旧分支/用户改动。设计/文件地图/计划见superpowers/
+{specs,plans}/2026-10-20-real-idp-https.md。固定真实Keycloak26.8.1＋正常CA/SAN校验
+HTTPS＋安装版Controller/浏览器验收；不是生产IdP/MFA/HA或Agent联合闭环证明。
+仅CI外部服务，不换产品栈/依赖。本地Unix EPERM不算绿，必须完整native/一次独立
+全分支评审/原始日志/四实际归档/expected-head/main；最终准确证据和即时释放写本PR。
+整体继续，后续安装版OIDC/Agent/入口/应用完整联合验收。
+
 ## 安装版OIDC恢复评审修复 — 2026-10-20T05:05Z
 同owner codex/oidc-restore，PR40，heartbeat05:05Z，租约05:35Z或明确释放/合并且
 main完整验证。一次全分支评审0Critical/1Important/1Minor、With fixes；root同轮

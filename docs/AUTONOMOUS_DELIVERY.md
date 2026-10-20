@@ -1,5 +1,18 @@
 # Autonomous delivery checkpoint
 
+## Real IdP/HTTPS acquisition — 2026-10-20T05:45Z
+Owner codex/real-idp-https, short lease06:45Z or explicit release/verified merged main.
+Core0b3d8c1/tree98f977d/main39373684266, Agent0255d4d/treeced537d/main39347548020
+alljobs/steps green, no open PR; PR40 explicit05:20:33Z release read back. Existing
+clean isolated worktree new branch from exact fetched main, old work/user changes
+preserved. Spec/context/plan superpowers/{specs,plans}/2026-10-20-real-idp-https.md.
+Actual pinned Keycloak26.8.1 +normal CA/SAN HTTPS +installed Controller/browser
+acceptance; no production provider/MFA/HA/Agent-conjunction claim. CI-only external
+service, no product stack/dependency change. Local Unix EPERM baseline/native mandatory.
+One fresh whole-branch review/full raw/four actual archives/expected-head/main;
+final exact receipts/immediate release in this PR supersede source pending text.
+Whole goal remains active, installed OIDC/Agent/ingress/application conjunction next.
+
 ## Installed OIDC recovery review correction — 2026-10-20T05:05Z
 Same owner codex/oidc-restore, PR40, heartbeat05:05Z, lease05:35Z or explicit
 release/merged+fully-verified main. One whole-branch review0Critical/1Important/
