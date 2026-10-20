@@ -82,16 +82,25 @@ export default function App() {
   async function load(signal?: AbortSignal, replaceDraft = false) {
     const generation = epoch.current
     const me = await request<Identity>('/me', { signal })
+    if (generation !== epoch.current) return
+    // Observed capabilities are authoritative even if a dependent view fails.
+    setIdentity(me.data)
+    const operations = me.data.operations
+    const publicationRead = operations.includes('publication:read')
+    const requestRead = operations.some(op => op.startsWith('request:'))
+    const accountRead = operations.includes('account:read')
+    const auditRead = operations.includes('audit:read')
+    setTab(previous => (previous === 'audit' ? auditRead : previous === 'requests' ? requestRead : previous === 'accounts' ? accountRead : publicationRead)
+      ? previous : publicationRead ? 'publication' : requestRead ? 'requests' : accountRead ? 'accounts' : auditRead ? 'audit' : 'publication')
+    if (!auditRead) { setAudit([]); setCursor(0); setHasMore(false) }
     const [doc, events] = await Promise.all([
       me.data.operations.includes('publication:read') ? request<Publication>('/publication', { signal }) : Promise.resolve(null),
       me.data.operations.includes('audit:read') ? request<AuditPage>('/audit?limit=50', { signal }) : Promise.resolve(null),
     ])
     if (generation !== epoch.current) return
-    setIdentity(me.data)
     if (!doc) {
       setAccepted(null); setDraft(null)
       setAudit(events?.data.events ?? []); setCursor(events?.data.next_after ?? 0); setHasMore((events?.data.events?.length ?? 0) === 50)
-      setTab(me.data.operations.some(op => op.startsWith('request:')) ? 'requests' : me.data.operations.includes('account:read') ? 'accounts' : me.data.operations.includes('audit:read') ? 'audit' : 'publication')
       setLastRead(Date.now()); setReadFailed(false); return
     }
     if (!/^"\d+"$/.test(doc.etag)) throw new Error('Missing strong revision')

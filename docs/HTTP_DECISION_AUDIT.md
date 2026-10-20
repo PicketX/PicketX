@@ -19,6 +19,10 @@ address does not identify a person. Nonpersisted lifetime/cache fields are not
 presented as historical facts. Invalid/unauthenticated callers may fail before
 decision recording. URI/query/headers/body and credentials are not displayed.
 
+Only one event's details opens at once. Each Grant/deny list renders50 IDs per
+page with positions/total and Previous/Next IDs; all accepted IDs remain reachable.
+Collapsed details render no ID list, and freshness ticks do not rebuild the ledger.
+
 Loading, initial empty, empty tail, unavailable/invalid read, permission loss and
 outdated history are separate. Failed/schema-invalid/unexpected202 reads retain
 previous history/cursor, never substitute samples or advance silently.401 clears

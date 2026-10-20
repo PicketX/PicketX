@@ -1,5 +1,6 @@
 {
   "httpAudit": {
+    "idWindow": "ID {{first}}–{{last}}，共 {{total}} 个", "previousIDs": "上一批 ID", "nextIDs": "下一批 ID",
     "navigation": "HTTP 决策", "view": "审计视图", "title": "HTTP 授权决策",
     "help": "按事件序号读取已持久保存的决策。读取下一批可继续，从最早事件重新读取可回到起点。",
     "boundary": "允许或拒绝决策不证明请求已转发、应用已访问或权限当前仍有效。来源地址不代表人员身份。不显示请求 URI、查询、请求头或凭据。",

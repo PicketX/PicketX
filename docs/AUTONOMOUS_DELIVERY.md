@@ -1,5 +1,18 @@
 # Autonomous delivery checkpoint
 
+## HTTP audit review correction — 2026-10-20T12:07Z
+Same owner/lease12:40Z, PR44. ONE whole-branch review0Critical/3Important/1Minor;
+root ONE correction pass: observed /me capability loss before dependent failures,
+preserve authorized mixed-capability audit selection, lazy single-event50-ID pages/
+memoized ledger. ActualApp.load three RED→GREEN and oldJSX8192collapsedli RED→
+new200rows0li GREEN;44Node nofail/skip, lockedWeb checks pass. Browser adds held old
+response+observed removal+dependency503, both mixed capabilities and near-limit IDs.
+Candidate39418402856 web failed controlled clock freshness, not accepted; corrected
+wall-only suspension retains15s transport timeout. All13rulings/costs and deferred
+keyboard coverage minor in validation/HTTP_AUDIT_REVIEW*.md. Final corrected-head
+fullnative/raw/fouractualarchives/source/static/notices/screenshots/expectedhead/
+freshmain mandatory. No extra review/gate bypass; finalPRreceipt/release supersedes.
+
 ## HTTP decision audit implementation — 2026-10-20T11:50Z
 Same owner/lease12:40Z, PR44. Test-first remote cda2127, native39416795817/web
 118607673736 actual Chromium RED at missing HTTP decisions button; raw log saved.

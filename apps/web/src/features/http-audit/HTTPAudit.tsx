@@ -6,6 +6,7 @@ import { APIError, request } from '@/lib/console'
 import { observationAge } from '@/features/nodes/freshness'
 import { appendHTTPAudit, parseHTTPAuditPage } from './model'
 import type { HTTPAuditEvent } from './model'
+import { DecisionLedger } from './DecisionLedger'
 
 type Reading = { rows: HTTPAuditEvent[]; cursor: number; emptyTail: boolean; wall: number; monotonic: number; received: number }
 export function HTTPAudit({ onUnauthorized }: { onUnauthorized: () => void }) {
@@ -77,14 +78,7 @@ export function HTTPAudit({ onUnauthorized }: { onUnauthorized: () => void }) {
       <p className="hint">{t('httpAudit.window', { count: reading.rows.length, cursor: reading.cursor })}</p>
       {reading.rows.length === 0 ? <p className="empty">{t('httpAudit.empty')}</p> : <>
         {reading.emptyTail && <p role="status">{t('httpAudit.emptyTail')}</p>}
-        <div className="http-decision-list">{reading.rows.map(event => <article key={event.id} data-http-decision-id={event.id}>
-          <div className="http-decision-heading"><h3>{t(event.allowed ? 'httpAudit.allowed' : 'httpAudit.denied')}</h3><time dateTime={event.at}>{new Date(event.at).toLocaleString(i18n.language)}</time></div>
-          <dl><div><dt>{t('httpAudit.source')}</dt><dd>{event.source}</dd></div><div><dt>{t('httpAudit.reason')}</dt><dd>{event.reason}</dd></div>
-            <div><dt>{t('httpAudit.route')}</dt><dd>{event.route}</dd></div><div><dt>{t('httpAudit.caller')}</dt><dd>{event.caller}</dd></div>
-            <div><dt>{t('httpAudit.event')}</dt><dd>{event.id}</dd></div><div><dt>{t('httpAudit.revision')}</dt><dd>{event.revision}</dd></div></dl>
-          <details><summary>{t('httpAudit.details')}</summary><h4>{t('httpAudit.grants')}</h4>{event.grant_ids.length ? <ul>{event.grant_ids.map(id => <li key={id}>{id}</li>)}</ul> : <p>{t('httpAudit.none')}</p>}
-            <h4>{t('httpAudit.denies')}</h4>{event.deny_ids.length ? <ul>{event.deny_ids.map(id => <li key={id}>{id}</li>)}</ul> : <p>{t('httpAudit.none')}</p>}</details>
-        </article>)}</div>
+        <DecisionLedger rows={reading.rows} />
       </>}
     </>}
   </section>

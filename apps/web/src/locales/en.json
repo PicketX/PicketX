@@ -1,5 +1,6 @@
 {
   "httpAudit": {
+    "idWindow": "IDs {{first}}–{{last}} of {{total}}", "previousIDs": "Previous IDs", "nextIDs": "Next IDs",
     "navigation": "HTTP decisions", "view": "Audit view", "title": "HTTP authorization decisions",
     "help": "Read durable decisions in ascending event order. Read next to continue; start from oldest to restart.",
     "boundary": "A recorded allow or deny is not proof of forwarding, application access or current permission. Source addresses do not identify a person. No request URI, query, headers or credentials are shown.",

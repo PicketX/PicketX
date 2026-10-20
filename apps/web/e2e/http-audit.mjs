@@ -26,6 +26,7 @@ export async function populatedHTTPAudit({ browser, origin, authzPort, ingressPo
   await writeFile(principalPath, JSON.stringify(principals), { mode: 0o600 })
   const context = await browser.newContext({ viewport: { width: 1440, height: 1000 }, reducedMotion: 'reduce' })
   const page = await context.newPage(), errors = []
+  let projectedOperations = ['audit:read']
   page.on('pageerror', e => errors.push(e.message))
   const path = '**/console/api/v1/http-decisions?*'
   try {
@@ -34,7 +35,7 @@ export async function populatedHTTPAudit({ browser, origin, authzPort, ingressPo
     // actual audit endpoint remain unchanged; do not call this RBAC acceptance.
     await page.route('**/console/api/v1/me', async route => {
       const response = await route.fetch(), body = await response.json()
-      await route.fulfill({ response, json: { ...body, operations: body.operations.filter(x => x === 'audit:read') } })
+      await route.fulfill({ response, json: { ...body, operations: projectedOperations } })
     })
     await page.goto(origin + '/console/')
     await page.getByLabel('Access key', { exact: true }).fill(credential)
@@ -55,6 +56,37 @@ export async function populatedHTTPAudit({ browser, origin, authzPort, ingressPo
     assert(first.events.length > 0, 'existing real Nginx/application decisions required')
     await section.locator(`[data-http-decision-id="${first.events.at(-1).id}"]`).waitFor()
     assert.deepEqual(await ids(), first.events.map(e => e.id))
+    // Capability projections exercise parent UI transitions, not server RBAC.
+    const refresh = async () => {
+      const me = page.waitForResponse(r => r.url().endsWith('/console/api/v1/me'))
+      await page.getByRole('button', { name: 'Refresh status', exact: true }).click(); await me
+      await page.waitForFunction(() => document.querySelector('.workspace')?.getAttribute('aria-busy') === 'false')
+    }
+    for (const extra of ['request:read-own', 'account:read']) {
+      projectedOperations = ['audit:read', extra]; await refresh()
+      await section.locator(`[data-http-decision-id="${first.events.at(-1).id}"]`).waitFor()
+      const observed = page.waitForResponse(r => r.url().endsWith('/console/api/v1/me'))
+      await page.getByRole('button', { name: 'Audit', exact: true }).click(); await observed
+      await page.waitForFunction(() => document.querySelector('.workspace')?.getAttribute('aria-busy') === 'false')
+      assert(await section.isVisible(), 'mixed-capability Audit navigation/refresh stays selected')
+    }
+    let releasePermission, enteredPermission, permissionDone
+    const permissionGate = new Promise(r => { releasePermission = r }), permissionEntered = new Promise(r => { enteredPermission = r }), permissionComplete = new Promise(r => { permissionDone = r })
+    await page.route(path, async route => {
+      const response = await route.fetch(); enteredPermission(); await permissionGate
+      try { await route.fulfill({ response }) } catch { /* revoked mount aborts */ } finally { permissionDone() }
+    })
+    await section.getByRole('button', { name: 'Read next decisions', exact: true }).click(); await permissionEntered
+    projectedOperations = ['publication:read']
+    await page.route('**/console/api/v1/publication', r => r.fulfill({ status: 503, json: { code: 'unavailable' } }))
+    await refresh()
+    assert.equal(await section.count(), 0, 'observed audit removal unmounts despite dependent read failure')
+    assert.equal(await page.getByRole('button', { name: 'Audit', exact: true }).count(), 0)
+    releasePermission(); await permissionComplete
+    assert.equal(await page.locator('[data-http-decision-id]').count(), 0, 'late response cannot restore observed-revoked history')
+    await page.unroute(path); await page.unroute('**/console/api/v1/publication')
+    projectedOperations = ['audit:read']; await refresh()
+    await section.locator(`[data-http-decision-id="${first.events.at(-1).id}"]`).waitFor()
     let actual = [...first.events], cursor = first.next_after, last = first
     const next = async () => {
       const response = page.waitForResponse(r => r.url().includes('/console/api/v1/http-decisions?') && r.request().method() === 'GET')
@@ -107,8 +139,12 @@ export async function populatedHTTPAudit({ browser, origin, authzPort, ingressPo
     await page.route(path, async route => { entered(); await gate; await route.continue() })
     await section.getByRole('button', { name: 'Read next decisions', exact: true }).click(); await waiting
     await section.getByText('Reading HTTP decisions…', { exact: true }).waitFor()
-    await page.clock.fastForward(61000)
-    release(); await section.getByText('No newer HTTP decisions at the last read.', { exact: true }).waitFor()
+    // Advance wall time without firing the separate15s transport timeout.
+    // This is controlled clock suspension, not a61s live network acceptance.
+    await page.clock.setSystemTime(await page.evaluate(() => Date.now() + 61000))
+    release(); await page.waitForFunction(() => document.querySelector('.http-audit-section')?.getAttribute('aria-busy') === 'false')
+    assert.equal(await section.locator('[role="alert"]').count(), 0, 'held read completed, not transport timeout')
+    await section.getByText('No newer HTTP decisions at the last read.', { exact: true }).waitFor()
     await section.getByText('Loaded history may be behind newer decisions. Read again to update it.', { exact: true }).waitFor()
     await page.unroute(path)
     await section.getByRole('button', { name: 'Start from oldest', exact: true }).click()
@@ -141,6 +177,30 @@ export async function populatedHTTPAudit({ browser, origin, authzPort, ingressPo
     await section.getByText('Permission to read HTTP decisions is unavailable. Retry after refreshing your session.', { exact: true }).waitFor()
     assert.equal(await section.locator('[data-http-decision-id]').count(), 0)
     await page.unroute(path); await next()
+    // Valid near-limit display stress is injected UI data, NOT real audit proof.
+    const stressID = Number(await section.getAttribute('data-after')) + 10000
+    const grantIDs = Array.from({ length: 4096 }, (_, n) => `grant-${n}-${'g'.repeat(235)}`)
+    const denyIDs = Array.from({ length: 4096 }, (_, n) => `deny-${n}-${'d'.repeat(235)}`)
+    await page.route(path, r => r.fulfill({ status: 200, json: { events: [{ ...first.events[0], id: stressID, grant_ids: grantIDs, deny_ids: denyIDs }], next_after: stressID } }))
+    await next(); await page.unroute(path)
+    const stress = section.locator(`[data-http-decision-id="${stressID}"]`)
+    assert.equal(await stress.locator('li').count(), 0, 'collapsed near-limit record has no ID DOM')
+    await stress.getByText('Decision details', { exact: true }).click()
+    await stress.getByText(grantIDs[0], { exact: true }).waitFor()
+    assert.equal(await stress.locator('li').count(), 100)
+    const grantList = stress.locator('.http-contributions').first()
+    let offset = 0
+    while (!(await grantList.getByRole('button', { name: 'Next IDs', exact: true }).isDisabled())) {
+      await grantList.getByRole('button', { name: 'Next IDs', exact: true }).click(); offset += 50
+      await grantList.getByText(grantIDs[offset], { exact: true }).waitFor()
+      assert((await stress.locator('li').count()) <= 100)
+    }
+    await grantList.getByText(grantIDs.at(-1), { exact: true }).waitFor()
+    await page.setViewportSize({ width: 375, height: 1000 })
+    assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth))
+    await page.screenshot({ path: join(evidence, 'http-audit-contributions-375.png'), fullPage: false })
+    await stress.getByText('Decision details', { exact: true }).click()
+    await page.waitForFunction(id => document.querySelector(`[data-http-decision-id="${id}"]`)?.querySelectorAll('li').length === 0, stressID)
     // Actual credential removal, not a mocked401: private history must disappear.
     const current = JSON.parse(await readFile(principalPath, 'utf8'))
     current.principals = current.principals.filter(p => p.id !== id)
@@ -150,7 +210,7 @@ export async function populatedHTTPAudit({ browser, origin, authzPort, ingressPo
     assert.equal(await page.locator('[data-http-decision-id]').count(), 0)
     assert.equal(await page.evaluate(() => localStorage.length + sessionStorage.length), 0)
     assert.deepEqual(errors, [])
-    console.log('PASS actual HTTP decision audit: real Nginx/SQLite allow-deny-IPv6-contributing IDs,205 realAPI decisions, keyset/window/emptytail, loading/failure/age, language/mobile and credential removal')
+    console.log('PASS actual HTTP decision audit: real Nginx/SQLite allow-deny-IPv6-contributing IDs,205 realAPI decisions, keyset/window/emptytail, loading/failure/age, language/mobile and credential removal; controlled mixed-capability/observed-revocation/4096-ID UI stress separately')
   } finally {
     await context.close()
     const current = JSON.parse(await readFile(principalPath, 'utf8'))
