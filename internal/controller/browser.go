@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/PicketX/PicketX/internal/management"
+	"github.com/PicketX/PicketX/internal/oidclogin"
 	"github.com/alexedwards/scs/v2"
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v5"
@@ -30,6 +31,7 @@ type Browser struct {
 	sessions *scs.SessionManager
 	origin   *url.URL
 	assets   string
+	oidc     *oidclogin.Client
 	// Only existing authenticated sessions acquire an exact-token lock. Entries
 	// exist only while held/waiting; unknown cookies cannot occupy shared locks.
 	lockMu sync.Mutex
@@ -162,6 +164,29 @@ func (b *Browser) wrap(next http.Handler) http.Handler {
 }
 func (b *Browser) principal(c *echo.Context) (management.Principal, error) {
 	ctx := c.Request().Context()
+	if subject := b.sessions.GetString(ctx, "oidc_subject"); subject != "" {
+		if b.oidc == nil || time.Now().Unix() >= b.sessions.GetInt64(ctx, "oidc_expiry") {
+			_ = b.sessions.Destroy(ctx)
+			return management.Principal{}, management.ErrUnauthorized
+		}
+		id, _, err := b.oidc.Resolve(subject, b.sessions.GetString(ctx, "oidc_binding"))
+		if err != nil {
+			if errors.Is(err, oidclogin.ErrUnavailable) {
+				return management.Principal{}, management.ErrUnavailable
+			}
+			_ = b.sessions.Destroy(ctx)
+			return management.Principal{}, management.ErrUnauthorized
+		}
+		if id != b.sessions.GetString(ctx, "id") {
+			_ = b.sessions.Destroy(ctx)
+			return management.Principal{}, management.ErrUnauthorized
+		}
+		p, err := b.service.ResolveHumanSession(id, b.sessions.GetString(ctx, "credential"))
+		if errors.Is(err, management.ErrUnauthorized) {
+			_ = b.sessions.Destroy(ctx)
+		}
+		return p, err
+	}
 	p, e := b.service.ResolveSession(b.sessions.GetString(ctx, "id"), b.sessions.GetString(ctx, "credential"))
 	if errors.Is(e, management.ErrUnauthorized) {
 		_ = b.sessions.Destroy(ctx)
@@ -192,6 +217,13 @@ func (b *Browser) register(e *echo.Echo, limits ManagementLimits) {
 		DenyHandler:  func(c *echo.Context, _ string, _ error) error { return apiError(c, 429, "rate_limited") },
 	}))
 	g.POST("/logout", b.logout)
+	if b.oidc != nil {
+		g.POST("/oidc/start", b.startOIDC, middleware.RateLimiterWithConfig(middleware.RateLimiterConfig{Store: middleware.NewRateLimiterMemoryStoreWithConfig(middleware.RateLimiterMemoryStoreConfig{Rate: 0.1, Burst: 5}), IdentifierExtractor: func(c *echo.Context) (string, error) {
+			host, _, e := net.SplitHostPort(c.Request().RemoteAddr)
+			return host, e
+		}, ErrorHandler: func(c *echo.Context, _ error) error { return apiError(c, 400, "invalid_peer") }, DenyHandler: func(c *echo.Context, _ string, _ error) error { return apiError(c, 429, "rate_limited") }}))
+		g.GET("/oidc/callback", b.callbackOIDC)
+	}
 	g.GET("/me", h.browserMe)
 	g.GET("/accounts", h.accounts)
 	g.POST("/accounts", h.createAccount)

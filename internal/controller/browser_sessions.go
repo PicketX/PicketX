@@ -16,6 +16,7 @@ import (
 
 type SessionResponse struct {
 	PasswordLogin bool                     `json:"password_login"`
+	OIDCLogin     bool                     `json:"oidc_login"`
 	Authenticated bool                     `json:"authenticated"`
 	CSRF          string                   `json:"csrf"`
 	Identity      *SessionIdentityResponse `json:"identity,omitempty"`
@@ -47,6 +48,7 @@ func (b *Browser) session(c *echo.Context) error {
 		return mappedError(c, e)
 	}
 	response := SessionResponse{Authenticated: err == nil, CSRF: c.Get("csrf").(string), PasswordLogin: enabled}
+	response.OIDCLogin = b.oidc != nil
 	if err == nil {
 		response.Identity = &SessionIdentityResponse{ID: p.ID, Roles: p.Roles}
 	}
@@ -87,16 +89,22 @@ func (b *Browser) login(c *echo.Context, validation *validator.Validate) error {
 	return b.establishSession(c, p, hex.EncodeToString(sum[:]))
 }
 func (b *Browser) establishSession(c *echo.Context, p management.Principal, fingerprint string) error {
-	ctx := c.Request().Context()
-	if err := b.sessions.Destroy(ctx); err != nil {
+	if err := b.saveSession(c, p, fingerprint); err != nil {
 		return mappedError(c, err)
 	}
+	return c.JSON(200, SessionIdentityResponse{ID: p.ID, Roles: p.Roles})
+}
+func (b *Browser) saveSession(c *echo.Context, p management.Principal, fingerprint string) error {
+	ctx := c.Request().Context()
+	if err := b.sessions.Destroy(ctx); err != nil {
+		return management.ErrUnavailable
+	}
 	if err := b.sessions.RenewToken(ctx); err != nil {
-		return mappedError(c, err)
+		return management.ErrUnavailable
 	}
 	b.sessions.Put(ctx, "id", p.ID)
 	b.sessions.Put(ctx, "credential", fingerprint)
-	return c.JSON(200, SessionIdentityResponse{ID: p.ID, Roles: p.Roles})
+	return nil
 }
 
 // logout godoc

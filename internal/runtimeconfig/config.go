@@ -37,6 +37,7 @@ type Config struct {
 	Browser struct {
 		Enabled        bool
 		Origin, Assets string
+		OIDCConfig     string
 	}
 	Agent struct {
 		Enabled                            bool
@@ -51,7 +52,8 @@ func defaults() map[string]any {
 		"http.listen": "127.0.0.1:8080", "poll": "1s", "shutdown": "5s", "database": "", "credentials": "", "source.mode": "file", "source.policy": "", "source.facts": "",
 		"management.credentials": "", "management.users_mode": "file", "management.reload": "30s", "management.warn_rules": 10000, "management.warn_load_percent": 50, "management.requests_per_second": 128, "management.burst": 256,
 		"browser.enabled": false, "browser.origin": "", "browser.assets": "",
-		"agent.enabled": false, "agent.listen": "127.0.0.1:9090", "agent.authority": "", "agent.tls_cert": "", "agent.tls_key": "",
+		"browser.oidc_config": "",
+		"agent.enabled":       false, "agent.listen": "127.0.0.1:9090", "agent.authority": "", "agent.tls_cert": "", "agent.tls_key": "",
 		"agent.max_credentials": 128, "agent.max_streams": 128, "agent.max_frame": 4 << 20, "agent.establish_per_second": 128, "agent.messages_per_second": 32, "agent.hello_timeout": "5s", "agent.send_timeout": "10s",
 	}
 }
@@ -155,6 +157,7 @@ func Load(path string, env, overrides map[string]string) (Config, error) {
 	c.Browser.Enabled = k.Bool("browser.enabled")
 	c.Browser.Origin = k.String("browser.origin")
 	c.Browser.Assets = k.String("browser.assets")
+	c.Browser.OIDCConfig = k.String("browser.oidc_config")
 	c.Agent.Enabled = k.Bool("agent.enabled")
 	c.Agent.Listen = k.String("agent.listen")
 	c.Agent.Authority = k.String("agent.authority")
@@ -260,7 +263,10 @@ func (c Config) Validate() error {
 		if e := management.ValidateBrowserOrigin(c.Browser.Origin); e != nil {
 			return e
 		}
-	} else if c.Browser.Origin != "" || c.Browser.Assets != "" {
+		if c.Browser.OIDCConfig != "" && !filepath.IsAbs(c.Browser.OIDCConfig) {
+			return fmt.Errorf("OIDC config requires absolute path")
+		}
+	} else if c.Browser.Origin != "" || c.Browser.Assets != "" || c.Browser.OIDCConfig != "" {
 		return fmt.Errorf("browser settings require enabled browser")
 	}
 	return nil

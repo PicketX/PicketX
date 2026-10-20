@@ -55,6 +55,26 @@ func (s *Service) PasswordLoginEnabled() (bool, error) {
 	return a.PasswordLoginEnabled()
 }
 
+// External proof stays in its adapter; this boundary resolves only trusted humans.
+func (s *Service) AuthenticateHuman(id string) (Principal, string, error) {
+	a, ok := s.access.(interface {
+		AuthenticateHuman(string) (Principal, string, error)
+	})
+	if !ok {
+		return Principal{}, "", ErrUnauthorized
+	}
+	return a.AuthenticateHuman(id)
+}
+func (s *Service) ResolveHumanSession(id, fingerprint string) (Principal, error) {
+	a, ok := s.access.(interface {
+		ResolveHumanSession(string, string) (Principal, error)
+	})
+	if !ok {
+		return Principal{}, ErrUnauthorized
+	}
+	return a.ResolveHumanSession(id, fingerprint)
+}
+
 func (s *Service) AgentObservations(p Principal) (agentsync.Observations, error) {
 	if e := s.Check(p, "publication:read"); e != nil {
 		return agentsync.Observations{}, e

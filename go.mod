@@ -6,6 +6,7 @@ require (
 	github.com/alexedwards/scs/v2 v2.9.0
 	github.com/casbin/casbin/v3 v3.11.0
 	github.com/casbin/gorm-adapter/v3 v3.41.0
+	github.com/coreos/go-oidc/v3 v3.21.0
 	github.com/go-playground/validator/v10 v10.30.5
 	github.com/knadh/koanf/providers/confmap v1.0.0
 	github.com/knadh/koanf/v2 v2.3.8
@@ -13,6 +14,7 @@ require (
 	github.com/spf13/cobra v1.10.2
 	go.yaml.in/yaml/v3 v3.0.5
 	golang.org/x/crypto v0.57.0
+	golang.org/x/oauth2 v0.37.0
 	google.golang.org/grpc v1.84.0
 	google.golang.org/protobuf v1.36.11
 	gorm.io/driver/sqlite v1.6.0
@@ -27,6 +29,7 @@ require (
 	github.com/gabriel-vasile/mimetype v1.4.16 // indirect
 	github.com/glebarez/go-sqlite v1.22.0 // indirect
 	github.com/glebarez/sqlite v1.11.0 // indirect
+	github.com/go-jose/go-jose/v4 v4.1.4 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-sql-driver/mysql v1.9.3 // indirect

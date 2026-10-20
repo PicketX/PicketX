@@ -995,6 +995,14 @@
                 "type": "object",
                 "additionalProperties": false
             },
+            "controller.OIDCStartResponse": {
+                "properties": {
+                    "url": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
             "controller.PasswordLoginRequest": {
                 "properties": {
                     "password": {
@@ -1179,6 +1187,9 @@
                     },
                     "identity": {
                         "$ref": "#/components/schemas/controller.SessionIdentityResponse"
+                    },
+                    "oidc_login": {
+                        "type": "boolean"
                     },
                     "password_login": {
                         "type": "boolean"
@@ -8036,6 +8047,162 @@
                     }
                 ],
                 "summary": "Read current trusted session identity and allowed operations",
+                "tags": [
+                    "console"
+                ]
+            }
+        },
+        "/console/api/v1/oidc/callback": {
+            "get": {
+                "description": "GET callback permits cross-site top-level navigation; one-use state, path-scoped HttpOnly Lax correlation, PKCE/nonce/issuer/audience/signature/expiry are mandatory. Fixed local success/failure redirect; no provider diagnostics or tokens returned. Local logout does not end the IdP session.",
+                "operationId": "browserOIDCCallback",
+                "parameters": [
+                    {
+                        "description": "One-use state",
+                        "in": "query",
+                        "name": "state",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Authorization code",
+                        "in": "query",
+                        "name": "code",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "303": {
+                        "description": "Fixed console redirect"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "429": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "503": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    }
+                },
+                "summary": "Consume one browser-bound verified OIDC code and renew local SCS session",
+                "tags": [
+                    "console"
+                ]
+            }
+        },
+        "/console/api/v1/oidc/start": {
+            "post": {
+                "description": "Exact Origin/Host and Echo CSRF required. Pending5min, max128, S256 PKCE and nonce. No external token is returned; provider is opt-in and local roles stay authoritative.",
+                "operationId": "browserOIDCStart",
+                "parameters": [
+                    {
+                        "description": "Exact public origin",
+                        "in": "header",
+                        "name": "Origin",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Bootstrap token for legacy clients",
+                        "in": "header",
+                        "name": "X-CSRF-Token",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.OIDCStartResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "429": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    },
+                    "503": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/controller.APIError"
+                                }
+                            }
+                        },
+                        "description": "Bad Request"
+                    }
+                },
+                "summary": "Start one browser-bound OIDC authorization-code transaction",
                 "tags": [
                     "console"
                 ]

@@ -11,6 +11,7 @@ import (
 	"github.com/PicketX/PicketX/internal/controller"
 	"github.com/PicketX/PicketX/internal/management"
 	"github.com/PicketX/PicketX/internal/managementaccess"
+	"github.com/PicketX/PicketX/internal/oidclogin"
 	"github.com/PicketX/PicketX/internal/publication"
 	"github.com/PicketX/PicketX/internal/runtimeconfig"
 	"github.com/PicketX/PicketX/pkg/configuration"
@@ -151,6 +152,13 @@ func Run(ctx context.Context, c runtimeconfig.Config, log *slog.Logger, d Depend
 		browser, e = controller.NewBrowser(managementService, c.Browser.Origin, c.Browser.Assets)
 		if e != nil {
 			return e
+		}
+		if c.Browser.OIDCConfig != "" {
+			client, err := oidclogin.New(ctx, c.Browser.OIDCConfig, c.Browser.Origin)
+			if err != nil {
+				return fmt.Errorf("OIDC initialization failed")
+			}
+			browser.SetOIDC(client)
 		}
 	}
 	server := &http.Server{Handler: controller.NewHandlerWithBrowser(ready, managementService, controller.ManagementLimits{RequestsPerSecond: c.Management.RequestsPerSecond, Burst: c.Management.Burst}, browser), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 10 * time.Second, WriteTimeout: 10 * time.Second, IdleTimeout: 60 * time.Second}
