@@ -1,5 +1,18 @@
 # Autonomous delivery checkpoint
 
+## OIDC acquisition — 2026-10-20T01:41Z
+Owner codex/oidc-login; heartbeat01:41Z; short lease02:35Z or explicit release/
+merged+verified main. Fresh Coreadfa1b1/tree7a5cbb6/main39339061250 and Agent0255d4d/
+treeced537d/main39347548020 green, no open PRs; PR38/27 explicit releases verified.
+Existing clean linked worktree switched from fetched exact main, originals/old
+branches preserved. Spec/context/plan superpowers/{specs,plans}/2026-10-20-oidc-login.md
+self-reviewed; inline implementation, routine approvals waived, one final fresh
+review retained. Existing full baseline fails only inherited Unix listener EPERM;
+real native CI mandatory. Deliver opt-in verified OIDC→existing human→SCS/Casbin
+plus actual browser/protocol evidence, not implicit claim-role/network permission.
+Final exact commit/PR/CI/source/archive/main receipt and release in PR metadata.
+Goal remains active; real deployed IdP/Agent conjunction is not fixture evidence.
+
 ## Packaged ingress acquisition — 2026-10-19T22:40Z
 Owner codex/nginx-includes; heartbeat22:49Z; lease23:35Z or explicit release/merged+
 verified-green main. Core cdee150/treea86a890/main39308466228 and Agent c0eb1b8/
