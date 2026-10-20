@@ -1,5 +1,26 @@
 # 自动交付检查点
 
+## 真实Provider评审修复 — 2026-10-20T06:10Z
+同owner codex/real-idp-https，PR41，租约06:45Z或明确main完整验证后释放。
+一次全分支评审0Critical/1Important/0Minor、With fixes。root保留Provider dev-file
+DB未纳入私有清理问题，成功/失败两条真实文件系统回归RED→GREEN，改唯一私有发行副本，
+不修改/删除调用方输入。合并Node32过。完整裁决/代价：validation/REAL_IDP_HTTPS_REVIEW*.md。
+候选39377577216全部3job/step绿，Go260/660、真实Keycloak26.8.1/HTTPS/安装版浏览器
+及四实际归档核验；不是修复head证据。仍需新完整native/原始日志/源码/四归档/expected-head/
+新main；最终证据和即时释放写PR41且优先于本段。无产品UI/Agent变化；安装版OIDC/Agent/
+入口/应用完整联合验收仍下一段，整体继续。
+
+## 真实IdP/HTTPS接续 — 2026-10-20T05:39Z
+Owner codex/real-idp-https，短租约06:45Z或明确释放/合并且main完整验证。
+Core0b3d8c1/tree98f977d/main39373684266、Agent0255d4d/treeced537d/main39347548020
+全部job/step绿，无开放PR；PR40已05:20:33Z明确释放且回读。复用干净隔离工作区
+从准确main建新分支，保留旧分支/用户改动。设计/文件地图/计划见superpowers/
+{specs,plans}/2026-10-20-real-idp-https.md。固定真实Keycloak26.8.1＋正常CA/SAN校验
+HTTPS＋安装版Controller/浏览器验收；不是生产IdP/MFA/HA或Agent联合闭环证明。
+仅CI外部服务，不换产品栈/依赖。本地Unix EPERM不算绿，必须完整native/一次独立
+全分支评审/原始日志/四实际归档/expected-head/main；最终准确证据和即时释放写本PR。
+整体继续，后续安装版OIDC/Agent/入口/应用完整联合验收。
+
 ## 安装版OIDC恢复评审修复 — 2026-10-20T05:05Z
 同owner codex/oidc-restore，PR40，heartbeat05:05Z，租约05:35Z或明确释放/合并且
 main完整验证。一次全分支评审0Critical/1Important/1Minor、With fixes；root同轮

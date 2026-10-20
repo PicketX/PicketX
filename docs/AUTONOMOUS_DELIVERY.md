@@ -1,5 +1,30 @@
 # Autonomous delivery checkpoint
 
+## Real-provider review correction — 2026-10-20T06:10Z
+Same owner codex/real-idp-https, PR41, lease06:45Z or explicit verified-main release.
+One whole-branch review0Critical/1Important/0Minor, With fixes. Root retained
+provider dev-file DB outside private cleanup; real success/failure filesystem
+regressions RED→GREEN with unique private distribution copy, never deleting or
+mutating caller input. CombinedNode32 pass. Full rulings/costs:
+validation/REAL_IDP_HTTPS_REVIEW*.md. Candidate39377577216 all3jobs/steps green,
+Go260/660, actual Keycloak26.8.1/HTTPS/installed browser, four archives verified;
+NOT corrected-head evidence. New full native/raw/source/four archives/expected-head/
+fresh main still required; final receipt/immediate release in PR41 supersedes this.
+No product UI/Agent change; installed OIDC/Agent/ingress/application next, goal active.
+
+## Real IdP/HTTPS acquisition — 2026-10-20T05:39Z
+Owner codex/real-idp-https, short lease06:45Z or explicit release/verified merged main.
+Core0b3d8c1/tree98f977d/main39373684266, Agent0255d4d/treeced537d/main39347548020
+alljobs/steps green, no open PR; PR40 explicit05:20:33Z release read back. Existing
+clean isolated worktree new branch from exact fetched main, old work/user changes
+preserved. Spec/context/plan superpowers/{specs,plans}/2026-10-20-real-idp-https.md.
+Actual pinned Keycloak26.8.1 +normal CA/SAN HTTPS +installed Controller/browser
+acceptance; no production provider/MFA/HA/Agent-conjunction claim. CI-only external
+service, no product stack/dependency change. Local Unix EPERM baseline/native mandatory.
+One fresh whole-branch review/full raw/four actual archives/expected-head/main;
+final exact receipts/immediate release in this PR supersede source pending text.
+Whole goal remains active, installed OIDC/Agent/ingress/application conjunction next.
+
 ## Installed OIDC recovery review correction — 2026-10-20T05:05Z
 Same owner codex/oidc-restore, PR40, heartbeat05:05Z, lease05:35Z or explicit
 release/merged+fully-verified main. One whole-branch review0Critical/1Important/

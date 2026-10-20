@@ -115,6 +115,26 @@ Agent conjunction evidence. Final exact-run receipts live in the delivery PR.
 
 ## Evidence boundary
 
+An additional native installation gate uses the official Keycloak26.8.1 archive
+(SHA2564e2740b181faa2ea623a1c2ecf00855935311e546046e2f857615a47ed24cbe8),
+not the signed fixture. It starts a disposable real HTTPS Keycloak server with an
+imported exact confidential S256 client/user and a file database, and uses actual
+packaged Controller/CLI plus Nginx TLS. The short-lived integration CA is explicitly
+trusted with normal hostname verification; unknown CA and wrong SAN must fail.
+Chromium does not ignore certificate errors. The CI-only CA's unique NSS trust
+label is removed before the public success receipt is written. No private provider
+state, raw process logs or failed-browser screenshot is uploaded.
+
+This gate checks real wrong-password and valid-unbound rejection, Secure HttpOnly
+Lax correlation/Strict SCS cookies, exact existing local account, current Casbin
+roles, real publication/SQLite/audit, local role/binding revocation and logout.
+Its `real-idp-report.json` and successful console screenshot accompany the existing
+installation evidence. Consult the delivery PR for exact verified run/source IDs;
+the code's presence alone is not execution evidence. Keycloak/JDK are CI services,
+not added PicketX runtime dependencies or a required operator IdP selection. This
+disposable instance is NOT a production IdP deployment, MFA/HA/other-provider
+clearance or installed Agent/ingress/application conjunction under OIDC.
+
 Go tests use actual HTTP discovery/JWKS/token exchange and signed RSA fixtures,
 including PKCE, replay/concurrency, wrong claims, issuer alias, current binding and
 human-role checks. The real Chromium suite uses the built Controller/React/SQLite,

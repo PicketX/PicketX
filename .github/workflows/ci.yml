@@ -107,7 +107,7 @@ jobs:
         with:
           node-version-file: .node-version
       - name: Reject existing bundle targets before building
-        run: node --test scripts/controller-bundle.test.mjs scripts/controller-state-copy.test.mjs scripts/controller-service.test.mjs
+        run: node --test scripts/controller-bundle.test.mjs scripts/controller-state-copy.test.mjs scripts/controller-service.test.mjs scripts/real-idp-https.test.mjs
       - name: Build and inspect standalone Linux-amd64 Controller bundle
         run: |
           sudo apt-get update
@@ -143,6 +143,21 @@ jobs:
             PLAYWRIGHT_BROWSERS_PATH="$PLAYWRIGHT_BROWSERS_PATH" \
             PICKETX_INSTALL_EVIDENCE_DIR="$RUNNER_TEMP/service-evidence" \
             "$(command -v node)" apps/web/e2e/install.mjs "$RUNNER_TEMP/extracted-controller-bundle" --systemd
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Verify pinned upstream Keycloak distribution
+        run: |
+          sudo apt-get install -y libnss3-tools
+          curl -fsSL --retry 3 https://github.com/keycloak/keycloak/releases/download/26.8.1/keycloak-26.8.1.tar.gz -o "$RUNNER_TEMP/keycloak.tar.gz"
+          echo "4e2740b181faa2ea623a1c2ecf00855935311e546046e2f857615a47ed24cbe8  $RUNNER_TEMP/keycloak.tar.gz" | sha256sum --check --strict -
+          tar -C "$RUNNER_TEMP" -xzf "$RUNNER_TEMP/keycloak.tar.gz"
+      - name: Actual installed Controller with real Keycloak and verified HTTPS
+        env:
+          PICKETX_REAL_IDP_TESTS: '1'
+          PICKETX_REAL_IDP_EVIDENCE_DIR: ${{ runner.temp }}/install-evidence
+        run: node apps/web/e2e/real-idp.mjs "$RUNNER_TEMP/extracted-controller-bundle" "$RUNNER_TEMP/keycloak-26.8.1"
       - uses: actions/upload-artifact@v4
         with:
           name: controller-linux-amd64

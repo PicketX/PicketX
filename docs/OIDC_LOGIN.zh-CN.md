@@ -1,5 +1,21 @@
 # OIDC 浏览器登录
 
+## 真实提供方 HTTPS 安装验收
+
+新增原生门禁使用官方Keycloak26.8.1分发包，SHA256
+4e2740b181faa2ea623a1c2ecf00855935311e546046e2f857615a47ed24cbe8，不是签名协议夹具。
+一次性真实Keycloak HTTPS服务导入精确confidential/S256客户端和测试账户，配合
+文件数据库、实际交付的Controller/CLI及Nginx TLS；正常CA/主机名校验，未知CA和
+错误SAN必须拒绝，Chromium不忽略证书错误。只在一次性CI导入短期CA的唯一NSS
+标签，写成功证据前删除；不上传私有provider状态、原进程日志或失败页面截图。
+
+检查真实错误密码/已认证但未绑定拒绝、Secure HttpOnly的Lax关联/Strict SCS
+Cookie、明确既有本地账户/当前Casbin权限、实际发布/SQLite/审计、权限/绑定撤销
+及本地退出。real-idp-report.json和成功控制台截图随安装证据交付；准确已验证
+执行/源码以交付PR为准，代码存在不等于已运行。Keycloak/JDK仅为CI服务，不加入
+PicketX运行时依赖，也不强制操作者选型；一次性实例不是生产IdP、MFA/HA/任意
+提供方兼容性或安装Agent/入口/应用OIDC联合闭环证明。
+
 可选OIDC只认证**已存在的人类账户**，不认证源IP、Agent或应用账户。
 精确issuer＋sub通过私有显式绑定关联现有账户；邮箱、claims中的roles/groups
 不会赋予PicketX权限。每次请求仍读取本地当前角色并由Casbin执行deny优先。
