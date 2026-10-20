@@ -22,6 +22,9 @@ Total --timeout defaults5s, positive<=30s; no automatic retries. Read failures,
 authentication denial, inconsistent/malformed/oversized data produce fixed errors
 and no success report. policy/facts/raw errors, key values and private paths are
 not emitted. Only fixed API GETs carry Bearer; readiness probes do not.
+Malformed flags and positional arguments also use fixed non-echoing errors.
+Publication reads allow worst-case JSON escaping of both supported4 MiB input
+fields, then enforce each decoded field limit; response reads remain bounded.
 
 Status returns0 for a valid current read, including empty/disconnected inventory.
 Doctor additionally checks readiness and returns0 only for at least one selected

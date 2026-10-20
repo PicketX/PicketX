@@ -7,6 +7,8 @@ import (
 	"sort"
 	"strconv"
 	"time"
+
+	"github.com/PicketX/PicketX/pkg/configuration"
 )
 
 type Report struct {
@@ -44,6 +46,15 @@ type publication struct {
 	Policy    string `json:"policy"`
 	Facts     string `json:"facts"`
 }
+
+// Each independently bounded decoded input byte can occupy six JSON bytes
+// (for example '<' becomes '\u003c'). Reserve the remaining bounded envelope.
+const maxPublicationResponse = 2*configuration.MaxBytes*6 + 4096
+
+func (p publication) validSizes() bool {
+	return len(p.Policy) <= configuration.MaxBytes && len(p.Facts) <= configuration.MaxBytes
+}
+
 type observations struct {
 	Authority  string        `json:"authority"`
 	ObservedAt time.Time     `json:"observed_at"`
@@ -96,12 +107,15 @@ func Inspect(ctx context.Context, o Options, doctor bool) (Report, error) {
 		ready = &v
 	}
 	var before, after publication
-	code, e := c.get(ctx, "/api/v1/publication", true, &before, 16<<20)
+	code, e := c.get(ctx, "/api/v1/publication", true, &before, maxPublicationResponse)
 	if e != nil {
 		return Report{}, e
 	}
 	if code != 200 {
 		return Report{}, errRead
+	}
+	if !before.validSizes() {
+		return Report{}, errData
 	}
 	started := time.Now()
 	var view observations
@@ -112,14 +126,14 @@ func Inspect(ctx context.Context, o Options, doctor bool) (Report, error) {
 	if code != 200 {
 		return Report{}, errRead
 	}
-	code, e = c.get(ctx, "/api/v1/publication", true, &after, 16<<20)
+	code, e = c.get(ctx, "/api/v1/publication", true, &after, maxPublicationResponse)
 	if e != nil {
 		return Report{}, e
 	}
 	if code != 200 {
 		return Report{}, errRead
 	}
-	if !validID(before.Authority) || before.Revision == 0 || before.Authority != after.Authority || before.Revision != after.Revision || view.Authority != before.Authority || view.ObservedAt.IsZero() || view.Nodes == nil || len(view.Nodes) > 4096 {
+	if !after.validSizes() || !validID(before.Authority) || before.Revision == 0 || before.Authority != after.Authority || before.Revision != after.Revision || view.Authority != before.Authority || view.ObservedAt.IsZero() || view.Nodes == nil || len(view.Nodes) > 4096 {
 		return Report{}, errData
 	}
 	out := Report{Scope: "controller-observations", Authority: before.Authority, Revision: strconv.FormatUint(before.Revision, 10), ObservedAt: view.ObservedAt, Ready: ready, Nodes: []Node{}, EnforcementConfirmed: false}

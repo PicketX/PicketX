@@ -18,7 +18,13 @@ func statusCommand(doctor bool) *cobra.Command {
 	if doctor {
 		name, short = "doctor", "Check Controller readiness and fresh matching Agent assertions (read-only)"
 	}
-	c := &cobra.Command{Use: name, Short: short, Args: cobra.NoArgs, RunE: func(cmd *cobra.Command, _ []string) error {
+	invalidArguments := errors.New("invalid diagnostic command arguments; use --help for accepted flags")
+	c := &cobra.Command{Use: name, Short: short, Args: func(_ *cobra.Command, args []string) error {
+		if len(args) != 0 {
+			return invalidArguments
+		}
+		return nil
+	}, RunE: func(cmd *cobra.Command, _ []string) error {
 		if format != "text" && format != "json" {
 			return errors.New("format must be text or json")
 		}
@@ -52,6 +58,7 @@ func statusCommand(doctor bool) *cobra.Command {
 		}
 		return nil
 	}}
+	c.SetFlagErrorFunc(func(*cobra.Command, error) error { return invalidArguments })
 	f := c.Flags()
 	f.StringVar(&options.Origin, "controller", "", "Controller origin; HTTPS or literal loopback HTTP")
 	f.StringVar(&options.KeyFile, "key-file", "", "Absolute private management-key file (not Agent or ingress Token)")

@@ -38,7 +38,7 @@ plus nonzero. Missing selected scope is an error. No atomic/continuous/kernel pr
 | --- | --- |
 | internal/controllerclient/client.go (new) | Verified bounded HTTP, origin/private credential/CA |
 | internal/controllerclient/status.go (new) | DTO validation and coherent point-in-time state |
-| internal/controllerclient/*_test.go | Real HTTP/TLS, response/transport/freshness regressions |
+| internal/cli/status_test.go | Real client HTTP/TLS, response/transport/freshness regressions through CLI |
 | internal/cli/status.go (new), config.go | Thin Cobra status/doctor adapters and renderers |
 | internal/cli/status_test.go (new) | Command contract, error/exit/credential exclusion |
 | internal/controllerapp/observations_test.go | Existing actual Controller/gRPC through CLI |

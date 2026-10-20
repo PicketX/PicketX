@@ -110,6 +110,18 @@ try {
   inspectCLI('initial-doctor', 'doctor', 1)
   inspectCLI('wrong-Agent-audience', 'status', 1, 'agent-token')
   inspectCLI('wrong-ingress-audience', 'status', 1, 'ingress-token')
+  const privateArgument = join(instance, 'diagnostic-private-marker')
+  for (const command of ['status', 'doctor']) {
+    for (const extra of [['--timeout', privateArgument], ['--' + keys[0]], [privateArgument]]) {
+      const result = spawnSync(cli, [command, '--controller', origin, '--key-file', join(instance, 'bootstrap-key'), '--format', 'json', ...extra], initOptions)
+      assert.equal(result.status, 1, 'invalid diagnostic arguments must fail')
+      assert.equal(result.stdout, '', 'invalid diagnostic arguments must not emit a report')
+      const diagnostics = (result.stdout ?? '') + (result.stderr ?? '')
+      assert(!diagnostics.includes(privateArgument), 'diagnostic parser exposed a private path')
+      for (const key of keys) assert(!diagnostics.includes(key), 'diagnostic parser exposed a credential')
+    }
+  }
+  diagnosticCases.push({ name: 'private-arguments', result: 'rejected' })
   if (service) {
     const socket = createConnection({ host: '::1', port: agent })
     socket.setTimeout(5000, () => socket.destroy(new Error('IPv6 listener deadline')))

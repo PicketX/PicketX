@@ -16,6 +16,8 @@ import (
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"github.com/PicketX/PicketX/pkg/configuration"
 )
 
 const diagnosticKey = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
@@ -152,6 +154,68 @@ func TestControllerDiagnosticsIPv6AndExactRevisionScope(t *testing.T) {
 	v, _, e = runDiagnostic(t, v6.URL, key, "status")
 	if e != nil || v["nodes"].([]any)[0].(map[string]any)["agent_ref"] != "node-a" {
 		t.Fatal("scope order is unstable", v, e)
+	}
+}
+
+func TestControllerDiagnosticsParseErrorsDoNotEchoPrivateArguments(t *testing.T) {
+	for _, name := range []string{"status", "doctor"} {
+		for _, extra := range [][]string{{"--timeout", "/private/management-key"}, {"--" + diagnosticKey}, {"/private/extra-path"}} {
+			t.Run(name+extra[0], func(t *testing.T) {
+				var out, diagnostics bytes.Buffer
+				command := New(&out, &diagnostics)
+				command.SetArgs(append([]string{name}, extra...))
+				err := command.Execute()
+				if err == nil || out.Len() != 0 {
+					t.Fatal("invalid private arguments accepted")
+				}
+				// cmd/picketx prints the returned error to stderr after Execute.
+				fmt.Fprintln(&diagnostics, err)
+				for _, private := range []string{"/private/", diagnosticKey} {
+					if strings.Contains(err.Error(), private) || strings.Contains(diagnostics.String(), private) {
+						t.Fatal("command parsing echoed a private argument")
+					}
+				}
+			})
+		}
+	}
+}
+
+func TestControllerDiagnosticsRejectsOverLimitPublicationFields(t *testing.T) {
+	for _, field := range []string{"policy", "facts"} {
+		t.Run(field, func(t *testing.T) {
+			s := diagnosticServer(t, diagnosticObservation(), func(w http.ResponseWriter, r *http.Request) bool {
+				if r.URL.Path != "/api/v1/publication" {
+					return false
+				}
+				w.Header().Set("Content-Type", "application/json")
+				v := map[string]any{"authority": "authority:test", "revision": 1, "policy": "", "facts": ""}
+				v[field] = strings.Repeat("x", configuration.MaxBytes+1)
+				_ = json.NewEncoder(w).Encode(v)
+				return true
+			})
+			if _, out, e := runDiagnostic(t, s.URL, diagnosticKeyFile(t), "status"); e == nil || out != "" {
+				t.Fatal("out-of-contract decoded publication accepted")
+			}
+		})
+	}
+}
+
+func TestControllerDiagnosticsPublicationEncodedReadIsBounded(t *testing.T) {
+	s := diagnosticServer(t, diagnosticObservation(), func(w http.ResponseWriter, r *http.Request) bool {
+		if r.URL.Path != "/api/v1/publication" {
+			return false
+		}
+		w.Header().Set("Content-Type", "application/json")
+		chunk := []byte(strings.Repeat(" ", 1<<20))
+		for n := 0; n < 50; n++ {
+			if _, err := w.Write(chunk); err != nil {
+				break
+			}
+		}
+		return true
+	})
+	if _, out, e := runDiagnostic(t, s.URL, diagnosticKeyFile(t), "status", "--timeout", "30s"); e == nil || out != "" {
+		t.Fatal("unbounded encoded publication accepted")
 	}
 }
 func TestControllerDiagnosticsIncompleteReportsFailDoctor(t *testing.T) {
