@@ -12,7 +12,7 @@ PicketX 通过自助申请、策略和审批，为受保护资源提供有期限
 
 真实管理页面支持[Grant签发/撤销](docs/GRANT_MANAGEMENT.zh-CN.md)、[资源/入口创建、网络编辑/移除和精确主机Binding创建、命名入口编辑/移除](docs/RESOURCE_MANAGEMENT.zh-CN.md)、HTTPRoute创建/查看/移除、[人员本地密码/密钥登录](docs/HUMAN_LOGIN.zh-CN.md)，以及[持久申请与独立缩限批准/拒绝](docs/ACCESS_REQUESTS.zh-CN.md)。批准原子发布限时Grant，不证明已实施。准确源码/CI与集成状态见[交付检查点](docs/AUTONOMOUS_DELIVERY.md)。
 
-OIDC/账户生命周期、必要场景中的请求绑定协议身份、新审批流程的特权联合验收、部署/备份和发布加固仍待完成。保留既有Agent/浏览器/Nginx联合证据，不把它推断为每个后续流程都已验收；不声明完整生产产品。
+[OIDC登录](docs/OIDC_LOGIN.zh-CN.md)可选地将已验证issuer/subject显式关联现有人类账户，仍读取本地当前角色及SCS会话，不从claims推断角色或网络权限。数据库账户生命周期、原生人员审批/Agent/Nginx/Gitea及静态服务/恢复增量已记录于检查点。真实部署IdP及其安装版Agent/应用/恢复联合验收仍待完成，签名协议夹具不证明这些场景；不声明完整生产产品。
 
 [节点观测](docs/NODE_OBSERVATIONS.zh-CN.md)分别展示已下发目标、流连接与报告新鲜度。Agent 声明不是独立内核验证，持续应用状态证明尚未提供。
 
@@ -32,7 +32,7 @@ SQLite 选用 GORM 官方驱动（v1.6.0 基线）和 mattn/go-sqlite3（v1.14.5
 
 首期执行范围为IP/CIDR网络准入、现有入口HTTP/HTTPS授权和本地TCP/Unix决策接口。[alpha HTTP适配器](docs/HTTP_AUTHORIZATION.zh-CN.md)新增来源HTTPRoute、限权本地TCP/Unix决策、持久审计及Nginx集成，精确CI验收见检查点；不是已验证用户授权或完整产品。NFQUEUE/镜像探测、透明代理/TLS终止及原生数据库代理仍后移。
 
-管理API使用Casbin3.11.0和官方GORM adapter3.41.0，支持独立主体可信角色、多角色deny优先和可观察周期重载。浏览器会话每次请求解析同一可信角色；本地人员账户已实现，OIDC和按资源委派待实现，见[ADR 0001](docs/decisions/0001-rbac-authorization.zh-CN.md)及[实际边界](docs/MANAGEMENT_API.zh-CN.md)。
+管理API使用Casbin3.11.0和官方GORM adapter3.41.0，支持独立主体可信角色、多角色deny优先和可观察周期重载。浏览器会话每次请求解析同一可信角色；本地人员账户和可选OIDC已实现，按资源委派待实现，见[ADR 0001](docs/decisions/0001-rbac-authorization.zh-CN.md)及[实际边界](docs/MANAGEMENT_API.zh-CN.md)。
 
 运行支持已接SCS2.9.0浏览器会话、Echo原生CSRF、普通/Agent独立限流、官方gRPC、独立Agent Token与可选服务端TLS；指标及更广集成待实现，见[ADR 0002](docs/decisions/0002-runtime-support.zh-CN.md)。
 

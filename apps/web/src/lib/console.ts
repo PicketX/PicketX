@@ -3,7 +3,7 @@ export type Identity = { id: string; roles: string[]; operations: string[] }
 export type Publication = { authority: string; revision: number; policy: string; facts: string }
 export type AuditEvent = { id: number; actor: string; reason: string; revision: number; digest: string; at: string }
 export type AuditPage = { events: AuditEvent[]; next_after: number }
-export type Session = { authenticated: boolean; csrf: string; password_login?: boolean }
+export type Session = { authenticated: boolean; csrf: string; password_login?: boolean; oidc_login?: boolean }
 export class APIError extends Error {
   status: number
   constructor(status: number, code: string) { super(code); this.status = status }

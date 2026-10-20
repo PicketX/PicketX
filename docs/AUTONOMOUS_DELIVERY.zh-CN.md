@@ -1,5 +1,27 @@
 # 自动交付检查点
 
+## OIDC 评审修复 — 2026-10-20T02:05Z
+同owner codex/oidc-login，heartbeat02:05Z，租约02:35Z或明确释放/合并且main完整验证。
+PR39活跃。一次全分支评审0Critical/2Important、With fixes；root同一轮回归优先修复：
+离站前撤销原SCS（实际旧Cookie200 RED→race GREEN），把混合空标记夹具改为合法
+Resource并精确回读revision/人类审计。本地全量normal/race仅继承Unix EPERM，聚焦四包
+race/vet/build、Web锁文件检查通过。真实缺按钮RED39355817801和实际登录后夹具非法
+RED39356233386均保留，不是验收。全部12项保留判断/代价和延期传输故障测试广度见
+validation/OIDC_LOGIN_REVIEW*.md。修复后完整native/原始日志/源码/四份实际归档/
+expected-head合并/main仍必需；不二次评审或伪造approval。最终准确证据及即时释放写
+PR39，优先于源码pending。下一段实际部署IdP＋安装Controller/Agent/入口/应用及OIDC
+恢复，签名夹具不证明此闭环或整体完成，不重做已交付Agent/LKG基础。
+
+## OIDC 接续 — 2026-10-20T01:41Z
+Owner codex/oidc-login，短租约02:35Z或明确释放/合并且main完整验证。
+已核对Core adfa1b1/CI39339061250及Agent0255d4d/CI39347548020全绿，
+PR38/27已释放，无竞争PR。保留原工作区和旧分支，当前隔离工作区从准确main新建分支。
+设计/上下文图/计划：superpowers/{specs,plans}/2026-10-20-oidc-login.md。
+逐项TDD、内联实现、一次全分支独立评审；例行确认按明确授权省略，验证门禁不省略。
+外部验证身份只显式绑定现有人类账户；本地角色和网络Grant仍独立，禁止claims自动提权。
+本地基线仅继承Unix socket EPERM，真实Linux CI必需。浏览器签名协议夹具不是生产IdP。
+最终准确提交/PR/CI/源码/归档/main证据与即时释放记入PR。整体目标尚未完成。
+
 ## PR37 权限就绪等待 — 2026-10-19T19:00Z
 Owner codex/capability-refresh，租约19:25Z或明确释放/合并且main完整验证全绿。
 原生RED39305662932确认Playwright异步Promise提前成功，不是生产授权缺陷。
