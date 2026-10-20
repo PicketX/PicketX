@@ -10,11 +10,14 @@ import { once } from 'node:events'
 import { randomBytes } from 'node:crypto'
 import { chromium } from 'playwright'
 import { freePort } from './ingress.mjs'
+import { restoreRealIdpInstance, validateRealIdpRestoreEvidence } from '../../../scripts/real-idp-restore.mjs'
+import { assertPrivateStateEqual } from '../../../scripts/controller-state-copy.mjs'
+import { durableServiceView } from '../../../scripts/controller-service-evidence.mjs'
 import { createTestCertificate, requestHTTPS, stagePrivateProvider } from '../../../scripts/real-idp-https.mjs'
 
 const bundle = resolve(process.argv[2] ?? '/missing-bundle'), keycloakSource = resolve(process.argv[3] ?? '/missing-keycloak')
 const archiveSHA256 = '4e2740b181faa2ea623a1c2ecf00855935311e546046e2f857615a47ed24cbe8'
-let phase = 'setup', directory, browser, context, trustLabel, activePage, siteOrigins, completed = false
+let phase = 'setup', directory, browser, context, trustLabel, activePage, siteOrigins, completed = false, restoreEvidence
 const children = [], observations = { s256: false, nonce: false }
 const nss = join(homedir(), '.pki/nssdb')
 const command = (bin, args, options = {}) => {
@@ -71,14 +74,17 @@ try {
   phase = 'installed-init'
   const runtimeEnv = Object.fromEntries(Object.entries(process.env).filter(([key]) => !key.startsWith('PICKETX_')))
   runtimeEnv.PATH = ''; runtimeEnv.SSL_CERT_FILE = certificate.ca
-  const instance = join(privateDir, 'instance'), cli = join(bundle, 'bin/picketx')
+  let instance = join(privateDir, 'instance')
+  const cli = join(bundle, 'bin/picketx')
   command(cli, ['controller-init', '--directory', instance, '--assets', join(bundle, 'web'), '--origin', origin, '--listen', `127.0.0.1:${backendPort}`, '--agent-listen', `127.0.0.1:${await freePort()}`, '--authz-listen', `127.0.0.1:${await freePort()}`], { env: runtimeEnv })
-  const token = (await readFile(join(instance, 'bootstrap-key'), 'utf8')).trim(), bindings = join(instance, 'bindings.json'), oidc = join(instance, 'provider.json')
+  const token = (await readFile(join(instance, 'bootstrap-key'), 'utf8')).trim()
+  await mkdir(join(instance, 'identity'), { mode: 0o700 })
+  let bindings = join(instance, 'identity/bindings.json'), oidc = join(instance, 'identity/provider.json')
   await writeFile(bindings, '{"bindings":[]}', { mode: 0o600 })
   await writeFile(oidc, JSON.stringify({ issuer, client_id: 'picketx-installed', client_secret: secret, bindings }), { mode: 0o600 })
   const configuration = JSON.parse(await readFile(join(instance, 'controller.yaml'), 'utf8')); configuration.browser.oidc_config = oidc
   await writeFile(join(instance, 'controller.yaml'), JSON.stringify(configuration), { mode: 0o600 })
-  const core = start(join(bundle, 'bin/picketx-controller'), ['-config', join(instance, 'controller.yaml')], runtimeEnv)
+  let core = start(join(bundle, 'bin/picketx-controller'), ['-config', join(instance, 'controller.yaml')], runtimeEnv)
   const nginxConfig = join(privateDir, 'nginx.conf')
   await writeFile(nginxConfig, `daemon off;\npid ${JSON.stringify(join(privateDir, 'nginx.pid'))};\nerror_log ${JSON.stringify(join(privateDir, 'nginx.log'))};\nevents {}\nhttp { access_log off; server { listen 127.0.0.1:${publicPort} ssl; server_name 127.0.0.1; ssl_certificate ${JSON.stringify(certificate.cert)}; ssl_certificate_key ${JSON.stringify(certificate.key)}; location / { proxy_set_header Host $http_host; proxy_pass http://127.0.0.1:${backendPort}; } } }\n`, { mode: 0o600 })
   const nginx = start('nginx', ['-p', directory, '-c', nginxConfig], process.env)
@@ -128,12 +134,51 @@ try {
   assert((await api('/audit')).json().events.some(event => event.actor === account.id && event.reason === 'real Keycloak human publication'))
   const evidence = process.env.PICKETX_REAL_IDP_EVIDENCE_DIR; assert(evidence, 'explicit public evidence directory required'); await mkdir(evidence, { recursive: true })
   await page.screenshot({ path: join(evidence, 'real-idp-controller-1440.png'), fullPage: true })
+  phase = 'stopped-real-provider-backup'
+  const views = async () => Object.fromEntries(await Promise.all(['publication', 'accounts', 'audit'].map(async path => {
+    const started = Date.now(), response = await api('/' + path); assert.equal(response.status, 200)
+    const value = response.json()
+    if (path === 'accounts') assert(Date.parse(value.observedAt) >= started - 1000 && Date.parse(value.observedAt) <= Date.now() + 1000, 'fresh accounts observation')
+    return [path, durableServiceView(path, value)]
+  })))
+  const beforeRestore = await views()
+  await stop(core, true)
+  assert.equal(provider.exitCode, null); assert.equal(provider.signalCode, null)
+  assert.equal((await requestHTTPS(issuer + '/.well-known/openid-configuration', { ca })).status, 200)
+  const restored = await restoreRealIdpInstance(instance, join(privateDir, 'stopped backup'), join(privateDir, 'restored instance'), join(privateDir, 'original unavailable'))
+  instance = restored.instance; oidc = restored.configuration.browser.oidc_config; bindings = restored.provider.bindings
+  core = start(join(bundle, 'bin/picketx-controller'), ['-config', join(instance, 'controller.yaml')], runtimeEnv)
+  phase = 'restored-real-provider-login'
+  await ready(core, async () => (await requestHTTPS(origin + '/readyz', { ca })).status === 200)
+  assert.equal((await requestHTTPS(origin + '/console/api/v1/me', { ca, headers: { Cookie: `picketx_session=${cookie.value}` } })).status, 401)
+  assertPrivateStateEqual(await views(), beforeRestore)
+  assertPrivateStateEqual((await readFile(join(instance, 'bootstrap-key'), 'utf8')).trim(), token)
+  observations.s256 = false; observations.nonce = false
+  await begin(); const restoredIdentity = await signedIn()
+  assert.equal(restoredIdentity.id, account.id); assert.deepEqual(restoredIdentity.roles, ['role:admin'])
+  const restoredCookie = (await context.cookies()).find(item => item.name === 'picketx_session')
+  assert(restoredCookie?.secure && restoredCookie.httpOnly && restoredCookie.sameSite === 'Strict')
+  assert.notEqual(restoredCookie.value, cookie.value); assert(observations.s256 && observations.nonce)
+  assert.equal(await page.evaluate(() => localStorage.length + sessionStorage.length), 0)
+  assertPrivateStateEqual(await views(), beforeRestore)
+  assert.equal(provider.exitCode, null); assert.equal(provider.signalCode, null)
+  assert.equal((await requestHTTPS(issuer + '/.well-known/openid-configuration', { ca })).status, 200)
+  phase = 'restored-human-publication'
+  const restoredPolicy = policy + '# restored real IdP publication\n'
+  await page.getByLabel('Policy YAML', { exact: true }).fill(restoredPolicy)
+  await page.getByLabel('Change reason', { exact: true }).fill('restored real Keycloak human publication')
+  await page.getByRole('button', { name: 'Save desired configuration', exact: true }).click()
+  await page.getByText('Desired configuration saved. Node application is not confirmed.', { exact: true }).waitFor()
+  const restoredPublication = (await api('/publication')).json(); assert.equal(restoredPublication.revision, 3); assert.equal(restoredPublication.policy, restoredPolicy)
+  assert((await api('/audit')).json().events.some(event => event.actor === account.id && event.reason === 'restored real Keycloak human publication' && event.revision === 3))
+  await page.screenshot({ path: join(evidence, 'real-idp-restored-1440.png'), fullPage: true })
+  restoreEvidence = { principal: account.id, revision: restoredPublication.revision, restore: restored.proof }
   phase = 'current-local-roles'
   assert.equal((await api(`/accounts/${account.id}`, 'PUT', { roles: ['role:viewer'], disabled: false, reason: 'real IdP local role revocation' }, 1)).status, 200)
   assert.equal((await requestHTTPS(origin + '/console/api/v1/me', { ca, headers: { Cookie: `picketx_session=${cookie.value}` } })).status, 401)
   await begin(); const viewer = await signedIn(); assert.deepEqual(viewer.roles, ['role:viewer']); assert(!viewer.operations.includes('publication:write'))
-  const writeStatus = await page.evaluate(async () => { const session = await (await fetch('/console/api/v1/session')).json(); return (await fetch('/console/api/v1/publication', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': session.csrf, 'If-Match': '"2"' }, body: JSON.stringify({ policy: '', facts: '{}', reason: 'viewer cannot write' }) })).status })
-  assert.equal(writeStatus, 403); assert.equal((await api('/publication')).json().revision, 2)
+  const writeStatus = await page.evaluate(async () => { const session = await (await fetch('/console/api/v1/session')).json(); return (await fetch('/console/api/v1/publication', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': session.csrf, 'If-Match': '"3"' }, body: JSON.stringify({ policy: '', facts: '{}', reason: 'viewer cannot write' }) })).status })
+  assert.equal(writeStatus, 403); assert.equal((await api('/publication')).json().revision, 3)
   phase = 'binding-revoke-logout'
   const viewerCookie = (await context.cookies()).find(item => item.name === 'picketx_session')
   await writeFile(bindings, '{"bindings":[]}', { mode: 0o600 }); assert.equal((await me()).status, 401)
@@ -151,6 +196,11 @@ try {
   await assert.rejects(stat(keycloak), { code: 'ENOENT' }, 'owned provider state was not removed')
   directory = undefined
   await writeFile(join(evidence, 'real-idp-report.json'), JSON.stringify({ result: 'pass', source, provider: { kind: 'real-keycloak', version: '26.8.1', archiveSHA256, disposable: true }, runtimePATH: 'empty', proofs: { normalVerifiedTLS: true, unknownCARejected: true, wrongSANRejected: true, realPasswordRejected: true, validUnboundRejected: true, explicitSubjectBinding: true, s256: true, nonce: true, secureLaxCorrelation: true, secureStrictSession: true, correlationCleared: true, noBrowserTokenStorage: true, sameLocalPrincipal: true, humanPublicationAndAudit: true, currentLocalRoles: true, oldCookieRejected: true, viewerWriteDenied: true, bindingWithdrawalDenied: true, localLogout: true, ownedTrustRemoved: true, cleanControllerShutdown: true } }, null, 2) + '\n')
+  const restoreReport = { result: 'pass', source, provider: { kind: 'real-keycloak', version: '26.8.1', archiveSHA256, disposable: true }, runtimePATH: 'empty', ...restoreEvidence,
+    proofs: { normalVerifiedTLS: true, providerRunningAcrossRestore: true, cleanStoppedBackup: true, durableViewsEqual: true, oldSessionRejected: true, freshSamePrincipalRoles: true, restoredPublicationAudit: true, withdrawalDenied: true, revokedCookieRejected: true, localRecoveryKeyRetained: true, ownedStateRemoved: true, ownedTrustRemoved: true } }
+  validateRealIdpRestoreEvidence(restoreReport, source)
+  await writeFile(join(evidence, 'real-idp-restore-report.json'), JSON.stringify(restoreReport, null, 2) + '\n')
+  console.log('PASS actual real Keycloak HTTPS stopped Controller recovery: complete private copy, nested relocated paths, original unavailable, old-cookie401, fresh same-principal OIDC/publication/audit, current-role and binding revocation; external IdP DB not restored')
   console.log('PASS actual Keycloak26.8.1 → normal CA/SAN HTTPS → installed Controller/React/SCS/Casbin/SQLite: password/unbound denial, Secure cookies, current roles, publication/audit and revoke/logout; disposable real provider NOT production deployment or Agent conjunction')
   completed = true
 } catch {

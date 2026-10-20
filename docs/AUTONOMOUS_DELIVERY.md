@@ -1,5 +1,18 @@
 # Autonomous delivery checkpoint
 
+## Real-provider stopped recovery acquisition — 2026-10-20T08:16Z
+Owner codex/real-idp-restore; lease09:15Z or explicit verified-main release earlier.
+Fresh Core64c8cb8/tree4637c029 and Agentb14b54d/tree5b243935; no open PR.
+PR28 exact main39388341832/allraw/fourarchives accepted and released07:53Z.
+Use existing clean isolated Core worktree, new exact-main branch; all old branches
+and user files preserved. Focused spec/context/plan superpowers/{specs,plans}/2026-10-20-real-idp-restore.md.
+Extend existing actualKeycloak26.8.1/normalHTTPS installed runner with complete
+stopped Controller-only relocation; keep externalIdP alive/all old gates, no Go/
+API/UI/kernel/dependency change. Local new30RED→GREEN/full62Node; UnixEPERM baseline.
+One fresh whole-branch review/fullCI/raw/fouractualarchives/source/static/expected-head
+merge/main still required. Final PR receipt/release supersedes source pending text.
+Next status/doctor commands, not repeated completed AgentPR28 conjunction.
+
 ## Real-provider review correction — 2026-10-20T06:10Z
 Same owner codex/real-idp-https, PR41, lease06:45Z or explicit verified-main release.
 One whole-branch review0Critical/1Important/0Minor, With fixes. Root retained

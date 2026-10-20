@@ -1,5 +1,18 @@
 # 自动交付检查点
 
+## 真实提供方停服恢复接续 — 2026-10-20T08:16Z
+Owner codex/real-idp-restore；租约09:15Z或主线验收完成立即释放。
+基于Core64c8cb8/tree4637c029及Agentb14b54d/tree5b243935；无打开PR。
+PR28主线39388341832及原始日志/四归档已验收，07:53Z释放。
+复用干净隔离Core工作区，新建分支，保留旧分支及用户文件。
+设计/上下文/计划：superpowers/{specs,plans}/2026-10-20-real-idp-restore.md。
+扩展实际Keycloak26.8.1正常HTTPS流程，外部IdP保留，完整停服异路径恢复
+Controller；所有原门禁保留，不改生产Go/API/UI/内核/依赖。
+新增30回归先红后绿、完整62Node通过；本地UnixEPERM不称原生通过。
+独立全分支评审、完整CI/原始日志/四实际归档/源码/静态二进制/预期头合并/
+新main复核仍须完成。最终PR收据覆盖待验文本并立即释放。
+后续状态/doctor功能，不重复AgentPR28已验收联合流程。
+
 ## 真实Provider评审修复 — 2026-10-20T06:10Z
 同owner codex/real-idp-https，PR41，租约06:45Z或明确main完整验证后释放。
 一次全分支评审0Critical/1Important/0Minor、With fixes。root保留Provider dev-file
