@@ -1,6 +1,6 @@
 # 自动交付检查点
 
-## 真实IdP/HTTPS接续 — 2026-10-20T05:45Z
+## 真实IdP/HTTPS接续 — 2026-10-20T05:39Z
 Owner codex/real-idp-https，短租约06:45Z或明确释放/合并且main完整验证。
 Core0b3d8c1/tree98f977d/main39373684266、Agent0255d4d/treeced537d/main39347548020
 全部job/step绿，无开放PR；PR40已05:20:33Z明确释放且回读。复用干净隔离工作区
