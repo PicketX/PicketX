@@ -2,12 +2,16 @@
 package controllerapp
 
 import (
+	"bytes"
 	"encoding/json"
 	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
 	"github.com/PicketX/PicketX/internal/agentsync"
+	"github.com/PicketX/PicketX/internal/cli"
+	"github.com/PicketX/PicketX/internal/controllerclient"
 	agentv1 "github.com/PicketX/PicketX/pkg/protocol/agent/v1alpha1"
 )
 
@@ -16,6 +20,25 @@ func TestAgentObservationsRuntime(t *testing.T) {
 	c := managedConfig(t)
 	p := start(t, c)
 	ready(t, p, 200)
+	keyFile := filepath.Join(t.TempDir(), "management-key")
+	write(t, keyFile, []byte(adminToken))
+	checkCLI := func(want string, healthy bool) {
+		t.Helper()
+		var out, diagnostics bytes.Buffer
+		command := cli.New(&out, &diagnostics)
+		command.SetArgs([]string{"doctor", "--controller", "http://" + p.http, "--key-file", keyFile, "--format", "json"})
+		err := command.Execute()
+		if (err == nil) != healthy {
+			t.Fatalf("CLI health mismatch: %v", err)
+		}
+		var report controllerclient.Report
+		if json.Unmarshal(out.Bytes(), &report) != nil || len(report.Nodes) != 1 || report.Nodes[0].State != want || report.EnforcementConfirmed {
+			t.Fatalf("incorrect actual Controller diagnostic: %s", out.String())
+		}
+		if bytes.Contains(out.Bytes(), []byte(adminToken)) {
+			t.Fatal("CLI exposed management key")
+		}
+	}
 	read := func() agentsync.Observations {
 		t.Helper()
 		code, h, data := apiCall(t, p, "GET", "/api/v1/agent-observations", nil, "", adminToken)
@@ -32,6 +55,7 @@ func TestAgentObservationsRuntime(t *testing.T) {
 	if len(v.Nodes) != 1 || v.Nodes[0].Freshness != "unknown" || v.Nodes[0].Connection != "disconnected" {
 		t.Fatal(v)
 	}
+	checkCLI("disconnected", false)
 	for _, tc := range []struct {
 		token, path string
 		code        int
@@ -65,6 +89,7 @@ func TestAgentObservationsRuntime(t *testing.T) {
 	if n.Report.ObservedAt != "2099-01-01T00:00:00Z" || n.Report.ReceivedAt.IsZero() {
 		t.Fatal(n)
 	}
+	checkCLI("reported-applied", true)
 	policy, _ := os.ReadFile("../../examples/static/gitea.yaml")
 	facts, _ := os.ReadFile("../../examples/static/facts.json")
 	body, _ := json.Marshal(map[string]string{"policy": string(policy), "facts": string(facts), "reason": "observe pending delivery"})
@@ -76,15 +101,18 @@ func TestAgentObservationsRuntime(t *testing.T) {
 	if n.Report.Revision != "1" {
 		t.Fatal(n)
 	}
+	checkCLI("applying", false)
 	if e := st.CloseSend(); e != nil {
 		t.Fatal(e)
 	}
 	wait(func(n agentsync.NodeObservation) bool {
 		return n.Connection == "disconnected" && n.Freshness == "stale"
 	})
+	checkCLI("disconnected", false)
 	next := stream(t, p)
 	snapshot(t, next)
 	wait(func(n agentsync.NodeObservation) bool { return n.Connection == "connected" && n.Freshness == "stale" })
+	checkCLI("stale", false)
 }
 
 func TestAgentObservationsRejectUnreadyPublisher(t *testing.T) {

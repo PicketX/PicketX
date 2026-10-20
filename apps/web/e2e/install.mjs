@@ -60,6 +60,24 @@ try {
     await writeFile(join(instance, 'controller.yaml'), JSON.stringify(config, null, 2) + '\n', { mode: 0o600 })
   }
   const api = (path, key) => fetch(origin + '/api/v1/' + path, { headers: key ? { Authorization: `Bearer ${key}` } : {} })
+  const diagnosticCases = []
+  function inspectCLI(name, command, revision, keyName = 'bootstrap-key', unavailable = false) {
+    const result = spawnSync(cli, [command, '--controller', origin, '--key-file', join(instance, keyName), '--format', 'json', '--timeout', unavailable ? '250ms' : '5s'], initOptions)
+    const text = (result.stdout ?? '') + (result.stderr ?? '')
+    for (const key of keys) assert(!text.includes(key), 'installed diagnostic exposed a credential')
+    if (unavailable || keyName !== 'bootstrap-key') {
+      assert.equal(result.status, 1, 'failed read must fail CLI'); assert.equal(result.stdout, '', 'failed read must not emit a report')
+      diagnosticCases.push({ name, result: 'rejected' }); return
+    }
+    assert.equal(result.status, command === 'doctor' ? 1 : 0, 'no Agent report cannot pass doctor')
+    const value = JSON.parse(result.stdout)
+    assert.equal(value.scope, 'controller-observations'); assert.equal(value.enforcement_confirmed, false)
+    assert.equal(value.revision, String(revision)); assert.equal(value.nodes.length, 1)
+    assert.equal(value.nodes[0].state, 'disconnected'); assert.equal(value.nodes[0].agent_ref, 'node-a')
+    if (command === 'doctor') assert.equal(value.ready, true)
+    assert(!('policy' in value) && !('facts' in value))
+    diagnosticCases.push({ name, result: 'pass', revision: value.revision, state: value.nodes[0].state })
+  }
   async function ready() {
     for (let n = 0; n < 150; n++) {
       if (child) assert.equal(child.exitCode, null, 'packaged Controller exited before ready')
@@ -88,6 +106,10 @@ try {
     child = null
   }
   await start()
+  inspectCLI('initial-status', 'status', 1)
+  inspectCLI('initial-doctor', 'doctor', 1)
+  inspectCLI('wrong-Agent-audience', 'status', 1, 'agent-token')
+  inspectCLI('wrong-ingress-audience', 'status', 1, 'ingress-token')
   if (service) {
     const socket = createConnection({ host: '::1', port: agent })
     socket.setTimeout(5000, () => socket.destroy(new Error('IPv6 listener deadline')))
@@ -140,6 +162,8 @@ try {
   await human.clearCookies(); await humanLogin()
   const publication = await (await api('publication', keys[0])).json()
   assert.equal(publication.revision, 2); assert(publication.policy.includes('name: installed'))
+  inspectCLI('restarted-status', 'status', 2)
+  inspectCLI('restarted-doctor', 'doctor', 2)
   const accounts = await (await api('accounts', keys[0])).json()
   assert.equal(accounts.accounts.length, 1); assert.equal(accounts.accounts[0].username, 'operator')
   const audit = await person.evaluate(async () => (await fetch('/console/api/v1/audit')).json())
@@ -225,11 +249,14 @@ try {
     await person.screenshot({ path: join(evidence, `installed-controller-${width}.png`), fullPage: true })
   }
   await stop()
+  inspectCLI('stopped-Controller', 'status', 2, 'bootstrap-key', true)
   for (const key of keys) assert(!logs.includes(key), 'runtime logged a credential')
   const report = { result: 'pass', source, runtimePATH: 'empty', relocated: true, initialRevision: 1, recoveredRevision: 2, accounts: 1, oldSessionRejected: true, independentAudiences: true, cleanSIGTERM: true }
   if (service) report.service = service.proof
   if (serviceMode) assert(report.service?.status === 'pass', 'actual systemd and stopped restore proof required')
   await writeFile(join(evidence, 'install-report.json'), JSON.stringify(report, null, 2) + '\n')
+  await writeFile(join(evidence, 'cli-diagnostics-report.json'), JSON.stringify({ result: 'pass', source, runtimePATH: 'empty', independentEnforcement: false, cases: diagnosticCases }, null, 2) + '\n')
+  console.log('PASS actual installed CLI status/doctor: authenticated reads, disconnected is not applied, wrong audiences denied, restarted revision retained, stopped Controller rejected, empty runtime PATH')
   console.log('PASS detached static Controller: private init, real browser bootstrap/human publication, restart/audit, no runtime tools')
   if (service) console.log('PASS actual unprivileged systemd Controller: crash restart, clean stop, complete stopped backup and relocated restore')
   if (service) console.log('PASS actual installed OIDC restored service: nested private paths, original unavailable, old-cookie401, same-principal fresh login, binding withdrawal; signed protocol fixture NOT production IdP')

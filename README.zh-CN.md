@@ -26,7 +26,7 @@ PicketX 通过自助申请、策略和审批，为受保护资源提供有期限
 
 运行日志使用标准库 `log/slog`，JSON标准错误与模块Logger注入已实现；管理配置审计独立持久化。格式/级别选项和请求时授权记录仍待实现。
 
-`picketx` CLI 使用 Cobra v1.10.2，现提供只读配置检查。Controller已接入Koanf进程配置；经过认证的管理命令仍待实现。
+`picketx` CLI使用Cobra v1.10.2，提供配置/部署及鉴权的[Controller status/doctor](docs/CLI_DIAGNOSTICS.zh-CN.md)，区分期望版本和当前Agent声明，不冒称独立内核验证。Controller已接入Koanf进程配置。
 
 SQLite 选用 GORM 官方驱动（v1.6.0 基线）和 mattn/go-sqlite3（v1.14.52 基线）。默认 Linux 发布包必须完整静态链接，无额外共享库安装要求。PostgreSQL 采用官方 gorm.io/driver/postgres v1.6.3，底层 pgx/v5 v5.10.0。Controller发布记录及静态SQLite实际运行检查已实现；PostgreSQL、业务迁移与发布打包仍待接入。
 

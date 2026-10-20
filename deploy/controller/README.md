@@ -187,3 +187,23 @@ Native CI installs a relocated bundle outside source with an empty runtime PATH,
 uses real Chromium to create/sign-in a human, publishes and restarts/readbacks
 SQLite/audit, rejects cross-audience keys and old sessions, and inspects artifacts.
 This does not yet establish a packaged Agent→ingress→Gitea deployment or host reboot.
+
+## Read-only diagnostics
+
+Run the shipped CLI as an identity that can read the private management key:
+
+```sh
+/opt/picketx/bin/picketx status --controller https://picketx.example.com --key-file /var/lib/picketx/controller/bootstrap-key
+/opt/picketx/bin/picketx doctor --controller https://picketx.example.com --key-file /var/lib/picketx/controller/bootstrap-key --agent node-a --format json
+```
+
+Use the exact Controller origin and normal HTTPS trust (optional --ca-file for an
+additional PEM CA). Only literal loopback permits HTTP. The key is not an Agent or
+ingress Token; a dedicated management viewer key with publication:read is sufficient.
+No redirects or ambient proxies are used. --timeout defaults5s (maximum30s).
+Status returns0 for a valid read, including disconnected/empty scopes. Doctor
+returns1 if Controller readiness or any selected fresh matching APPLIED report is
+missing. A new publication still applying cannot pass. Reports always distinguish
+Agent assertions from independent enforcement: enforcement_confirmed=false.
+Read errors emit no success report; no policy/facts/key/private error is printed.
+Neither command repairs/reloads state or proves actual packet reachability.
