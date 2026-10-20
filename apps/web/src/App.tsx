@@ -41,6 +41,7 @@ export default function App() {
   const [hasMore, setHasMore] = useState(false)
   const [busy, setBusy] = useState(true)
   const [error, setError] = useState('')
+  const oidcFailure = useRef(new URLSearchParams(window.location.search).get('login_error') === 'oidc')
   const [notice, setNotice] = useState('')
   const [lastRead, setLastRead] = useState(0)
   const [now, setNow] = useState(() => Date.now())
@@ -96,6 +97,7 @@ export default function App() {
       try {
         const { data } = await request<Session>('/session', { signal: controller.signal }); setSession(data)
         if (data.authenticated) await load(controller.signal)
+        if (oidcFailure.current) { oidcFailure.current = false; window.history.replaceState(null, '', '/console/'); setError(t('oidc.rejected')) }
       } catch (e) { fail(e, true) } finally { if (!controller.signal.aborted) setBusy(false) }
   })
   const invalidate = useEffectEvent(() => { epoch.current++ })
@@ -144,6 +146,20 @@ export default function App() {
     try { await request('/logout', { method: 'POST', headers: { 'X-CSRF-Token': session?.csrf ?? '' } }); clear(); setSession(s => s ? { ...s, authenticated: false } : null) }
     catch (e) { fail(e) } finally { setBusy(false) }
   }
+  async function loginOIDC() {
+    if (busy) return
+    setBusy(true); setError(''); setKey(''); setPassword(''); setUsername(''); setShowPassword(false)
+    try {
+      const { data } = await request<Session>('/session'); setSession(data)
+      if (!data.oidc_login) { setError(t('oidc.unavailable')); return }
+      const result = await request<{ url: string }>('/oidc/start', { method: 'POST', headers: { 'X-CSRF-Token': data.csrf } }, 200)
+      // Only the trusted Controller supplies this destination, never a URL query.
+      const target = new URL(result.data.url)
+      if (target.protocol !== 'https:' && target.protocol !== 'http:') throw new Error('Invalid sign-in destination')
+      window.location.assign(target.href)
+    } catch (e) { if (e instanceof APIError && e.message === 'oidc_unavailable') setError(t('oidc.unavailable')); else fail(e) }
+    finally { setBusy(false) }
+  }
   async function save(e: React.FormEvent) {
     e.preventDefault(); if (busy || !draft || !canWrite || conflict) return
     setBusy(true); setError(''); setNotice('')
@@ -169,6 +185,7 @@ export default function App() {
     <header className="login-header"><span className="brand"><ShieldCheck aria-hidden="true" />PicketX</span>{language}</header>
     <main className="login-main"><section className="login-intro"><h1>{t('loginTitle')}</h1><p>{t('loginDescription')}</p><p className="boundary">{t('desiredBoundary')}</p></section>
       <form className="login-panel" onSubmit={e => void login(e)} aria-busy={busy}><h2>{t('signIn')}</h2>{errorPanel}
+        {session?.oidc_login && <div className="mb-6"><Button type="button" variant="outline" className="w-full" disabled={busy} onClick={() => void loginOIDC()} aria-describedby="oidc-help">{busy ? t('loading') : t('oidc.continue')}</Button><p id="oidc-help" className="hint">{t('oidc.help')}</p></div>}
         {session?.password_login && <><label htmlFor="sign-in-method">{t('humanLogin.method')}</label><select id="sign-in-method" value={signInMethod} disabled={busy} onChange={e => { setSignInMethod(e.target.value as 'key' | 'password'); setKey(''); setPassword(''); setUsername(''); setShowPassword(false); setError('') }}><option value="key">{t('accessKey')}</option><option value="password">{t('humanLogin.methodPassword')}</option></select></>}
         {passwordMode ? <>
           <label htmlFor="username">{t('humanLogin.username')}</label><input id="username" name="username" autoComplete="username" autoCapitalize="none" spellCheck={false} value={username} onChange={e => setUsername(e.target.value)} minLength={3} maxLength={64} required disabled={busy} aria-describedby="password-help" />

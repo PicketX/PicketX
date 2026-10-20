@@ -10,6 +10,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/coreos/go-oidc/v3/oidc"
 	"math/big"
 	"net/http"
 	"net/http/httptest"
@@ -31,6 +32,7 @@ type issuerFixture struct {
 	claims           map[string]any
 	nonce, challenge string
 	fail             bool
+	badSignature     bool
 }
 
 func privateJSON(t *testing.T, p string, v any) {
@@ -76,6 +78,9 @@ func fixture(t *testing.T) (*Client, *issuerFixture, string) {
 			input := header + "." + base64.RawURLEncoding.EncodeToString(b)
 			hash := sha256.Sum256([]byte(input))
 			sig, _ := rsa.SignPKCS1v15(rand.Reader, key, crypto.SHA256, hash[:])
+			if f.badSignature {
+				sig[0] ^= 1
+			}
 			json.NewEncoder(w).Encode(map[string]any{"access_token": "not-retained", "token_type": "Bearer", "id_token": input + "." + base64.RawURLEncoding.EncodeToString(sig)})
 		default:
 			http.NotFound(w, r)
@@ -195,5 +200,83 @@ func TestOIDCPrivateBindingsFailClosedAndNoProviderDiagnostic(t *testing.T) {
 	os.Chmod(path, 0644)
 	if _, _, e := c.Resolve("oidc-alice", ""); e == nil {
 		t.Fatal("public bindings accepted")
+	}
+}
+
+func TestOIDCRequiresExactIssuerEvenForLibraryGoogleAlias(t *testing.T) {
+	c, f, _ := fixture(t)
+	// go-oidc intentionally accepts Google's legacy bare issuer alias. PicketX's
+	// explicit issuer binding must not inherit that exception.
+	c.issuer = "https://accounts.google.com"
+	c.verifier = oidc.NewVerifier(c.issuer, &oidc.StaticKeySet{PublicKeys: []crypto.PublicKey{&f.key.PublicKey}}, &oidc.Config{ClientID: "client"})
+	f.claims = map[string]any{"iss": "accounts.google.com"}
+	state, cookie := begin(t, c, f)
+	if _, e := c.Complete(context.Background(), state, cookie, "one-use-code"); e == nil {
+		t.Fatal("non-exact issuer alias accepted")
+	}
+}
+
+func TestOIDCRejectsBadSignatureAndAcceptsBoundAuthorizedParty(t *testing.T) {
+	c, f, _ := fixture(t)
+	f.badSignature = true
+	state, cookie := begin(t, c, f)
+	if _, e := c.Complete(context.Background(), state, cookie, "one-use-code"); e == nil {
+		t.Fatal("bad signature accepted")
+	}
+	f.badSignature = false
+	f.claims = map[string]any{"aud": []string{"client", "other"}, "azp": "client"}
+	state, cookie = begin(t, c, f)
+	if _, e := c.Complete(context.Background(), state, cookie, "one-use-code"); e != nil {
+		t.Fatal("valid authorized party rejected", e)
+	}
+}
+
+func TestOIDCRejectsMalformedPrivateProviderAndUnsafeEndpoints(t *testing.T) {
+	_, _, bindings := fixture(t)
+	path := filepath.Join(filepath.Dir(bindings), "provider.json")
+	original, e := os.ReadFile(path)
+	if e != nil {
+		t.Fatal(e)
+	}
+	var cfg map[string]any
+	json.Unmarshal(original, &cfg)
+	for _, change := range []map[string]any{{"issuer": "http://remote.example"}, {"issuer": "http://localhost:1234"}, {"issuer": "https://user:password@example.test"}, {"issuer": "https://example.test/#fragment"}, {"client_id": ""}, {"client_secret": ""}, {"bindings": "relative.json"}, {"extra": "secret"}} {
+		candidate := map[string]any{}
+		for k, v := range cfg {
+			candidate[k] = v
+		}
+		for k, v := range change {
+			candidate[k] = v
+		}
+		privateJSON(t, path, candidate)
+		if _, e := New(context.Background(), path, "http://127.0.0.1:8080"); e == nil || strings.Contains(e.Error(), "secret") {
+			t.Fatal("unsafe provider accepted or diagnostic leak", change, e)
+		}
+	}
+	privateJSON(t, path, cfg)
+	os.Chmod(path, 0644)
+	if _, e := New(context.Background(), path, "http://127.0.0.1:8080"); e == nil {
+		t.Fatal("public client secret accepted")
+	}
+	os.Chmod(path, 0600)
+	for _, target := range []string{"authorization_endpoint", "token_endpoint", "jwks_uri"} {
+		t.Run(target, func(t *testing.T) {
+			var server *httptest.Server
+			server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				v := map[string]any{"issuer": server.URL, "authorization_endpoint": server.URL + "/authorize", "token_endpoint": server.URL + "/token", "jwks_uri": server.URL + "/keys"}
+				v[target] = "http://remote.example/private"
+				json.NewEncoder(w).Encode(v)
+			}))
+			defer server.Close()
+			candidate := map[string]any{}
+			for k, v := range cfg {
+				candidate[k] = v
+			}
+			candidate["issuer"] = server.URL
+			privateJSON(t, path, candidate)
+			if _, e := New(context.Background(), path, "http://127.0.0.1:8080"); e == nil {
+				t.Fatal("unsafe discovered endpoint accepted")
+			}
+		})
 	}
 }

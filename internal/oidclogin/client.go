@@ -148,7 +148,7 @@ func (c *Client) Complete(ctx context.Context, state, correlation, code string) 
 		return Identity{}, ErrLogin
 	}
 	verified, e := c.verifier.Verify(ctx, raw)
-	if e != nil || subtle.ConstantTimeCompare([]byte(verified.Nonce), []byte(p.nonce)) != 1 || !validSubject(verified.Subject) || !now.Before(verified.Expiry) {
+	if e != nil || verified.Issuer != c.issuer || subtle.ConstantTimeCompare([]byte(verified.Nonce), []byte(p.nonce)) != 1 || !validSubject(verified.Subject) || !now.Before(verified.Expiry) {
 		return Identity{}, ErrLogin
 	}
 	var claims struct {
