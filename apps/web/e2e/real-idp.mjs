@@ -14,7 +14,7 @@ import { createTestCertificate, requestHTTPS } from '../../../scripts/real-idp-h
 
 const bundle = resolve(process.argv[2] ?? '/missing-bundle'), keycloak = resolve(process.argv[3] ?? '/missing-keycloak')
 const archiveSHA256 = '4e2740b181faa2ea623a1c2ecf00855935311e546046e2f857615a47ed24cbe8'
-let phase = 'setup', directory, browser, context, trustLabel, realmFile, completed = false
+let phase = 'setup', directory, browser, context, trustLabel, realmFile, activePage, siteOrigins, completed = false
 const children = [], observations = { s256: false, nonce: false }
 const nss = join(homedir(), '.pki/nssdb')
 const command = (bin, args, options = {}) => {
@@ -47,6 +47,7 @@ try {
   const privateDir = join(directory, 'private'), certificate = await createTestCertificate(privateDir), ca = await readFile(certificate.ca)
   const publicPort = await freePort(), backendPort = await freePort(), providerPort = await freePort()
   const origin = `https://127.0.0.1:${publicPort}`, providerOrigin = `https://127.0.0.2:${providerPort}`, issuer = providerOrigin + '/realms/picketx-acceptance'
+  siteOrigins = { controller: origin, provider: providerOrigin }
   const secret = randomBytes(32).toString('hex'), password = randomBytes(24).toString('hex'), subject = '9f4101d6-0400-4000-8000-111111111111'
   const source = JSON.parse(await readFile(join(bundle, 'SOURCE.json'), 'utf8'))
   assert.match(source.commit, /^[a-f0-9]{40}$/); assert.match(source.tree, /^[a-f0-9]{40}$/)
@@ -92,16 +93,20 @@ try {
   command('certutil', ['-A', '-d', `sql:${nss}`, '-n', trustLabel, '-t', 'C,,', '-i', certificate.ca])
   browser = await chromium.launch({ headless: true }); context = await browser.newContext({ viewport: { width: 1440, height: 1000 } })
   const page = await context.newPage(), pageErrors = []
+  activePage = page
   page.on('pageerror', () => pageErrors.push('browser error'))
   page.on('request', request => { const url = new URL(request.url()); if (url.origin === providerOrigin && url.pathname.endsWith('/protocol/openid-connect/auth')) { observations.s256 = url.searchParams.get('code_challenge_method') === 'S256' && Boolean(url.searchParams.get('code_challenge')); observations.nonce = Boolean(url.searchParams.get('nonce')) } })
   const me = () => page.evaluate(async () => { const response = await fetch('/console/api/v1/me'); return { status: response.status, ...(response.ok ? { identity: await response.json() } : {}) } })
   async function begin() { await page.goto(origin + '/console/'); await page.getByRole('button', { name: 'Continue with organization', exact: true }).click() }
   async function signedIn() { await page.getByRole('heading', { name: 'Desired configuration', exact: true }).waitFor({ timeout: 15000 }); const identity = await me(); assert.equal(identity.status, 200); assert.equal(identity.identity.id, account.id); return identity.identity }
   phase = 'real-password-unbound'
-  await begin(); await page.locator('#username').waitFor()
+  await begin(); phase = 'provider-login-form'; await page.locator('#username').waitFor()
+  phase = 'correlation-cookie'
   const correlation = (await context.cookies()).find(cookie => cookie.name === 'picketx_oidc')
   assert(correlation?.secure && correlation.httpOnly && correlation.sameSite === 'Lax', 'HTTPS correlation cookie boundary')
+  phase = 'wrong-password'
   await page.locator('#username').fill('picketx-operator'); await page.locator('#password').fill('deliberately-incorrect-password'); await page.locator('#kc-login').click(); await page.locator('#input-error').waitFor()
+  phase = 'valid-unbound-callback'
   await page.locator('#password').fill(password); await page.locator('#kc-login').click()
   await page.getByRole('alert').getByText('Organization sign-in failed. Try again or contact your administrator.', { exact: true }).waitFor()
   assert.equal((await me()).status, 401)
@@ -140,7 +145,18 @@ try {
   await writeFile(join(evidence, 'real-idp-report.json'), JSON.stringify({ result: 'pass', source, provider: { kind: 'real-keycloak', version: '26.8.1', archiveSHA256, disposable: true }, runtimePATH: 'empty', proofs: { normalVerifiedTLS: true, unknownCARejected: true, wrongSANRejected: true, realPasswordRejected: true, validUnboundRejected: true, explicitSubjectBinding: true, s256: true, nonce: true, secureLaxCorrelation: true, secureStrictSession: true, correlationCleared: true, noBrowserTokenStorage: true, sameLocalPrincipal: true, humanPublicationAndAudit: true, currentLocalRoles: true, oldCookieRejected: true, viewerWriteDenied: true, bindingWithdrawalDenied: true, localLogout: true, ownedTrustRemoved: true, cleanControllerShutdown: true } }, null, 2) + '\n')
   console.log('PASS actual Keycloak26.8.1 → normal CA/SAN HTTPS → installed Controller/React/SCS/Casbin/SQLite: password/unbound denial, Secure cookies, current roles, publication/audit and revoke/logout; disposable real provider NOT production deployment or Agent conjunction')
   completed = true
-} catch { console.error('Real IdP acceptance failed during ' + phase); process.exitCode = 1 }
+} catch {
+  console.error('Real IdP acceptance failed during ' + phase)
+  // Classification only, never URL/query/body/credential/exception text.
+  if (activePage) {
+    try {
+      const actualOrigin = new URL(activePage.url()).origin
+      const flags = { atProvider: actualOrigin === siteOrigins.provider, atController: actualOrigin === siteOrigins.controller, usernamePresent: await activePage.locator('#username').count() > 0, passwordPresent: await activePage.locator('#password').count() > 0, providerErrorPresent: await activePage.locator('#kc-error-message').count() > 0, inputErrorPresent: await activePage.locator('#input-error').count() > 0, controllerAlertPresent: await activePage.getByRole('alert').count() > 0 }
+      console.error('Real IdP failure classification ' + JSON.stringify(flags))
+    } catch { console.error('Real IdP failure classification unavailable') }
+  }
+  process.exitCode = 1
+}
 finally {
   await context?.close().catch(() => {}); await browser?.close().catch(() => {})
   for (const child of children.toReversed()) { try { await stop(child) } catch { console.error('Real IdP owned-process cleanup failed'); process.exitCode = 1 } }
