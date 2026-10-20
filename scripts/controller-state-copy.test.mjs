@@ -6,6 +6,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { spawnSync } from 'node:child_process'
 import { copyPrivateState, snapshotPrivateTree, relocateInstanceConfig } from './controller-state-copy.mjs'
+import * as stateCopy from './controller-state-copy.mjs'
 
 async function fixture(t) {
   const dir = await mkdtemp(join(tmpdir(), 'picketx-state-test-'))
@@ -58,4 +59,29 @@ test('relocation changes only four exact instance paths, retaining authority and
 test('relocation rejects a path outside original complete instance', () => {
   const c = config(); c.database = '/operator/live.sqlite'
   assert.throws(() => relocateInstanceConfig(c, '/private/old', '/private/new'))
+})
+test('optional OIDC runtime path follows the complete private instance', () => {
+  const original = config(); original.browser.oidc_config = '/private/old/identity/provider.json'
+  const actual = relocateInstanceConfig(original, '/private/old', '/private/new')
+  assert.equal(actual.browser.oidc_config, '/private/new/identity/provider.json')
+  assert.equal(actual.browser.assets, '/bundle/web'); assert.equal(actual.agent.authority, 'authority-stays')
+  assert.equal(original.browser.oidc_config, '/private/old/identity/provider.json')
+})
+test('optional OIDC runtime relocation refuses unknown or external private paths', () => {
+  for (const path of ['/operator/identity/provider.json', '/private/old/identity/../provider.json', 'identity/provider.json']) {
+    const original = config(); original.browser.oidc_config = path
+    assert.throws(() => relocateInstanceConfig(original, '/private/old', '/private/new'))
+    assert.equal(original.browser.oidc_config, path)
+  }
+})
+test('nested provider relocation preserves every nonpath identity field', () => {
+  const original = { issuer: 'https://identity.example.test', client_id: 'picketx-fixture', client_secret: 'not-a-real-secret', bindings: '/private/old/identity/bindings.json' }
+  const actual = stateCopy.relocateOIDCProvider(original, '/private/old', '/private/new')
+  assert.deepEqual(actual, { issuer: 'https://identity.example.test', client_id: 'picketx-fixture', client_secret: 'not-a-real-secret', bindings: '/private/new/identity/bindings.json' })
+  assert.equal(original.bindings, '/private/old/identity/bindings.json')
+})
+test('nested provider relocation refuses missing or external binding state', () => {
+  for (const bindings of [undefined, '', '/operator/bindings.json', '/private/old/identity/../bindings.json']) {
+    assert.throws(() => stateCopy.relocateOIDCProvider({ bindings }, '/private/old', '/private/new'))
+  }
 })

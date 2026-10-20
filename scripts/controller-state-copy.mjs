@@ -53,5 +53,17 @@ export function relocateInstanceConfig(config, old, target) {
     assert.equal(parent?.[key], join(old, relative), 'unexpected private instance path')
     parent[key] = join(target, relative)
   }
+  if (output.browser?.oidc_config !== undefined && output.browser.oidc_config !== '') {
+    assert.equal(output.browser.oidc_config, join(old, 'identity/provider.json'), 'unexpected private OIDC provider path')
+    output.browser.oidc_config = join(target, 'identity/provider.json')
+  }
   return output
+}
+
+// Explicit second layer: relocating controller.yaml alone leaves a stale nested
+// binding reference. Only this fixture's complete in-instance state is supported.
+export function relocateOIDCProvider(provider, old, target) {
+  assert.equal(old, resolve(old)); assert.equal(target, resolve(target)); assert.notEqual(old, target)
+  assert.equal(provider.bindings, join(old, 'identity/bindings.json'), 'unexpected private OIDC bindings path')
+  return { ...structuredClone(provider), bindings: join(target, 'identity/bindings.json') }
 }

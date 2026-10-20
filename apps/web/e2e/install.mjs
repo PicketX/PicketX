@@ -11,8 +11,9 @@ import { createConnection } from 'node:net'
 import { chromium } from 'playwright'
 import { freePort } from './ingress.mjs'
 import { createControllerService } from '../../../scripts/controller-service-fixture.mjs'
-import { copyPrivateState, relocateInstanceConfig, snapshotPrivateTree } from '../../../scripts/controller-state-copy.mjs'
+import { copyPrivateState, relocateInstanceConfig, relocateOIDCProvider, snapshotPrivateTree } from '../../../scripts/controller-state-copy.mjs'
 import { durableServiceView } from '../../../scripts/controller-service-evidence.mjs'
+import { createOIDCProviderFixture } from './oidc-provider-fixture.mjs'
 
 const input = resolve(process.argv[2] ?? '/missing-controller-bundle')
 const serviceMode = process.argv[3] === '--systemd'
@@ -25,7 +26,7 @@ const evidence = process.env.PICKETX_INSTALL_EVIDENCE_DIR ?? join(temp, 'evidenc
 await mkdir(evidence, { recursive: true })
 const env = Object.fromEntries(Object.entries(process.env).filter(([k]) => !k.startsWith('PICKETX_')))
 env.PATH = '' // Neither executable may invoke Go/npm/Python/shell helpers at runtime.
-let child, browser, service, logs = '', keys = [], completed = false
+let child, browser, service, oidcIssuer, logs = '', keys = [], completed = false
 const publicError = value => keys.reduce((s, key) => s.replaceAll(key, '[REDACTED]'), String(value))
 try {
   await cp(input, bundle, { recursive: true, errorOnExist: true, force: false })
@@ -46,6 +47,18 @@ try {
   const repeat = spawnSync(cli, args, initOptions)
   assert.notEqual(repeat.status, 0, 'existing instance overwritten')
   assert.equal((await readFile(join(instance, 'bootstrap-key'), 'utf8')).trim(), keys[0], 'recovery key rotated on rerun')
+  if (service) {
+    const secret = randomBytes(32).toString('hex'); keys.push(secret, 'fixture-not-persisted')
+    oidcIssuer = await createOIDCProviderFixture({ origin, clientID: 'installed-oidc-test', secret, subject: 'installed-operator' })
+    const directory = join(instance, 'identity'), provider = join(directory, 'provider.json')
+    await mkdir(directory, { mode: 0o700 })
+    await writeFile(join(directory, 'bindings.json'), '{"bindings":[]}', { mode: 0o600 })
+    await writeFile(provider, JSON.stringify({ issuer: oidcIssuer.issuer, client_id: 'installed-oidc-test', client_secret: secret, bindings: join(directory, 'bindings.json') }, null, 2) + '\n', { mode: 0o600 })
+    for (const path of [directory, provider, join(directory, 'bindings.json')]) await chown(path, service.identity.uid, service.identity.gid)
+    const config = JSON.parse(await readFile(join(instance, 'controller.yaml'), 'utf8'))
+    config.browser.oidc_config = provider
+    await writeFile(join(instance, 'controller.yaml'), JSON.stringify(config, null, 2) + '\n', { mode: 0o600 })
+  }
   const api = (path, key) => fetch(origin + '/api/v1/' + path, { headers: key ? { Authorization: `Bearer ${key}` } : {} })
   async function ready() {
     for (let n = 0; n < 150; n++) {
@@ -83,7 +96,7 @@ try {
   }
   assert.equal((await fetch(origin + '/healthz')).status, 200)
   assert.equal((await api('publication')).status, 401)
-  for (const key of keys.slice(1)) assert.equal((await api('publication', key)).status, 401, 'wrong audience accepted by management')
+  for (const key of keys.slice(1, 3)) assert.equal((await api('publication', key)).status, 401, 'wrong audience accepted by management')
   const before = await (await api('publication', keys[0])).json()
   assert.equal(before.revision, 1); assert(before.policy.includes('empty: true'))
   for (const key of keys.slice(0, 2)) assert.equal((await fetch(`http://127.0.0.1:${authz}/authz/v1/nginx`, { headers: { Authorization: `Bearer ${key}`, 'X-PicketX-Route': 'route-web', 'X-PicketX-Source': '127.0.0.1', 'X-PicketX-Host': 'app.example.test', 'X-PicketX-Method': 'GET', 'X-PicketX-URI': '/' } })).status, 401, 'wrong audience accepted by decision listener')
@@ -132,6 +145,28 @@ try {
   const audit = await person.evaluate(async () => (await fetch('/console/api/v1/audit')).json())
   assert(JSON.stringify(audit).includes('Installed operator publication'), 'durable publication audit missing')
   if (service) {
+    // Additional context: preserve the original password flow and all its gates.
+    const external = await browser.newContext(), oidcPage = await external.newPage()
+    const bindingBytes = JSON.stringify({ bindings: [{ subject: 'installed-operator', principal_id: accounts.accounts[0].id, generation: randomBytes(16).toString('hex') }] })
+    await writeFile(join(instance, 'identity/bindings.json'), bindingBytes)
+    async function oidcLogin() {
+      await external.clearCookies(); await oidcPage.goto(origin + '/console/')
+      await oidcPage.getByRole('button', { name: 'Continue with organization', exact: true }).click()
+      await oidcPage.getByRole('heading', { name: 'Signed OIDC test issuer', exact: true }).waitFor()
+      await oidcPage.getByRole('link', { name: 'Continue as test user', exact: true }).click()
+      await oidcPage.getByRole('heading', { name: 'Desired configuration', exact: true }).waitFor()
+      const response = await external.request.get(origin + '/console/api/v1/me'); assert.equal(response.status(), 200)
+      const identity = await response.json(); assert.equal(identity.id, accounts.accounts[0].id); assert.deepEqual(identity.roles, ['role:admin'])
+      const publication = await external.request.get(origin + '/console/api/v1/publication'); assert.equal(publication.status(), 200)
+      assert.equal((await publication.json()).revision, 2)
+      assert.equal(await oidcPage.evaluate(() => localStorage.length + sessionStorage.length), 0)
+      const cookie = (await external.cookies()).find(c => c.name === 'picketx_session')
+      assert(cookie?.httpOnly && cookie.sameSite === 'Strict')
+      return cookie.value
+    }
+    const oidcCookie = await oidcLogin()
+    const oidcSessionStatus = async cookie => (await fetch(origin + '/console/api/v1/me', { headers: { Cookie: `picketx_session=${cookie}` } })).status
+    assert.equal(await oidcSessionStatus(oidcCookie), 200)
     const views = async () => Object.fromEntries(await Promise.all(['publication', 'accounts', 'audit'].map(async path => {
       const started = Date.now()
       const response = await api(path, keys[0]); assert.equal(response.status, 200)
@@ -140,27 +175,45 @@ try {
       return [path, durableServiceView(path, body)]
     })))
     const beforeRestore = await views(), oldConfig = JSON.parse(await readFile(join(instance, 'controller.yaml'), 'utf8'))
+    const oldProvider = JSON.parse(await readFile(oldConfig.browser.oidc_config, 'utf8'))
     const restoreCookie = await human.cookies()
     await stop()
     const backup = join(temp, 'stopped backup'), restored = join(stateParent, 'restored instance')
     const snapshot = await copyPrivateState(instance, backup)
     assert.deepEqual(await copyPrivateState(backup, restored), snapshot)
     const config = relocateInstanceConfig(oldConfig, instance, restored)
+    const provider = relocateOIDCProvider(oldProvider, instance, restored)
     await writeFile(join(restored, 'controller.yaml'), JSON.stringify(config, null, 2) + '\n', { mode: 0o600 })
+    await writeFile(config.browser.oidc_config, JSON.stringify(provider, null, 2) + '\n', { mode: 0o600 })
+    assert.deepEqual(provider, { ...oldProvider, bindings: join(restored, 'identity/bindings.json') })
     const restoredSnapshot = await snapshotPrivateTree(restored)
-    for (const path of Object.keys(snapshot).filter(path => path !== 'controller.yaml')) assert.equal(restoredSnapshot[path], snapshot[path])
+    assert.deepEqual(Object.keys(restoredSnapshot), Object.keys(snapshot), 'complete restored private file inventory')
+    for (const path of Object.keys(snapshot).filter(path => !['controller.yaml', 'identity/provider.json'].includes(path))) assert.equal(restoredSnapshot[path], snapshot[path])
+    assert.equal(await readFile(provider.bindings, 'utf8'), bindingBytes)
     async function restoreOwner(path) {
       await chown(path, service.identity.uid, service.identity.gid)
       if ((await stat(path)).isDirectory()) for (const name of await readdir(path)) await restoreOwner(join(path, name))
     }
     await restoreOwner(restored)
     await rename(instance, join(stateParent, 'original unavailable'))
+    assert.equal(await stat(oldConfig.browser.oidc_config).then(() => true, error => { if (error.code !== 'ENOENT') throw error; return false }), false, 'original provider must be unavailable')
+    assert.equal((await stat(backup)).uid, 0); assert.equal((await stat(backup)).mode & 0o777, 0o700, 'backup unavailable to unprivileged service')
     instance = restored
     await start()
+    assert.equal(await oidcSessionStatus(oidcCookie), 401, 'OIDC session survived restored process')
     assert.equal((await fetch(origin + '/console/api/v1/publication', { headers: { Cookie: restoreCookie.map(c => `${c.name}=${c.value}`).join('; ') } })).status, 401, 'session survived restored process')
     assert.deepEqual(await views(), beforeRestore, 'restored durable views changed')
     await human.clearCookies(); await humanLogin()
+    const restoredCookie = await oidcLogin()
+    await writeFile(provider.bindings, '{"bindings":[]}')
+    assert.equal(await oidcSessionStatus(restoredCookie), 401, 'restored binding withdrawal not enforced')
+    await writeFile(provider.bindings, bindingBytes)
+    assert.equal(await oidcSessionStatus(restoredCookie), 401, 'observed revoked OIDC cookie revived')
+    await oidcLogin()
+    assert.deepEqual(await views(), beforeRestore, 'OIDC login mutated durable restored views')
+    await oidcPage.screenshot({ path: join(evidence, 'installed-oidc-restored-1440.png'), fullPage: true })
     service.proof.restore = { completeFiles: Object.keys(snapshot).length, snapshotSHA256: createHash('sha256').update(JSON.stringify(snapshot)).digest('hex'), changedOnlyConfigPaths: true, originalUnavailable: true, durableViewsEqual: true, onlyExcludedReadMetadata: ['accounts.observedAt'], freshObservationValidated: true, oldSessionRejected: true, freshHumanLogin: true, authorityRetained: config.agent.authority === oldConfig.agent.authority }
+    service.proof.restore.oidc = { providerKind: 'signed-protocol-fixture', providerRelocated: true, bindingsRelocated: true, nonpathProviderFieldsPreserved: true, bindingBytesPreserved: true, originalProviderUnavailable: true, backupPrivateToRoot: true, oldSessionRejected: true, samePrincipalAndRoles: true, freshLogin: true, withdrawalDenied: true, observedRevokedCookieRejected: true, durableViewsEqual: true }
     service.proof.status = 'pass'
   }
   for (const width of [1440, 375]) {
@@ -176,6 +229,7 @@ try {
   await writeFile(join(evidence, 'install-report.json'), JSON.stringify(report, null, 2) + '\n')
   console.log('PASS detached static Controller: private init, real browser bootstrap/human publication, restart/audit, no runtime tools')
   if (service) console.log('PASS actual unprivileged systemd Controller: crash restart, clean stop, complete stopped backup and relocated restore')
+  if (service) console.log('PASS actual installed OIDC restored service: nested private paths, original unavailable, old-cookie401, same-principal fresh login, binding withdrawal; signed protocol fixture NOT production IdP')
   completed = true
 } catch (err) {
   // Never propagate child process argument/env/cause or unredacted private logs.
@@ -185,6 +239,7 @@ try {
   if (child?.exitCode === null) { const exit = once(child, 'exit'); child.kill('SIGKILL'); await exit }
   let safe = true
   if (service) try { await service.close() } catch { safe = false; process.exitCode = 1; console.error('Owned service cleanup failed; private fixture retained for inspection') }
+  if (oidcIssuer) await oidcIssuer.close()
   if (safe) await rm(temp, { recursive: true, force: true })
 }
 assert(completed || process.exitCode === 1)
