@@ -97,6 +97,14 @@ error. Correct the private files or remove `browser.oidc_config` and restart; th
 recovery key/password paths remain independent once the configured process starts.
 Counters/sessions/pending state are process-local, not HA/distributed quotas.
 
+Keep the provider and binding files inside the private instance directory when
+backing up the complete stopped instance, or separately include every external
+referenced file. A restore to a different path also requires explicitly reviewing
+`browser.oidc_config` and the nested provider `bindings` path; the existing
+test-only four-path relocation helper does not rewrite those. Installed OIDC
+service/backup/restore acceptance is still pending; existing non-OIDC restore
+evidence is not evidence for this optional configuration.
+
 ## Evidence boundary
 
 Go tests use actual HTTP discovery/JWKS/token exchange and signed RSA fixtures,

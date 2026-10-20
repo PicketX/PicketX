@@ -12,7 +12,7 @@ This repository is under active development, not a complete access-management pr
 
 Live management includes [Grant issue/revoke](docs/GRANT_MANAGEMENT.md), [Resource/Endpoint creation, network edits/removal and exact-host Binding creation, named-entry edits/removal](docs/RESOURCE_MANAGEMENT.md), HTTPRoute create/read/remove, [local human password/key login](docs/HUMAN_LOGIN.md), and [durable requests with independent narrowing approval/rejection](docs/ACCESS_REQUESTS.md). Approval atomically publishes a bounded Grant; it is not confirmation of execution. Exact source/CI and integration status are in [the checkpoint](docs/AUTONOMOUS_DELIVERY.md).
 
-OIDC/account lifecycle, request-bound verified protocol identities where required, the new approval workflow's privileged combined acceptance, deployment/backup and release hardening remain. Prior Agent/browser/Nginx combined acceptance is retained, not inferred for every later workflow. No complete production product is claimed.
+[OIDC sign-in](docs/OIDC_LOGIN.md) adds an opt-in verified issuer/subject binding to existing human accounts, with current local roles and SCS sessions; no claim-role or network permission is inferred. Managed account lifecycle, native human approval/Agent/Nginx/Gitea and standalone service/recovery increments are recorded in the checkpoint. Real deployed-IdP acceptance and its installed Agent/application/recovery conjunction remain; signed protocol fixtures do not establish those. No complete production product is claimed.
 
 [Node observations](docs/NODE_OBSERVATIONS.md) separate distributed targets, stream presence and report freshness. Agent assertions are not independent kernel verification; continuous applied-state proof remains out of scope.
 

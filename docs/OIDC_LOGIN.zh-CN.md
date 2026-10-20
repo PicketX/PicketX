@@ -51,6 +51,11 @@ access/ID/refresh令牌、client secret、邮箱或claim角色。最长不超过
 Bearer管理密钥。配置/discovery失败时启动以不含详情的错误结束；修正文件，或取消
 OIDC设置后重启再使用本地密钥/密码恢复。没有配置就绪的进程不承诺可登录。
 
+备份停止的完整私有实例时，应将提供方和绑定文件放在实例目录内，或另行完整备份
+所有外部引用文件。异路径恢复必须显式核对`browser.oidc_config`及提供方JSON中的
+`bindings`嵌套路径；现有仅供验收的四路径迁移助手不会改写它们。安装版OIDC服务/
+备份恢复仍待真实验收，现有非OIDC恢复证据不能直接外推。
+
 ## 验证声明
 
 Go使用真实HTTP discovery/JWKS/code及RSA签名夹具，覆盖PKCE、重放/并发、恶意claims、

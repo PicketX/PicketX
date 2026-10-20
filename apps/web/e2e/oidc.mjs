@@ -93,7 +93,15 @@ browser: {enabled: true, origin: ${JSON.stringify(origin)}, assets: ${JSON.strin
     await bind(null); assert.equal((await context.request.get(`${origin}/console/api/v1/me`)).status(), 401); await bind(account.id)
     assert.equal((await fetch(`${origin}/console/api/v1/me`, { headers: { Cookie: `picketx_session=${viewerCookie.value}` } })).status, 401)
     await page.goto(`${origin}/console/`); mode = 'nonce'; await login(); await page.getByRole('alert').getByText('Organization sign-in failed. Try again or contact your administrator.', { exact: true }).waitFor(); assert.equal(new URL(page.url()).search, ''); assert.equal((await context.request.get(`${origin}/console/api/v1/me`)).status(), 401)
-    mode = 'valid'; await login(); await page.getByRole('heading', { name: 'Desired configuration', exact: true }).waitFor(); const logoutCookie = (await context.cookies()).find(c => c.name === 'picketx_session'); await page.getByRole('button', { name: 'Sign out', exact: true }).click()
+    mode = 'valid'; await login(); await page.getByRole('heading', { name: 'Desired configuration', exact: true }).waitFor()
+    const beforeDisable = (await context.cookies()).find(c => c.name === 'picketx_session')
+    assert.equal((await api(`/accounts/${account.id}`, 'PUT', { roles: ['role:viewer'], disabled: true, reason: 'OIDC disable' }, 2)).status, 200)
+    assert.equal((await api(`/accounts/${account.id}`, 'PUT', { roles: ['role:viewer'], disabled: false, reason: 'OIDC re-enable' }, 3)).status, 200)
+    // No authenticated request between disable/re-enable: durable generation,
+    // not an observed-cookie destruction, must permanently revoke the old login.
+    assert.equal((await fetch(`${origin}/console/api/v1/me`, { headers: { Cookie: `picketx_session=${beforeDisable.value}` } })).status, 401)
+    await page.goto(`${origin}/console/`); await login(); await page.getByRole('heading', { name: 'Desired configuration', exact: true }).waitFor()
+    const logoutCookie = (await context.cookies()).find(c => c.name === 'picketx_session'); await page.getByRole('button', { name: 'Sign out', exact: true }).click()
     assert.equal((await fetch(`${origin}/console/api/v1/me`, { headers: { Cookie: `picketx_session=${logoutCookie.value}` } })).status, 401)
     assert.deepEqual(errors, []); assert(!logs.includes(secret) && !logs.includes('fixture-not-persisted'))
     console.log('PASS actual cross-site Chromium → signed OIDC protocol fixture → Controller SCS/Casbin → SQLite publication/audit, fresh roles/binding/replay/nonce/logout; fixture is NOT a production IdP')

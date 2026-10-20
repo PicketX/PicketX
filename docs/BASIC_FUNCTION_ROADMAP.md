@@ -20,6 +20,15 @@ Earlier rows preserve their original slice evidence. Durable publication, the na
 
 ## Delivery sequence
 
+Current identity extension: [OIDC sign-in](OIDC_LOGIN.md) explicitly binds a verified
+issuer/subject to existing humans and refreshes local account roles/generations.
+Managed account lifecycle and the previously extended privileged approval/Gitea,
+service/recovery increments are already delivered; do not repeat them as missing.
+The older current-position paragraph preserves its historical PR32 boundary.
+Remaining OIDC acceptance: actual registered/deployed IdP with installed Controller,
+Agent/ingress/application and recovery. Signed protocol/browser fixtures alone are
+not that final product proof. No required protocol identity integration is inferred.
+
 [Node observations](NODE_OBSERVATIONS.md) adds authenticated read-only report/current-stream/freshness views and the live Nodes page; no independent or continuous kernel proof is claimed.
 
 The rows below subdivide the existing M1 usable-workflow goal. Their labels are work packages, not commitments to stable schemas. Each gets a focused design/plan before implementation; later evidence may adjust task boundaries without reopening settled architecture.
