@@ -1,5 +1,15 @@
 # 自动交付检查点
 
+## 安装版OIDC恢复评审修复 — 2026-10-20T05:05Z
+同owner codex/oidc-restore，PR40，heartbeat05:05Z，租约05:35Z或明确释放/合并且
+main完整验证。一次全分支评审0Critical/1Important/1Minor、With fixes；root同轮
+先回归再修复私有文档断言diff，改布尔比较＋固定提示。两个实际泄露RED→GREEN，
+Node23通过。图片名1440实际1280明确延期/按实汇报。全部保留判断/代价见
+validation/OIDC_RESTORE_REVIEW*.md。候选39371678322绿260/660和四实际归档不是
+最终修复head证据；新完整native/原始日志/源码/四归档/expected-head/main仍必需。
+最终准确证据/即时释放写PR40且优先于源码pending。整体继续，实际IdP/HTTPS/
+安装版完整闭环仍是后续。
+
 ## 安装版 OIDC 停服恢复接续 — 2026-10-20T04:42Z
 Owner codex/oidc-restore，短租约05:35Z或明确释放/合并且main完整验证。
 最新 Core72ab5d0/tree69500be/main39364792738、Agent0255d4d/treeced537d/

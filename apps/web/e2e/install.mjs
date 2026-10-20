@@ -11,7 +11,7 @@ import { createConnection } from 'node:net'
 import { chromium } from 'playwright'
 import { freePort } from './ingress.mjs'
 import { createControllerService } from '../../../scripts/controller-service-fixture.mjs'
-import { copyPrivateState, relocateInstanceConfig, relocateOIDCProvider, snapshotPrivateTree } from '../../../scripts/controller-state-copy.mjs'
+import { assertPrivateStateEqual, copyPrivateState, relocateInstanceConfig, relocateOIDCProvider, snapshotPrivateTree } from '../../../scripts/controller-state-copy.mjs'
 import { durableServiceView } from '../../../scripts/controller-service-evidence.mjs'
 import { createOIDCProviderFixture } from './oidc-provider-fixture.mjs'
 
@@ -188,11 +188,11 @@ try {
     const provider = relocateOIDCProvider(oldProvider, instance, restored)
     await writeFile(join(restored, 'controller.yaml'), JSON.stringify(config, null, 2) + '\n', { mode: 0o600 })
     await writeFile(config.browser.oidc_config, JSON.stringify(provider, null, 2) + '\n', { mode: 0o600 })
-    assert.deepEqual(provider, { ...oldProvider, bindings: join(restored, 'identity/bindings.json') })
+    assertPrivateStateEqual(provider, { ...oldProvider, bindings: join(restored, 'identity/bindings.json') })
     const restoredSnapshot = await snapshotPrivateTree(restored)
     assert.deepEqual(Object.keys(restoredSnapshot), Object.keys(snapshot), 'complete restored private file inventory')
     for (const path of Object.keys(snapshot).filter(path => !['controller.yaml', 'identity/provider.json'].includes(path))) assert.equal(restoredSnapshot[path], snapshot[path])
-    assert.equal(await readFile(provider.bindings, 'utf8'), bindingBytes)
+    assertPrivateStateEqual(await readFile(provider.bindings, 'utf8'), bindingBytes)
     async function restoreOwner(path) {
       await chown(path, service.identity.uid, service.identity.gid)
       if ((await stat(path)).isDirectory()) for (const name of await readdir(path)) await restoreOwner(join(path, name))

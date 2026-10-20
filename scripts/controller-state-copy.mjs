@@ -6,6 +6,13 @@ import { constants } from 'node:fs'
 import { chmod, copyFile, lstat, mkdir, readFile, readdir, realpath } from 'node:fs/promises'
 import { createHash } from 'node:crypto'
 import { dirname, join, resolve, sep } from 'node:path'
+import { isDeepStrictEqual } from 'node:util'
+
+// Failure stacks are public CI output: attach only the comparison result, never
+// actual/expected private documents or an automatically generated value diff.
+export function assertPrivateStateEqual(actual, expected) {
+  assert(isDeepStrictEqual(actual, expected), 'private restored state differs')
+}
 
 async function canonical(path) {
   assert.equal(path, resolve(path), 'canonical absolute path required')

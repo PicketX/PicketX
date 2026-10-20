@@ -8,6 +8,21 @@ import { spawnSync } from 'node:child_process'
 import { copyPrivateState, snapshotPrivateTree, relocateInstanceConfig } from './controller-state-copy.mjs'
 import * as stateCopy from './controller-state-copy.mjs'
 
+for (const kind of ['binding bytes', 'provider object']) test(`private ${kind} mismatch rejects without disclosing either document`, () => {
+  const markers = ['SUBJECT-PRIVATE-A', 'PRINCIPAL-PRIVATE-A', 'GENERATION-PRIVATE-A', 'ISSUER-PRIVATE-A', 'CLIENT-PRIVATE-A', 'SECRET-PRIVATE-A', 'SUBJECT-PRIVATE-B', 'PRINCIPAL-PRIVATE-B', 'GENERATION-PRIVATE-B', 'ISSUER-PRIVATE-B', 'CLIENT-PRIVATE-B', 'SECRET-PRIVATE-B']
+  const document = offset => Object.fromEntries(['subject', 'principal', 'generation', 'issuer', 'client_id', 'client_secret'].map((key, i) => [key, markers[offset + i]]))
+  const actual = kind === 'binding bytes' ? JSON.stringify(document(0)) : document(0)
+  const expected = kind === 'binding bytes' ? JSON.stringify(document(6)) : document(6)
+  stateCopy.assertPrivateStateEqual(actual, structuredClone(actual))
+  let failure
+  try { stateCopy.assertPrivateStateEqual(actual, expected) } catch (error) { failure = error }
+  assert(failure instanceof assert.AssertionError, 'unequal private state must reject')
+  // The runner prints this stack after literal credential redaction. Neither
+  // complete document nor unknown private fields may reach that public boundary.
+  for (const marker of markers) assert(!failure.stack.includes(marker), 'private marker reached public failure output')
+  assert.equal(failure.message, 'private restored state differs')
+})
+
 async function fixture(t) {
   const dir = await mkdtemp(join(tmpdir(), 'picketx-state-test-'))
   t.after(() => rm(dir, { recursive: true, force: true }))
