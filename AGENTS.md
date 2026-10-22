@@ -4,7 +4,7 @@ Read `docs/PRODUCT_DESIGN.md` and `docs/ARCHITECTURE.md` before changing domain 
 
 Read `docs/CONFIGURATION_MODEL.md` before implementing configuration schemas or bindings. Keep business workflows, standard desired-state objects and execution state separate; follow the documented omission/empty-value semantics and do not silently finalize its open decisions.
 
-- This repository contains the Go control plane/core and `apps/web`. The Linux enforcement Agent belongs to PicketXD.
+- This repository contains the Go control plane/core and `web`. The Linux enforcement Agent belongs to PicketXD.
 - Controller HTTP uses Echo v5. Keep framework types in HTTP adapters; business and shared configuration/core packages remain framework-independent.
 - Controller persistence uses GORM. Keep ORM types in persistence implementations and use versioned migrations for deployed databases; SQLite uses official gorm.io/driver/sqlite v1.6.0 + mattn/go-sqlite3 v1.14.52 as integration baselines; PostgreSQL uses official gorm.io/driver/postgres v1.6.3 with its pgx/v5 v5.10.0 dependency as the integration baseline; migration tooling remains deferred. These drivers are selected, not implemented.
 - Authorization starts with Casbin RBAC and the official GORM Adapter; read `docs/decisions/0001-rbac-authorization.md` before integration. Resolve current-user groups/roles in the trusted business/identity layer, keep shared group/role rules in one injected SyncedEnforcer per process, and use only configurable periodic policy reloads. Startup size/cost guidance must not change configuration automatically. Keep default adapter AutoMigrate for Casbin tables separate from business migrations; Grant/Lease/network semantics remain in Core. ABAC is deferred until required; these selections are not implemented.
@@ -24,5 +24,5 @@ Read `docs/CONFIGURATION_MODEL.md` before implementing configuration schemas or 
 - Use npm and the committed lockfile for Web development. Keep business code out of `src/components/ui`; compose shared components separately.
 - Keep UI loading, failure and freshness states explicit. Never substitute sample data for real authorization state.
 - Add interfaces/packages when needed; do not preimplement the entire architecture during scaffolding.
-- Check Go with `go test ./...`, `go vet ./...`, and `go build ./...`. Check Web with `npm ci`, `npm run typecheck`, `npm run lint`, and `npm run build` in `apps/web`.
+- Check Go with `go test ./...`, `go vet ./...`, and `go build ./...`. Check Web with `npm ci`, `npm run typecheck`, `npm run lint`, and `npm run build` in `web`.
 - Do not add credentials, generated build output, or GPL Agent implementation to this Apache-2.0 repository.

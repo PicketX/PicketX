@@ -22,8 +22,8 @@
 | internal/controller/inventory.go, binding_removal_test.go | Strict bearer/cookie HTTP contract and real SQLite acceptance |
 | internal/controller/management.go, browser.go | Routes and stable404 mapping |
 | scripts/normalize-management-api.mjs, docs/api/swagger.json | Generated strict acknowledgement schema |
-| apps/web/src/features/resources/Resources.tsx, locales | Single removal draft, warning, conflict and cancellation |
-| apps/web/e2e/resources.mjs | Real browser/API acceptance and screenshots |
+| web/src/features/resources/Resources.tsx, locales | Single removal draft, warning, conflict and cancellation |
+| web/e2e/resources.mjs | Real browser/API acceptance and screenshots |
 | docs/RESOURCE_MANAGEMENT*, AUTONOMOUS_DELIVERY.md | Usage, evidence and remaining boundaries |
 
 Dependencies: Bundle → Service.grantBase/Replace → publication CAS/audit and full

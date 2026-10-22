@@ -20,9 +20,9 @@ Autonomous authorization covers the routine plan, commits, PR and gated merge.
 ## Context map
 | File | Responsibility |
 | --- | --- |
-| apps/web/src/features/nodes/Nodes.tsx | Effect-owned active request and queued resume |
-| apps/web/e2e/node-lifecycle.mjs | Real browser delayed reads, visibility and disposal |
-| apps/web/e2e/nodes.mjs | Invoke lifecycle acceptance with existing signed-in session |
+| web/src/features/nodes/Nodes.tsx | Effect-owned active request and queued resume |
+| web/e2e/node-lifecycle.mjs | Real browser delayed reads, visibility and disposal |
+| web/e2e/nodes.mjs | Invoke lifecycle acceptance with existing signed-in session |
 | docs/AUTONOMOUS_DELIVERY.md | Lease and exact evidence/handoff |
 
 Dependencies: request() timeout/AbortSignal, App conditional Nodes mount, existing

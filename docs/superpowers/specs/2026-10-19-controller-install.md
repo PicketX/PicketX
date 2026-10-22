@@ -64,7 +64,7 @@ fresh-install/reboot acceptance; retain graceful SSH limitation.
 | internal/runtimeconfig/config.go | consumer of generated runtime document, unchanged |
 | internal/management/origin.go | existing exact origin validation, unchanged |
 | scripts/build-controller-bundle.sh | static artifacts + locked Web packaging |
-| apps/web/e2e/install.mjs | real detached bundle/bootstrap/restart browser acceptance |
+| web/e2e/install.mjs | real detached bundle/bootstrap/restart browser acceptance |
 | deploy/controller/* | bilingual runbooks and opt-in service template |
 | .github/workflows/ci.yml | mandatory bundle/browser gate and public evidence artifact |
 

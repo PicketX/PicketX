@@ -10,9 +10,9 @@ import { once } from 'node:events'
 import { createConnection } from 'node:net'
 import { chromium } from 'playwright'
 import { freePort } from './ingress.mjs'
-import { createControllerService } from '../../../scripts/controller-service-fixture.mjs'
-import { assertPrivateStateEqual, copyPrivateState, relocateInstanceConfig, relocateOIDCProvider, snapshotPrivateTree } from '../../../scripts/controller-state-copy.mjs'
-import { durableServiceView } from '../../../scripts/controller-service-evidence.mjs'
+import { createControllerService } from '../../scripts/controller-service-fixture.mjs'
+import { assertPrivateStateEqual, copyPrivateState, relocateInstanceConfig, relocateOIDCProvider, snapshotPrivateTree } from '../../scripts/controller-state-copy.mjs'
+import { durableServiceView } from '../../scripts/controller-service-evidence.mjs'
 import { createOIDCProviderFixture } from './oidc-provider-fixture.mjs'
 
 const input = resolve(process.argv[2] ?? '/missing-controller-bundle')

@@ -4,13 +4,13 @@
 
 ## 运行
 
-按照[管理 API](MANAGEMENT_API.zh-CN.md)配置数据库权威及两个独立私有凭据文件。在 apps/web 执行 npm ci、npm run typecheck、npm run lint、npm run build，运行 YAML 加入：
+按照[管理 API](MANAGEMENT_API.zh-CN.md)配置数据库权威及两个独立私有凭据文件。在 web 执行 npm ci、npm run typecheck、npm run lint、npm run build，运行 YAML 加入：
 
 ```yaml
 browser:
   enabled: true
   origin: https://control.example.com
-  assets: apps/web/dist
+  assets: web/dist
 ```
 
 路径相对 Controller 工作目录。既有 HTTPS 入口必须保留外部 Host；限制 Controller 直连网络访问。origin 使用浏览器 location.origin 的准确值，无尾斜杠、路径、userinfo、查询或片段，不写浏览器省略的默认端口。Controller 不负责 TLS，也不信任转发身份/TLS头。打开 /console/，用独立管理密钥登录；Agent Token 不能登录。密钥不写 localStorage/sessionStorage/Cookie/SCS 值。

@@ -27,8 +27,8 @@ CAS publication and inventory. Keep ingress and source authorization unchanged.
 | pkg/configuration/{types,decode,candidate,inventory}.go | Strict presence, source roundtrip, inventory |
 | internal/controller/http_routes.go | DTO validation and forwarding |
 | pkg/configuration/http_test.go; internal/controller/http_routes_test.go | Pure and durable real API regressions |
-| apps/web/src/features/http-routes/HTTPRoutes.tsx; src/locales/{en,zh-CN}.json | Separate selector fields/details and errors |
-| apps/web/e2e/{http-routes,ingress}.mjs | Real browser/Nginx prefix acceptance |
+| web/src/features/http-routes/HTTPRoutes.tsx; src/locales/{en,zh-CN}.json | Separate selector fields/details and errors |
+| web/e2e/{http-routes,ingress}.mjs | Real browser/Nginx prefix acceptance |
 | docs/HTTP_AUTHORIZATION*.md; docs/openapi/* | Contract/generated schema |
 
 Dependencies: management inventory service already forwards typed routes;

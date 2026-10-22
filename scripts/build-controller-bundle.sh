@@ -24,15 +24,15 @@ for binary in "$output/bin/picketx-controller" "$output/bin/picketx"; do
     exit 1
   fi
 done
-npm ci --prefix apps/web
-npm run typecheck --prefix apps/web
-npm run lint --prefix apps/web
-npm run build --prefix apps/web
-if [[ -n $(find apps/web/dist -type l -print -quit) ]]; then
+npm ci --prefix web
+npm run typecheck --prefix web
+npm run lint --prefix web
+npm run build --prefix web
+if [[ -n $(find web/dist -type l -print -quit) ]]; then
   echo 'Refusing symlink in built Web assets' >&2
   exit 1
 fi
-cp -R apps/web/dist "$output/web"
+cp -R web/dist "$output/web"
 cp LICENSE "$output/LICENSE"
 node scripts/collect-bundle-licenses.mjs "$output"
 cp deploy/controller/README.md deploy/controller/README.zh-CN.md deploy/controller/picketx-controller.service "$output/deploy/"

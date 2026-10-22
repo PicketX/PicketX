@@ -7,7 +7,7 @@ This document covers complete desired policy/facts publications, transactional a
 Use the database-authoritative configuration from [management API](MANAGEMENT_API.md), with separate private Agent and management credential files. Build Web using the committed lockfile:
 
 ```sh
-cd apps/web
+cd web
 npm ci
 npm run typecheck
 npm run lint
@@ -20,7 +20,7 @@ Add to the Controller runtime YAML (paths are relative to its working directory)
 browser:
   enabled: true
   origin: https://control.example.com
-  assets: apps/web/dist
+  assets: web/dist
 ```
 
 Expose the Controller behind your existing HTTPS ingress without rewriting the public Host. `origin` must be the browser's exact `location.origin`, without trailing slash, path, user info, query or fragment. Do not include a default port that the browser omits. The Controller itself does not terminate HTTPS or trust forwarded TLS/identity headers. Restrict direct Controller network access; ingress is the TLS boundary. Open `/console/` and enter the independent management access key corresponding to a configured principal. Agent Tokens cannot sign in. No access key is written to localStorage, sessionStorage, cookies or SCS values.

@@ -23,8 +23,8 @@
 | internal/controller/inventory.go, inventory_test.go | Strict DTO/API/cookie wrappers, real SQLite tests |
 | internal/controller/management.go, browser.go | Route registration |
 | scripts/normalize-management-api.mjs, docs/api/swagger.json, internal/controller/management_test.go | Generated contract incl deferred endpoint-name constraints |
-| apps/web/src/features/resources/Resources.tsx, App.tsx, locales, index.css | Real Resources flow, current styles/components |
-| apps/web/e2e/console.mjs | Real browser/API/persistence/Grant acceptance |
+| web/src/features/resources/Resources.tsx, App.tsx, locales, index.css | Real Resources flow, current styles/components |
+| web/e2e/console.mjs | Real browser/API/persistence/Grant acceptance |
 | docs/RESOURCE_MANAGEMENT*.md, AUTONOMOUS_DELIVERY*, BASIC_FUNCTION_ROADMAP*, README* | Honest delivery/usage/remaining boundaries |
 
 Dependencies: management.Service.Replace -> publication.Repository; configuration

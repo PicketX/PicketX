@@ -36,7 +36,7 @@ controller-init directory with controller.yaml and three key/registry pairs.
 
 ### Task 2: Bundle and actual first-use verification
 **Files:** scripts/build-controller-bundle.sh, deploy/controller/*,
-apps/web/e2e/install.mjs, .github/workflows/ci.yml, delivery/review docs.
+web/e2e/install.mjs, .github/workflows/ci.yml, delivery/review docs.
 **Interfaces:** consumes Task1 command and actual built web; produces detached
 bundle + SHA256/source metadata and public browser install evidence.
 - [x] Write actual install runner requiring bundle executables; run against absent

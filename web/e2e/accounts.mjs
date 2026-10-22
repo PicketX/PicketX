@@ -22,7 +22,7 @@ credentials: ${JSON.stringify(join(dir, 'agents.json'))}
 source: {mode: database}
 management: {credentials: ${JSON.stringify(credentials)}, users_mode: database, reload: 100ms}
 agent: {enabled: true, listen: "127.0.0.1:0", authority: "accounts:test"}
-browser: {enabled: true, origin: ${JSON.stringify(origin)}, assets: ${JSON.stringify(join(root, 'apps/web/dist'))}}
+browser: {enabled: true, origin: ${JSON.stringify(origin)}, assets: ${JSON.stringify(join(root, 'web/dist'))}}
 `, { mode: 0o600 })
   let logs = ''
   const env = Object.fromEntries(Object.entries(process.env).filter(([k]) => !k.startsWith('PICKETX_')))

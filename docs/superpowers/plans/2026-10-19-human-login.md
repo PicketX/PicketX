@@ -18,7 +18,7 @@ No password logging, args/environment storage or browser persistence.
 **Files:** internal/managementaccess/{credentials,password}.go and tests;
 internal/management/service.go; internal/cli/{config,password}.go and tests;
 internal/controller/{browser,browser_sessions,browser_password}.go and tests;
-apps/web/src/{App.tsx,lib/console.ts,locales/*.json}; apps/web/e2e/{console,human-login}.mjs;
+web/src/{App.tsx,lib/console.ts,locales/*.json}; web/e2e/{console,human-login}.mjs;
 go.mod; docs/api/swagger.json; docs/{HUMAN_LOGIN,BROWSER_CONSOLE}*.md;
 docs/AUTONOMOUS_DELIVERY.md.
 

@@ -723,7 +723,7 @@ The UI distinguishes pending approval, rejected, approved but applying, applied,
 
 The agreed stack is **React + TypeScript + Vite + shadcn/ui + Tailwind CSS + i18next + npm**. shadcn/ui replaces the earlier Ant Design 6 Core choice. Use the official component appearance initially, with shared theme tokens for branding. The underlying primitive family (Base UI, Radix UI, or another officially supported choice), router, form library, and exact package versions are not finalized by this decision.
 
-Sharing a repository does not mean sharing build tools: the Go backend uses Go modules, while `apps/web` has its own `package.json`, lockfile, and Vite build. Development servers and build tasks are separate. Production may embed static assets in the Controller or host them separately with appropriate API origin/proxy and authentication configuration. A third Git repository for UI is not an approved decision.
+Sharing a repository does not mean sharing build tools: the Go backend uses Go modules, while `web` has its own `package.json`, lockfile, and Vite build. Development servers and build tasks are separate. Production may embed static assets in the Controller or host them separately with appropriate API origin/proxy and authentication configuration. A third Git repository for UI is not an approved decision.
 
 One Web application serves a user access portal and an administration area with separate layouts/routes. They share theme, UI components, translations, API client, and session handling. The portal covers resources, access requests and current permissions; administration covers approval, policy, targets and authorization records. Server-side authorization remains mandatory; hiding a route or button is not a security boundary.
 
@@ -864,7 +864,7 @@ PicketX/                       # Apache-2.0
   pkg/pluginapi/
   internal/controller/
   internal/storage/
-  apps/web/
+  web/
   docs/
 
 PicketXD/                      # GPL-3.0-or-later + OEM option

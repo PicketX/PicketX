@@ -26,8 +26,8 @@ Standing autonomous authorization covers design/plan/inline/expected-head merge.
 | internal/management/accounts.go (new) | Permission-checked directory service |
 | internal/runtimeconfig/config.go, controllerapp/runtime.go | Strict opt-in typed assembly |
 | internal/controller/accounts*.go (new), management.go, browser.go | Strict API and capability discovery |
-| apps/web/src/features/accounts/Accounts.tsx (new), App/locales | Real CRUD/unknown/stale/permission UI |
-| apps/web/e2e/accounts.mjs (new), console.mjs | Actual lifecycle against second DB-mode Controller |
+| web/src/features/accounts/Accounts.tsx (new), App/locales | Real CRUD/unknown/stale/permission UI |
+| web/e2e/accounts.mjs (new), console.mjs | Actual lifecycle against second DB-mode Controller |
 | scripts/normalize-management-api.mjs, docs/api | Reproducible strict schemas and paths |
 | scripts/check-static-controller.sh, docs guides/checkpoint | Version assertions, actual process and handoff |
 

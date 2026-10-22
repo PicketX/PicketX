@@ -61,12 +61,12 @@ verified React cleanup/error-handling guidance and web accessibility defaults.
 
 | File | Responsibility/change |
 | --- | --- |
-| apps/web/src/features/http-audit/model.ts (new) | Strict page parser and bounded200 keyset window, pure functions |
-| apps/web/e2e/http-audit-model.test.mjs (new) | Real parser/window tests, malformed/cursor/unsafe/private-extra failures |
-| apps/web/src/features/http-audit/HTTPAudit.tsx (new) | Actual API read lifecycle, states and bounded decision ledger |
-| apps/web/src/App.tsx | Audit subview/mount and correct independent audit capability gate |
-| apps/web/src/locales/en.json, zh-CN.json, src/index.css | Paired English/Chinese copy, scoped responsive layout |
-| apps/web/e2e/http-audit.mjs (new), e2e/console.mjs | Actual empty and real Nginx/API decision records, pagination/failures/401 screenshots |
+| web/src/features/http-audit/model.ts (new) | Strict page parser and bounded200 keyset window, pure functions |
+| web/e2e/http-audit-model.test.mjs (new) | Real parser/window tests, malformed/cursor/unsafe/private-extra failures |
+| web/src/features/http-audit/HTTPAudit.tsx (new) | Actual API read lifecycle, states and bounded decision ledger |
+| web/src/App.tsx | Audit subview/mount and correct independent audit capability gate |
+| web/src/locales/en.json, zh-CN.json, src/index.css | Paired English/Chinese copy, scoped responsive layout |
+| web/e2e/http-audit.mjs (new), e2e/console.mjs | Actual empty and real Nginx/API decision records, pagination/failures/401 screenshots |
 | .github/workflows/ci.yml | Run model tests as part of existing Web gate; retain every prior gate |
 | docs/HTTP_DECISION_AUDIT*.md, AUTONOMOUS_DELIVERY*.md | User flow/boundaries/lease/exact receipts/next steps |
 

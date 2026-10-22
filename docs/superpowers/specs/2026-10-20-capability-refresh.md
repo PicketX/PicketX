@@ -19,8 +19,8 @@ cookies/tokens/passwords/credential documents/private SQLite files.
 | --- | --- |
 | internal/managementaccess/access.go, access_test.go | Real shared policy reload/evaluation |
 | internal/controller/management.go, access_requests_capabilities_test.go | /me operations and API capability contract |
-| apps/web/src/App.tsx, lib/console.ts | Session/bootstrap/load/no-store boundary |
-| apps/web/e2e/access-requests.mjs, console.mjs | Actual custom-role login/reload/Chromium |
+| web/src/App.tsx, lib/console.ts | Session/bootstrap/load/no-store boundary |
+| web/e2e/access-requests.mjs, console.mjs | Actual custom-role login/reload/Chromium |
 | docs/AUTONOMOUS_DELIVERY{,.zh-CN}.md | Lease and continuation |
 Dependencies: official Casbin/GORM Adapter and React19, no new dependencies.
 References: ADR0001, existing periodic reload/failure and capability API tests.

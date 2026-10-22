@@ -71,7 +71,7 @@ go run ./cmd/picketx-controller
 另开终端启动 Web：
 
 ```bash
-cd apps/web
+cd web
 npm ci
 npm run dev
 ```
@@ -85,7 +85,7 @@ go test ./...
 go vet ./...
 go build ./...
 
-cd apps/web
+cd web
 npm run typecheck
 npm run lint
 npm run build
@@ -101,10 +101,10 @@ npm run build
 | `cmd/picketx`、`internal/cli` | 只读 Cobra 配置检查 |
 | `pkg/configuration` | 严格 alpha 策略解码与不可变编译候选 |
 | `pkg/networkplan` | 有明确范围的每 Agent 物理意图及替换约束 |
-| `apps/web` | React、TypeScript、Vite、shadcn/ui、Tailwind CSS、i18next |
+| `web` | React、TypeScript、Vite、shadcn/ui、Tailwind CSS、i18next |
 | `docs` | 最新中英文产品、架构与配置模型基线 |
 
-`pkg/core` 提供演进中的网络逻辑 Go API 与可运行的 `ExampleCompile`；公开外部协议包仍暂缓。参阅[产品设计](docs/PRODUCT_DESIGN.zh-CN.md)、[架构设计](docs/ARCHITECTURE.zh-CN.md)、[配置模型](docs/CONFIGURATION_MODEL.zh-CN.md)和 [Web 开发说明](apps/web/README.md)。
+`pkg/core` 提供演进中的网络逻辑 Go API 与可运行的 `ExampleCompile`；公开外部协议包仍暂缓。参阅[产品设计](docs/PRODUCT_DESIGN.zh-CN.md)、[架构设计](docs/ARCHITECTURE.zh-CN.md)、[配置模型](docs/CONFIGURATION_MODEL.zh-CN.md)和 [Web 开发说明](web/README.md)。
 
 ## 许可证
 

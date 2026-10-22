@@ -38,7 +38,7 @@ race,vet,build and locked Web/native CI; one whole-branch independent review.
 No Agent/kernel behavior changes; installed Gitea+Agent conjunction is next.
 
 Context map: internal/cli/config.go assembles commands; new nginx_init{,_test}.go
-owns input validation/rendering/private writes. apps/web/e2e/ingress.mjs owns real
+owns input validation/rendering/private writes. web/e2e/ingress.mjs owns real
 Nginx/app fixture, install.mjs consumes packaged CLI; new installed-ingress.mjs
 owns real publication/revocation acceptance. CI install adds actual nginx package.
 deploy/controller README translations are shipped by existing bundle script.

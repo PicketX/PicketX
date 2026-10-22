@@ -34,8 +34,8 @@ thin Echo adapters; extend existing single Resource draft.
 | internal/controller/resource_edit.go + tests | Strict DTO/auth/CAS/status |
 | internal/controller/{management,browser}.go | Register bearer/session routes |
 | docs/api and existing OpenAPI generation | Document explicit contract |
-| apps/web/src/features/resources/Resources.tsx, locales | Live draft/recovery |
-| apps/web/e2e/resource-edit.mjs, console.mjs | Browser acceptance |
+| web/src/features/resources/Resources.tsx, locales | Live draft/recovery |
+| web/e2e/resource-edit.mjs, console.mjs | Browser acceptance |
 
 Dependencies: InventoryEndpoint/InventoryChange, RemoveResource/appendObject,
 Replace, decodeGrantJSON, request(status). Patterns: Resource create/remove and

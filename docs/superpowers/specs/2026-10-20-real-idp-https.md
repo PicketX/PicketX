@@ -52,10 +52,10 @@ merge plus fresh main repeat remain mandatory.
 | File | Responsibility/change |
 | --- | --- |
 | scripts/real-idp-https.mjs + .test.mjs | Normal TLS request/certificate helper, actual CA/SAN rejection tests |
-| apps/web/e2e/real-idp.mjs | Real installed Keycloak/Nginx/Controller/browser lifecycle and allowlisted receipt |
+| web/e2e/real-idp.mjs | Real installed Keycloak/Nginx/Controller/browser lifecycle and allowlisted receipt |
 | .github/workflows/ci.yml | Pinned verified upstream/JDK21 + mandatory new native acceptance; retain all old gates |
 | docs/OIDC_LOGIN*.md, AUTONOMOUS_DELIVERY*.md | Accurate usage/evidence/lease and remaining conjunction |
-| apps/web/e2e/install.mjs, oidc.mjs, scripts/controller-state-copy.mjs | Read-only existing installed/OIDC/privacy patterns |
+| web/e2e/install.mjs, oidc.mjs, scripts/controller-state-copy.mjs | Read-only existing installed/OIDC/privacy patterns |
 Dependencies: node built-ins, existing Playwright/npm lock, external CI-only
 OpenSSL/Nginx/certutil/JDK/Keycloak. No public API/DB migration/config schema change.
 Tests: actual TLS helper regression + complete existing local/native suites.

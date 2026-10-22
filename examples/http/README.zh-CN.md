@@ -6,4 +6,4 @@
 
 回环模板没有生产TLS或上游隔离。应保护后端，不能信任客户端转发头，保护回调密钥，在现有入口添加TLS；这不是通用反向代理产品。
 
-必需CI命令：在`apps/web`运行`npm ci && npm run build && npm run test:e2e`，需Go、真实Chromium及启用auth_request的Nginx；缺少能力即失败，不跳过。
+必需CI命令：在`web`运行`npm ci && npm run build && npm run test:e2e`，需Go、真实Chromium及启用auth_request的Nginx；缺少能力即失败，不跳过。

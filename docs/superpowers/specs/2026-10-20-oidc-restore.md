@@ -39,9 +39,9 @@ explicitly pending; a fixture passing cannot close that goal.
 | --- | --- |
 | scripts/controller-state-copy.mjs | Optional exact provider path, separate nested bindings relocation |
 | scripts/controller-state-copy.test.mjs | Literal paths, unchanged fields, external path refusal |
-| apps/web/e2e/oidc-provider-fixture.mjs | Reusable signed protocol test server |
-| apps/web/e2e/oidc.mjs | Extract fixture only, retain existing assertions |
-| apps/web/e2e/install.mjs | Additional OIDC context + actual restored service checks |
+| web/e2e/oidc-provider-fixture.mjs | Reusable signed protocol test server |
+| web/e2e/oidc.mjs | Extract fixture only, retain existing assertions |
+| web/e2e/install.mjs | Additional OIDC context + actual restored service checks |
 | docs/OIDC_LOGIN*.md | New bounded recovery evidence, honest remaining limits |
 | docs/AUTONOMOUS_DELIVERY*.md | Lease/progress and final PR receipt routing |
 

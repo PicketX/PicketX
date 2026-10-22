@@ -24,13 +24,13 @@ from actual node application. This is a bounded correction, not a new API.
 
 | File | Responsibility / change |
 | --- | --- |
-| apps/web/src/lib/console.ts | Shared transport, optional exact success status |
-| apps/web/src/App.tsx | Publication 200 and ambiguous-write retry lock |
-| apps/web/src/locales/{en,zh-CN}.json | Publication reconciliation guidance |
-| apps/web/src/features/{resources,grants,http-routes}/*.tsx | Explicit status at each management mutation |
-| apps/web/e2e/request.mjs | Real helper status/error/ETag/204 regression |
-| apps/web/e2e/{console,resources,resource-removal,http-routes}.mjs | Actual form intent and recovery with response fault injection |
-| apps/web/e2e/mutation-receipts.mjs | Shared narrow browser fault assertion |
+| web/src/lib/console.ts | Shared transport, optional exact success status |
+| web/src/App.tsx | Publication 200 and ambiguous-write retry lock |
+| web/src/locales/{en,zh-CN}.json | Publication reconciliation guidance |
+| web/src/features/{resources,grants,http-routes}/*.tsx | Explicit status at each management mutation |
+| web/e2e/request.mjs | Real helper status/error/ETag/204 regression |
+| web/e2e/{console,resources,resource-removal,http-routes}.mjs | Actual form intent and recovery with response fault injection |
+| web/e2e/mutation-receipts.mjs | Shared narrow browser fault assertion |
 
 Dependencies: API status contracts in internal/controller/{management,inventory,
 grants,http_routes,http_route_removal}.go and existing removal receipt validation.

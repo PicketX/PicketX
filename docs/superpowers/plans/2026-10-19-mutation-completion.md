@@ -42,6 +42,6 @@ unchanged result `{data: T, etag: string, status: number}`.
   publication unknown/5xx catch locks retry. Keep existing body checks.
 - [ ] Run local Node regression and locked npm ci/typecheck/lint/build: expected
   GREEN. Run full native CI including Go race/vet/build and real browser suite.
-- [ ] Commit; run task-done using `node apps/web/e2e/request.mjs` after complete
+- [ ] Commit; run task-done using `node web/e2e/request.mjs` after complete
   native suite evidence is read. Independent whole-branch review; fix blockers
   RED→GREEN, verify exact tree/head/checks, merge safely and verify main CI.

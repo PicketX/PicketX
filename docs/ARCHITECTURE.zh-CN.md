@@ -723,7 +723,7 @@ flowchart LR
 
 已确定技术栈为 **React + TypeScript + Vite + shadcn/ui + Tailwind CSS + i18next + npm**。shadcn/ui 替代此前 Ant Design 6 Core 选型。初期直接使用官方组件默认外观，通过共享主题变量调整品牌风格。底层交互组件家族（Base UI、Radix UI 或官方支持的其他选择）、路由库、表单库及具体依赖版本不在本次决策中冻结。
 
-同仓库不代表共享构建工具：Go 后端使用 Go Module，`apps/web` 使用自己的 `package.json`、锁文件和 Vite 构建。开发服务和构建任务分开，生产部署可将静态前端嵌入 Controller，或单独托管并正确配置 API 同源/代理与认证边界。当前未决定将 UI 拆成第三个 Git 仓库。
+同仓库不代表共享构建工具：Go 后端使用 Go Module，`web` 使用自己的 `package.json`、锁文件和 Vite 构建。开发服务和构建任务分开，生产部署可将静态前端嵌入 Controller，或单独托管并正确配置 API 同源/代理与认证边界。当前未决定将 UI 拆成第三个 Git 仓库。
 
 一个 Web 应用提供用户访问门户和管理区域，使用不同布局/路由，共享主题、UI 组件、翻译、API Client 和会话处理。门户覆盖资源、申请和当前权限；管理区域覆盖审批、策略、执行目标和授权记录。后端始终执行权限校验，隐藏路由或按钮不构成安全边界。
 
@@ -864,7 +864,7 @@ PicketX/                       # Apache-2.0
   pkg/pluginapi/
   internal/controller/
   internal/storage/
-  apps/web/
+  web/
   docs/
 
 PicketXD/                      # GPL-3.0-or-later + OEM option

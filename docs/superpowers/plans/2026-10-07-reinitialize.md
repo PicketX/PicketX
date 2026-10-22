@@ -4,7 +4,7 @@
 
 **Goal:** Replace the former Rust scaffold with a minimal Go and React development baseline while retaining Git history.
 
-**Architecture:** One Go module at the root; an independently built Web project under `apps/web`. PicketXD stays outside this repository. This is scaffolding, not an authorization implementation.
+**Architecture:** One Go module at the root; an independently built Web project under `web`. PicketXD stays outside this repository. This is scaffolding, not an authorization implementation.
 
 **Tech Stack:** Go standard library, React, TypeScript, Vite, shadcn/ui, Tailwind CSS, i18next, npm.
 
@@ -27,7 +27,7 @@
 
 ## Task 1: Bootstrap and validate
 
-**Files:** root module/license/readmes, `cmd/picketx-controller/main.go`, `internal/controller/http.go` and tests, `apps/web`, `.github/workflows/ci.yml`, `docs`.
+**Files:** root module/license/readmes, `cmd/picketx-controller/main.go`, `internal/controller/http.go` and tests, `web`, `.github/workflows/ci.yml`, `docs`.
 
 **Interfaces:** Controller serves only `GET /healthz`; Web starts independently through Vite. No business API contract is introduced.
 

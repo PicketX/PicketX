@@ -17,5 +17,5 @@ The loopback template deliberately does not implement production TLS or upstream
 Keep upstreams private, do not trust client forwarded headers, protect callback credentials,
 and add TLS at the existing ingress. It is not a generic reverse-proxy product.
 
-Required CI command: `npm ci && npm run build && npm run test:e2e` in `apps/web`, with Go,
+Required CI command: `npm ci && npm run build && npm run test:e2e` in `web`, with Go,
 actual Chromium and Nginx/auth_request installed. Missing capabilities fail, never skip.

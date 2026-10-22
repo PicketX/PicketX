@@ -43,9 +43,9 @@ Endpoints; catalog is bounded by existing4MiB/4096-object publication limits.
 Context map: pkg/configuration/{types,decode,compile,candidate}.go owns policy
 semantics; internal/management owns trusted use cases; internal/controller
 {management,browser}.go owns strict DTO/ETag/session adapters; publication.Store
-and controllerapp publisher own atomic authority/distribution; apps/web/src
+and controllerapp publisher own atomic authority/distribution; web/src
 features/grants owns UI, lib/console.ts transport, App.tsx navigation, locales
-and index.css shared presentation; apps/web/e2e/{console,ingress}.mjs owns real
+and index.css shared presentation; web/e2e/{console,ingress}.mjs owns real
 Chromium/API/Nginx/application acceptance. No Agent/kernel changes.
 
 Visual/component plan (frontend-design + ui-ux-pro-max): retain existing light

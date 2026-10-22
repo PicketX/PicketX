@@ -39,7 +39,7 @@ for (const entry of [...modules].sort()) {
   const [dependency, version, directory] = entry.split('|')
   await retain(dependency, version, directory, join('go', dependency + '@' + version))
 }
-const npmRoots = run('npm', ['ls', '--omit=dev', '--all', '--parseable', '--prefix', 'apps/web']).split('\n').slice(1)
+const npmRoots = run('npm', ['ls', '--omit=dev', '--all', '--parseable', '--prefix', 'web']).split('\n').slice(1)
 const packages = []
 for (const directory of [...new Set(npmRoots)].sort()) {
   const meta = JSON.parse(await readFile(join(directory, 'package.json'), 'utf8'))

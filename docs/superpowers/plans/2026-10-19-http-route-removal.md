@@ -21,11 +21,11 @@ the existing route page's single CAS draft; no new authority or runtime integrat
 | internal/management/http_route_removal.go | grantBase, full Replace, typed not-found |
 | internal/controller/http_route_removal.go | strict DTO, bearer/session HTTP adapters |
 | internal/controller/{management,browser}.go | routes and error mapping |
-| apps/web/src/features/http-routes/HTTPRoutes.tsx | one-draft removal/rebase/receipt handling |
-| apps/web/src/locales/{en,zh-CN}.json | bilingual labels/errors |
+| web/src/features/http-routes/HTTPRoutes.tsx | one-draft removal/rebase/receipt handling |
+| web/src/locales/{en,zh-CN}.json | bilingual labels/errors |
 | scripts/normalize-management-api.mjs, docs/api/swagger.json | reproducible strict contract |
 | internal/controller/http_route_removal_test.go | actual HTTP/SQLite security/atomicity |
-| apps/web/e2e/{http-routes,http-route-removal}.mjs | actual browser/ingress acceptance |
+| web/e2e/{http-routes,http-route-removal}.mjs | actual browser/ingress acceptance |
 
 Dependencies/reference patterns: configuration/binding_removal.go, resource_removal.go;
 management/inventory.go and controller/resource_removal_test.go; resource-removal.mjs.

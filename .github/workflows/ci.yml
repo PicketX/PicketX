@@ -58,14 +58,14 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: apps/web
+        working-directory: web
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version-file: .node-version
           cache: npm
-          cache-dependency-path: apps/web/package-lock.json
+          cache-dependency-path: web/package-lock.json
       - run: npm ci
       - run: npm run typecheck
       - run: npm run lint
@@ -129,20 +129,20 @@ jobs:
         env:
           PICKETX_INSTALL_EVIDENCE_DIR: ${{ runner.temp }}/install-evidence
         run: |
-          cd apps/web
+          cd web
           npx playwright install --with-deps chromium
-          cd ../..
-          node apps/web/e2e/install.mjs "$RUNNER_TEMP/extracted-controller-bundle"
+          cd ..
+          node web/e2e/install.mjs "$RUNNER_TEMP/extracted-controller-bundle"
       - name: Actual installed CLI includes and dual-stack trusted Nginx authorization
         env:
           PICKETX_INGRESS_EVIDENCE_DIR: ${{ runner.temp }}/install-evidence
-        run: node apps/web/e2e/installed-ingress.mjs "$RUNNER_TEMP/extracted-controller-bundle"
+        run: node web/e2e/installed-ingress.mjs "$RUNNER_TEMP/extracted-controller-bundle"
       - name: Actual unprivileged systemd and stopped complete-state restore
         run: |
           sudo --non-interactive env PICKETX_SERVICE_TESTS=1 \
             PLAYWRIGHT_BROWSERS_PATH="$PLAYWRIGHT_BROWSERS_PATH" \
             PICKETX_INSTALL_EVIDENCE_DIR="$RUNNER_TEMP/service-evidence" \
-            "$(command -v node)" apps/web/e2e/install.mjs "$RUNNER_TEMP/extracted-controller-bundle" --systemd
+            "$(command -v node)" web/e2e/install.mjs "$RUNNER_TEMP/extracted-controller-bundle" --systemd
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -157,7 +157,7 @@ jobs:
         env:
           PICKETX_REAL_IDP_TESTS: '1'
           PICKETX_REAL_IDP_EVIDENCE_DIR: ${{ runner.temp }}/install-evidence
-        run: node apps/web/e2e/real-idp.mjs "$RUNNER_TEMP/extracted-controller-bundle" "$RUNNER_TEMP/keycloak-26.8.1"
+        run: node web/e2e/real-idp.mjs "$RUNNER_TEMP/extracted-controller-bundle" "$RUNNER_TEMP/keycloak-26.8.1"
       - uses: actions/upload-artifact@v4
         with:
           name: controller-linux-amd64

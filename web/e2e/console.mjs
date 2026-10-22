@@ -22,7 +22,7 @@ import { managedAccounts } from './accounts.mjs'
 import { oidcLogin } from './oidc.mjs'
 import { initialHTTPAudit, populatedHTTPAudit } from './http-audit.mjs'
 
-const root = resolve(import.meta.dirname, '../../..')
+const root = resolve(import.meta.dirname, '../..')
 const temp = await mkdtemp(join(tmpdir(), 'picketx-browser-'))
 const evidence = process.env.PICKETX_BROWSER_EVIDENCE_DIR ?? join(temp, 'screenshots')
 await mkdir(evidence, { recursive: true })
@@ -49,7 +49,7 @@ credentials: ${JSON.stringify(join(temp, 'agent.json'))}
 source: {mode: database}
 management: {credentials: ${JSON.stringify(principalPath)}}
 agent: {enabled: true, listen: "127.0.0.1:0", authority: "static:example-v1"}
-browser: {enabled: true, origin: ${JSON.stringify(origin)}, assets: ${JSON.stringify(join(root, 'apps/web/dist'))}}
+browser: {enabled: true, origin: ${JSON.stringify(origin)}, assets: ${JSON.stringify(join(root, 'web/dist'))}}
 authz: {enabled: true, network: tcp, address: "127.0.0.1:${authzPort}", credentials: ${JSON.stringify(callersPath)}}
 `, { mode: 0o600 })
   const built = spawnSync('go', ['build', '-o', join(temp, 'controller'), './cmd/picketx-controller'], { cwd: root, encoding: 'utf8' })

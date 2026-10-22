@@ -27,7 +27,7 @@ credentials: ${JSON.stringify(join(dir, 'agents.json'))}
 source: {mode: database}
 management: {credentials: ${JSON.stringify(join(dir, 'keys.json'))}, users_mode: database}
 agent: {enabled: true, listen: "127.0.0.1:0", authority: "oidc:test"}
-browser: {enabled: true, origin: ${JSON.stringify(origin)}, assets: ${JSON.stringify(join(root, 'apps/web/dist'))}, oidc_config: ${JSON.stringify(provider)}}
+browser: {enabled: true, origin: ${JSON.stringify(origin)}, assets: ${JSON.stringify(join(root, 'web/dist'))}, oidc_config: ${JSON.stringify(provider)}}
 `, { mode: 0o600 })
   const env = Object.fromEntries(Object.entries(process.env).filter(([k]) => !k.startsWith('PICKETX_')))
   const child = spawn(join(temp, 'controller'), ['-config', runtime], { cwd: root, env, stdio: ['ignore', 'pipe', 'pipe'] })

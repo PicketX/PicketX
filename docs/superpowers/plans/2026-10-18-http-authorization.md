@@ -33,7 +33,7 @@
 | internal/controller/{authz,management}.go | Echo DTO/HTTP | dedicated decision handlers/audit routes |
 | internal/controllerapp/{runtime,authz}.go | owned lifecycle | listener/assembly/readiness |
 | internal/runtimeconfig/config.go | Koanf typed boundary | disabled-by-default listener settings |
-| apps/web/e2e/console.mjs, .github/workflows/ci.yml | real acceptance | Nginx/browser/application |
+| web/e2e/console.mjs, .github/workflows/ci.yml | real acceptance | Nginx/browser/application |
 | docs/api, docs/HTTP_AUTHORIZATION* | generated/deployment contract | bilingual scope/examples |
 
 ### Dependencies
@@ -64,7 +64,7 @@ configuration compile tests (strict objects/lifecycle), core network tests (inde
 - [x] Full Go ordinary/race/vet/build, pinned generation, local OpenAPI; Expected: PASS; commit (full native suite in Linux CI; local Unix EPERM retained).
 
 ### Task 3: Real Nginx/browser/application acceptance
-**Files:** examples/http/*, apps/web/e2e/console.mjs, .github/workflows/ci.yml, bilingual docs/checkpoint.
+**Files:** examples/http/*, web/e2e/console.mjs, .github/workflows/ci.yml, bilingual docs/checkpoint.
 **Interfaces:** existing real console e2e publishes policy through SCS/CAS; Nginx internal auth_request calls dedicated local API using fixed routing target and sanitized source metadata.
 - [x] Add actual Nginx/HTTP acceptance first; Expected: RED until setup/integration exists, never skip absent tool.
 - [x] Provide minimal documented Nginx config/template and executable test lifecycle; real application count/content proves blocked calls never forwarded. Exercise reused connection target/method/path/source spoofing, source dual-stack decisions, expiry/revoke/deny, authz unavailable, audit records; actual browser publish→proxy→application and revoke.

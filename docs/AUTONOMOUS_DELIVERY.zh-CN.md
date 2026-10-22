@@ -459,7 +459,7 @@ vet/build、固定生成/OpenAPI及全静态SQLite/管理Controller/CLI通过。
 
 裁定：云技能脚本不可直接执行，使用仓库持久台账，代价是手动维护；OpenAPI校验CLI触发未授权遥测后停用，改锁定Swagger Parser13.1.0/Ajv2020本地校验、禁用外部/文件/HTTP引用，不假定遥测许可，代价是另一套lint建议。
 
-随后CI39120860780在setup-node失败：错用不存在的apps/web/.node-version（原始job117656009194），必需测试被跳过，不算验收。新增TestDocumentationCINodeVersionFilesExist先复现同一路径失败，再改为根目录.node-version；这只是已评审生产树之外的工作流/测试修正，未改生产行为，须重跑全部检查。
+随后CI39120860780在setup-node失败：错用不存在的web/.node-version（原始job117656009194），必需测试被跳过，不算验收。新增TestDocumentationCINodeVersionFilesExist先复现同一路径失败，再改为根目录.node-version；这只是已评审生产树之外的工作流/测试修正，未改生产行为，须重跑全部检查。
 
 修正后代码验收通过：远端headf8536e6b447b9da5454dadbb9f235b492dd27e39，树27daea21709eb7682f8d7f0dc9b551e72a4abbb8；实际CI检出96108c071c0c009b4b95b54c9899307df07c376b同树。CI39121161170的Go/Web均通过。原始Go job117656881965确认128顶层/357总测试，无fail/skip/race，vet/build、协议/OpenAPI重生成、本地OpenAPI3.1校验、真实全静态文件SQLite/gRPC及管理Token/Casbin/HTTP CAS/审计/重启/SIGTERM、CLI绝对期限/撤回检查通过。Web job117656882175确认npm ci/typecheck/lint/build通过。未改Agent内核，不能把旧PR16证据当成本段新内核测试。
 

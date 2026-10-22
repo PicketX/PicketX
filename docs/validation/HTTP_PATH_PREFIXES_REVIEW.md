@@ -18,7 +18,7 @@ implementer, not inferred from that review.
 
 ## Deferred minors
 
-1. Reviewer: `apps/web/src/locales/en.json:43` selectorLimit wording "unique
+1. Reviewer: `web/src/locales/en.json:43` selectorLimit wording "unique
    selectors across" can imply cross-list uniqueness. Contract and implementation
    permit the same string in exact and prefix lists; Chinese correctly says each
    list. Cost: potentially confusing advice, no authorization widening/rejection.

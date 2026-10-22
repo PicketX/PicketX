@@ -1,6 +1,6 @@
 # Third-party notices
 
-The Button and Card source files in `apps/web/src/components/ui` are copied from the official shadcn/ui new-york-v4 registry (retrieved 2026-10-07), with their original MIT license below. Source: https://github.com/shadcn-ui/ui/tree/main/apps/v4/registry/new-york-v4/ui
+The Button and Card source files in `web/src/components/ui` are copied from the official shadcn/ui new-york-v4 registry (retrieved 2026-10-07), with their original MIT license below. Source: https://github.com/shadcn-ui/ui/tree/main/apps/v4/registry/new-york-v4/ui
 
 The project Apache-2.0 license does not replace third-party licenses. Go module and npm package dependencies retain their own license files. Binary distributions must retain applicable dependency notices.
 

@@ -22,8 +22,8 @@
 | internal/management/inventory.go | grantBase/random UID/Replace; preserve facts |
 | internal/controller/http_routes.go, http_routes_test.go, management.go, browser.go | Strict DTO and bearer/cookie routes, real SQLite tests |
 | scripts/normalize-management-api.mjs, docs/api/swagger.json, management_test.go | Generated bounded public contract |
-| apps/web/src/features/http-routes/HTTPRoutes.tsx, App.tsx, locales | Existing theme, real catalog/create, CAS/draft lifecycle |
-| apps/web/e2e/console.mjs, http-routes.mjs, ingress.mjs | Real browser/API/Nginx/application acceptance |
+| web/src/features/http-routes/HTTPRoutes.tsx, App.tsx, locales | Existing theme, real catalog/create, CAS/draft lifecycle |
+| web/e2e/console.mjs, http-routes.mjs, ingress.mjs | Real browser/API/Nginx/application acceptance |
 | docs/HTTP_AUTHORIZATION*, AUTONOMOUS_DELIVERY* | Usage, evidence, remaining scope and lease |
 
 Dependencies: Inventory/Replace -> publication.Repository -> shared compiler;

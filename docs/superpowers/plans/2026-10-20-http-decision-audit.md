@@ -31,7 +31,7 @@ appendHTTPAudit(previous:HTTPAuditEvent[],page:HTTPAuditPage):HTTPAuditEvent[]
 retains last200; HTTPAudit({onUnauthorized:()=>void}) component.
 - [ ] Write model tests first: exact page/cursor,50limit,200window, emptytail,
   booleans/time/unsafe/reordered/duplicate/privateextras; run
-  node --test apps/web/e2e/http-audit-model.test.mjs; Expected missing-model RED.
+  node --test web/e2e/http-audit-model.test.mjs; Expected missing-model RED.
 - [ ] Write actual browser initial-empty/missing-subview test and publish test-first
   draft; actual CI must show missing HTTP decisions button before UI implementation.
 - [ ] Implement minimal parser/window, same Node command Expected all PASS.
@@ -44,7 +44,7 @@ retains last200; HTTPAudit({onUnauthorized:()=>void}) component.
   browser/Linux/install/provider gates in CI mandatory. Expected clean supported
   local checks and actual native success, no ignored errors or skipped scenarios.
 - [ ] Update bilingual docs/checkpoint and commit. Whole-task command:
-  node --test apps/web/e2e/http-audit-model.test.mjs apps/web/e2e/wait-for-operation.test.mjs
+  node --test web/e2e/http-audit-model.test.mjs web/e2e/wait-for-operation.test.mjs
 - [ ] ONE independent full-branch review; root ONE blocker RED→GREEN pass; defer
   minors and persist exhaustive rulings/costs. No extra reviewer/gate bypass.
 - [ ] Verify final head/tree/fullCI/raw/fouractualarchives/static/notices/screenshots;

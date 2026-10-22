@@ -18,7 +18,7 @@ Not delivered: password/OIDC identity, resource delegation, structured CRUD/appr
 
 1. `internal/management{,access}`: RED current-role/rotation/ID-reuse tests; implement ID+digest resolver; GREEN full Go. Produces fresh Principal or unauthorized/unavailable.
 2. `internal/controller`, `runtimeconfig`, `controllerapp`: RED cookie/CSRF/origin/config tests; implement lifecycle-owned sessions, separate browser group, reused handlers and confined assets; GREEN Go/race/vet/build/static/OpenAPI.
-3. `apps/web/src`, `vite.config.ts`, browser tests/CI: actual Chromium test RED before replacing scaffold; implement real session/publication/audit with preserved drafts/conflicts, loading/error/empty/stale; GREEN npm ci/typecheck/lint/build and Chromium→Go→SQLite, desktop/mobile screenshots.
+3. `web/src`, `vite.config.ts`, browser tests/CI: actual Chromium test RED before replacing scaffold; implement real session/publication/audit with preserved drafts/conflicts, loading/error/empty/stale; GREEN npm ci/typecheck/lint/build and Chromium→Go→SQLite, desktop/mobile screenshots.
 4. Bilingual guide/checkpoint; one independent whole-branch review; fix blockers RED→GREEN. Compare trees, exact-head required CI, expected-head merge and main raw evidence. Keep remaining L7 task active.
 
 Review focus: reused credential ID, rotation/stale roles, fixation/login CSRF, Host rebinding/forwarding, concurrent session requests, traversal/symlinks, authenticated cache, async draft loss, logout/revocation and no false applied/browser-mock acceptance.

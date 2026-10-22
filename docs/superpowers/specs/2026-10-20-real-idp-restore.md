@@ -31,7 +31,7 @@ must remain untouched. No raw private documents/config/paths/codes/tokens/logs.
 | --- | --- |
 | scripts/real-idp-restore.mjs (new) | Private stopped copy/relocate and strict public evidence validation |
 | scripts/real-idp-restore.test.mjs (new) | Actual byte/mode/nested-path preservation and unsafe targets, sanitized errors, strict receipt mutations |
-| apps/web/e2e/real-idp.mjs | Existing real issuer stays alive while installed Controller is restored; actual browser/API observations |
+| web/e2e/real-idp.mjs | Existing real issuer stays alive while installed Controller is restored; actual browser/API observations |
 | .github/workflows/ci.yml | Add mandatory helper regressions, preserve jobs/artifacts/provider pin |
 | docs/validation/REAL_IDP_RESTORE*.md | Scope, evidence, runbook/receipt boundaries |
 | docs/AUTONOMOUS_DELIVERY*.md | Current owner/lease and final PR authority |

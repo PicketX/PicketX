@@ -31,8 +31,8 @@ compile.go define pinned references. Add resource_removal.go for reference guard
 internal/management/inventory.go owns structured CAS/Replace operations;
 internal/controller/inventory.go and management.go/browser.go own DTO/routes/errors.
 scripts/normalize-management-api.mjs plus docs/api/swagger.json own strict OpenAPI.
-apps/web/src/features/resources/Resources.tsx owns the single draft and inventory;
-locales/en.json/zh-CN.json own copy. apps/web/e2e/resources.mjs owns real browser
+web/src/features/resources/Resources.tsx owns the single draft and inventory;
+locales/en.json/zh-CN.json own copy. web/e2e/resources.mjs owns real browser
 resource acceptance (verify filename before edit). RESOURCE_MANAGEMENT bilingual
 docs and AUTONOMOUS_DELIVERY.md carry user-facing boundaries and handoff.
 

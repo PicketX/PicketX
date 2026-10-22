@@ -72,7 +72,7 @@ It listens on `127.0.0.1:8080`; use `-listen` to change the address. `GET /healt
 Start the Web development server in another terminal:
 
 ```bash
-cd apps/web
+cd web
 npm ci
 npm run dev
 ```
@@ -86,7 +86,7 @@ go test ./...
 go vet ./...
 go build ./...
 
-cd apps/web
+cd web
 npm run typecheck
 npm run lint
 npm run build
@@ -102,10 +102,10 @@ npm run build
 | `cmd/picketx`, `internal/cli` | Read-only Cobra configuration check |
 | `pkg/configuration` | Strict alpha policy decoding and immutable compiler candidates |
 | `pkg/networkplan` | Scoped per-Agent physical intent and replacement guards |
-| `apps/web` | React, TypeScript, Vite, shadcn/ui, Tailwind CSS, i18next |
+| `web` | React, TypeScript, Vite, shadcn/ui, Tailwind CSS, i18next |
 | `docs` | Current bilingual product, architecture and configuration model baselines |
 
-`pkg/core` contains the evolving logical network Go API and a runnable `ExampleCompile`; public wire/protocol packages remain deferred. See [Product Design](docs/PRODUCT_DESIGN.md), [Architecture](docs/ARCHITECTURE.md), [Configuration Model](docs/CONFIGURATION_MODEL.md), and [Web development](apps/web/README.md).
+`pkg/core` contains the evolving logical network Go API and a runnable `ExampleCompile`; public wire/protocol packages remain deferred. See [Product Design](docs/PRODUCT_DESIGN.md), [Architecture](docs/ARCHITECTURE.md), [Configuration Model](docs/CONFIGURATION_MODEL.md), and [Web development](web/README.md).
 
 ## License
 

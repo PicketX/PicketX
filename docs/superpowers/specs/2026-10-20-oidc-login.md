@@ -75,8 +75,8 @@ one independent whole-branch review, expected-head merge and main recheck remain
 | internal/controller/browser{,_sessions,_oidc}.go + tests | Transaction cookies, protected start, safe callback and live session resolution |
 | internal/runtimeconfig/config.go + tests | Typed optional restart-only private provider config path |
 | internal/controllerapp/runtime.go + tests | Explicit bounded client construction/injection |
-| apps/web/src/{App.tsx,lib/console.ts,locales/*} | Real existing sign-in composition, EN/ZH states |
-| apps/web/e2e/*, .github/workflows/ci.yml | Actual protocol/browser acceptance, all prior gates retained |
+| web/src/{App.tsx,lib/console.ts,locales/*} | Real existing sign-in composition, EN/ZH states |
+| web/e2e/*, .github/workflows/ci.yml | Actual protocol/browser acceptance, all prior gates retained |
 | go.mod/go.sum, scripts/collect-bundle-licenses.mjs | Pinned dependencies and actual release notices |
 | docs/OIDC_LOGIN*.md, AUTONOMOUS_DELIVERY*.md | Operator contract/evidence/lease |
 

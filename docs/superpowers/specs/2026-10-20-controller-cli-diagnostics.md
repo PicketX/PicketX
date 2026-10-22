@@ -42,7 +42,7 @@ plus nonzero. Missing selected scope is an error. No atomic/continuous/kernel pr
 | internal/cli/status.go (new), config.go | Thin Cobra status/doctor adapters and renderers |
 | internal/cli/status_test.go (new) | Command contract, error/exit/credential exclusion |
 | internal/controllerapp/observations_test.go | Existing actual Controller/gRPC through CLI |
-| apps/web/e2e/install.mjs | Shipped empty-PATH CLI status/doctor/auth/stopped-server checks |
+| web/e2e/install.mjs | Shipped empty-PATH CLI status/doctor/auth/stopped-server checks |
 | docs/CLI_DIAGNOSTICS*.md, README*.md | Operators, freshness/exit/trust limits |
 | deploy/controller/README*.md | Ship the same diagnostic instructions in the bundle |
 | docs/AUTONOMOUS_DELIVERY*.md | Short lease, exact final receipt/next work |

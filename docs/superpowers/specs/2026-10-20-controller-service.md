@@ -37,7 +37,7 @@ fixture must not invent Grant coverage. Local lacks PID1 systemd; native require
 |---|---|
 | scripts/controller-state-copy{,.test}.mjs | strict complete private tree copy/config relocation, real FS tests |
 | scripts/controller-service-fixture.mjs | opt-in unique actual systemd fixture and process identity |
-| apps/web/e2e/install.mjs | existing browser flow, service mode and restore readbacks |
+| web/e2e/install.mjs | existing browser flow, service mode and restore readbacks |
 | .github/workflows/ci.yml | existing three jobs, additional mandatory service install step |
 | deploy/controller/README{,.zh-CN}.md | tested operations and remaining limits |
 | docs/AUTONOMOUS_DELIVERY{,.zh-CN}.md | short lease/checkpoint, final PR receipt |

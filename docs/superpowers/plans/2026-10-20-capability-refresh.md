@@ -24,7 +24,7 @@ public response evidence and assert every repeated reload, never retry a failure
 - Failure diagnostics/cleanup must not replace the original browser exception.
 
 ### Task 1: Real boundary evidence and repeat assertions
-**Files:** apps/web/e2e/access-requests.mjs; bilingual checkpoints/spec.
+**Files:** web/e2e/access-requests.mjs; bilingual checkpoints/spec.
 **Interfaces:** Existing accessRequests({...}) unchanged; real /me response listener
 stores at most16 records of status/id/roles/operations (no arbitrary payload);
 every actual reload must show Requests and exact custom capability.
