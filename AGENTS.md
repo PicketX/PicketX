@@ -26,3 +26,8 @@ Read `docs/CONFIGURATION_MODEL.md` before implementing configuration schemas or 
 - Add interfaces/packages when needed; do not preimplement the entire architecture during scaffolding.
 - Check Go with `go test ./...`, `go vet ./...`, and `go build ./...`. Check Web with `npm ci`, `npm run typecheck`, `npm run lint`, and `npm run build` in `web`.
 - Do not add credentials, generated build output, or GPL Agent implementation to this Apache-2.0 repository.
+
+## Commit conventions
+
+- Every commit containing AI-authored or AI-assisted changes must include a `Co-Authored-By: <AI name> <AI email>` trailer identifying the assisting AI. Separate trailers from the commit message body with a blank line.
+- Preserve existing co-author trailers and add one trailer per contributing AI. Verify the trailers before creating the commit.
