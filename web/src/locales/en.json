@@ -1,4 +1,5 @@
 {
+  "theme": { "label": "Theme", "system": "System", "light": "Light", "dark": "Dark" },
   "httpAudit": {
     "idWindow": "IDs {{first}}–{{last}} of {{total}}", "previousIDs": "Previous IDs", "nextIDs": "Next IDs",
     "navigation": "HTTP decisions", "view": "Audit view", "title": "HTTP authorization decisions",

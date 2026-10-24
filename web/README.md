@@ -18,6 +18,8 @@ This is a bilingual operator console backed by real SCS sessions and management 
 
 ## UI conventions
 
+Appearance supports Light, Dark and System modes beside the language control, defaulting to the system preference. Only the appearance preference is saved as `picketx.theme`; theme colors are centralized in `src/index.css`, and official UI components remain unchanged.
+
 - `src/components/ui`: official shadcn components, kept close to upstream.
 - `src/lib`: shared utilities and i18next configuration.
 - `src/locales`: matching English and Simplified Chinese translation keys.
@@ -38,6 +40,8 @@ npx shadcn@latest add button --overwrite
 npm dependency updates and copied component-source updates are separate. Preserve `package-lock.json`. See [third-party notices](../THIRD_PARTY_NOTICES.md) for upstream licensing.
 
 ## 中文说明
+
+语言切换旁提供浅色、深色和跟随系统主题，默认跟随系统。仅将外观偏好保存为 `picketx.theme`；主题颜色集中在 `src/index.css`，不修改官方 UI 组件。
 
 后端在根目录执行 `go run ./cmd/picketx-controller`，自动准备 SQLite/管理员。Web 独立 `npm run dev`，用户名 `admin`，密码在私有 `var/controller/initial-admin-password`。详见[本地开发](../docs/LOCAL_DEVELOPMENT.zh-CN.md)。Vite 保留普通 API 代理及严格5173端口。
 

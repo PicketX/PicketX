@@ -1,4 +1,5 @@
 {
+  "theme": { "label": "主题", "system": "跟随系统", "light": "浅色", "dark": "深色" },
   "httpAudit": {
     "idWindow": "ID {{first}}–{{last}}，共 {{total}} 个", "previousIDs": "上一批 ID", "nextIDs": "下一批 ID",
     "navigation": "HTTP 决策", "view": "审计视图", "title": "HTTP 授权决策",
