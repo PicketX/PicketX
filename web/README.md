@@ -10,7 +10,7 @@ npm run lint
 npm run build
 ```
 
-Run the independent backend with `go run ./cmd/picketx-controller` from the repository root. It prepares SQLite/admin automatically. Open `http://127.0.0.1:5173/console/`, choose username/password and use `admin` plus private `var/controller/initial-admin-password`. See [local development](../docs/LOCAL_DEVELOPMENT.md). Vite retains its ordinary API proxy and strict port5173.
+Run the independent backend with `go run ./cmd/picketx-controller` from the repository root. It prepares SQLite/admin automatically. Open `http://127.0.0.1:5173/console/`, use `admin` plus private `var/controller/initial-admin-password`. See [local development](../docs/LOCAL_DEVELOPMENT.md). Vite retains its ordinary API proxy and strict port5173.
 
 This is a bilingual operator console backed by real SCS sessions and management publication/audit APIs, not a complete access portal. English is default. Use [browser deployment](../docs/BROWSER_CONSOLE.md): opt in to database authority; an explicit public origin is optional except for OIDC. Normal unconfigured startup creates the first database administrator; explicitly configured deployments retain their existing provisioning contract. Built assets use `/console/`; Vite proxies `/console/api` to127.0.0.1:8080. No API mocks/sample state or browser-stored access keys are used.
 
@@ -18,7 +18,7 @@ This is a bilingual operator console backed by real SCS sessions and management 
 
 ## UI conventions
 
-Appearance supports Light, Dark and System modes beside the language control, defaulting to the system preference. Only the appearance preference is saved as `picketx.theme`; theme colors are centralized in `src/index.css`, and official UI components remain unchanged.
+Appearance supports Light, Dark and System modes beside the language control, defaulting to the system preference. Theme and language use labeled dropdown menus with checked selections; system mode includes an explanation, and language names stay in their own language. Only the appearance preference is saved as `picketx.theme`; theme colors are centralized in `src/index.css`, and official UI components remain unchanged.
 
 - `src/components/ui`: official shadcn components, kept close to upstream.
 - `src/lib`: shared utilities and i18next configuration.
@@ -41,7 +41,7 @@ npm dependency updates and copied component-source updates are separate. Preserv
 
 ## 中文说明
 
-语言切换旁提供浅色、深色和跟随系统主题，默认跟随系统。仅将外观偏好保存为 `picketx.theme`；主题颜色集中在 `src/index.css`，不修改官方 UI 组件。
+语言切换旁提供浅色、深色和跟随系统主题，默认跟随系统。主题和语言使用带明确名称及选中标记的下拉菜单；跟随系统提供解释，语言选项使用各自名称。仅将外观偏好保存为 `picketx.theme`；主题颜色集中在 `src/index.css`，不修改官方 UI 组件。
 
 后端在根目录执行 `go run ./cmd/picketx-controller`，自动准备 SQLite/管理员。Web 独立 `npm run dev`，用户名 `admin`，密码在私有 `var/controller/initial-admin-password`。详见[本地开发](../docs/LOCAL_DEVELOPMENT.zh-CN.md)。Vite 保留普通 API 代理及严格5173端口。
 

@@ -20,7 +20,7 @@ npm ci
 npm run dev
 ```
 
-Open **http://127.0.0.1:5173/console/**, choose **Username and password**, sign in as **admin** using the generated private `var/controller/initial-admin-password` file. Logs identify the file, never the password. Change the initial password using account management; the plaintext file is only the original provisioning copy and can then be removed.
+Open **http://127.0.0.1:5173/console/**, sign in as **admin** using the generated private `var/controller/initial-admin-password` file. Logs identify the file, never the password. Change the initial password using account management; the plaintext file is only the original provisioning copy and can then be removed.
 
 No config file means the complete single-instance Controller: SQLite and database-managed accounts, HTTP8080, Agent gRPC9090 and local decisions9091. Agent/caller credential sets start empty and authorize nobody; configure them explicitly for direct testing. Agent absence does not block readiness and readiness does not prove enforcement. State stays in ignored `var/controller/`; do not commit or share it.
 

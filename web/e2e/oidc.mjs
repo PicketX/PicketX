@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
+import { tokenSession } from './session.mjs'
 // Signed protocol fixture, NOT a production IdP. Controller/API/SQLite/React are real.
 import assert from 'node:assert/strict'
 import { mkdir, writeFile } from 'node:fs/promises'
@@ -42,14 +43,14 @@ browser: {enabled: true, origin: ${JSON.stringify(origin)}, assets: ${JSON.strin
     await page.goto(`${origin}/console/`)
     await page.getByRole('button', { name: 'Continue with organization', exact: true }).waitFor({ timeout: 5000 })
     for (const width of [375, 1440]) { await page.setViewportSize({ width, height: 1000 }); assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)); await page.screenshot({ path: join(evidence, `oidc-login-${width}.png`), fullPage: true }) }
-    await page.getByRole('button', { name: 'Language', exact: true }).click()
+    await page.getByRole('button', { name: 'Language', exact: true }).click(); await page.getByRole('menuitemradio', { name: '简体中文', exact: true }).click()
     await page.getByRole('button', { name: '使用组织账户登录', exact: true }).waitFor(); await page.screenshot({ path: join(evidence, 'oidc-login-zh-1440.png'), fullPage: true })
-    await page.getByRole('button', { name: '语言', exact: true }).click()
+    await page.getByRole('button', { name: '语言', exact: true }).click(); await page.getByRole('menuitemradio', { name: 'English', exact: true }).click()
     async function login() { await page.getByRole('button', { name: 'Continue with organization', exact: true }).click(); await page.getByRole('heading', { name: 'Signed OIDC test issuer' }).waitFor(); await page.getByRole('link', { name: 'Continue as test user' }).click() }
     // A stale signed-out tab can initiate replacement while another tab has a
     // session. The Strict cookie is absent at cross-site callback, so start must
     // revoke that original token under its existing same-session request lock.
-    await page.getByLabel('Access key', { exact: true }).fill(token); await page.getByRole('button', { name: 'Sign in', exact: true }).click(); await page.getByRole('heading', { name: 'Desired configuration', exact: true }).waitFor()
+    await tokenSession(page, token); await page.getByRole('heading', { name: 'Desired configuration', exact: true }).waitFor()
     const originatingCookie = (await context.cookies()).find(c => c.name === 'picketx_session')
     const start = await page.evaluate(async () => (await fetch('/console/api/v1/oidc/start', { method: 'POST' })).json())
     assert.equal((await fetch(`${origin}/console/api/v1/me`, { headers: { Cookie: `picketx_session=${originatingCookie.value}` } })).status, 401)

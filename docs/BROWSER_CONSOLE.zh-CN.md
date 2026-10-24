@@ -15,7 +15,7 @@ browser:
   assets: web/dist
 ```
 
-路径相对 Controller 工作目录。既有 HTTPS 入口必须保留外部 Host；限制 Controller 直连网络访问。显式 origin 使用浏览器 location.origin 的准确值，无尾斜杠、路径、userinfo、查询或片段，不写浏览器省略的默认端口。Controller 不负责 TLS，也不信任转发身份/TLS头。打开 /console/，用独立管理密钥登录；Agent Token 不能登录。密钥不写 localStorage/sessionStorage/Cookie/SCS 值。
+路径相对 Controller 工作目录。既有 HTTPS 入口必须保留外部 Host；限制 Controller 直连网络访问。显式 origin 使用浏览器 location.origin 的准确值，无尾斜杠、路径、userinfo、查询或片段，不写浏览器省略的默认端口。Controller 不负责 TLS，也不信任转发身份/TLS头。打开 /console/，使用本地用户名与密码或已配置的 OIDC 提供方登录。登录页不提供 Access Token 登录；只有管理密钥的部署需先供应本地账户或配置 OIDC，才能通过页面登录。
 
 仅回环开发可用 http://127.0.0.1:8080 或 http://[::1]:8080。Vite 开发可省略 assets，origin 可省略，npm run dev，/console/api 代理至127.0.0.1:8080并保留外部Host；禁止远端明文开发 Origin。未显式启用或非数据库权威时拒绝浏览器配置，不会回到文件轮询覆盖管理状态。
 

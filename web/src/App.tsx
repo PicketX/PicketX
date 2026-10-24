@@ -3,6 +3,7 @@ import { useEffect, useEffectEvent, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { FileText, History, KeyRound, Boxes, Route, ShieldCheck, RefreshCw, LogOut } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { LanguageSelector } from '@/components/shared/LanguageSelector'
 import { ThemeSelector } from '@/components/shared/ThemeSelector'
 import { APIError, request } from '@/lib/console'
 import type { AuditEvent, AuditPage, Identity, Publication, Session } from '@/lib/console'
@@ -22,8 +23,6 @@ export default function App() {
   const [accepted, setAccepted] = useState<Publication | null>(null)
   const [draft, setDraft] = useState<Draft | null>(null)
   const [reason, setReason] = useState('')
-  const [key, setKey] = useState('')
-  const [signInMethod, setSignInMethod] = useState<'key' | 'password'>('key')
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -59,16 +58,15 @@ export default function App() {
   const canRequests = identity?.operations.some(op => op.startsWith('request:')) ?? false
   const canAccounts = identity?.operations.includes('account:read') ?? false
   const canAudit = identity?.operations.includes('audit:read') ?? false
-  const passwordMode = session?.password_login && signInMethod === 'password'
 
   function clear() {
     setAccountDirty(false); setAccountBusy(false)
-    setSignInMethod('key'); setUsername(''); setPassword(''); setShowPassword(false)
+    setUsername(''); setPassword(''); setShowPassword(false)
     setRouteDirty(false); setRouteBusy(false)
     setAuditView('publication')
     setRequestDirty(false); setRequestBusy(false)
     epoch.current++
-    setIdentity(null); setAccepted(null); setDraft(null); setReason(''); setKey(''); setAudit([]); setCursor(0); setHasMore(false); setLastRead(0); setConflict(false); setGrantDirty(false); setGrantBusy(false); setResourceDirty(false); setResourceBusy(false)
+    setIdentity(null); setAccepted(null); setDraft(null); setReason(''); setAudit([]); setCursor(0); setHasMore(false); setLastRead(0); setConflict(false); setGrantDirty(false); setGrantBusy(false); setResourceDirty(false); setResourceBusy(false)
   }
   function fail(e: unknown, reading = false) {
     if (e instanceof DOMException && e.name === 'AbortError') return
@@ -150,14 +148,14 @@ export default function App() {
   }
   async function login(e: React.FormEvent) {
     e.preventDefault(); if (busy) return
-    if (passwordMode && (new TextEncoder().encode(password).length < 12 || new TextEncoder().encode(password).length > 72)) { setError(t('humanLogin.passwordLimit')); return }
+    if (new TextEncoder().encode(password).length < 12 || new TextEncoder().encode(password).length > 72) { setError(t('humanLogin.passwordLimit')); return }
     setBusy(true); setError(''); setNotice('')
     try {
       const { data } = await request<Session>('/session'); setSession(data)
-      if (signInMethod === 'password' && !data.password_login) { setSignInMethod('key'); setError(t('humanLogin.unavailable')); return }
-      await request(signInMethod === 'password' ? '/login/password' : '/login', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': data.csrf }, body: JSON.stringify(signInMethod === 'password' ? { username, password } : { token: key }) }, 200)
-      setKey(''); setPassword(''); setUsername(''); setShowPassword(false); setSession({ ...data, authenticated: true }); await load(undefined, true)
-    } catch (e) { if (e instanceof APIError && e.status === 401) setError(t(passwordMode ? 'humanLogin.rejected' : 'errors.unauthorized')); else fail(e) } finally { setKey(''); setPassword(''); setShowPassword(false); setBusy(false) }
+      if (!data.password_login) { setError(t('humanLogin.unavailable')); return }
+      await request('/login/password', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': data.csrf }, body: JSON.stringify({ username, password }) }, 200)
+      setPassword(''); setUsername(''); setShowPassword(false); setSession({ ...data, authenticated: true }); await load(undefined, true)
+    } catch (e) { if (e instanceof APIError && e.status === 401) setError(t('humanLogin.rejected')); else fail(e) } finally { setPassword(''); setShowPassword(false); setBusy(false) }
   }
   async function logout() {
     if (busy || grantBusy || resourceBusy || routeBusy || requestBusy || accountBusy || ((dirty || grantDirty || resourceDirty || routeDirty || requestDirty || accountDirty) && !window.confirm(t('routes.discardAll')))) return
@@ -167,7 +165,7 @@ export default function App() {
   }
   async function loginOIDC() {
     if (busy) return
-    setBusy(true); setError(''); setKey(''); setPassword(''); setUsername(''); setShowPassword(false)
+    setBusy(true); setError(''); setPassword(''); setUsername(''); setShowPassword(false)
     try {
       const { data } = await request<Session>('/session'); setSession(data)
       if (!data.oidc_login) { setError(t('oidc.unavailable')); return }
@@ -198,23 +196,21 @@ export default function App() {
     setBusy(true); setError('')
     try { const { data } = await request<AuditPage>(`/audit?after=${cursor}&limit=50`); setAudit(old => [...old, ...(data.events ?? [])]); setCursor(data.next_after); setHasMore((data.events?.length ?? 0) === 50) } catch (e) { fail(e, true) } finally { setBusy(false) }
   }
-  const language = <Button variant="ghost" onClick={() => void i18n.changeLanguage(i18n.language === 'en' ? 'zh-CN' : 'en')} aria-label={t('language')}>{i18n.language === 'en' ? '简体中文' : 'English'}</Button>
-  const appearance = <div className="appearance-controls"><ThemeSelector />{language}</div>
+  const appearance = <div className="appearance-controls"><ThemeSelector /><LanguageSelector /></div>
   const errorPanel = error && <div id="console-error" className="feedback error" role="alert" tabIndex={-1} ref={errorBox}>{error}</div>
   if (!session?.authenticated) return <div className="login-shell">
     <header className="login-header"><span className="brand"><ShieldCheck aria-hidden="true" />PicketX</span>{appearance}</header>
     <main className="login-main"><section className="login-intro"><h1>{t('loginTitle')}</h1><p>{t('loginDescription')}</p><p className="boundary">{t('desiredBoundary')}</p></section>
       <form className="login-panel" onSubmit={e => void login(e)} aria-busy={busy}><h2>{t('signIn')}</h2>{errorPanel}
         {session?.oidc_login && <div className="mb-6"><Button type="button" variant="outline" className="w-full" disabled={busy} onClick={() => void loginOIDC()} aria-describedby="oidc-help">{busy ? t('loading') : t('oidc.continue')}</Button><p id="oidc-help" className="hint">{t('oidc.help')}</p></div>}
-        {session && <>{session.password_login && <><label htmlFor="sign-in-method">{t('humanLogin.method')}</label><select id="sign-in-method" value={signInMethod} disabled={busy} onChange={e => { setSignInMethod(e.target.value as 'key' | 'password'); setKey(''); setPassword(''); setUsername(''); setShowPassword(false); setError('') }}><option value="key">{t('accessKey')}</option><option value="password">{t('humanLogin.methodPassword')}</option></select></>}
-        {passwordMode ? <>
+        {session?.password_login && <>
           <label htmlFor="username">{t('humanLogin.username')}</label><input id="username" name="username" autoComplete="username" autoCapitalize="none" spellCheck={false} value={username} onChange={e => setUsername(e.target.value)} minLength={3} maxLength={64} required disabled={busy} aria-describedby="password-help" />
           <label htmlFor="human-password">{t('humanLogin.password')}</label><input id="human-password" name="password" type={showPassword ? 'text' : 'password'} autoComplete="current-password" value={password} onChange={e => setPassword(e.target.value)} maxLength={72} required disabled={busy} aria-describedby={error ? 'password-help console-error' : 'password-help'} />
           <Button type="button" variant="ghost" disabled={busy} aria-pressed={showPassword} onClick={() => setShowPassword(v => !v)}>{t(showPassword ? 'humanLogin.hide' : 'humanLogin.show')}</Button>
           <p id="password-help" className="hint">{t('humanLogin.help')}</p>
-        </> : <><label htmlFor="access-key">{t('accessKey')}</label><input id="access-key" type="password" autoComplete="current-password" value={key} onChange={e => setKey(e.target.value)} minLength={32} maxLength={256} required disabled={busy} aria-describedby="key-help" /><p id="key-help" className="hint">{t('keyHelp')}</p></>}
-        <Button type="submit" disabled={busy}>{busy ? t('loading') : t('signIn')}</Button>
+          <Button type="submit" disabled={busy}>{busy ? t('loading') : t('signIn')}</Button>
         </>}
+        {session && !session.password_login && !session.oidc_login && <p role="status">{t('humanLogin.unavailable')}</p>}
         {!session && busy && <p role="status">{t('loading')}</p>}
         {!session && !busy && <Button type="button" variant="outline" onClick={() => window.location.reload()}>{t('retry')}</Button>}
       </form>

@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
+import { tokenSession } from './session.mjs'
 // Real browser → built React → real Controller → SQLite. No API fixtures.
 import assert from 'node:assert/strict'
 import { mkdtemp, mkdir, readFile, writeFile, rm } from 'node:fs/promises'
@@ -72,8 +73,7 @@ authz: {enabled: true, network: tcp, address: "127.0.0.1:${authzPort}", credenti
   const page = await context.newPage()
   const errors = []; page.on('pageerror', e => errors.push(e.message))
   await page.goto(`${origin}/console/`)
-  await page.getByLabel('Access key', { exact: true }).fill(token)
-  await page.getByRole('button', { name: 'Sign in', exact: true }).click()
+  await tokenSession(page, token)
   await page.getByRole('heading', { name: 'Desired configuration', exact: true }).waitFor()
   await page.getByLabel('Policy YAML').waitFor()
   const original = await page.getByLabel('Policy YAML').inputValue()
@@ -143,8 +143,7 @@ authz: {enabled: true, network: tcp, address: "127.0.0.1:${authzPort}", credenti
   assert.equal(readonlyDocument.status, 200)
   const viewerContext = await browser.newContext({ viewport: { width: 375, height: 812 }, reducedMotion: 'reduce' })
   const view = await viewerContext.newPage(); await view.goto(`${origin}/console/`)
-  await view.getByLabel('Access key', { exact: true }).fill(viewer)
-  await view.getByRole('button', { name: 'Sign in', exact: true }).click()
+  await tokenSession(view, viewer)
   await view.getByLabel('Policy YAML').waitFor()
   assert(await view.getByLabel('Policy YAML').isEnabled(), 'Viewer must be able to focus, read and copy documents')
   assert(await view.getByLabel('Policy YAML').evaluate(el => el.readOnly))
@@ -306,7 +305,7 @@ spec:
   // Removal invalidates the next real request even when the browser holds a cookie.
   await writeFile(principalPath, '{"principals":[]}', { mode: 0o600 })
   await page.getByRole('button', { name: 'Refresh status', exact: true }).click()
-  await page.getByLabel('Access key', { exact: true }).waitFor()
+  await page.getByRole('heading', { name: 'Sign in', exact: true }).waitFor()
   assert.deepEqual(errors, [])
   console.log('PASS real Chromium → React → SCS/CSRF → management API → SQLite: publish, audit, conflict/draft, read failure, viewer, mobile, credential revocation')
   await humanLogin({ browser, origin, principalPath, root, evidence })

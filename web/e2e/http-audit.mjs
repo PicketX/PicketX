@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
+import { tokenSession } from './session.mjs'
 // Success assertions read the actual Controller/SQLite, not response fixtures.
 import assert from 'node:assert/strict'
 import { join } from 'node:path'
@@ -38,8 +39,7 @@ export async function populatedHTTPAudit({ browser, origin, authzPort, ingressPo
       await route.fulfill({ response, json: { ...body, operations: projectedOperations } })
     })
     await page.goto(origin + '/console/')
-    await page.getByLabel('Access key', { exact: true }).fill(credential)
-    await page.getByRole('button', { name: 'Sign in', exact: true }).click()
+    await tokenSession(page, credential)
     await page.getByRole('button', { name: 'Audit', exact: true }).waitFor()
     assert.equal(await page.getByRole('button', { name: 'Resources', exact: true }).count(), 0)
     let reads = 0
@@ -172,9 +172,9 @@ export async function populatedHTTPAudit({ browser, origin, authzPort, ingressPo
     await page.unroute(path)
     await section.getByRole('button', { name: 'Read next decisions', exact: true }).focus()
     assert(await section.getByRole('button', { name: 'Read next decisions', exact: true }).evaluate(e => e === document.activeElement))
-    await page.getByRole('button', { name: 'Language', exact: true }).click()
+    await page.getByRole('button', { name: 'Language', exact: true }).click(); await page.getByRole('menuitemradio', { name: '简体中文', exact: true }).click()
     await section.getByRole('heading', { name: 'HTTP 授权决策', exact: true }).waitFor()
-    await page.getByRole('button', { name: '语言', exact: true }).click()
+    await page.getByRole('button', { name: '语言', exact: true }).click(); await page.getByRole('menuitemradio', { name: 'English', exact: true }).click()
     await page.route(path, r => r.fulfill({ status: 403, json: { code: 'forbidden' } }))
     await section.getByRole('button', { name: 'Read next decisions', exact: true }).click()
     await section.getByText('Permission to read HTTP decisions is unavailable. Retry after refreshing your session.', { exact: true }).waitFor()
@@ -209,7 +209,7 @@ export async function populatedHTTPAudit({ browser, origin, authzPort, ingressPo
     current.principals = current.principals.filter(p => p.id !== id)
     await writeFile(principalPath, JSON.stringify(current), { mode: 0o600 })
     await section.getByRole('button', { name: 'Read next decisions', exact: true }).click()
-    await page.getByLabel('Access key', { exact: true }).waitFor()
+    await page.getByRole('heading', { name: 'Sign in', exact: true }).waitFor()
     assert.equal(await page.locator('[data-http-decision-id]').count(), 0)
     assert.equal(await page.evaluate(() => localStorage.length + sessionStorage.length), 0)
     assert.deepEqual(errors, [])

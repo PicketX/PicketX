@@ -20,7 +20,7 @@ npm ci
 npm run dev
 ```
 
-访问 **http://127.0.0.1:5173/console/**，选择**用户名与密码**，用户名 **admin**，密码取自生成的私有 `var/controller/initial-admin-password`。日志只提示文件位置，不输出密码。可在账户管理修改初始密码；明文文件只保留最初供应副本，改密后可以删除。
+访问 **http://127.0.0.1:5173/console/**，用户名 **admin**，密码取自生成的私有 `var/controller/initial-admin-password`。日志只提示文件位置，不输出密码。可在账户管理修改初始密码；明文文件只保留最初供应副本，改密后可以删除。
 
 无配置文件时启动完整单实例 Controller：SQLite、数据库账户、HTTP8080、Agent gRPC9090 和本地决策9091。Agent/调用方凭据初始为空，不授权任何人，需要直接测试时显式配置。无 Agent 不阻止就绪，就绪不证明执行。状态保存在已忽略的 `var/controller/`，不要提交或分享。
 

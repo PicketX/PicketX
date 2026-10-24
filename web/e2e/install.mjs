@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
+import { tokenSession } from './session.mjs'
 // Real packaged binaries + copied built assets, never build from this runner.
 import assert from 'node:assert/strict'
 import { chown, cp, mkdir, mkdtemp, readFile, readdir, rename, rm, stat, writeFile } from 'node:fs/promises'
@@ -138,8 +139,7 @@ try {
   const admin = await browser.newContext(), human = await browser.newContext()
   const page = await admin.newPage(), person = await human.newPage()
   await page.goto(origin + '/console/')
-  await page.getByLabel('Access key', { exact: true }).fill(keys[0])
-  await page.getByRole('button', { name: 'Sign in', exact: true }).click()
+  await tokenSession(page, keys[0])
   await page.getByRole('button', { name: 'Accounts', exact: true }).click()
   await page.getByText('No human accounts yet.', { exact: true }).waitFor()
   const password = randomBytes(24).toString('hex'); keys.push(password)
@@ -151,7 +151,6 @@ try {
   await page.getByText('Account saved. Previous sessions are invalid.', { exact: true }).waitFor()
   async function humanLogin() {
     await person.goto(origin + '/console/')
-    await person.getByLabel('Sign-in method', { exact: true }).selectOption('password')
     await person.getByLabel('Username', { exact: true }).fill('operator')
     await person.getByLabel('Password', { exact: true }).fill(password)
     await person.getByRole('button', { name: 'Sign in', exact: true }).click()

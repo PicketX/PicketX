@@ -1,5 +1,5 @@
 {
-  "theme": { "label": "主题", "system": "跟随系统", "light": "浅色", "dark": "深色" },
+  "theme": { "label": "主题", "system": "跟随系统", "light": "浅色", "dark": "深色", "systemHelp": "自动使用设备的浅色或深色外观。" },
   "httpAudit": {
     "idWindow": "ID {{first}}–{{last}}，共 {{total}} 个", "previousIDs": "上一批 ID", "nextIDs": "下一批 ID",
     "navigation": "HTTP 决策", "view": "审计视图", "title": "HTTP 授权决策",
@@ -30,7 +30,7 @@
     "states": { "pending": "待审批", "approved": "已批准", "rejected": "已拒绝" },
     "grantStates": { "valid-desired": "有效期望权限", "revoked": "已撤销", "expired": "已过期", "withdrawn": "已移除", "modified": "批准后已修改", "scheduled": "已计划，尚未生效", "unknown": "未知" }
   },
-  "humanLogin": { "method": "登录方式", "methodPassword": "用户名与密码", "username": "用户名", "password": "密码", "show": "显示密码", "hide": "隐藏密码", "help": "使用管理员配置的本地账户。用户名为小写，密码不自动去除空格；支持密码管理器与粘贴。", "passwordLimit": "请输入 12–72 UTF-8 字节的密码（纯汉字最多 24 个）。", "rejected": "登录信息未被接受，请检查或联系管理员。", "unavailable": "本地密码登录已不可用，请使用访问密钥或联系管理员。" },
+  "humanLogin": { "username": "用户名", "password": "密码", "show": "显示密码", "hide": "隐藏密码", "help": "使用管理员配置的本地账户。用户名为小写，密码不自动去除空格；支持密码管理器与粘贴。", "passwordLimit": "请输入 12–72 UTF-8 字节的密码（纯汉字最多 24 个）。", "rejected": "登录信息未被接受，请检查或联系管理员。", "unavailable": "本地密码登录不可用，请联系管理员。" },
   "publicationConflictHelp": "写入已阻止，草稿已保留，但变更可能已经提交。请先检查最新状态和审计，再显式将最新配置载入编辑器后重试。",
   "nodes": {
     "title": "节点", "observations": "节点观测", "help": "当前凭据覆盖的 Agent 作用域 · Controller 只读观测", "refresh": "刷新节点",
@@ -61,7 +61,7 @@
     "clear": "清空路由草稿", "discard": "丢弃此未保存的路由草稿？", "discardAll": "退出并丢弃所有未保存的配置、Resource、Binding、Grant 和 HTTP 路由草稿？",
     "list": "已配置 HTTP 路由", "empty": "尚无 HTTP 路由。请选择 TCP 端点并定义精确请求条件。", "setup": "此列表为期望配置，并非实时入口状态。管理员需在可信调用方允许列表与入口中分别固定每个 UID。来源访问请通过 Grant 管理。", "uid": "路由 UID", "inspectPaths": "查看 {{n}} 个精确路径"
   },
-  "language": "语言", "loginTitle": "管理访问，明确边界。", "loginDescription": "登录以查看和发布本 Controller 管理的配置。", "desiredBoundary": "这里只展示期望状态。保存配置不表示节点已应用。", "signIn": "登录", "accessKey": "访问密钥", "keyHelp": "使用独立管理访问密钥换取服务端会话，密钥不会写入浏览器存储。", "loading": "加载中…", "retry": "重试", "operatorConsole": "管理工作台", "navigation": "工作台导航", "configuration": "期望配置", "audit": "审计", "signOut": "退出登录", "refresh": "刷新状态", "status": "发布状态", "authority": "权威来源", "editorRevision": "编辑基线修订", "lastRead": "最后成功读取", "notRead": "尚未读取", "enforcement": "节点应用", "notConfirmed": "此视图无法确认", "policyAndFacts": "策略与绑定事实", "editorHelp": "编辑完整策略与事实文档。接受之前运行共享校验。", "readOnly": "只读访问，当前角色不能发布修改。", "unsaved": "未保存草稿", "inSync": "编辑内容未修改", "policyYaml": "策略 YAML", "factsJson": "事实 JSON", "changeReason": "变更原因", "reasonHelp": "说明此次修改，原因将写入追加式发布审计。", "reloadLatest": "重新载入最新配置", "save": "保存期望配置", "noConfiguration": "无法读取配置，请刷新重试。", "publicationHistory": "发布历史", "auditHelp": "配置变更与接受结果在同一事务中记录。这不是执行报告或请求决策日志。", "emptyAudit": "尚无配置变更记录。", "revisionNumber": "修订 {{revision}}", "digest": "配置摘要", "moreAudit": "加载更多审计", "discard": "放弃未保存草稿并载入最新配置？", "expired": "会话已过期或访问已撤销，请重新登录。", "conflict": "修订已改变。草稿已保留，请显式重新载入后再编辑。", "saved": "期望配置已保存，尚未确认节点应用。", "staleFailed": "上次读取失败，显示的数据可能已过时。", "staleAge": "此视图已超过一分钟，请刷新后再使用。", "requestFailed": "请求失败，请检查连接和 Controller 就绪状态后重试。",
+  "language": "语言", "loginTitle": "管理访问，明确边界。", "loginDescription": "登录以查看和发布本 Controller 管理的配置。", "desiredBoundary": "这里只展示期望状态。保存配置不表示节点已应用。", "signIn": "登录", "loading": "加载中…", "retry": "重试", "operatorConsole": "管理工作台", "navigation": "工作台导航", "configuration": "期望配置", "audit": "审计", "signOut": "退出登录", "refresh": "刷新状态", "status": "发布状态", "authority": "权威来源", "editorRevision": "编辑基线修订", "lastRead": "最后成功读取", "notRead": "尚未读取", "enforcement": "节点应用", "notConfirmed": "此视图无法确认", "policyAndFacts": "策略与绑定事实", "editorHelp": "编辑完整策略与事实文档。接受之前运行共享校验。", "readOnly": "只读访问，当前角色不能发布修改。", "unsaved": "未保存草稿", "inSync": "编辑内容未修改", "policyYaml": "策略 YAML", "factsJson": "事实 JSON", "changeReason": "变更原因", "reasonHelp": "说明此次修改，原因将写入追加式发布审计。", "reloadLatest": "重新载入最新配置", "save": "保存期望配置", "noConfiguration": "无法读取配置，请刷新重试。", "publicationHistory": "发布历史", "auditHelp": "配置变更与接受结果在同一事务中记录。这不是执行报告或请求决策日志。", "emptyAudit": "尚无配置变更记录。", "revisionNumber": "修订 {{revision}}", "digest": "配置摘要", "moreAudit": "加载更多审计", "discard": "放弃未保存草稿并载入最新配置？", "expired": "会话已过期或访问已撤销，请重新登录。", "conflict": "修订已改变。草稿已保留，请显式重新载入后再编辑。", "saved": "期望配置已保存，尚未确认节点应用。", "staleFailed": "上次读取失败，显示的数据可能已过时。", "staleAge": "此视图已超过一分钟，请刷新后再使用。", "requestFailed": "请求失败，请检查连接和 Controller 就绪状态后重试。",
   "resources": {
     "editBindingEndpoints": "编辑受保护 Endpoint", "saveBindingEndpoints": "保存受保护 Endpoint", "cancelBindingEdit": "取消 Binding 编辑", "bindingEditReason": "Binding 编辑原因",
     "latestProtected": "草稿修订中的当前保护名单", "acknowledgeBindingEdit": "我已核对最新作用域及保护名单变更",

@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
+import { tokenSession } from './session.mjs'
 // A separate real process isolates the sticky DB-user authority from file-user suites.
 import assert from 'node:assert/strict'
 import { mkdir, writeFile } from 'node:fs/promises'
@@ -39,8 +40,7 @@ browser: {enabled: true, origin: ${JSON.stringify(origin)}, assets: ${JSON.strin
     }
     assert(ready, logs)
     await page.goto(`${origin}/console/`)
-    await page.getByLabel('Access key', { exact: true }).fill(token)
-    await page.getByRole('button', { name: 'Sign in', exact: true }).click()
+    await tokenSession(page, token)
     await page.getByRole('button', { name: 'Accounts', exact: true }).click({ timeout: 5000 })
     await page.getByText('No human accounts yet.', { exact: true }).waitFor()
     await page.getByLabel('Account username', { exact: true }).fill('alice')
@@ -57,7 +57,6 @@ browser: {enabled: true, origin: ${JSON.stringify(origin)}, assets: ${JSON.strin
     const id = directory.accounts[0].id
     async function signInHuman() {
       await person.goto(`${origin}/console/`)
-      await person.getByLabel('Sign-in method', { exact: true }).selectOption('password')
       await person.getByLabel('Username', { exact: true }).fill('alice')
       await person.getByLabel('Password', { exact: true }).fill(password)
       await person.getByRole('button', { name: 'Sign in', exact: true }).click()
@@ -178,13 +177,12 @@ browser: {enabled: true, origin: ${JSON.stringify(origin)}, assets: ${JSON.strin
     try {
       const requested = []; onlyPage.on('request', r => requested.push(new URL(r.url()).pathname))
       await onlyPage.goto(`${origin}/console/`)
-      await onlyPage.getByLabel('Access key', { exact: true }).fill(directoryKey)
-      await onlyPage.getByRole('button', { name: 'Sign in', exact: true }).click()
+      await tokenSession(onlyPage, directoryKey)
       await onlyPage.getByRole('heading', { name: 'Accounts', exact: true }).waitFor()
       await onlyPage.getByRole('heading', { name: 'alice', exact: true }).waitFor()
       assert(!requested.some(p => p.endsWith('/publication') || p.includes('/access-request')))
       assert.equal(await onlyPage.getByRole('button', { name: 'Access requests', exact: true }).count(), 0)
-      await onlyPage.getByRole('button', { name: 'Language', exact: true }).click()
+      await onlyPage.getByRole('button', { name: 'Language', exact: true }).click(); await onlyPage.getByRole('menuitemradio', { name: '简体中文', exact: true }).click()
       await onlyPage.getByRole('heading', { name: '人员账户目录', exact: true }).waitFor()
       for (const width of [375, 1440]) {
         await onlyPage.setViewportSize({ width, height: 1000 }); assert(await onlyPage.evaluate(() => document.documentElement.scrollWidth <= innerWidth))

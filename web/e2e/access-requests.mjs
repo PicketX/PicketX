@@ -29,7 +29,6 @@ c.commit()`, databasePath], { encoding: 'utf8' })
  const errors = []; for (const page of [requester, admin]) page.on('pageerror', e => errors.push(e.message))
  const login = async (page, user) => {
   await page.goto(`${origin}/console/`)
-  await page.getByLabel('Sign-in method', { exact: true }).selectOption('password')
   for (let attempt = 0; attempt < 3; attempt++) {
    await page.getByLabel('Username', { exact: true }).fill(user)
    await page.getByLabel('Password', { exact: true }).fill(password)
