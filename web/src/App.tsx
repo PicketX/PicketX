@@ -216,7 +216,7 @@ export default function App() {
         {!session && busy && <p role="status">{t('loading')}</p>}
         {!session && !busy && <Button type="button" variant="outline" onClick={() => window.location.reload()}>{t('retry')}</Button>}
       </form>
-    </main><footer>{t('sessionBoundary')}</footer>
+    </main>
   </div>
   return <div className="console-shell">
     <aside className="sidebar"><span className="brand"><ShieldCheck aria-hidden="true" />PicketX</span><p className="sidebar-subtitle">{t('operatorConsole')}</p>
