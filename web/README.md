@@ -10,7 +10,9 @@ npm run lint
 npm run build
 ```
 
-This is a bilingual operator console backed by real SCS sessions and management publication/audit APIs, not a complete access portal. English is default. Use [browser deployment](../docs/BROWSER_CONSOLE.md): opt in to database authority and the exact public browser origin. The health-only Controller default cannot log in. Built assets use `/console/`; Vite proxies `/console/api` to127.0.0.1:8080. No API mocks/sample state or browser-stored access keys are used.
+Run the independent backend with `go run ./cmd/picketx-controller` from the repository root. It prepares SQLite/admin automatically. Open `http://127.0.0.1:5173/console/`, choose username/password and use `admin` plus private `var/controller/initial-admin-password`. See [local development](../docs/LOCAL_DEVELOPMENT.md). Vite retains its ordinary API proxy and strict port5173.
+
+This is a bilingual operator console backed by real SCS sessions and management publication/audit APIs, not a complete access portal. English is default. Use [browser deployment](../docs/BROWSER_CONSOLE.md): opt in to database authority; an explicit public origin is optional except for OIDC. Normal unconfigured startup creates the first database administrator; explicitly configured deployments retain their existing provisioning contract. Built assets use `/console/`; Vite proxies `/console/api` to127.0.0.1:8080. No API mocks/sample state or browser-stored access keys are used.
 
 `npm run test:e2e` requires Go, a built dist and `npx playwright install --with-deps chromium`. It drives actual Chromium against a temporary real Controller/SQLite. The CI screenshot artifact contains no credential/database files.
 
@@ -37,4 +39,6 @@ npm dependency updates and copied component-source updates are separate. Preserv
 
 ## 中文说明
 
-这是接入真实SCS会话、配置发布与审计API的双语管理工作台，不是完整权限门户。按[部署说明](../docs/BROWSER_CONSOLE.zh-CN.md)启用数据库权威及准确Origin；仅健康默认服务不能登录。使用npm，Go/Web分别构建，路径/console/。草稿ETag不随刷新推进，412须显式重新载入。test:e2e使用真实Chromium→Go→SQLite，截图不含凭据/数据库文件。官方组件内部保持贴近上游，后续组合及申请/审批独立实现，保留锁文件。
+后端在根目录执行 `go run ./cmd/picketx-controller`，自动准备 SQLite/管理员。Web 独立 `npm run dev`，用户名 `admin`，密码在私有 `var/controller/initial-admin-password`。详见[本地开发](../docs/LOCAL_DEVELOPMENT.zh-CN.md)。Vite 保留普通 API 代理及严格5173端口。
+
+这是接入真实SCS会话、配置发布与审计API的双语管理工作台，不是完整权限门户。按[部署说明](../docs/BROWSER_CONSOLE.zh-CN.md)启用数据库权威；除 OIDC 外，公开 Origin 可选；正常无配置启动自动创建首个数据库管理员，显式配置部署保留原供应契约。使用npm，Go/Web分别构建，路径/console/。草稿ETag不随刷新推进，412须显式重新载入。test:e2e使用真实Chromium→Go→SQLite，截图不含凭据/数据库文件。官方组件内部保持贴近上游，后续组合及申请/审批独立实现，保留锁文件。

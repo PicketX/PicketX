@@ -23,6 +23,10 @@ import (
 )
 
 func browserFixture(t *testing.T) (http.Handler, string, *Browser) {
+	return browserFixtureOrigin(t, "http://127.0.0.1:8080")
+}
+
+func browserFixtureOrigin(t *testing.T, origin string) (http.Handler, string, *Browser) {
 	t.Helper()
 	_, s, creds := managementFixture(t)
 	a, e := managementaccess.New(s.GORM(), managementaccess.Settings{Credentials: creds, Reload: time.Second, WarnRules: 10000, WarnLoadPercent: 50}, slog.New(slog.NewTextHandler(io.Discard, nil)))
@@ -30,7 +34,7 @@ func browserFixture(t *testing.T) (http.Handler, string, *Browser) {
 		t.Fatal(e)
 	}
 	service := management.New(a, directRepository{s})
-	b, e := NewBrowser(service, "http://127.0.0.1:8080", "")
+	b, e := NewBrowser(service, origin, "")
 	if e != nil {
 		t.Fatal(e)
 	}
@@ -434,5 +438,73 @@ func TestBrowserCanceledSessionWaitReleasesResources(t *testing.T) {
 	browser.lockMu.Unlock()
 	if remaining != 0 {
 		t.Fatal("completed/canceled session locks retained", remaining)
+	}
+}
+
+func TestOptionalBrowserOriginUsesRequestOrigin(t *testing.T) {
+	h, _, _ := browserFixtureOrigin(t, "")
+	for _, origin := range []string{"http://127.0.0.1:5173", "http://localhost:8080", "http://control.example:8081", "https://control.example"} {
+		t.Run(origin, func(t *testing.T) {
+			t.Parallel()
+			r := httptest.NewRequest("GET", origin+"/console/api/v1/session", nil)
+			out := httptest.NewRecorder()
+			h.ServeHTTP(out, r)
+			if out.Code != 200 {
+				t.Fatal("optional origin rejected", out.Code)
+			}
+			var session struct {
+				CSRF string `json:"csrf"`
+			}
+			if err := json.Unmarshal(out.Body.Bytes(), &session); err != nil {
+				t.Fatal(err)
+			}
+			secure := strings.HasPrefix(origin, "https:")
+			for _, c := range out.Result().Cookies() {
+				if c.Name == "picketx_csrf" && c.Secure != secure {
+					t.Fatal("wrong CSRF cookie security")
+				}
+			}
+			post := func(requestOrigin string, forwarded bool) *httptest.ResponseRecorder {
+				req := httptest.NewRequest("POST", origin+"/console/api/v1/login", strings.NewReader(`{"token":"`+managementToken+`"}`))
+				req.Header.Set("Content-Type", "application/json")
+				req.Header.Set("Origin", requestOrigin)
+				req.Header.Set("X-CSRF-Token", session.CSRF)
+				if forwarded {
+					req.Header.Set("X-Forwarded-Proto", "https")
+					req.Header.Set("X-Forwarded-Host", "evil.test")
+					req.Header.Set("Forwarded", "proto=https;host=evil.test")
+				}
+				for _, c := range out.Result().Cookies() {
+					req.AddCookie(c)
+				}
+				result := httptest.NewRecorder()
+				h.ServeHTTP(result, req)
+				return result
+			}
+			good := post(origin, true)
+			if good.Code != 200 {
+				t.Fatal("same-origin login rejected", good.Code)
+			}
+			found := false
+			for _, c := range good.Result().Cookies() {
+				if c.Name == "picketx_session" {
+					found = true
+					if c.Secure != secure {
+						t.Fatal("wrong session cookie security")
+					}
+				}
+			}
+			if !found {
+				t.Fatal("no session cookie")
+			}
+			for _, bad := range []string{"", "null", "http://evil.test", origin + ":1234", strings.Replace(origin, "http:", "https:", 1)} {
+				if bad == origin {
+					continue
+				}
+				if got := post(bad, false); got.Code != 403 {
+					t.Fatal("cross-origin write accepted", bad, got.Code)
+				}
+			}
+		})
 	}
 }

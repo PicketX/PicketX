@@ -59,17 +59,15 @@ M2D2 adds a [running Controller publisher](docs/CONTROLLER_RUNTIME.md): strict K
 
 ## Development
 
-Requirements: Go 1.27+, Node.js 24 LTS and npm.
+Requirements: Go 1.27+, Node.js24 LTS, npm and CGO/a native C compiler for SQLite.
 
-Start the Controller from the repository root:
+Start the backend independently, or run the Go package directly in your IDE directly:
 
 ```bash
 go run ./cmd/picketx-controller
 ```
 
-It listens on `127.0.0.1:8080`; use `-listen` to change the address. `GET /healthz` returns process liveness only, not readiness to authorize access.
-
-Start the Web development server in another terminal:
+Start Web in another terminal:
 
 ```bash
 cd web
@@ -77,7 +75,7 @@ npm ci
 npm run dev
 ```
 
-Go and Web build independently. For a working console, first configure database authority, management credentials and the opt-in browser origin as described in [browser deployment](docs/BROWSER_CONSOLE.md); the health-only default cannot authenticate it. Vite proxies `/healthz` and `/console/api`; a configured Controller can serve built assets at `/console/`.
+Open `http://127.0.0.1:5173/console/`, choose username/password login, and use `admin` with the private generated `var/controller/initial-admin-password`. Normal first startup prepares SQLite and the administrator; later starts preserve them. Agent gRPC and local decisions are enabled without requiring PicketXD/Nginx. See [local development](docs/LOCAL_DEVELOPMENT.md) for IDEs, built Web, recovery and troubleshooting. Explicit `-config` deployments retain their existing configuration semantics.
 
 ## Verification
 

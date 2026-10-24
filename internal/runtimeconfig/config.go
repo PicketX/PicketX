@@ -21,7 +21,9 @@ import (
 )
 
 type Config struct {
-	Authz struct {
+	// InitialSetup is selected by normal no-config startup, never by a YAML key.
+	InitialSetup bool
+	Authz        struct {
 		Enabled                       bool
 		Network, Address, Credentials string
 	}
@@ -58,12 +60,35 @@ func defaults() map[string]any {
 	}
 }
 
-// Load is the only runtime loading boundary. An explicitly present empty value
+// Load preserves the existing defaults for explicitly configured installations.
+// An explicitly present empty value
 // overrides lower layers and is validated; absent flags never overwrite a file.
 func Load(path string, env, overrides map[string]string) (Config, error) {
+	return load(path, env, overrides, defaults())
+}
+
+// LoadDefault loads the complete, single-instance Controller for no-config startup.
+// Configured installations continue to use Load, including file authority mode.
+func LoadDefault(env, overrides map[string]string) (Config, error) {
+	defs := defaults()
+	for key, value := range map[string]any{
+		"database": "var/controller/controller.sqlite", "credentials": "var/controller/agent-credentials.json",
+		"source.mode": "database", "management.credentials": "var/controller/management.json", "management.users_mode": "database",
+		"agent.enabled": true, "agent.authority": "controller:default",
+		"browser.enabled": true,
+		"authz.enabled":   true, "authz.address": "127.0.0.1:9091", "authz.credentials": "var/controller/authz-callers.json",
+	} {
+		defs[key] = value
+	}
+	c, err := load("", env, overrides, defs)
+	c.InitialSetup = c.Source.Mode == "database" && c.Management.UsersMode == "database"
+	return c, err
+}
+
+// load is the common strict file/environment/flag loading boundary.
+func load(path string, env, overrides map[string]string, defs map[string]any) (Config, error) {
 	var c Config
 	k := koanf.New(".")
-	defs := defaults()
 	if e := k.Load(confmap.Provider(defs, "."), nil); e != nil {
 		return c, e
 	}
@@ -260,8 +285,13 @@ func (c Config) Validate() error {
 		if c.Source.Mode != "database" {
 			return fmt.Errorf("browser requires database authority")
 		}
-		if e := management.ValidateBrowserOrigin(c.Browser.Origin); e != nil {
-			return e
+		if c.Browser.Origin != "" {
+			if e := management.ValidateBrowserOrigin(c.Browser.Origin); e != nil {
+				return e
+			}
+		}
+		if c.Browser.OIDCConfig != "" && c.Browser.Origin == "" {
+			return fmt.Errorf("OIDC requires an explicit public browser origin")
 		}
 		if c.Browser.OIDCConfig != "" && !filepath.IsAbs(c.Browser.OIDCConfig) {
 			return fmt.Errorf("OIDC config requires absolute path")

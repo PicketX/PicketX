@@ -9,8 +9,8 @@ PostgreSQL and multi-Controller operation remain unimplemented.
 
 ## One authority
 
-Default `source.mode: file` is compatible with previous deployments and exposes no
-management routes. For the API, use a NEW private database and explicit database mode:
+Explicit runtime files retain `source.mode: file` for compatibility with previous deployments and expose no
+management routes by default. Normal no-config startup is described in [local development](LOCAL_DEVELOPMENT.md). For the API, use a NEW private database and explicit database mode:
 
 ```yaml
 http: {listen: "127.0.0.1:8080"}

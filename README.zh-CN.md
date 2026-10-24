@@ -58,17 +58,15 @@ M2D2新增[可运行Controller发布服务](docs/CONTROLLER_RUNTIME.zh-CN.md)：
 
 ## 本地开发
 
-需要 Go 1.27+、Node.js 24 LTS 和 npm。
+需要 Go1.27+、Node.js24 LTS、npm，以及 SQLite 所需的 CGO/本机 C 编译器。
 
-在仓库根目录启动 Controller：
+独立启动后端，或在 IDE 中直接运行 Go 包：
 
 ```bash
 go run ./cmd/picketx-controller
 ```
 
-默认监听 `127.0.0.1:8080`，通过 `-listen` 修改地址。`GET /healthz` 仅表示进程存活，不表示授权功能已就绪。
-
-另开终端启动 Web：
+另一个终端启动 Web：
 
 ```bash
 cd web
@@ -76,7 +74,7 @@ npm ci
 npm run dev
 ```
 
-前后端独立构建。要运行工作台，须先按[浏览器部署说明](docs/BROWSER_CONSOLE.zh-CN.md)启用数据库权威、管理凭据及准确浏览器Origin，默认仅健康服务不能登录。Vite代理/healthz及/console/api；配置后的Controller可托管/console/构建资源。
+访问 `http://127.0.0.1:5173/console/`，选择用户名/密码，使用 `admin` 和自动生成的私有 `var/controller/initial-admin-password`。正常首次启动自行准备 SQLite 和管理员，后续保留。Agent gRPC 和决策服务正常启动，不要求 PicketXD/Nginx。参阅[本地开发指南](docs/LOCAL_DEVELOPMENT.zh-CN.md)了解 IDE、构建后运行、恢复及排查。显式 `-config` 部署保留已有配置语义。
 
 ## 验证
 

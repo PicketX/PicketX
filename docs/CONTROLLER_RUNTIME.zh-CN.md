@@ -6,7 +6,7 @@ M2D2 把类型化Agent流接入真实picketx-controller进程，提供严格运�
 
 在仓库根目录按 [英文说明](CONTROLLER_RUNTIME.md#start-a-controlled-local-example) 生成私有随机Token文件及仅含摘要的凭据文件，然后运行 `go run ./cmd/picketx-controller -config examples/controller/controller.yaml`。不要提交、输出或记录Token；var已忽略。示例policy含历史绝对期限，发布不会重置；facts是诊断示例，不是Agent现场证明。
 
-配置优先级为显式变更参数>已存在PICKETX_*环境变量>严格单文档YAML>默认。-config优先，否则PICKETX_CONFIG指定文件；-listen和-agent-listen分别覆盖HTTP/Agent监听。未知/null/重复/别名/多文档、类型错误和非法值均拒绝。相对路径以工作目录为准。默认无配置只启HTTP127.0.0.1:8080，Agent关闭；例启用Agent127.0.0.1:9090。所有YAML字段、精确默认值及环境名映射见英文对照表；poll/shutdown默认1s/5s，凭据/流128，帧4MiB，接入/消息128/32，Hello/发送5s/10s。
+配置优先级为显式变更参数>已存在PICKETX_*环境变量>严格单文档YAML>默认。-config优先，否则PICKETX_CONFIG指定文件；-listen和-agent-listen分别覆盖HTTP/Agent监听。未知/null/重复/别名/多文档、类型错误和非法值均拒绝。相对路径以工作目录为准。正常无配置启动现在自动准备完整 SQLite/数据库账户 Controller，首次创建 admin 并将随机密码写入私有 var/controller/initial-admin-password，见[本地开发及首次启动](LOCAL_DEVELOPMENT.zh-CN.md)。HTTP8080、Agent gRPC9090、本地决策9091；显式配置文件保留原默认值及供应契约。所有YAML字段、精确默认值及环境名映射见英文对照表；poll/shutdown默认1s/5s，凭据/流128，帧4MiB，接入/消息128/32，Hello/发送5s/10s。
 
 healthz仅存活；readyz为配置模块就绪，不泄漏策略，不证明远程已执行，也不要求Agent在线。本次没有无认证管理API。TLS证书和私钥必须成对，启动加载，至少TLS1.2；客户端正常验证根和名称，不强制mTLS。明文没有保密性和服务端认证，只适用于有意控制/隧道保护的链路。运行配置/TLS变更需重启，policy/facts/credentials轮询重载。
 

@@ -8,7 +8,7 @@
 
 ## 唯一权威来源
 
-默认 `source.mode: file` 保持兼容且没有管理路由。API 使用新的私有数据库，显式配置：
+显式运行配置文件默认 `source.mode: file` 保持兼容且没有管理路由；正常无配置启动见[本地开发](LOCAL_DEVELOPMENT.zh-CN.md)。API 使用新的私有数据库，显式配置：
 
 ```yaml
 http: {listen: "127.0.0.1:8080"}

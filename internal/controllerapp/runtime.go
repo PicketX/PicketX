@@ -97,6 +97,9 @@ func Run(ctx context.Context, c runtimeconfig.Config, log *slog.Logger, d Depend
 			default:
 			}
 		}
+		if e = prepareInitialState(c); e != nil {
+			return e
+		}
 		if !p.credentials() {
 			return fmt.Errorf("initial Agent credentials rejected")
 		}
@@ -108,6 +111,9 @@ func Run(ctx context.Context, c runtimeconfig.Config, log *slog.Logger, d Depend
 		if c.Source.Mode == "database" {
 			access, e = managementaccess.New(p.store.GORM(), managementaccess.Settings{Credentials: c.Management.Credentials, UsersMode: c.Management.UsersMode, Reload: c.Management.Reload, WarnRules: c.Management.WarnRules, WarnLoadPercent: c.Management.WarnLoadPercent}, log)
 			if e != nil {
+				return e
+			}
+			if e = initializeAdmin(c, access, log); e != nil {
 				return e
 			}
 			if e = p.initializeManaged(); e != nil {

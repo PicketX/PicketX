@@ -204,7 +204,7 @@ export default function App() {
     <main className="login-main"><section className="login-intro"><h1>{t('loginTitle')}</h1><p>{t('loginDescription')}</p><p className="boundary">{t('desiredBoundary')}</p></section>
       <form className="login-panel" onSubmit={e => void login(e)} aria-busy={busy}><h2>{t('signIn')}</h2>{errorPanel}
         {session?.oidc_login && <div className="mb-6"><Button type="button" variant="outline" className="w-full" disabled={busy} onClick={() => void loginOIDC()} aria-describedby="oidc-help">{busy ? t('loading') : t('oidc.continue')}</Button><p id="oidc-help" className="hint">{t('oidc.help')}</p></div>}
-        {session?.password_login && <><label htmlFor="sign-in-method">{t('humanLogin.method')}</label><select id="sign-in-method" value={signInMethod} disabled={busy} onChange={e => { setSignInMethod(e.target.value as 'key' | 'password'); setKey(''); setPassword(''); setUsername(''); setShowPassword(false); setError('') }}><option value="key">{t('accessKey')}</option><option value="password">{t('humanLogin.methodPassword')}</option></select></>}
+        {session && <>{session.password_login && <><label htmlFor="sign-in-method">{t('humanLogin.method')}</label><select id="sign-in-method" value={signInMethod} disabled={busy} onChange={e => { setSignInMethod(e.target.value as 'key' | 'password'); setKey(''); setPassword(''); setUsername(''); setShowPassword(false); setError('') }}><option value="key">{t('accessKey')}</option><option value="password">{t('humanLogin.methodPassword')}</option></select></>}
         {passwordMode ? <>
           <label htmlFor="username">{t('humanLogin.username')}</label><input id="username" name="username" autoComplete="username" autoCapitalize="none" spellCheck={false} value={username} onChange={e => setUsername(e.target.value)} minLength={3} maxLength={64} required disabled={busy} aria-describedby="password-help" />
           <label htmlFor="human-password">{t('humanLogin.password')}</label><input id="human-password" name="password" type={showPassword ? 'text' : 'password'} autoComplete="current-password" value={password} onChange={e => setPassword(e.target.value)} maxLength={72} required disabled={busy} aria-describedby={error ? 'password-help console-error' : 'password-help'} />
@@ -212,6 +212,8 @@ export default function App() {
           <p id="password-help" className="hint">{t('humanLogin.help')}</p>
         </> : <><label htmlFor="access-key">{t('accessKey')}</label><input id="access-key" type="password" autoComplete="current-password" value={key} onChange={e => setKey(e.target.value)} minLength={32} maxLength={256} required disabled={busy} aria-describedby="key-help" /><p id="key-help" className="hint">{t('keyHelp')}</p></>}
         <Button type="submit" disabled={busy}>{busy ? t('loading') : t('signIn')}</Button>
+        </>}
+        {!session && busy && <p role="status">{t('loading')}</p>}
         {!session && !busy && <Button type="button" variant="outline" onClick={() => window.location.reload()}>{t('retry')}</Button>}
       </form>
     </main><footer>{t('sessionBoundary')}</footer>

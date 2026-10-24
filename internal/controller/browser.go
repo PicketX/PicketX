@@ -76,8 +76,10 @@ func NewBrowser(service *management.Service, origin, assets string) (*Browser, e
 	if service == nil {
 		return nil, fmt.Errorf("browser requires management service")
 	}
-	if e := management.ValidateBrowserOrigin(origin); e != nil {
-		return nil, e
+	if origin != "" {
+		if e := management.ValidateBrowserOrigin(origin); e != nil {
+			return nil, e
+		}
 	}
 	if assets != "" {
 		r, e := os.OpenRoot(assets)
@@ -117,6 +119,11 @@ func NewBrowser(service *management.Service, origin, assets string) (*Browser, e
 }
 func (b *Browser) wrap(next http.Handler) http.Handler {
 	session := b.sessions.LoadAndSave(next)
+	// Share the store/context key, with immutable cookie settings for actual TLS.
+	// Never mutate the process-wide SessionManager in a request.
+	tlsSessions := *b.sessions
+	tlsSessions.Cookie.Secure = true
+	tlsSession := tlsSessions.LoadAndSave(next)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/console" && !strings.HasPrefix(r.URL.Path, "/console/") {
 			next.ServeHTTP(w, r)
@@ -126,11 +133,19 @@ func (b *Browser) wrap(next http.Handler) http.Handler {
 		w.Header().Set("X-Content-Type-Options", "nosniff")
 		w.Header().Set("Referrer-Policy", "no-referrer")
 		w.Header().Set("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'")
-		if r.Host != b.origin.Host {
+		if b.origin.Host != "" && r.Host != b.origin.Host {
 			http.Error(w, "untrusted host", 403)
 			return
 		}
-		if r.Method != "GET" && r.Method != "HEAD" && r.Method != "OPTIONS" && (len(r.Header.Values("Origin")) != 1 || r.Header.Get("Origin") != b.origin.String()) {
+		expectedOrigin := b.origin.String()
+		if expectedOrigin == "" {
+			scheme := "http"
+			if r.TLS != nil {
+				scheme = "https"
+			}
+			expectedOrigin = scheme + "://" + r.Host
+		}
+		if r.Method != "GET" && r.Method != "HEAD" && r.Method != "OPTIONS" && (len(r.Header.Values("Origin")) != 1 || r.Header.Get("Origin") != expectedOrigin) {
 			http.Error(w, "untrusted origin", 403)
 			return
 		}
@@ -156,7 +171,11 @@ func (b *Browser) wrap(next http.Handler) http.Handler {
 					defer release()
 				}
 			}
-			session.ServeHTTP(w, r)
+			if b.origin.Host == "" && r.TLS != nil {
+				tlsSession.ServeHTTP(w, r)
+			} else {
+				session.ServeHTTP(w, r)
+			}
 			return
 		}
 		next.ServeHTTP(w, r)
@@ -204,7 +223,23 @@ func (b *Browser) register(e *echo.Echo, limits ManagementLimits) {
 		},
 		ErrorHandler: func(c *echo.Context, _ error) error { return apiError(c, 400, "invalid_peer") }, DenyHandler: func(c *echo.Context, _ string, _ error) error { return apiError(c, 429, "rate_limited") },
 	}))
-	g.Use(middleware.CSRFWithConfig(middleware.CSRFConfig{CookieName: "picketx_csrf", CookiePath: "/console/", CookieSecure: b.origin.Scheme == "https", CookieHTTPOnly: true, CookieSameSite: http.SameSiteStrictMode, ErrorHandler: func(c *echo.Context, _ error) error { return apiError(c, 403, "csrf_rejected") }}))
+	csrfConfig := middleware.CSRFConfig{CookieName: "picketx_csrf", CookiePath: "/console/", CookieSecure: b.origin.Scheme == "https", CookieHTTPOnly: true, CookieSameSite: http.SameSiteStrictMode, ErrorHandler: func(c *echo.Context, _ error) error { return apiError(c, 403, "csrf_rejected") }}
+	csrf := middleware.CSRFWithConfig(csrfConfig)
+	if b.origin.Host != "" {
+		g.Use(csrf)
+	} else {
+		csrfConfig.CookieSecure = true
+		tlsCSRF := middleware.CSRFWithConfig(csrfConfig)
+		g.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
+			plain, secure := csrf(next), tlsCSRF(next)
+			return func(c *echo.Context) error {
+				if c.Request().TLS != nil {
+					return secure(c)
+				}
+				return plain(c)
+			}
+		})
+	}
 	g.GET("/session", b.session)
 	g.POST("/login", func(c *echo.Context) error { return b.login(c, h.validate) })
 	g.POST("/login/password", func(c *echo.Context) error { return b.loginPassword(c, h.validate) }, middleware.RateLimiterWithConfig(middleware.RateLimiterConfig{

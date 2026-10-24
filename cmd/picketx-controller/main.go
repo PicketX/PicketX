@@ -60,7 +60,13 @@ func run(ctx context.Context, args, environment []string, logger *slog.Logger) e
 	if !configExplicit {
 		*path = env["PICKETX_CONFIG"]
 	}
-	c, e := runtimeconfig.Load(*path, env, overrides)
+	var c runtimeconfig.Config
+	var e error
+	if *path == "" {
+		c, e = runtimeconfig.LoadDefault(env, overrides)
+	} else {
+		c, e = runtimeconfig.Load(*path, env, overrides)
+	}
 	if e != nil {
 		return e
 	}

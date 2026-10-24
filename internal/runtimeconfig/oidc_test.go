@@ -12,7 +12,7 @@ func TestOIDCRequiresExplicitBrowserAndPrivateConfigPath(t *testing.T) {
 	if c.Browser.OIDCConfig != "/private/oidc.json" {
 		t.Fatal("OIDC config lost")
 	}
-	for _, m := range []map[string]string{{"browser.enabled": "false", "browser.origin": ""}, {"browser.oidc_config": "relative.json"}} {
+	for _, m := range []map[string]string{{"browser.enabled": "false", "browser.origin": ""}, {"browser.oidc_config": "relative.json"}, {"browser.origin": ""}} {
 		values := map[string]string{}
 		for k, v := range base {
 			values[k] = v

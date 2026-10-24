@@ -30,7 +30,7 @@ func TestDefaultsAndPrecedence(t *testing.T) {
 	}
 }
 
-func TestBrowserRequiresManagedAuthorityAndExplicitSecureOrigin(t *testing.T) {
+func TestBrowserRequiresManagedAuthorityAndValidOptionalOrigin(t *testing.T) {
 	base := map[string]string{"agent.enabled": "true", "agent.authority": "controller:test", "database": "state/db.sqlite", "credentials": "agent.json", "source.mode": "database", "management.credentials": "principals.json", "browser.enabled": "true", "browser.origin": "https://control.example"}
 	c, e := Load("", nil, base)
 	if e != nil {
@@ -39,13 +39,13 @@ func TestBrowserRequiresManagedAuthorityAndExplicitSecureOrigin(t *testing.T) {
 	if !c.Browser.Enabled || c.Browser.Origin != "https://control.example" {
 		t.Fatal(c)
 	}
-	for _, origin := range []string{"", "http://control.example", "https://control.example/", "https://user@control.example", "https://control.example?x=1", "https://control.example#x", "https://control.example/a"} {
+	for _, origin := range []string{"http://control.example", "https://control.example/", "https://user@control.example", "https://control.example?x=1", "https://control.example#x", "https://control.example/a"} {
 		base["browser.origin"] = origin
 		if _, e = Load("", nil, base); e == nil {
 			t.Fatal("invalid browser origin accepted", origin)
 		}
 	}
-	for _, origin := range []string{"http://127.0.0.1:8080", "http://[::1]:8080", "http://localhost:5173"} {
+	for _, origin := range []string{"", "http://127.0.0.1:8080", "http://[::1]:8080", "http://localhost:5173"} {
 		base["browser.origin"] = origin
 		if _, e = Load("", nil, base); e != nil {
 			t.Fatal(origin, e)
